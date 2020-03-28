@@ -1,0 +1,221 @@
+MAIL      R...MAIL COMMAND
+          R ... LAST MODIFIED 3/17/69 BY R. ROACH
+          R...
+          R...
+            GCLS.(A,0)
+          R
+            WHENEVER A(1).E.FENCE.OR.A(2).E.FENCE.OR.A(3).E.FENCE
+            PRFULL.($'R'1INSTRUCTIONS:$)
+            PRFULL.($ '4MAIL NAME1 NAME2 PROB1 PROG1 PROB2 PROG2 ...$)
+            PRFULL.($ WHERE '=NAME1 NAME2'= IS THE FILE TO BE MAILED,$)
+            PRFULL.($ AND '=PROBN PROGN'= ARE DIRECTORIES TO WHICH '8$,
+          1  $IT IS TO BE SENT.'B$)
+            CHNCOM.(0)
+            END OF CONDITIONAL
+          R
+            DIMENSION ME(2)
+            ATTNAM.(ME(2)...3)
+            FERRTN.(DSKER.)
+            USER = GLOC.(COMLOC.($USER$))
+            UFDNAM = BZ57.(GLOC.(COMLOC.($UFDNM$)+USER))
+            ATTACH.(ME(2),ME(1))
+            GETBUF.(B1,432)
+            GETBUF.(B2,432)
+          R
+            FSTATE.(A(1),A(2),Z(7)...8)
+            LTH = Z(7)
+          R
+            WHENEVER LTH.G.432
+            PRFULL.(RX,A(1)...2,$ MUST BE LESS THAN 1 RECORD LONG.'B$)
+                 CHNCOM.(0)
+                 VECTOR VALUES RX = $'R'X'8$
+            OR WHENEVER Z(6).A.10K.NE.0.OR.Z(6).A.20K.NE.0.AND.Z.A.
+          1         777777K.NE.ME
+                 PRFULL.(RX,A(1)...2,$''S MODE PREVENTS READING.'B$)
+                 CHNCOM.(0)
+            END OF CONDITIONAL
+          R
+            OPEN.($R$,A(1),A(2))
+            RDFILE.(A(1),A(2),1,BUFF(432)...LTH)
+            CLOSE.(A(1),A(2))
+          R
+            WHENEVER BUFF(432).RS.18.NE. 777777K
+                 PRFULL.(RX,A(1)...2,$ MUST BE LINE MARKED.'B$)
+                 CHNCOM.(0)
+            END OF CONDITIONAL
+          R
+            WHOAMI.(PROB...2)
+            DIMENSION PROG(1)
+            EQUIVALENCE (PROB,PROG(1))
+            PROB1 = LJUST.(PROB)
+            PROG1 = BZ57.(PROG)
+            PROBN = BZ57.(PROB)
+            GETTM.(DATE,TIME)
+            LTH = LTH+11
+            CINDEX = 3
+          R
+CKMETA      WHENEVER A(CINDEX).E.$(LIST)$
+                 LIST=1B
+                 N1 = A(CINDEX+1)
+                 N2 = A(CINDEX+2)
+                 BFOPEN.($R$,N1,N2,B1(B1+432),-0,-0,DSKER.)
+                 GTWDBX.(N1,N2)
+                 CINDEX = CINDEX + 3
+                 TRANSFER TO CKMETA
+            OR WHENEVER A(CINDEX).E.$     *$.AND.A(CINDEX+1).E.$     *$
+                 CINDEX = CINDEX+2
+                 USRCHK.(PROB,PROG,CKMETA)
+                 BB=2
+                 TRANSFER TO SRCH
+            OR WHENEVER A(CINDEX).E.$(URGT)$
+                 CINDEX = CINDEX+1
+                 USRCHK.(PROB,PROG,CKMETA)
+                 BOX =   MAIL
+                 MAIL = $URGENT$
+                 TRANSFER TO CKMETA
+            END OF CONDITIONAL
+          R
+GETARG      ARGS.(ALL)
+            TRANSFER TO GETARG
+          R
+ALL         CONTINUE
+          R
+            THROUGH ASEND, FOR I=0,2,I.GE.AA
+ASEND       SEND.(APRG(I),APRG(I+1))
+          R
+SRCH        WHENEVER BB.G.0
+                 OPNMF.
+SLOOP            RDMF.(X,Y)
+                 THROUGH BSEND,FOR C=0,2,C.G.BB
+                 WHENEVER X.E.BPRG(C).OR.BPRG(C).E.$ALLALL$
+                 WHENEVER Y.E.BPRG(C+1).OR.BPRG(C+1).E.$ALLALL$,
+          1            SEND.(X,Y)
+                 END OF CONDITIONAL
+BSEND            CONTINUE
+                 TRANSFER TO SLOOP
+EX               BFCLOS.(MFD,FILE)
+            END OF CONDITIONAL
+          R
+            CHNCOM.(0)
+          R
+          R
+            NORMAL MODE IS INTEGER
+            DIMENSION A(20),APRG(202),BPRG(22)
+            DIMENSION B1(0), B2(0)
+            DIMENSION Z(7)
+            BOOLEAN LIST
+            VECTOR VALUES MFD=$M.F.D.$
+            VECTOR VALUES UFD=$U.F.D.$
+            VECTOR VALUES FILE=$(FILE)$
+            VECTOR VALUES MAIL=$  MAIL$
+            VECTOR VALUES BOX=$   BOX$
+            VECTOR VALUES BPRG = $ALLALL$, $ALLALL$
+            VECTOR VALUES AA = 0
+            VECTOR VALUES BB = 0
+            VECTOR VALUES FENCE=777777777777K
+          R
+            DIMENSION BUFF(443)
+            EQUIVALENCE (BUFF(443),LM)
+            VECTOR VALUES LM = 777777000012K
+            VECTOR VALUES BUFF(442) = $ FROM $
+            EQUIVALENCE (BUFF(441),PROB1), (BUFF(440),PROG1)
+            VECTOR VALUES BUFF(439) = 603145605757K
+            EQUIVALENCE (BUFF(438),PROBN)
+            VECTOR VALUES BUFF(437) = 605757575757K
+            EQUIVALENCE (BUFF(436),UFDNAM)
+            VECTOR VALUES BUFF(435) = 605721636057K
+            EQUIVALENCE (BUFF(434),DATE), (BUFF(433),TIME)
+          R
+          R
+          R
+            INTERNAL FUNCTION(X,Y)
+            ENTRY TO USRCHK.
+          R
+            WHENEVER X.NE.$ M1416$ .OR. (Y.NE.$   385$ .AND. Y
+          1  .NE. $  4301$ .AND. Y .NE. $  2962$ .AND. Y .NE.
+          2  $  3845$)
+          3  , ERROR RETURN
+            FUNCTION RETURN
+            END OF FUNCTION
+          R
+          R
+            INTERNAL FUNCTION(THRU)
+            ENTRY TO ARGS.
+            STATEMENT LABEL THRU
+          R
+            WHENEVER LIST
+                 GTWD.(X,THRU)
+                 GTWD.(Y,THRU)
+            OTHERWISE
+                 X=A(CINDEX)
+                 Y=A(CINDEX+1)
+                 WHENEVER X.E.FENCE.OR.Y.E.FENCE,TRANSFER TO THRU
+                 CINDEX=CINDEX+2
+            END OF CONDITIONAL
+          R
+            WHENEVER X.E.$     *$
+                 BPRG(BB)=$ALLALL$
+                 BPRG(BB+1)=Y.A.777777777777K
+                 BB=BB+2
+            OR WHENEVER Y.E.$     *$
+                 BPRG(BB)=REPROB.(X)
+                 BPRG(BB+1)=$ALLALL$
+                 BB=BB+2
+            OTHERWISE
+                 APRG(AA)=REPROB.(X)
+                 Y=LJUST.(Y)
+                 APRG(AA+1)=Y.A.777777777777K
+                 AA=AA+2
+            END OF CONDITIONAL
+          R
+            WHENEVER AA.G.200.OR.BB.G.20
+                 PRINT COMMENT $TOO MANY ADDRESSEES$
+                 TRANSFER TO THRU
+            END OF CONDITIONAL
+          R
+            FUNCTION RETURN
+            END OF FUNCTION
+          R
+          R
+            INTERNAL FUNCTION
+            ENTRY TO OPNMF.
+          R
+            ATTACH.(MFD,FILE)
+            BFOPEN.($R$,MFD,FILE,B2(B2+432),-0,-0,DSKER.)
+            ATTACH.(ME(2),ME(1))
+            BFREAD.(MFD,FILE,Z(3)...3,DSKER.,-0,DSKER.)
+            FUNCTION RETURN
+            END OF FUNCTION
+          R
+          R
+            INTERNAL FUNCTION(X,Y)
+            ENTRY TO RDMF.
+RR          BFREAD.(MFD,FILE,Z(7)...7,EX,-0,DSKER.)
+            X=Z(7)
+            Y=Z(6)
+            WHENEVER X.E.0.OR.Y.E.0.OR.X.E.UFD,TRANSFER TO RR
+            WHENEVER Y.RS.12.E.$00CMFL$,TRANSFER TO RR
+            FUNCTION RETURN
+            END OF FUNCTION
+          R
+          R
+            INTERNAL FUNCTION(M,N)
+            ENTRY TO SEND.
+          R
+            Z=SMAIL.(M,N,LM,LTH,MAIL,BOX)
+            WHENEVER Z.E.0
+                 FUNCTION RETURN
+            OR WHENEVER Z.E.4
+                 PRFULL.(RX,M,RX,N,$ NOT FOUND.'B$)
+            OR WHENEVER Z.E.3
+                 PRFULL.(RX,M,RX,N,$ DOES NOT WANT MAIL.'B$)
+            OR WHENEVER Z.E.2
+                 PRFULL.(RX,M,RX,N,$''S MAIL BOX IS BUSY.'B$)
+            OTHERWISE
+                 PRFULL.($'R DISK ERROR SENDING TO'8$,M,N,$'B'8$)
+            END OF CONDITIONAL
+          R
+            FUNCTION RETURN
+            END OF FUNCTION
+          R
+            END OF PROGRAM
