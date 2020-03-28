@@ -1,0 +1,25 @@
+CPU = i386
+MAKECPU = /D_X86_
+PCPU = /G3
+
+!include <ntwin32.mak>
+
+CFLAGS = /nologo /D_WIN32 /DWIN32 /W3 /Zi /MD $(PCPU)
+
+LNKOBJS = lnk7090.obj lnkloader.obj lnksupt.obj lnkpunch.obj
+
+all: lnk7090.exe
+
+lnk7090.exe: $(LNKOBJS)
+	link $(LNKOBJS) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+
+clean:
+	del $(LNKOBJS) lnk7090.exe
+
+lnk7090.obj: lnk7090.c lnkdef.h
+lnkloader.obj: lnkloader.c lnkdef.h
+lnksupt.obj: lnksupt.c lnkdef.h
+lnkpunch.obj: lnkpunch.c lnkdef.h
