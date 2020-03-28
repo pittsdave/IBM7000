@@ -1,0 +1,314 @@
+          R...DSKEDT - MAIN CONTROL FOR THE DISK EDITOR
+          R...I.E., BULK INPUT AND OUTPUT BY CONTROL CARDS
+          R...OR RQUEST COMMAND FILE CALLED OUTPUT RQUEST.
+          R
+           INSERT FILE .SW.
+           INSERT FILE COMDSK
+           EQUIVALENCE(RDCD,CRDEOF)
+           PRIVIL = PRIV.(0)
+           BPNCHI.(2202K)
+           BINREW.
+           GETTIM.(DATE,TIME)
+           IDD(2) = DATE
+           IDD(4) = TIME
+           BPUNCH.(IDD(0)...IDD(4))
+              VECTOR VALUES IDD = $ ID CARDS   $,$$,$$,$$
+          R
+           UPDMFD.(DSKEDT,FILE,ALRDY1)
+           ATTACH.(DSKEDT,FILE)
+           ALLOT.(2,100)
+ALRDY1     CARSWT = 0
+           ATTACH.(DSKEDT,FILE)
+           RESETF.(AX1)
+AX1        CLOSE.(STAT,FILE,OPSTAT)
+          R
+OPSTAT     OPEN.($RW$,STAT,FILE,MZE,MZE,ER13,ERCOD)
+           BUFFER.(STAT,FILE,BUFT(432)...432,ER13,ERCOD)
+          R
+           WHENEVER .SW. 2, TRANSFER TO QUIT
+           WHENEVER .SW. 4, TRANSFER TO GOCARD
+RQST       ONLINE.(MESS...MESS(1))
+              VECTOR VALUES MESS = $RQUEST FILES$
+           STPCHG.
+           UPDCHG.
+           WHENEVER .SW. 3
+                PROB = DAEPRB
+                PROG = DAEPRG
+                ATTACH.(PROB,PROG,ER14)
+                FSTATE.(OUT,RQU,A(8)...8,ER14)
+                ONLINE.(DEMON...DEMON(3))
+                   VECTOR VALUES DEMON = $STARTING DAEMON REQUESTS$
+                TRANSFER TO ATTDAE
+           END OF CONDITIONAL
+          R
+SCMFD      WHENEVER .SW. 3
+              ONLINE.(SWT3T1...SWT3T1(7))
+              ONLINE.(SWT3T2...SWT3T2(3))
+              ONLINE.(SWT3T3...SWT3T3(7))
+           V'S SWT3T1=$FINISHED DAEMON. RESET SWT 3 TO CONTINUE RQUEST$
+              VECTOR VALUES SWT3T2 = $SWT 3 OR 2 DWN TO QUIT.$
+              V'S SWT3T3 =$SWT 3 AND 2 UP WITH 4 DWN TO DO INPUT TAPE.$
+              PAUSE NO. 7
+              WHENEVER .SW. 3, TRANSFER TO QUIT
+           END OF CONDITIONAL
+           WHENEVER .SW. 2,TRANSFER TO QUIT
+           WHENEVER .SW. 4, TRANSFER TO GOCARD
+          R
+           TILOCK.(SCMFD)
+           SUCESS = SCNMFD.(PROB,PROG,ENDMFD)
+           WHENEVER SUCESS .E. 0, TRANSFER TO ENDMFD
+           ATTACH.(PROB,PROG,SCMFD)
+          R
+          R...SWT 6 -UP -DONT PROCESS TEMP MODE RQUEST FILES
+          R         DWN - PROCESS ALL RQUEST FILES FOR RERUN
+           FSTATE.(OUT,RQU,A(8)...8,SCMFD)
+ATTDAE        WHENEVER .NOT. .SW. 6
+                 WHENEVER A(7) .A. 1 .E. 1
+                    DELFIL.(OUT,RQU,SCMFD)
+                    TRANSFER TO SCMFD
+          R
+                 END OF CONDITIONAL
+          R
+              END OF CONDITIONAL
+          R
+           CHARGE.(PROB,PROG)
+           GETTIM.(DATE,TIME)
+           CHFILE.(OUT,RQU,124K,MZE,MZE,ER3,ERCOD)
+           OPEN.($R$,OUT,RQU,MZE,MZE,SCMFD)
+           BUFFER.(OUT,RQU,BUFFR(470)...470,ER1,ERCOD)
+           TILOCK.(NAMES)
+          R
+READ       STPCH1.
+           RDWAIT.(OUT,RQU,0,C(14)...14,EOF,EOFCT,ER3,ERCOD)
+           ERR.(C(14)...C(1), ONOFRT,CONTRL)
+CONTRL     FF = SCANI.(C(14),ER4)
+           WHENEVER FF .E. $     C$, TRANSFER TO NAMES
+FINDI      THROUGH FINDI, FOR I =1,1,I .G. CTL .OR. CTL(I) .E. FF
+           WHENEVER I .G. CTL, TRANSFER TO ER6
+           WHENEVER FF .E. $UPDMFD$ .OR. FF .E. $  LINK$, T'O ER5
+           CHARG1.(CTLCHG(I))
+           PROB1 = C(2)
+           PROG1 = C(1)
+           WHENEVER FF .E. $ PRINT$ .OR. FF .E. $PRNDEL$,
+          1   NPRINT.(EJECT...EJECT)
+NAMES      FNAM1 = SCAN.(READ)
+           FNAM2 = SCAN.(ER4)
+           W'R FNAM1 .E. $OUTPUT$ .AND. FNAM2 .E. $RQUEST$, T'O NAMES
+          R
+          R...GO TO DESIRED CONTROL FUNCTION
+           SUCESS= CTLF(I).
+           UPDATE.
+           TRANSFER TO NAMES
+          R
+EOF        CLOSE.(OUT,RQU,ER12,ERCOD)
+           CHFILE.(OUT,RQU,1,MZE,MZE,ER9,ERCOD)
+           STPCHG.
+           TRANSFER TO SCMFD
+          R
+          R...READ CONTROL CARDS FROM A2 IF SWT 4 IS DOWN
+          R
+ENDMFD     UPDCHG.
+           ONLINE.(MFDMSG...MFDMSG(6))
+           ONLINE.(MFDMS1...MFDMS1(5))
+                 V'S MFDMSG = $FINISHED RQUEST FILES. SWT 4-DWN-TAPE A2$
+              VECTOR VALUES MFDMS1 = $$,$$,$$,$SWT 4 -UP- QUIT$
+               VECTOR VALUES MFDMS2 = $SWT 1 - READ ONLINE$
+           PAUSE NO. 1
+           WHENEVER .NOT. .SW. 4, TRANSFER TO QUIT
+GOCARD     CT = 0
+           ONLINE.(STRTA2...STRTA2(5))
+             VECTOR VALUES STRTA2 =$AM STARTING TAPE A2. RESET SWT 4.$
+             ONLINE.(MFDMS2...MFDMS2(3))
+           PAUSE NO. 2
+          R
+           TILOCK.(NXTNAM)
+CRD1       TAPEI.(1002K)
+CARD       WHENEVER .SW. 1
+                RDCARD.(C(14)...RDCD)
+                C(1)=$$
+                C(2)=$$
+                T = 14
+           OTHERWISE
+            T = TAPE.(C(14)...C(1),ER8,CARD)
+           END OF CONDITIONAL
+           WHENEVER .SW. 2, TRANSFER TO QUIT
+           WHENEVER .SW. 4, TRANSFER TO RQUST
+CARDON     FF = SCANI.(C(14),CARD)
+           ERR.(C(14)...C(1),ONOFRT,ISCONT)
+ISCONT     WHENEVER FF .E. $ CLOSE$, TRANSFER TO RQUST
+           WHENEVER FF .E. $  STOP$
+CRDEOF     STPCHG.
+           UPDCHG.
+              ONLINE.(MSGXXX...MSGXXX(3))
+              ONLINE.(MSGXX1...MSGXX1(2))
+              ONLINE.(MSGXX2...MSGXX2(3))
+              VECTOR VALUES MSGXXX = $SWT 2 -UP- CONTINUE $
+              VECTOR VALUES MSGXX1 = $SWT 2 -DWN- QUIT$
+              VECTOR VALUES MSGXX2 = $SWT 4 -DWN- REQUEST FILES$
+              PAUSE NO. 70707
+              WHENEVER .SW. 4, TRANSFER TO RQUST
+              WHENEVER .SW. 2, TRANSFER TO QUIT
+              BSRA2.
+              TRANSFER TO CRD1
+           END OF CONDITIONAL
+           WHENEVER FF .E. $     C$
+                WHENEVER CT .E. 0, TRANSFER TO NXTNAM
+                TRANSFER TO CARD
+           END OF CONDITIONAL
+WHATI      THROUGH WHATI, FOR I = 1,1,I .G. CTL .OR. FF .E. CTL(I)
+           WHENEVER I .G. CTL, TRANSFER TO ER7
+           CT = 0
+           PROB = ADJPRB.( SCAN.(ER7),ER7)
+           PROG = SCAN.(ER7)
+           WHENEVER PROG .A. 77K .G. 12K
+              PROG = LJUST.(PROG)
+           OTHERWISE
+              WHENEVER PROG .A. 777777777700K .E. $ 32760$,
+          1   PROG = (8-(PROG .A. 7K)) .V. $CMFL00$
+           END OF CONDITIONAL
+           STPCHG.
+           CHARGE.(PROB,PROG)
+           CHARG1.(CTLCHG(I))
+           WHENEVER FF .E. $UPDMFD$, TRANSFER TO CNTRL1
+           ATTACH.(PROB,PROG,ER10,ERCOD)
+           PROB1 = PROB
+           PROG1 = PROG
+           WHENEVER FF .E. $ PRINT$ .OR. FF .E. $PRNDEL$,
+          1   NPRINT.(EJECT...EJECT)
+           GETTIM.(DATE,TIME)
+NXTNAM     FNAM1 = SCAN.(CARD)
+           FNAM2 = SCAN.(ER7)
+          R
+          R...GO TO CONTROL FUNCTION
+CNTRL1     SUCESS= CTLF(I).
+           UPDATE.
+           STPCH1.
+           WHENEVER FF .E. $ INPUT$, TRANSFER TO CARD
+           TRANSFER TO NXTNAM
+          R
+QUIT       ERR.(MSGEND...MSGEND(3),ONOFRT,THRU)
+              VECTOR VALUES MSGEND = $FINISHED INPUT EDIT.$
+THRU       STPCHG.
+           UPDCHG.
+           ATTACH.(DSKEDT,FILE,ER11,ERCOD)
+           FNAM2 = FILE
+           PROB = $$
+           PROG = $$
+           PROB1 = $$
+           PROG1 = $$
+           FSTATE.(CRYMAP,FILE,A(8)...8,CHKCAR)
+           WHENEVER A(6) .NE. 1,
+          1CLOSE.(CRYMAP,FILE,ER11,ERCOD)
+THRU1         BPNCHI.(2201K)
+           BPUNCH.(STOPCD...STOPCD(13))
+           BPUNCH.(STOPCD(20)...STOPCD(7))
+              V'S STOPCD(7) = $$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$
+              V'S STOPCD = $STOP  -END OF CARRY TAPE$,$$,$$,$$
+              VECTOR VALUES STOPCD(20) = $CLOSE$
+              BINEOF.(2201K)
+              BINEOF.(2201K)
+           RUNCRY.
+           NPRINT.(EJECT...EJECT)
+           NPRINT.(CRYMSG...CRYMSG(5))
+              V'S CRYMSG = $ **TABLE OF CONTENTS OF CARRY TAPE.$
+           FNAM1 = CRYMAP
+           PRNT.
+           DELFIL.(CRYMAP,FILE,THRU2)
+THRU2      NPRINT.(EJECT...EJECT)
+           NPRINT.(REQUES...REQUES(3))
+              VECTOR VALUES REQUES = $ **REQUESTS PROCESSED$
+           FNAM1 = STAT
+           CLOSE.(STAT,FILE,THRU4)
+THRU4      PRNT.
+           DELFIL.(STAT,FILE,THRU3)
+THRU3      PRNEOF.
+           CLOSE.($M.F.D.$,$(FILE)$,NX1)
+NX1        WHENEVER B4SWT .NE. 0
+              PNCEOF.
+              BPNCHI.(2202K)
+              BINEOF.(2202K)
+              BINEOF.(2202K)
+              RUNCRY.
+           END OF CONDITIONAL
+           WHENEVER .SW. 3
+              ONLINE.(RES3...RES3(1))
+                 VECTOR VALUES RES3 = $RESET SWT 3.$
+              PAUSE NO. 10
+           END OF CONDITIONAL
+           CARSWT = 0
+          R
+          R     FINISH OFF ASCII REQUESTS, IF ANY
+          R
+           EXIT.
+          R
+CHKCAR     WHENEVER CARSWT .E. 77777K, TRANSFER TO THRU1
+           TRANSFER TO THRU2
+RQUST      ONLINE.(TTAP...TTAP(6))
+           V'S TTAP = $AM STARTING REQUEST FILES. RESET SWT 4.$
+           BSRA2.
+           PAUSE NO. 3
+           TRANSFER TO RQST
+          R
+          R...ERROR RETURNS
+          R
+ER1        MSG1(4) = PROB
+           MSG1(5) = PROG
+           ERR.(MSG1...MSG1(5),ONOFRT,EOF)
+              VECTOR VALUES MSG1 = $CAN'T PROCESS RQUEST FILES$
+ER3        MSG3(5) = PROB
+           MSG3(6) = PROG
+           ERR.(MSG3...MSG3(6),ONOFRT,EOF)
+              VECTOR VALUES MSG3 = $ERR IN READING RQUEST FILES$
+ER4        ERR.(MSG4...MSG4(3),ONOFRT,READ)
+              VECTOR VALUES MSG4 = $ILLEGAL RQUEST FORMAT$
+ER5        ERR.(MSG5...MSG5(4), ONOFRT,READ)
+              VECTOR VALUES MSG5 = $NOT LEGAL FROM RQUEST FILES$
+ER6        ERR.(MSG6...MSG6(3),ONOFRT,READ)
+              VECTOR VALUES MSG6 = $ILLEGAL CONTROL WORD$
+ER7        CT = 7777K
+           ERR.(MSG7...MSG7(3),ONOFRT,ERRTST)
+              VECTOR VALUES MSG7 = $ILLEGAL CARD FORMAT$
+ER8        ERR.(MSG8...MSG8(3),ONOFRT,CARDON)
+              VECTOR VALUES MSG8 = $UNRECOVERED ERR ON A2$
+ER9        ERR.(MSG9...MSG9(3),ONOFRT,SCMFD)
+              VECTOR VALUES MSG9 = $CAN'T DELETE RQUEST FILE$
+ER10       ERR.(MSG10...MSG10(2), ONOFRT,ERRTST)
+              VECTOR VALUES MSG10 = $USER NOT IN MFD$
+ER11       ERR.(MSG11...MSG11(5),ONOFRT,THRU1)
+              VECTOR VALUES MSG11 = $CARRY TABLE OF CONTENTS TROUBLE$
+ER12       ERR.(MSG12...MSG12(3),ONOFRT,SCMFD)
+              VECTOR VALUES MSG12 = $CAN'T CLOSE RQUEST FILE$
+ER13       ONLINE.(MSG13...MSG13(7))
+              V'S MSG13 = $CAN'T OPEN STATISTICS FILE. RERUN OR SALVAG.$
+           CLOSE.(STAT,FILE,THRU3)
+           TRANSFER TO ALRDY1
+ER14       ERR.(MSG14...MSG14(2),ONOFRT,SCMFD)
+              VECTOR VALUES MSG14 = $NO DAEMON REQUESTS$
+ERRTST     WHENEVER FF .NE. $ INPUT$, TRANSFER TO CARD
+ERRTT      TAPE.(C(14)...C(13),ERRTT,CARD)
+           TRANSFER TO ERRTT
+          R
+          R...PROGRAM DATA
+          R
+           DIMENSION A(9), BUFFR(470),BUFT(432)
+           VECTOR VALUES ERCOD = 0
+           VECTOR VALUES DAEPRB = $ C0056$
+           VECTOR VALUES DAEPRG = $ 99999$
+           VECTOR VALUES B4SWT = 0
+           VECTOR VALUES PRNSWT = 0
+           VECTOR VALUES STAT = $STATIS$
+           VECTOR VALUES FF = 0
+           VECTOR VALUES T = 0
+           VECTOR VALUES EJECT = $1$
+           VECTOR VALUES OUT = $OUTPUT$
+           VECTOR VALUES RQU = $RQUEST$
+           V'S CTL = 17,$ PRINT$,$DPUNCH$,$BPUNCH$, $DELETE$, $7PUNCH$,
+          1 $SSPRNT$,$SSPRDL$,
+          1 $ INPUT$, $UPDMFD$, $PRNDEL$, $DPUDEL$, $BPUDEL$, $7PUDEL$
+          1 ,$ CARRY$, $  LINK$, $CHFILE$,$UNLINK$
+           V'S CTLF(1) = PRNT., DPNCH., BPNCH., DLETE., PNCH7.,
+          1 SSPRNT.,SSPRDL.,
+          1 INPUT., ADDMFD., PRNDL., DPUDL., BPUDL., PU7DL.
+          1 ,CARRY., LNK., CHNGE., NLINK.
+           VECTOR VALUES CTLCHG(1) = 2,4,5,0,3,2,2,1,0,2,4,5,3,6,0,0,0
+           END OF PROGRAM

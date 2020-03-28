@@ -1,0 +1,131 @@
+          R 7PUNCH SUBROUTINE
+           EXTERNAL FUNCTION
+           ENTRY TO PU7DL.
+           DLTSWT = 77777K
+           TRANSFER TO PNCH
+           ENTRY TO PNCH7.
+           DLTSWT = 0
+PNCH       BPNCHI.(2202K)
+           FSTATE.(FNAM1,FNAM2,T(8)...8,ER41)
+           WHENEVER T(7) .A. 20K .NE. 0 .AND. PRIVIL .E. 0, T'O ER45
+             L(9) = PROB
+             L(8) = PROG
+             L(6) = FNAM1
+             L(5) = FNAM2
+             L(7) = DATE
+             L(4) = TIME
+             L(3) = 777777777777K
+             FLIP1.(L(9))
+             L(10) = $7PUNCH$
+           L(7) = PROB1
+             L(6) = PROG1
+             L(5) = FNAM1
+             L(4) = FNAM2
+             L(3) = $$
+             L(2) = DATE
+             L(1) = TIME
+             BPUNCH.(L(10)...L(1))
+           BPNCHI.(2224K)
+BEGIN      EOFCT = 432
+           J = 864
+           K = 432
+           OPEN.($R$,FNAM1,FNAM2,MZE,MZE,ER41,ERCOD)
+           T(1) =0
+           RDFILE.(FNAM1,FNAM2,0,BUF(K)...432,EOF,EOFCT,ER42,ERCOD)
+           T(1) =7
+READLP     RDFILE.(FNAM1, FNAM2, 0, BUF(J)...432, EOF, EOFCT,ER42,ERCOD)
+           P7CARD.(BUF(K),432,0)
+           WHENEVER K .G. 432
+               K = 432
+               J = 864
+               TRANSFER TO READLP
+           OTHERWISE
+               K = 864
+               J = 432
+               TRANSFER TO READLP
+           END OF CONDITIONAL
+EOF        FCHECK.(FNAM1,FNAM2,EOF1,ER42,ERCOD)
+           TRANSFER TO EOF
+EOF1       WHENEVER T(1) .NE. 0
+              P7CARD.(BUF(K),432,0)
+           OTHERWISE
+              J = 432
+           END OF CONDITIONAL
+           P7CARD.(BUF(J),EOFCT,7)
+           BINEOF.(2224K)
+           CLOSE.(FNAM1,FNAM2,ER47,ERCOD)
+           WHENEVER DLTSWT .E. 77777K
+              WHENEVER T(7) .A. 120K .NE. 0,TRANSFER TO ER48
+              WHENEVER (T(7).RS.35) .NE. 0, TRANSFER TO ER49
+            CHFILE.(FNAM1,FNAM2,TEMP,MZE,MZE,ER46,ERCOD)
+           END OF CONDITIONAL
+XXRTN      FUNCTION RETURN 1
+          R
+          R   CARRY ROUTINE
+           ENTRY TO CARRY.
+           FSTATE.(FNAM1,FNAM2,T(8)...8,ER41)
+           WHENEVER T(7) .A. 20K .NE. 0 .AND. PRIVIL .E. 0,T'O ER45
+           DLTSWT = 0
+           CARSWT = 77777K
+           BPNCHI.(2201K)
+           PB = PROB
+           PG = PROG
+           F1 = FNAM1
+           F2 = FNAM2
+           PB = SCAN.(MOVINP)
+           PG = SCAN.(ER43)
+           F1 = SCAN.(MOVINP)
+           F2 = SCAN.(ER43)
+MOVINP     INP(13) = PB
+           INP(11) = PG
+           INP(9) = F1
+           INP(7) = F2
+           WHENEVER TRASWT .NE. 0
+           BINREW.
+              ATTACH.(DSKEDT,FILE)
+              FSTATE.(CRYMAP,FILE,TBUF(8)...8,OPNN)
+              DELFIL.(CRYMAP,FILE,OPNN)
+OPNN       OPEN.($W$,CRYMAP,FILE,MZE,MZE,ER44,ERCOD)
+              BUFFER.(CRYMAP,FILE,TBUF(432)...432,ER44,ERCOD)
+              ATTACH.(PROB,PROG)
+              TRASWT = 0
+           END OF CONDITIONAL
+           WRFILE.(CRYMAP,FILE,0,INP(14)...14,ER44,ERCOD)
+           BPUNCH.(INP(14)...INP(1))
+           BPNCHI.(2221K)
+DELAY      FCHECK.(CRYMAP,FILE,BEGIN,ER44,ERCOD)
+           TRANSFER TO DELAY
+ER41       ERR.(MSG41...MSG41(2), OFRT, XRTN)
+               VECTOR VALUES MSG41 = $NO FILE FOUND$
+ER42       ERR.(MSG42...MSG42(4),ONOFRT,RTN)
+              VECTOR VALUES MSG42 = $ERR READING FILE FOR 7PUNCH$
+ER43       ERR.(MSG43...MSG43(3),ONOFRT,XRTN)
+              VECTOR VALUES MSG43 = $ILLEGAL REQUEST FORMAT$
+ER44       ERR.(MSG44...MSG44(5),ONRT,BEGIN)
+              VECTOR VALUES MSG44=$TROUBLE WITH CARRY TABLE OF CONTENTS$
+ER45       ERR.(MSG45...MSG45(6),ONOFRT,XXRTN)
+              VECTOR VALUES MSG45 = $CAN'T OUTPUT A PRIVATE FILE.$
+ER46       ERR.(MSG46...MSG46(4),ONOFRT,XXRTN)
+              VECTOR VALUES MSG46 = $CAN'T CHANGE FILE TO TEMPORARY.$
+ER47       ERR.(MSG47...MSG47(2),ONOFRT,XXRTN)
+              VECTOR VALUES MSG47 = $CAN'T CLOSE FILE.$
+ER48       ERR.(MSG48...MSG48(4),OFRT,XXRTN)
+              VECTOR VALUES MSG48 = $CAN'T DELETE PROTECTED FILE$
+ER49       ERR.(MSG49...MSG49(3),OFRT,XXRTN)
+              VECTOR VALUES MSG49 = $LINKED FILE NOT DELETED$
+RTN        CLOSE.(FNAM1,FNAM2,XRTN)
+           BINEOF.(2224K)
+XRTN        FUNCTION RETURN 0
+          R
+           DIMENSION TBUF(432),T(14), L(11)
+           VECTOR VALUES INP(14) = $INPUT,$
+           VECTOR VALUES INP(12) = $$
+           VECTOR VALUES INP(1) = $$,$$,$$,$$,$$,$$,$$,$$,$$,$$
+           VECTOR VALUES TEMP = 1
+           VECTOR VALUES J = 864
+           VECTOR VALUES K = 432
+           VECTOR VALUES N = 0
+           VECTOR VALUES TRASWT = 777K
+           VECTOR VALUES DLTSWT = 0
+           INSERT FILE COMDSK
+           END OF FUNCTION

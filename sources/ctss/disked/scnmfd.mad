@@ -1,0 +1,90 @@
+          R...PROGRAM TO SCAN THE MFD FILE AND RETURN USERS IN ORDER.
+          R
+           EXTERNAL FUNCTION (PB, PG, END)
+           ENTRY TO SCNMFD.
+          R
+           INSERT FILE COMDSK
+           WHENEVER  NEWSW
+                ATTACH.(MFD,FILE,ER10)
+                 CLOSE.(MFD,FILE,OPNMFD)
+OPNMFD          OPEN.( $R$, MFD, FILE, MZE,MZE,ER10,ERCOD)
+                NEWSW = 0B
+              EOFSWT = 0
+                 EOFCT = 432
+                M = 2
+              J = 432
+              K = 864
+              FLAG = 10
+              RDFILE.(MFD,FILE,0,BUFFR(J)...432,EOF1,EOFCT,ER11,ERCOD)
+              FLAG = 15
+              RDFILE.(MFD,FILE,0,BUFFR(K)...432,EOF1,EOFCT,ER11,ERCOD)
+              FLAG = 20
+           END OF CONDITIONAL
+          R
+READMD     READBF.
+           PB = BUFFR(J-M)
+           READBF.
+           PG = BUFFR(J-M)
+           THROUGH FLIP, FOR I = 1,1, I .G. 5
+FLIP       READBF.
+           WHENEVER PG .E. 0 .AND. PB .E. 0, TRANSFER TO READMD
+           WHENEVER PG .E. $(FILE)$, TRANSFER TO READMD
+           FUNCTION RETURN 1
+          R
+EOF1       CLOSE.(MFD,FILE,ER12,ERCOD)
+           EOFSWT = 77777K
+           WHENEVER FLAG .E. 10,TRANSFER TO READMD
+           EOFTMP = EOFCT
+           EOFCT = 432
+           WHENEVER  FLAG .E. 15,TRANSFER TO READMD
+           TRANSFER TO RDXT
+EOF3       WHENEVER FLAG .E. 10,TRANSFER TO EOF
+           EOFCT = EOFTMP
+           FLAG = 10
+           TRANSFER TO RDXT
+EOF        NEWSW = 1B
+           TRANSFER TO END
+          R
+          R... ERROR RETURN
+          R
+ER10       ERR.(MSG10...MSG10(2),ONOFRT,NXTRT)
+                VECTOR VALUES MSG10 = $CAN'T PROCESS MFD$
+NXTRT      FUNCTION RETURN 0
+ER11       ERR.(MSG11...MSG11(2),ONOFRT,NXTRT)
+                VECTOR VALUES MSG11 = $ERROR READING MFD$
+ER12       ERR.(MSG12...MSG12(2),ONOFRT,NXTRT)
+              VECTOR VALUES MSG12 = $CAN'T CLOSE M.F.D.$
+          R...
+          R....
+           INTERNAL FUNCTION
+           ENTRY TO READBF.
+           M = M+1
+           WHENEVER M .GE. EOFCT
+              M = 0
+              WHENEVER K .G. 433
+                 K = 432
+                 J = 864
+              OTHERWISE
+                 K = 864
+                 J  = 432
+              END OF CONDITIONAL
+               WHENEVER EOFSWT .NE. 0, TRANSFER TO EOF3
+              RDFILE.(MFD,FILE,0,BUFFR(K)...432,EOF1,EOFCT,ER11,ERCOD)
+           END OF CONDITIONAL
+RDXT       FUNCTION RETURN
+           END OF FUNCTION
+          R
+          R...COMPILATION INFO.
+          R
+           VECTOR VALUES NEWSW = 1B
+           VECTOR VALUES EOFSWT = 0
+           VECTOR VALUES FLAG = 0
+           VECTOR VALUES EOFTMP = 0
+           VECTOR VALUES MFD = $M.F.D.$
+           VECTOR VALUES FILE = $(FILE)$
+           DIMENSION BUFFR(864)
+           STATEMENT LABEL END
+           NORMAL MODE IS INTEGER
+           BOOLEAN NEWSW
+          R
+           END OF FUNCTION

@@ -1,0 +1,420 @@
+          R...FUNCTION TO PRINT OR PUNCH A BCD FILE
+           EXTERNAL FUNCTION
+           ENTRY TO PRNDL.
+           DLTSWT = 1B
+           TRANSFER TO PRNT1
+           ENTRY TO DPUDL.
+           DLTSWT = 1B
+           TRANSFER TO DPNCH1
+           ENTRY TO SSPRNT.
+             DLTSWT = 0B
+             SS = 1B
+             TRANSFER TO PRNT2
+           ENTRY TO SSPRDL.
+             DLTSWT = 1B
+             SS = 1B
+             TRANSFER TO PRNT2
+           ENTRY TO PRNT.
+           DLTSWT = 0B
+PRNT1      SS = 0B
+PRNT2         PRINTS = 1B
+              WMAX = 22
+           NPRINT.(ASTERS(22)...ASTERS(1))
+           TITLE(14) = PROB
+           TITLE(12) = PROG
+           TITLE(10) = FNAM1
+           TITLE(8) = FNAM2
+           TITLE(6) = PROB1
+           TITLE(4) = PROG1
+           TITLE(2) = DATE
+           TITLE = TIME
+           VECTOR VALUES TITLE = $$,$$,$$,$$
+              V'S TITLE(4) = $$,$$,$$,$ FOR $,$$,$$,$$,$$,$$,$$,$$,$$
+           NPRINT.(TITLE(15)...TITLE)
+           TRANSFER TO PRPU
+          R
+           ENTRY TO DPNCH.
+           DLTSWT = 0B
+DPNCH1         PRINTS = 0B
+               SS = 0B
+           SS = 0B
+           B4SWT = 77777K
+              WMAX = 14
+             L(9) = PROB
+             L(8) = PROG
+             L(6) = FNAM1
+             L(5) = FNAM2
+             L(7) = DATE
+             L(4) = TIME
+             L(3) = 777777777777K
+             FLIP1.(L(9))
+             L(10) = $DPUNCH$
+             L(7) = PROB1
+             L(6) = PROG1
+             L(5) = FNAM1
+             L(4) = FNAM2
+             L(3) = $$
+             L(2) = DATE
+             L(1) = TIME
+             BPNCHI.(2202K)
+             BPUNCH.(L(10)...L(1))
+PRPU       J = 432
+           K = 864
+           EOFCT = 432
+           M= 0
+           EOFSWT = 0
+           TRSW = 0B
+           GW1 = 15
+           GW2 = 14
+           L(15) = $$
+           WC = 14
+           FSTATE.(FNAM1,FNAM2,T(8)...8,ER34)
+           T(1) = 10
+           WHENEVER T(7) .A. 20K .NE. 0 .AND. PRIVIL .E. 0, T'O ER35
+           OPEN.($R$, FNAM1,FNAM2,MZE,MZE,ER34,ERCOD)
+           RDFILE.(FNAM1,FNAM2,0,BUF(J)...432,EOF,EOFCT,ER30,ERCOD)
+           T(1) = 15
+           RDFILE.(FNAM1,FNAM2,0,BUF(K)...432,EOF,EOFCT,ER30,ERCOD)
+           T(1) = 20
+FINI       MARK = BUF(J) .A. 777777K6
+           WHENEVER MARK .E. 777777K6, TRANSFER TO PRL
+          R
+          R...HERE TO PRINT OR PUNCH CARD IMAGE FILES
+DEBLCK     THROUGH BLKLP, FOR N = 1,1, N .G. 14
+              L(15-N) = BUF(J-M)
+BLKLP         READBF.
+           WHENEVER PRINTS
+              NPRINT.(L(15)...L(1))
+           OTHERWISE
+              DPUNCH.(L(14)...L(1))
+           END OF CONDITIONAL
+           TRANSFER TO DEBLCK
+EOF        CLOSE.(FNAM1,FNAM2,ER30,ERCOD)
+           EOFSWT = 77K
+           WHENEVER T(1) .E. 10,TRANSFER TO FINI
+           EOFTMP = EOFCT
+           EOFCT = 432
+           WHENEVER T(1) .E. 15, TRANSFER TO FINI
+           TRANSFER TO RDXT
+EOF3       WHENEVER T(1) .E. 10, TRANSFER TO EOF2
+           EOFCT = EOFTMP
+           T(1) = 10
+           TRANSFER TO RDXT
+EOF2       WHENEVER FLAG .E. 7
+              END = UNPACK.(LINE,N,CARD,132)
+              END = END - 1
+              WHENEVER END .G. 132,
+          1      ONLINE.(MSG31...MSG31(3))
+              COUNT = COUNT + 10
+              DETAB(0).
+           PACKFP.(CARD,L,END,GW2)
+              WHENEVER PRINTS
+                 WHENEVER TRSW,NPRINT.(TRUN...TRUN(4))
+              END OF CONDITIONAL
+           OTHERWISE
+             GW1 = 15
+             GW2 = 14
+           END OF CONDITIONAL
+           FLAG = 0
+           WHENEVER PRINTS
+              WHENEVER GW1 .NE. 22, WC = 15
+              NPRINT.(L(GW1)...L(GW1-WC+1))
+              NPRINT.(ASTERS(22)...ASTERS(1))
+              TRANSFER TO EOF1
+           OTHERWISE
+              DPUNCH.(L(GW2)...L(1))
+              PNCEOF.
+           END OF CONDITIONAL
+EOF1       WHENEVER DLTSWT
+              WHENEVER T(7) .L. 0, TRANSFER TO ER39
+              WHENEVER T(7) .A. 120K .NE. 0, TRANSFER TO ER40
+              WHENEVER (T(7).RS.35) .NE. 0, TRANSFER TO ER39
+               CHFILE.(FNAM1,FNAM2,1,MZE,MZE,ER33,ERCOD)
+           END OF CONDITIONAL
+           FUNCTION RETURN 1
+          R
+          R...HERE TO PRINT OR PUNCH LINE-MARKED FILES
+PRL        GETFNT.(FNAM2)
+           INTERNAL FUNCTION (ARGUME)
+           ENTRY TO GETFNT.
+           SR = 0B
+           L(15) = $$
+           SSS = 0
+           WHENEVER SS, SSS = 1
+           WHENEVER ARGUME .E. $RUNCOM$
+              SSS = 1
+              GW1 = 22
+              GW2 = 22
+              DETAB = OTHER.
+           OR WHENEVER ARGUME .E. $   MAD$
+              DETAB = MAD.
+              SR = 1B
+              GW1 = 15
+              GW2 = 14
+           OR WHENEVER ARGUME .E. $   FAP$ .OR. ARGUME .E. $   TAP$
+              DETAB = FAP.
+              SR = 1B
+              GW1 = 15
+              GW2 = 14
+           OR WHENEVER ARGUME .E. $ ALGOL$
+              GW1 = 22
+              GW2 = 22
+              DETAB = ALGOL.
+           OR WHENEVER ARGUME .E. $  LISP$ .OR. ARGUME .E. $LSPOUT$
+              GW1 = 22
+              GW2 = 22
+              DETAB = LISP.
+           OR WHENEVER ARGUME .E. $SCRIPT$
+              GW1 = 22
+              GW2 = 22
+              DETAB = SCRIPT.
+           OTHERWISE
+              GW1 = 22
+              GW2 = 22
+              DETAB = OTHER.
+           END OF CONDITIONAL
+           FUNCTION RETURN
+           END OF FUNCTION
+           ACNT = 0
+           ARCHIV = 0B
+           THROUGH NEXT, FOR JI = J,-1,JI.E.J-4
+NEXT       WHENEVER BUF(JI).NE.777777K6,TRANSFER TO NARCH
+           WHENEVER BUF(J-4).E.777777000011K,ARCHIV=1B
+NARCH      CONTINUE
+           FLAG = 7
+           COUNT = 0
+NEWLIN     TRSW = 0B
+           CONTRL = 0B
+           END = READLN.(CARD,132)
+           COUNT = COUNT + 10
+           WHENEVER ARCHIV
+             ARCH.
+           OTHERWISE
+             DETAB(0).
+           END OF CONDITIONAL
+           PACKFP.(CARD,L,END,GW2)
+           WHENEVER PRINTS
+             WHENEVER CONTRL
+               GWT = GW1
+               GW1 = GW2
+             END OF CONDITIONAL
+              NPRINT.(L(GW1)...L(1))
+             WHENEVER CONTRL
+               GW1 = GWT
+             BLANK(14) = BLANK(1)
+             BLANK(15) = BLANK(1)
+             NPRINT.(BLANK(1)...BLANK(15))
+           END OF CONDITIONAL
+              WHENEVER TRSW, NPRINT.(TRUN...TRUN(4))
+                 VECTOR VALUES TRUN = $ **** THIS LINE WAS TRUNCATED.$
+           OTHERWISE
+              DPUNCH.(L(GW2)...L(1))
+           END OF CONDITIONAL
+           TRANSFER TO NEWLIN
+          R...
+          R...ROUTINES FOR XPANDING SQUASHED FILES
+           INTERNAL FUNCTION
+           ENTRY TO ARCH.
+GO         WHENEVER WC .E. 0
+             ACNT = ACNT+1
+             END = READLN.(CARD,132)
+             TRANSFER TO GO
+           OR WHENEVER WC .E. 9 .AND. ACNT .E. 4
+             COUNT = 0
+             ACNT = 0
+             LISP.
+             CARD(1) = 1
+             WHENEVER SS, CARD(1) = DASH
+             WHENEVER .NOT. PRINTS, CARD(1) = BLANK
+             CONTRL = 1B
+             BLANK(14) = BLANK(1)
+             BLANK(15) = BLANK(1)
+             GETFNT.(LINE(2))
+             FUNCTION RETURN
+           OR WHENEVER ACNT .G.0
+             THROUGH GORNK,FOR ACNT = ACNT,-1,ACNT.LE.0
+             WHENEVER SR
+               TEMP = DERBC.(COUNT)
+               COUNT = COUNT + 10
+               BLANK(14) = TEMP.RS.18.V.60606K7
+               BLANK(15) = TEMP.LS.24.V.60606060K
+              V'S BLANK(1) =$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$
+             OTHERWISE
+               BLANK(14) = BLANK(1)
+               BLANK(15) = BLANK(1)
+             END OF CONDITIONAL
+             NPRINT.(BLANK(1)...BLANK(15))
+GORNK        CONTINUE
+           END OF CONDITIONAL
+           DETAB(0).
+           FUNCTION RETURN
+           END OF FUNCTION
+          R...
+          R...
+           INTERNAL FUNCTION
+           ENTRY TO OTHER.
+           V'S OTHTAB=11,21,31,41,51,61,71,81,91,101,111,121,-0
+           END=UNTAB.(OTHTAB,0,CARD(0),CARD(SSS),END)
+           WHENEVER SSS .G. 0
+             END = END + SSS
+             WHENEVER END .G. 132, END = 132
+             THROUGH SSSLP, FOR Q = 1, 1, Q .G. SSS
+               CARD(Q) = BLANK
+SSSLP        CONTINUE
+           END OF CONDITIONAL
+           FUNCTION RETURN
+           END OF FUNCTION
+          R...
+          R.....
+           INTERNAL FUNCTION
+           ENTRY TO FAP.
+           VECTOR VALUES FAPTAB=8,16,30,34,38,42,46,55,-0
+           END=UNTAB.(FAPTAB,0,CARD(0),CARD(0),END)
+           END=SERIAL.(CARD(0),COUNT,END,TRSW)
+           FUNCTION RETURN
+           END OF FUNCTION
+          R....
+          R....
+           INTERNAL FUNCTION
+           ENTRY TO ALGOL.
+           VECTOR VALUES ALGTAB=11,16,21,26,31,36,41,46,51,56,61,66,-0
+           END=UNTAB.(ALGTAB,0,CARD(0),CARD(1),END)+1
+           CARD(1)=BLANK
+           FUNCTION RETURN
+           END OF FUNCTION
+          R....
+          R....
+           INTERNAL FUNCTION
+           ENTRY TO LISP.
+           ENTRY TO SCRIPT.
+           VECTOR VALUES LSPTAB=-0
+           WHENEVER END .G. 131, END = 131
+           END=UNTAB.(LSPTAB,0,CARD(0),CARD(1),END)+1
+           CARD(1)=BLANK
+           FUNCTION RETURN
+           END OF FUNCTION
+          R....
+          R....
+           INTERNAL FUNCTION
+           ENTRY TO MAD.
+           VECTOR VALUES MADTAB=12,17,22,27,32,37,42,47,55,-0
+           VECTOR VALUES MDBKSP=12
+           END=UNTAB.(MADTAB,MDBKSP,CARD(0),CARD(0),END)
+           END=SERIAL.(CARD(0),COUNT,END,TRSW)
+           FUNCTION RETURN
+           END OF FUNCTION
+          R.....
+          R.....
+           INTERNAL FUNCTION(CARDTP,LIMIT)
+           ENTRY TO READLN.
+           MARK = BUF(J-M) .A. 777777K6
+           WHENEVER MARK .NE. 777777K6, TRANSFER TO XER
+RDCONT     WC = BUF(J-M) .A. 77777K
+           WHENEVER WC .E. 0, LINE(1) = $$
+           READBF.
+           THROUGH RDLP1, FOR N = 1,1, N .G. WC .OR. N .G. 150
+              LINE(N) = BUF(J-M)
+RDLP1         READBF.
+           N = N-1
+           ENDTP = UNPACK.(LINE,N,CARDTP,LIMIT)
+           ENDTP = ENDTP - 1
+              WHENEVER ENDTP .G. LIMIT
+                 LNSCAN.
+                 TRANSFER TO ER37
+              END OF CONDITIONAL
+RDLP3      FUNCTION RETURN ENDTP
+           END OF FUNCTION
+ER30       ERR.(MSG30...MSG30(2),ONOFRT,FAILED)
+              VECTOR VALUES MSG30 = $ERR READING FILE$
+              VECTOR VALUES MSG31 = $ ******LINE IS TOO LONG$
+              VECTOR VALUES MSG32 = $ *****LINE-MARK ERROR$
+ER33       ERR.(MSG33...MSG33(2),OFRT,ERXT)
+              VECTOR VALUES MSG33 = $CAN'T DELETE FILE$
+ER34       ERR.(MSG34...MSG34( 2),ONOFRT,FLD1)
+              VECTOR VALUES MSG34 = $FILE NOT FOUND$
+ER35       ERR.(MSG35...MSG35(4),ONOFRT,FLD1)
+              VECTOR VALUES MSG35 = $CAN'T OUTPUT A PRIVATE FILE$
+ER36       ERR.(MSG36...MSG36(2),ONOFRT,FLD1)
+              VECTOR VALUES MSG36 = $CAN'T CLOSE FILE.$
+ER37       ERR.(MSG31...MSG31(3),OFRT,RDLP3)
+ER38       ERR.(MSG32...MSG32(3),OFRT,XER37)
+ER39       ERR.(MSG39...MSG39(3),OFRT,ERXT)
+              VECTOR VALUES MSG39 = $LINKED FILE NOT DELETED$
+ER40       ERR.(MSG40...MSG40(4),OFRT,ERXT)
+              VECTOR VALUES MSG40 = $CAN'T DELETE PROTECTED FILE.$
+XER        L(15) = $$
+           FLAG = 0
+           THROUGH GAZABE, FOR N = 1,1,N.G.14
+             L(15-N) = BUF(J-M)
+           READBF.
+           WHENEVER BUF(J-M).A.777777K6.E.777777K6
+             FLAG = 7
+             WHENEVER PRINTS
+               NPRINT.(L(15)...L(15-N))
+             OTHERWISE
+               DPUNCH.(L(14)...L(15-N))
+             END OF CONDITIONAL
+           WHENEVER N.NE.14,TRANSFER TOER38
+XER37        TRANSFER TO RDCONT
+           END OF CONDITIONAL
+GAZABE     CONTINUE
+           WHENEVER PRINTS
+           NPRINT.(L(15)...L(1))
+           OTHERWISE
+             DPUNCH.(L(14)...L(1))
+           END OF CONDITIONAL
+           TRANSFER TO XER
+FAILED     CLOSE.(FNAM1,FNAM2,ER36,ERCOD)
+FLD1       WHENEVER PRINTS
+           OTHERWISE
+              PNCEOF.
+           END OF CONDITIONAL
+ERXT       FUNCTION RETURN 0
+          R....
+          R....
+           INTERNAL FUNCTION
+           ENTRY TO LNSCAN.
+ RDNXT     READBF.
+           MARK = BUF(J-M) .A. 777777K6
+           WHENEVER MARK .NE. 777777K6, TRANSFER TO RDNXT
+           WC = BUF(J-M) .A. 77777K
+           FUNCTION RETURN
+           END OF FUNCTION
+           INTERNAL FUNCTION
+           ENTRY TO READBF.
+           M = M+1
+           WHENEVER M .GE. EOFCT
+              M = 0
+              WHENEVER K .G. 433
+                 K = 432
+                 J = 864
+              OTHERWISE
+                 K = 864
+                 J = 432
+              END OF CONDITIONAL
+              WHENEVER EOFSWT .NE. 0, TRANSFER TO EOF3
+              RDFILE.(FNAM1,FNAM2,0,BUF(K)...432,EOF,EOFCT,ER30,ERCOD)
+           END OF CONDITIONAL
+RDXT       FUNCTION RETURN
+           END OF FUNCTION
+          R
+          R...PROGRAM DATA
+           BOOLEAN CONTRL,SR,PRINTS,TRSW,SS,ARCHIV,DLTSWT
+           VECTOR VALUES EOFSWT = 0
+           VECTOR VALUES FLAG = 0
+           DIMENSION L(30),T(8),CARD(150),LINE(150)
+           FUNCTION NAME DETAB
+           VECTOR VALUES NULL = 57K
+           VECTOR VALUES SEVENS = 77K
+           VECTOR VALUES BCKSPS = 35K
+           VECTOR VALUES TAB = 72K
+           VECTOR VALUES BLANK = 60K
+           VECTOR VALUES DASH = 40K
+           VECTOR VALUES M = 0
+           VECTOR VALUES ASTERS    = $******************************$
+           VECTOR VALUES ASTERS(5) = $******************************$
+           VECTOR VALUES ASTERS(10)= $******************************$
+           VECTOR VALUES ASTERS(15)= $******************************$
+           VECTOR VALUES ASTERS(20)= $************1*****$
+           INSERT FILE COMDSK
+           END OF FUNCTION

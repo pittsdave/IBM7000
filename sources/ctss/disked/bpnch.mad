@@ -1,0 +1,111 @@
+          R...PROGRAM TO PUNCH BINARY FILES (28 WORDS)
+          R
+           EXTERNAL FUNCTION
+           ENTRY TO BPUDL.
+           DLTSWT = 77777K
+           TRANSFER TO BPN
+           ENTRY TO BPNCH.
+           DLTSWT = 0
+          R
+BPN        FSTATE.(FNAM1,FNAM2,T(8)...8,ER51)
+           B4SWT = 77777K
+           WHENEVER T(7) .A. 20K .NE. 0 .AND. PRIVIL .E. 0,T'O ER54
+           OPEN.( $R$,FNAM1, FNAM2, 0, 2, ER51,ERCOD )
+          R
+           J = 432
+           K= 864
+           M = -1
+           EOFCT = 432
+           EOFSWT = 0
+           FLAG = 10
+           BPNCHI.(2202K)
+             L(9) = PROB
+             L(8) = PROG
+             L(6) = FNAM1
+             L(5) = FNAM2
+             L(7) = DATE
+             L(4) = TIME
+             L(3) = 777777777777K
+           FLIP1.(L(9))
+             L(10) = $BPUNCH$
+           L(7) = PROB1
+           L(6) = PROG1
+           L(5) = FNAM1
+           L(4) = FNAM2
+           L(3) = $$
+           L(2) = DATE
+           L(1) = TIME
+             BPUNCH.(L(10)...L(1))
+           BPNCHI.(2224K)
+           RDFILE.(FNAM1,FNAM2,0,BUF(J)...432,EOF,EOFCT,ER52,ERCOD)
+           FLAG = 15
+           RDFILE.(FNAM1,FNAM2,0,BUF(K)...432,EOF,EOFCT,ER52,ERCOD)
+           FLAG = 20
+GLT1       THROUGH GLITCH, FOR II = 1,1, II .G. 28
+           READBF.
+GLITCH     L(II) = BUF(J-M)
+           BPUNCH.(L(1)...L(28))
+           TRANSFER TO GLT1
+EOF        CLOSE.(FNAM1,FNAM2,ER55,ERCOD)
+           EOFSWT = 77777K
+           WHENEVER FLAG .E. 10, TRANSFER TO GLT1
+           EOFTMP = EOFCT
+           EOFCT = 432
+           WHENEVER FLAG .E. 15, TRANSFER TO GLT1
+           TRANSFER TO RDXT
+EOF3       WHENEVER FLAG .E. 10, TRANSFER TO EOF1
+           EOFCT = EOFTMP
+           FLAG = 10
+           TRANSFER TO RDXT
+EOF1       WHENEVER II .LE. 28 .AND. II .G. 1,BPUNCH.(L(1)...L(II))
+           BINEOF.(2224K)
+           WHENEVER DLTSWT .E. 77777K
+              WHENEVER T(7) .A. 120K .NE. 0, TRANSFER TO ER56
+              WHENEVER T(7) .L. 0, TRANSFER TO ER57
+              WHENEVER (T(7).RS.35) .NE. 0, TRANSFER TO ER57
+                CHFILE.(FNAM1,FNAM2,1,MZE,MZE,ER53,ERCOD)
+           END OF CONDITIONAL
+RTN        FUNCTION RETURN 1
+          R....
+          R....
+           INTERNAL FUNCTION
+           ENTRY TO READBF.
+           M = M+1
+           WHENEVER M .GE. EOFCT
+              M = 0
+              WHENEVER K .G. 433
+                 K = 432
+                 J = 864
+              OTHERWISE
+                 K = 864
+                 J = 432
+              END OF CONDITIONAL
+              WHENEVER EOFSWT .NE. 0, TRANSFER TO EOF3
+              RDFILE.(FNAM1,FNAM2,0,BUF(K)...432,EOF,EOFCT,ER52,ERCOD)
+           END OF CONDITIONAL
+RDXT       FUNCTION RETURN
+           END OF FUNCTION
+ER51       ERR.(MSG51...MSG51(2),OFRT,ERRT)
+              VECTOR VALUES MSG51 = $FILE NOT FOUND$
+ER52       ERR.(MSG52...MSG52(4),ONOFRT,ERRT1)
+              VECTOR VALUES MSG52 = $ERR READING FILE FOR BPUNCH$
+ER53       ERR.(MSG53...MSG53(2),OFRT,ERRT)
+              VECTOR VALUES MSG53 = $CAN'T DELETE FILE$
+ER54       ERR.(MSG54...MSG54(4),ONOFRT,ERRT)
+              VECTOR VALUES MSG54 = $CAN'T OUTPUT A PRIVATE FILE$
+ER55       ERR.(MSG55...MSG55(2),ONOFRT,ERRT)
+              VECTOR VALUES MSG55 = $CAN'T CLOSE FILE$
+ER56       ERR.(MSG56...MSG56(4),OFRT,RTN)
+              VECTOR VALUES MSG56 = $CAN'T DELETE PROTECTED FILE.$
+ER57       ERR.(MSG57...MSG57(3),OFRT,RTN)
+              VECTOR VALUES MSG57 = $LINKED FILE NOT DELETED$
+ERRT1      CLOSE.(FNAM1,FNAM2,ER55,ERCOD)
+ERRT       BINEOF.(2224K)
+           FUNCTION RETURN 0
+           DIMENSION L(57),T(8)
+           INSERT FILE COMDSK
+           VECTOR VALUES DLTSWT = 0
+           VECTOR VALUES FLAG = 0
+           VECTOR VALUES EOFTMP = 0
+           VECTOR VALUES EOFSWT = 0
+           END OF FUNCTION

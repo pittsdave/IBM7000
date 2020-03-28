@@ -1,0 +1,46 @@
+          RPROGRAM TO SCAN THE MFD AND RETURN USERS IN ORDER
+          R  CROCKED FOR MININUM LENGTH SO THE STAND-ALONE
+          R    EDITORS CAN BE LOADED VIA FMS.  04/18/68
+          R
+           EXTERNAL FUNCTION (PB,PG,END)
+           ENTRY TO SCNMFD.
+          R
+           INSERT FILE COMDSK
+          R
+           WHENEVER NEWSW
+             ATTACH.(MFD,FILE,BAD)
+             CLOSE.(MFD,FILE,OPNMFD)
+OPNMFD       OPEN.($R$,MFD,FILE,-0,-0,BAD)
+             NEWSW=0B
+             RDFILE.(MFD,FILE,0,MFDENT(6)...3,EOF,-0,NOREAD)
+           END OF CONDITIONAL
+          R
+RDMFD      RDWAIT.(MFD,FILE,0,MFDENT(6)...7,EOF,-0,NOREAD)
+           PB=MFDENT(6)
+           PG=MFDENT(5)
+           WHENEVER PB.V.PG.E.0.OR.PG.E.FILE, TRANSFER TO RDMFD
+           FUNCTION RETURN 1
+          R
+EOF        NEWSW=1B
+           CLOSE.(MFD,FILE,NOCLOS)
+           TRANSFER TO END
+          R
+BAD        ERR.(MSG1...MSG1(2),ONOFRT,BADXIT)
+             VECTOR VALUES MSG1=$CAN'T PROCESS MFD$
+BADXIT     FUNCTION RETURN 0
+          R
+NOREAD     ERR.(MSG2...MSG2(2),ONOFRT,BADXIT)
+             VECTOR VALUES MSG2=$ERROR READING MFD$
+          R
+NOCLOS     ERR.(MSG3...MSG3(2),ONOFRT,BADXIT)
+             VECTOR VALUES MSG3=$CAN'T CLOSE MFD$
+          R
+           DIMENSION MFDENT(6)
+           VECTOR VALUES NEWSW=1B
+           VECTOR VALUES MFD=$M.F.D.$
+           VECTOR VALUES FILE=$(FILE)$
+           STATEMENT LABEL END
+           NORMAL MODE IS INTEGER
+           BOOLEAN NEWSW
+          R
+           END OF FUNCTION

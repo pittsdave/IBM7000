@@ -1,0 +1,16 @@
+          RPROGRAM TO ADJUST PROBNO TO FORM BANNNN
+           EXTERNAL FUNCTION (A,B)
+           ENTRY TO ADJPRB.
+           THROUGH ADJ, FOR K = 1,1, K .G. MM(2)
+           T = (A .A. M(K)) .RS. (36 - K*MM(1))
+           WHENEVER T .E. 0 .OR. T .E. $00000 $, TRANSFER TO ADJ
+           A = T .LS. 24 .V. (A .A. MM(K+1)) .V. MM
+           FUNCTION RETURN A
+ADJ        CONTINUE
+           TRANSFER TO B
+           NORMAL MODE IS INTEGER
+           STATEMENT LABEL B
+           VECTOR VALUES M = 0,2,77K8,77K6,77K4,77K2
+           VECTOR VALUES MM = 60K10,6,5,77777777K,777777K,7777K,77K
+           VECTOR VALUES T = 0
+           END OF FUNCTION
