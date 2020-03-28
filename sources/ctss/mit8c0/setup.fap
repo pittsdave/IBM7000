@@ -1,0 +1,344 @@
+* ......... TSS SETUP PROGRAM .......
+*
+* This initialization program was hacked from the CTSS main.
+* It is intended to set up "vigin" disk drives with the CTSS
+* environment.
+* Also, all the Terminal support (Channel E) has been stripped
+* to save space.
+*
+       LBL     SETUP
+       REM
+       EXTERN  RCLOCK,STCLOC,FIOERR,IOINIT,CHNGUS,USTAT,SETUSR
+       EXTERN  IFUNCT,SETRAP,SETAB,ATTACH,SCHEDL,CHANLI,CBINIT
+       EXTERN  INIT,EPRINT,LOGIN,CYCLE,SETUFL,GODOWN,KILL,NOTIM
+       REM
+       UNLIST
+       INSERT  MACRO
+       INSERT  EQU
+       INSERT  COMMON
+       LIST
+       REM
+HITRAP BOOL    61            HIGHEST CHANNEL INTERRUPT LOCATION
+       REM
+START  EQU     *                                                 DGPHACK
+       ENB     =0            ENTER HERE TO INITIALIZE TSS
+       AXT     HITRAP+1,4    ZERO OUT TRAP REGION
+       STZ     HITRAP+1,4    ..
+       TIX     *-1,4,1       ..
+       AXT     ENBWD-LOWCOM+1,4 ZERO OUT COMMON STORAGE
+       STZ     ENBWD+1,4     ..
+       TIX     *-1,4,1       ..
+       SLW     SYSNAM        SAVE SYSTEM NAME FROM LOADER
+*      HTR     *+1           PAUSE FOR OPERATOR
+       LMTM                  CTSS RUNS IN 7-TAG MODE
+       LFTM                  NO FLOATING POINT TRAP
+*      SLW     LOGIN         ..
+       SLW     LOGIN         ..                                  DGPHACK
+       AXT     INITN,4       INITIALIZE TRAP REGION AND COMMON STORAGE
+       CAL*    IWORD+INITN,4 ..
+       SLW*    IWORD+INITN+1,4 ..
+       TIX     *-2,4,2       ..
+       AXT     N-3,4         INITIALIZE RCODE VECTOR
+       CAL     FORCOD        .. FOR FOREGROUND
+       SLW     RCODE+N,4     ..
+       TIX     *-1,4,1       ..
+       SEB                   CLEAR MEMORY 'B'
+       AXT     -1,4          ..
+       STZ     -1,4          ..
+       TIX     *-1,4,1       ..
+       STZ     -1            ..
+       SEA                   RESET ECC TO MEMORY 'A'
+       REM
+       TSX     RCLOCK,4      READ TIME OF DAY FROM CHRONOLOG CLOCK
+       PZE     0             ..
+       TSX     STCLOC,4      START UP INTERVAL TIMER NOW
+       SCHEDL  =0,=0,=0      INITIALIZE SCHEDULING ALGORITHM
+       STL     ENBSW         INDICATE WE WILL BE ENABLED
+       ENB     ENBWD         ENABLE FOR ALL TRAPS
+*      CAL     FIOERR        PICK UP LOCATION OF DISK ERROR RETURN
+       CAL     FIOERV        PICK UP LOCATION OF DISK ERROR      DGPHACK
+       STA     *+2           .. T.V. ARRAY DESTROYED BY CBINIT
+       TSX     IOINIT,4      INITIALIZE DISK ROUTINES
+*      PAR     FIOERR        .. ERROR RETURN
+       PAR     FIOERV        .. ERROR RETURN                     DGPHACK
+       PAR     DATEYR        .. DATE
+       PAR     TIMNOW        .. TIME
+       PAR     ENBWD         .. COMMON ENABLE WORD
+       PAR     NOINIT        .. POSSIBLE ERROR
+       TSX     CHNGUS,4      SET TSS TO BE DISK USER
+       PAR     =1            .. USER NO. 1
+       TSX     USTAT,4       ASSIGN ACTIVE FILE STATUS TABLE
+       PAR     AFSTU1,,AFS1LN .. FOR TSS
+       PAR     Q1U1,,Q1U1LN  .. QUEUE FOR DEVICE 1
+       PAR     Q1U1,,0       .. DEVICE 2
+       PAR     Q3U1,,Q3U1LN  .. DEVICE 3
+*      CAL     IFUNCT        LOCATION OF SUPERVISOR INTERRUPT PROCEDURE
+       CAL     VFUNCT        LOCATION OF SUPERVISOR INTERRUPT    DGPHACK
+       STA     *+2           ..
+       TSX     SETRAP,4      ..
+*      PAR     IFUNCT        ..
+       PAR     VFUNCT        ..                                  DGPHACK
+       TSX     SETUSR,4      DEFINE USER OPTIONS FOR DISK ROUTINES
+       PAR     =1            .. USER NO. 1
+       PAR     TSRCOD        .. RESTRICTION CODE
+       PAR     =0            .. AUTHOR NUMBER
+       PAR     DMASK         .. PROTECTION LIMITS
+       PAR     =0            .. RELOCATION
+       PAR     =1            .. HIGHEST PRIORITY
+       SETAB   LA,LA,LA      SET MEMORY SWITCHES FOR MEMORY 'A'
+       CLA     =HCMFL01      USE THIS FOR SETUP
+       STO     CTSSID+1
+       TSX     ATTACH,4      SIGN TSS ONTO DISK
+       PAR     CTSSID        ..
+       PAR     CTSSID+1      ..
+       PAR     *+1           .. POSSIBLE ERROR
+       TSX     CHNGUS,4      SET BACKGROUND SYSTEM TO BE DISK USER
+       PAR     =2            .. USER NO. 2
+       TSX     USTAT,4       ASSIGN A.F.S.T. FOR BACKGROUND
+       PAR     AFSTU2,,AFS2LN .. FILE STATUS TABLE
+       PAR     Q1U2,,Q1U2LN  .. QUEUE FOR DEVICE 1
+       PAR     Q1U2,,0       .. DEVICE 2
+       PAR     Q3U2,,Q3U2LN  .. DEVICE 3
+       TSX     SETUSR,4      SET UP OPTIONS FOR BACKGROUND SYSTEM
+       PAR     =2            .. USER 2
+       PAR     RCODE         .. RESTRICTION CODE
+       PAR     =0            .. AUTHOR
+       PAR     PRIND         .. PROTECTION LIMITS
+       PAR     =0            .. RELOCATION
+       PAR     =2            .. SECOND HIGHEST PRIORITY
+       TSX     CHNGUS,4      RESTORE TSS AS DISK USER
+       PAR     =1            ..
+       TSX     SETUFL,4      GO DO THE SETUP.
+* All done
+       TSX     EPRINT,4      WE ARE DONE MESSAGE.
+       PZE     DONEMS,,5     ..
+       ENB     ENBWD         ENABLE FOR ALL TRAPS
+       STL     $DOWNSW
+       STZ     USROPT        INSURE OPTION BITS RESET FOR FMS
+       TSX     KILL,4        THIS GETS RID OF HIM ONE WAY OR ANOTHER
+       PAR     Q0,,1         ..
+       TRA     CYCLE         GO SHUT DOWN CLEANLY
+UTEMP  PZE     0
+       REM
+       REM
+NOINIT TSX     EPRINT,4      HERE ON ERROR INITIALIZING DISK ROUTINES
+       PZE     NOINCM,,5     .. PRINT ERROR MESSAGE
+DIE    HTR     *             .. AND STOP
+       REM
+* Messages
+NOINCM BCI     / DISK ERROR INITIALIZING TSS./
+DONEMS BCI     / DISK INITIALIZATION COMPLETE./
+*
+       REM
+IWORD  SYN     *             INITIALIZATION TABLE
+*      PZE     $STRTRP       .. SET UP FOR 'STR' TRAP
+       PZE     STRTRL        .. SET UP FOR 'STR' TRAP            DGPHACK
+       PZE     2             ..
+*      PZE     $DDTRAP       SET UP FOR DIRECT DATA TRAP
+       PZE     DDTRAL        SET UP FOR DIRECT DATA TRAP         DGPHACK
+       PZE     4             ..
+*      PZE     $CLKINT       SET UP FOR INTERVAL TIMER TRAP
+       PZE     CLKINL        SET UP FOR INTERVAL TIMER TRAP      DGPHACK
+       PZE     7             ..
+*      PZE     $FLPTRP       SET UP FOR FLOATING POINT TRAP
+       PZE     FLPTRL        SET UP FOR FLOATING POINT TRAP      DGPHACK
+       PZE     8             ..
+*      PZE     $PANIC        SET UP FOR PANIC DUMP PROCEDURE
+       PZE     PANICL        SET UP FOR PANIC DUMP PROCEDURE     DGPHACK
+       PZE     9             ..
+*      PZE     $ATRAP        SET UP FOR DATA CHANNEL TRAP FROM 'A'
+       PZE     ATRAPL        SET UP FOR DATA CHANNEL TRAP FROM 'ADGPHACK
+       PZE     11            ..
+*      PZE     $BTRAP        SET UP FOR DATA CHANNEL TRAP FROM 'B'
+       PZE     BTRAPL        SET UP FOR DATA CHANNEL TRAP FROM 'BDGPHACK
+       PZE     13            ..
+*      PZE     $DTRAP        SET UP FOR DATA CHANNEL TRAP FROM 'D'
+       PZE     DTRAPL        SET UP FOR DATA CHANNEL TRAP FROM 'DDGPHACK
+       PZE     17            ..
+*      PZE     $PTRAP        SET UP FOR PROTECTION TRAP
+       PZE     PTRAPL        SET UP FOR PROTECTION TRAP          DGPHACK
+       PZE     27            ..
+*      PZE     $COLD         SET UP FOR COLD START PROCEDURE
+       PZE     COLDL         SET UP FOR COLD START PROCEDURE     DGPHACK
+       PZE     28            ..
+*      PZE     =O3410037     SET UP COMMON ENABLE WORD
+       PZE     =O1410035     SET UP COMMON ENABLE WORD-DISABLE B-DGPHACK
+       PZE     ENBWD         ..
+       PZE     SYSID         SYSTEM FILE DIRECTORY NAME
+       PZE     CTSSID        ..
+       PZE     SYSID+1       ..
+       PZE     CTSSID+1      ..
+       PZE     TSFID         SYSTEM PUBLIC FILE NAME
+       PZE     TSSFID        ..
+       PZE     TSFID+1       ..
+       PZE     TSSFID+1      ..
+       PZE     RTSS          RESTRICTION CODE FOR TSS
+       PZE     TSRCOD        ..
+       PZE     RBACK         .. FOR BACKGROUND
+       PZE     RCODE         ..
+       PZE     RBKPRV        .. FOR PRIVILEGED BACKGROUND
+       PZE     BKRPRV        ..
+       PZE     RFIB          .. FOR FIB
+       PZE     RCODE+1       ..
+       PZE     RDAEM         .. FOR INCREMENTAL DUMPER
+       PZE     RCODE+2       ..
+       PZE     RDUMMY        .. FOR DUMMY USER (IDLE TIME)
+       PZE     RCODE+N       ..
+       PZE     RFOREG        .. FOR FOREGROUND
+       PZE     FORCOD        ..
+       PZE     =1            SET UP SCHEDL VARIABLES
+       PZE     MINLVL        ..
+       PZE     =8            ..
+       PZE     MAXLVL        ..
+       PZE     =3            ..
+       PZE     FULLVL        ..
+       PZE     =2            ..
+       PZE     EMPLVL        ..
+       PZE     =4096         ..
+       PZE     FULLEN        ..
+       PZE     =O377777777777 ..
+       PZE     QNTWAT        ..
+       PZE     =0            ..
+       PZE     LEVINC        ..
+       PZE     =V36/60*60*60 ..
+       PZE     INACTV        ..
+       PZE     =V36/60*60*2  ..
+       PZE     HANGUP        ..
+       PZE     =V36/N        SET UP USER NO. OF DUMMY USER
+       PZE     DUSER         ..
+       PZE     =30           SET UP QLOAD VARIABLES
+       PZE     MXUSRS        ..
+       PZE     =30           ..
+       PZE     MXUSRS+Q.MIN  ..
+       PZE     =V36/N-3      ..
+       PZE     MXUSRS+Q.MAX  ..
+       PZE     =30           ..
+       PZE     QUANTM        ..
+       PZE     =15           ..
+       PZE     QUANTM+Q.MIN  ..
+       PZE     =60           ..
+       PZE     QUANTM+Q.MAX  ..
+       PZE     =V36/60*60*5  ..
+       PZE     MXUSRS+Q.UPDT ..
+       PZE     =V36/60*60*5  ..
+       PZE     MXUSRS+Q.DNDT ..
+       PZE     =V36/60*60*5  ..
+       PZE     QUANTM+Q.UPDT ..
+       PZE     =V36/60*60*5  ..
+       PZE     QUANTM+Q.DNDT ..
+       PZE     =V36/60*60*10 ..
+       PZE     KILLDT        ..
+       PZE     =1            ..
+       PZE     MXUSRS+Q.UPVR ..
+       PZE     =1            ..
+       PZE     MXUSRS+Q.DNVR ..
+       PZE     =5            ..
+       PZE     QUANTM+Q.UPVR ..
+       PZE     =5            ..
+       PZE     QUANTM+Q.DNVR ..
+       PZE     =10000.       ..
+       PZE     QMAX          ..
+       PZE     =10000.       ..
+       PZE     QMIN          ..
+       PZE     =15000.       ..
+       PZE     QKILL         ..
+       PZE     *             ..
+       PZE     KILLSW        ..
+       PZE     0             INDICATE WE ARE DISABLED
+       PZE     ENBSW         ..
+       PZE     =V36/60*60*10 SET UP INTERVAL FOR READING CHRONOLOG
+       PZE     RCLKDT        ..
+       PZE     =12           SET UP CLOCK TRAP INTERVAL
+       PZE     CLKTIM        ..
+       PZE     =H SAVED      CONSTANTS
+       PZE     SAVED         ..
+       PZE     =HTSSDC.      ..
+       PZE     TSSDC.        ..
+       PZE     =HCMFL00      ..
+       PZE     CMFL00        ..
+       PZE     =O777777777777 ..
+       PZE     FENCE         ..
+       PZE     =O606060606060 ..
+       PZE     BLANKS        ..
+       PZE     =O575757575757 ..
+       PZE     NULLS         ..
+       PZE     =O777777000000 ..
+       PZE     LMASK         ..
+       PZE     =O000000777777 ..
+       PZE     RMASK         ..
+       PZE     =O700000000000 ..
+       PZE     PMASK         ..
+       PZE     =O077777000000 ..
+       PZE     DMASK         ..
+       PZE     =O000000700000 ..
+       PZE     TMASK         ..
+       PZE     =O000000077777 ..
+       PZE     AMASK         ..
+       PZE     =V36/B+P      MEMORY FLAGS
+       PZE     LB            ..
+       PZE     =V36/A        ..
+       PZE     LA            ..
+       PZE     =-0           LITERALS
+       PZE     M0            ..
+       PZE     =12           ..
+       PZE     Q12           ..
+       PZE     =11           ..
+       PZE     Q11           ..
+       PZE     =10           ..
+       PZE     Q10           ..
+       PZE     =9            ..
+       PZE     Q9            ..
+       PZE     =8            ..
+       PZE     Q8            ..
+       PZE     =7            ..
+       PZE     Q7            ..
+       PZE     =6            ..
+       PZE     Q6            ..
+       PZE     =5            ..
+       PZE     Q5            ..
+       PZE     =4            ..
+       PZE     Q4            ..
+       PZE     =3            ..
+       PZE     Q3            ..
+       PZE     =2            ..
+       PZE     Q2            ..
+       PZE     =1            ..
+       PZE     Q1            ..
+INITN  EQU     *-IWORD       SIZE OF TABLE
+       REM
+ENTRY  TRA     START                                             DGPHACK
+STRTRL TRA     $STRTRP       .. SET UP FOR 'STR' TRAP            DGPHACK
+DDTRAL TRA     $DDTRAP       SET UP FOR DIRECT DATA TRAP         DGPHACK
+CLKINL TRA     $CLKINT       SET UP FOR INTERVAL TIMER TRAP      DGPHACK
+FLPTRL TRA     $FLPTRP       SET UP FOR FLOATING POINT TRAP      DGPHACK
+PANICL TRA     $PANIC        SET UP FOR PANIC DUMP PROCEDURE     DGPHACK
+ATRAPL TRA     $ATRAP        SET UP FOR DATA CHANNEL TRAP FROM 'ADGPHACK
+BTRAPL TRA     $BTRAP        SET UP FOR DATA CHANNEL TRAP FROM 'BDGPHACK
+DTRAPL TRA     $DTRAP        SET UP FOR DATA CHANNEL TRAP FROM 'DDGPHACK
+PTRAPL TRA     $PTRAP        SET UP FOR PROTECTION TRAP          DGPHACK
+COLDL  TRA     $COLD         SET UP FOR COLD START PROCEDURE     DGPHACK
+LCYCLE TRA     CYCLE                                             DGPHACK
+VFUNCT TRA     IFUNCT                                            DGPHACK
+FIOERV TRA     FIOERR                                            DGPHACK
+       REM
+SYSID  CTSSID
+TSFID  TSSFID
+       REM
+RTSS   VFD     O18/UPRCBT,O18/RPRVBT+RPROBT+RCALBT
+RBACK  VFD     O18/UBACBT+NFORBT+NFIBBT+NDEMBT
+RBKPRV VFD     O18/UBACBT+UPRCBT+NFORBT+NFIBBT+NDEMBT,
+       ETC     O18/RPATBT+RPRVBT+RPROBT+RCALBT
+RFIB   VFD     O18/UFIBBT+NBACBT+NFORBT+NDEMBT
+RDAEM  VFD     O18/UDEMBT+NBACBT+NFORBT+NFIBBT
+RFOREG VFD     O18/UFORBT+NBACBT+NFIBBT+NDEMBT
+RDUMMY VFD     O18/NBACBT+NFORBT+NFIBBT+NDEMBT
+       REM
+INPBUF PZE     HITRAP+1,,END LIMITS OF COMMON INPUT BUFFER
+       REM
+       RMT     *
+       REM
+*      ORG     0
+LCMBF  EQU     340           MINIMUM SIZE OF INPUT BUFFER
+*      BSS     LCMBF         ..
+       BSS     START+LCMBF-* ..                                  DGPHACK
+END    END

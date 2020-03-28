@@ -1,0 +1,284 @@
+* EXTFIL - EXTRACT CTSS FILES.
+*
+* EXTFIL - This module extracts files from the CTSS filesystem.
+* Names files from TAPE B2 to extract files and write to B3.
+*
+       LBL     EXTFIL
+       NOLNK
+       ENTRY   EXTFIL
+       REM
+       ENTRY   CHANLI        DUMMY UNNEEDED FUNCTIONS
+       ENTRY   STARTE        DUMMY UNNEEDED FUNCTIONS
+       ENTRY   STOPE         DUMMY UNNEEDED FUNCTIONS
+       ENTRY   SETPRM        DUMMY UNNEEDED FUNCTIONS
+       ENTRY   GETPRM        DUMMY UNNEEDED FUNCTIONS
+       ENTRY   WRTELY        DUMMY UNNEEDED FUNCTIONS
+       ENTRY   WRHI          DUMMY UNNEEDED FUNCTIONS
+       REM
+       EXTERN  UPDMFD,ALLOT,EPRINT,BFOPEN,BFWRIT,BFCLOS
+       EXTERN  SETUSR,BTDC,UDUMP
+       REM
+       UNLIST
+       INSERT  MACRO
+       INSERT  EQU
+       INSERT  COMMON
+       LIST
+*
+BLKSIZ EQU     432
+*
+EXTFIL EQU     *
+       SXA     RETXR4,4      Save our return
+       SXA     RETXR2,2
+*
+* Read name of file.
+*
+NXTFIL EQU     *
+       ENB     =0          
+       TCOB    *
+       RTDB    2             Read Name info from B2
+       RCHB    NMTAPE
+       TCOB    *
+       TEFB    EOFNAM
+       CLA     NMBUFF        Set name into buffers
+       STO     EXTF1
+       STO     CPYF1
+       CLA     NMBUFF+1
+       STO     EXTF2
+       STO     CPYF2
+       CLA     =14           Default 14 words per record.
+       STO     DEFREC
+       STZ     BINFLG        Set TEXT mode as default mode.
+       LDQ     TEXT
+       CLA     NMBUFF+2      Get extract mode.
+       SUB     =H     B      BSS file?
+       TNZ     CHKPLT
+       STL     BINFLG        Yes, Set BINARY mode.
+       CLA     =28             and 28 words per record.
+       STO     DEFREC
+       LDQ     BSSMOD
+       TRA     CHKUFD
+CHKPLT EQU     *
+       CLA     NMBUFF+2      Get extract mode.
+       SUB     =H     P      PLOT file?
+       TNZ     CHKUFD
+       STL     BINFLG        Yes, Set BINARY mode.
+       CLA     =432            and 432 words per record.
+       STO     DEFREC
+       LDQ     PLOT
+CHKUFD EQU     *
+       STQ     CPYMOD
+       CLA     NMBUFF+3      Check if new UFD for files
+       SUB     USERUD
+       TNZ     NEWUFD
+       CLA     NMBUFF+4
+       SUB     USERUD+1
+       TZE     OLDUFD
+* ATTACH to new UFD defined in header
+NEWUFD EQU     *
+       CLA     NMBUFF+3      Get UFD info
+       STO     USERUD
+       STO     ATTU1
+       STO     MFDP1
+       CLA     NMBUFF+4
+       STO     USERUD+1
+       STO     ATTU2
+       STO     MFDP2
+       TSX     EPRINT,4      ATTACH message
+       PZE     ATTMSG,,6     ..
+       TSX     ATTACH,4
+       PAR     USERUD
+       PAR     USERUD+1
+       PAR     ERRMFD
+       TSX     GETUSR,4      GET User ID
+       PAR     USERID,,2
+*
+OLDUFD EQU     *
+       TSX     EPRINT,4      COPY Message
+       PZE     CPYMSG,,7     ..
+*
+* Process text data.
+*
+RDFILE EQU     *
+       ENB     ENBWD
+       TSX     BFOPEN,4      Open file
+       PAR     =HR
+       PAR     EXTF1
+       PAR     EXTF2
+       PAR     BUF1
+       PAR     BUF2
+       PAR     =-0
+       PAR     ERROPN
+* Loop reading text data.
+READLP EQU     *
+       AXT     TAPBUF,4      Set full buffer
+       SXA     RECLEN,4
+       CLA     DEFREC        Set the default record length
+       ALS     18
+       STD     RECLEN
+       STD     DATTAP
+       ZET     BINFLG        If binary mode
+       TRA     READIT          just go read record
+       ENB     ENBWD
+       TSX     BFREAD,4      Read from file
+       PAR     EXTF1
+       PAR     EXTF2
+       PAR     TAPBUF,,1     Only first word
+       PAR     GOTEOF
+       PAR     EOFCT
+       PAR     ERRRED
+       ENB     =0
+       CAL     TAPBUF       Check for LINE MARK marker.
+       PAX     0,4          Save possible word count
+       ANA     =O777777000000  
+       ERA     =O777777000000
+       TZE     PACKED
+       AXT     TAPBUF+1,4    Set for remainder of record.
+       SXA     RECLEN,4
+       CLA     DEFREC
+       SUB     =1
+       ALS     18
+       STD     RECLEN
+       TRA     READIT
+PACKED EQU     *             It's packed get length.
+       SXD     RECLEN,4
+       SXD     DATTAP,4
+READIT EQU     *
+       ENB     ENBWD
+       TSX     BFREAD,4      Read from file
+       PAR     EXTF1
+       PAR     EXTF2
+RECLEN PAR     TAPBUF,,14
+       PAR     GOTEOF
+       PAR     EOFCT
+       PAR     ERRRED
+       ENB     =0
+       TCOB    *
+       ZET     BINFLG        Check if in BINARY mode.
+       TRA     BINWRT
+       WTDB    3             Write TEXT info to B3
+       TRA     LDCHAN
+BINWRT WTBB    3             Write BINARY info to B3
+LDCHAN RCHB    DATTAP
+       TCOB    *
+       TRA     READLP
+*
+GOTEOF EQU     *
+       ENB     =0
+       CLA     EOFCT         Check for residual record on EOF
+       TZE     NOECNT
+       ALS     18            Yes, write out remainder.
+       STD     DATTAP
+       TCOB    *
+       ZET     BINFLG        Check if in BINARY mode.
+       TRA     BINWR1
+       WTDB    3             Write TEXT info to B3
+       TRA     LDCHA1
+BINWR1 WTBB    3             Write BINARY info to B3
+LDCHA1 RCHB    DATTAP
+       TCOB    *
+NOECNT EQU     *
+       WEFB    3
+       ENB     ENBWD
+       TSX     BFCLOS,4      Close file
+       PAR     EXTF1
+       PAR     EXTF2
+       PAR     ERRCLS
+       TRA     NXTFIL
+       TRA     NXTFIL
+* Done with TAPE
+EOFNAM EQU     *
+*
+* Exit
+*
+DIE    EQU     *
+RETXR2 AXT     0,2
+RETXR4 AXT     0,4
+       TRA     1,4
+       REM
+       EJECT
+*
+* ERROR processors
+*
+ERROPN CAL     OPNERR        Here on open error.
+       TRA     PRTERR
+ERRCLS CAL     CLSERR        Here on close error.
+       TRA     PRTERR
+ERRRED CAL     REDERR        HERE ON ERROR READING FILE
+PRTERR SLW     EXTCOD
+       TSX     EPRINT,4
+       PZE     EXTERR,,8     .. PRINT ERROR MESSAGE
+       TRA     DIE
+ERRMFD TSX     EPRINT,4      HERE ON ERROR ATTACHING TO MFD
+       PZE     MFDERR,,6     .. PRINT ERROR MESSAGE
+       TRA     DIE           .. AND STOP
+       EJECT
+*
+* Messages
+*
+MFDERR BCI     / ATTACH ERROR /
+MFDP1  PZE     0
+       BCI     / /
+MFDP2  PZE     0
+*
+EXTERR BCI     / FILE ERROR IN /
+EXTCOD PZE     0
+       BCI     / ON /
+EXTF1  PZE     0
+       BCI     / /
+EXTF2  PZE     0
+*
+CPYMSG BCI     / COPY FROM /
+CPYMOD PZE     0
+       BCI     / FILE /
+CPYF1  PZE     0
+       BCI     / /
+CPYF2  PZE     0
+*
+ATTMSG BCI     / ATTACHING TO /
+ATTU1  PZE     0
+       BCI     / /
+ATTU2  PZE     0
+*
+TEXT   BCI     /TEXT/
+PLOT   BCI     /PLOT/
+BSSMOD BCI     /BSS/
+*
+OPNERR BCI     /OPEN/
+CLSERR BCI     /CLOSE/
+REDERR BCI     /READ/
+*
+* STORAGE AREAS
+*
+BINFLG BSS     1
+USERID BSS     2
+USERUD OCT     0,0
+ERCODE OCT     0
+EOFCT  OCT     0
+DEFREC DEC     14
+*
+DATTAP IORT    TAPBUF,,14
+       IOCD    0,,0
+*
+NMTAPE IORT    NMBUFF,,14
+       IOCD    0,,0
+       EJECT
+*
+NMBUFF BSS     14            Name processing buffer.
+TAPBUF BSS     BLKSIZ        Tape buffer.
+*
+BUF1   BSS     BLKSIZ        Buffered I/O buffers.
+BUF2   BSS     BLKSIZ
+*
+* DUMMY ROUTINES AS WE DONT NEED THEM FOR SETUP.
+*
+CHANLI EQU     *
+STOPE  EQU     *
+STARTE EQU     *
+SETPRM EQU     *
+       TRA     1,4
+WRTELY EQU     *
+WRHI   EQU     *
+       TRA     2,4
+GETPRM EQU     *
+       TRA     3,4
+       END

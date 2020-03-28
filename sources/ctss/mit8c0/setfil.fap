@@ -1,0 +1,562 @@
+* SETFIL - SETUP CTSS FILES.
+*
+* SETFIL - This module sets up the CTSS UFDs and copies the initial
+* files from TAPE B2 to the CTSS disk.
+*
+       LBL     SETFIL
+       NOLNK
+       ENTRY   SETUFL
+       REM
+       ENTRY   CHANLI        DUMMY UNNEEDED FUNCTIONS
+       ENTRY   STARTE        DUMMY UNNEEDED FUNCTIONS
+       ENTRY   STOPE         DUMMY UNNEEDED FUNCTIONS
+       ENTRY   SETPRM        DUMMY UNNEEDED FUNCTIONS
+       ENTRY   GETPRM        DUMMY UNNEEDED FUNCTIONS
+       ENTRY   WRTELY        DUMMY UNNEEDED FUNCTIONS
+       ENTRY   WRHI          DUMMY UNNEEDED FUNCTIONS
+       REM
+       EXTERN  UPDMFD,ALLOT,EPRINT,BFOPEN,BFWRIT,BFCLOS
+       EXTERN  SETUSR,BTDC,UDUMP,IODIAG,DTBC
+       REM
+       UNLIST
+       INSERT  MACRO
+       INSERT  EQU
+       INSERT  COMMON
+       LIST
+*
+BLKSIZ EQU     432
+IMGORG EQU     20
+*
+PGMBND EQU     0
+PGMENT EQU     1
+*
+SETUFL EQU     *
+       SXA     RETXR4,4      Save our return
+       SXA     RETXR2,2
+*
+* Add in new SYSTEM UFDs
+*
+       AXT     NUMUFD,2
+ADDUFD EQU     *
+       CLA     UFDLST+NUMUFD,2
+       STO     MFDP1
+       STO     UFDP1
+       CLA     UFDLST+NUMUFD+1,2
+       STO     MFDP2
+       STO     UFDP2
+       TSX     ATTACH,4      Try ATTACH to UFD
+       PAR     MFDP1
+       PAR     MFDP2
+       PAR     ADDIT         Go add it if not defined
+       TRA     NXTUFD        It's defined, Check next.
+ADDIT  TSX     EPRINT,4      Adding new UFD
+       PZE     UFDADD,,5
+       TSX     UPDMFD,4      Add it
+       PAR     MFDP1
+       PAR     MFDP2
+       PAR     NXTUFD
+       PAR     ERCODE
+       TSX     ATTACH,4
+       PAR     MFDP1
+       PAR     MFDP2   
+       PAR     UPDMFD
+       TSX     ALLOT,4
+       PAR     =2            DISK
+       PAR     =4000
+       PAR     =-0
+NXTUFD TIX     ADDUFD,2,2
+*
+* Create a file or UFD, Read info from tape
+*
+NXTFIL EQU     *
+       STZ     BINFLG	     Set BINFLG for TEXT.
+       STZ     TXTFLG	     Set TXTFLG for Line Marked input.
+       STZ     NMBUFF
+       STZ     NMBUFF+1
+       ENB     =0          
+       TCOB    *
+       RTDB    2             Read Name info from B2
+       RCHB    NMTAPE
+       TCOB    *
+       TEFB    EOFNAM
+       ENB     ENBWD
+       TZE     NXTFIL        Ignore empty records.
+       CLA     NMBUFF	     Set name into buffers
+       STO     SAVF1
+       STO     CPYF1
+       CLA     NMBUFF+1
+       STO     SAVF2
+       STO     CPYF2
+       CLA     NMBUFF+2      Get mode
+       SUB     =H     U      If UFD mode
+       TZE     USRUFD           Go process UFDs
+       CLA     NMBUFF+2      Get mode
+       SUB     =H     Q      If Quota mode
+       TZE     USRQUO           Go process Quotas
+       CLA     NMBUFF+4      Check if new UFD for files
+       SUB     USERUD
+       TNZ     NEWUFD
+       CLA     NMBUFF+5
+       SUB     USERUD+1
+       TZE     OLDUFD
+* ATTACH to new UFD defined in header
+NEWUFD EQU     *
+       CLA     NMBUFF+4      Get UFD info
+       STO     USERUD
+       STO     ATTU1
+       CLA     NMBUFF+5
+       STO     USERUD+1
+       STO     ATTU2
+       TSX     EPRINT,4      ATTACH message
+       PZE     ATTMSG,,6     ..
+       TSX     ATTACH,4
+       PAR     USERUD
+       PAR     USERUD+1
+       PAR     ERRMFD
+       TSX     GETUSR,4      GET User ID
+       PAR     USERID,,2
+* ALLOT storage for this UFD
+       TSX     ALLOT,4
+       PAR     =2            DISK
+       PAR     =4000
+       PAR     =-0
+       TSX     ALLOT,4
+       PAR     =3            TAPE
+       PAR     =4000
+       PAR     =-0
+*
+OLDUFD EQU     *
+* DELETE old file first.
+       TSX     CHFILE,4      CHANGE TO TEMPORARY FILE
+       PAR     SAVF1
+       PAR     SAVF2
+       PAR     =1            TEMPORARY
+       PAR     =-0           NO RENAME
+       PAR     =-0
+       PAR     *+1           IGNORE ERROR
+       TSX     DELFIL,4      DELETE PREVIOUS FILE
+       PAR     SAVF1
+       PAR     SAVF2
+       PAR     *+1           IGNORE ERRORS.
+       CLA     NMBUFF+2      Get mode
+       SUB     =H     L      If LINK mode
+       TZE     PROLNK         go process links
+       CLA     NMBUFF+2      Get mode
+       SUB     =H     T      If Text mode
+       TZE     MODTXT         go set TEXT mode
+       CLA     NMBUFF+2      Get mode
+       SUB     =H     C      Line mark mode.
+       TZE     MODLIN         go set TEXT mode
+       CLA     NMBUFF+2
+       SUB     =H     B      Else if BSS mode
+       TZE     MODBSS         go set BSS mode
+       CAL     IMAGE         else IMAGE mode
+       TRA     PRTCPY
+MODBSS CAL     BSSMOD       BSS mode
+       STL     BINFLG       Set BINARY mode.
+       TRA     PRTCPY
+MODLIN STL     TXTFLG
+MODTXT CAL     TEXT         TEXT mode
+* Read from tape and write to disk
+PRTCPY EQU     *
+       SLW     CPYMOD
+       TSX     EPRINT,4      COPY Message
+       PZE     CPYMSG,,7     ..
+       CLA     NMBUFF+2      Get mode
+       SUB     =H     T      If Text mode
+       TZE     RDTEXT         go process
+       CLA     NMBUFF+2      Get mode
+       SUB     =H     C      If Line mark mode
+       TZE     RDTEXT         go process
+       CLA     NMBUFF+2      Get mode
+       SUB     =H     B      If BSS mode
+       TZE     RDTEXT         go process
+       CLA     ORIGIN        else image mode
+       STA     IOTAPE		Where to load
+       STA     ILC		Inital PC
+* Read image into BCORE
+RDLOOP EQU     *
+       TCOB    *
+       RTBB    2             Read image from B2
+       RCHB    IOTAPE        into BCORE
+       TCOB    *
+       TEFB    EOFTAP
+       ENB     ENBWD
+       SCHB    ERCODE        Get record length
+       CLA     IOTAPE
+       ANA     =O77777
+       ADD     SIZBLK
+       STA     IOTAPE
+       TRA     RDLOOP
+EOFTAP EQU     *
+       CLA     ERCODE        Get final location
+       ANA     =O77777
+       STA     MEMBND	     Set memory bounds
+       STZ     RLIND         And relocation
+       ALS     18
+       SLW     PRIND
+       ENB     ENBWD
+       TSX     SETUSR,4      SET UP OPTIONS 
+       PAR     USERID        .. USERID
+       PAR     RCODE         .. RESTRICTION CODE
+       PAR     M0            .. AUTHOR
+       PAR     PRIND         .. PROTECTION LIMITS
+       PAR     RLIND         .. RELOCATION
+       PAR     M0            .. SECOND HIGHEST PRIORITY
+       TSX     UDUMP,4       Dump image to DISK
+       PAR     SAVOPT,,0
+       PAR     SAVF1
+       PAR     SAVF2
+       PAR     *+1,,ERRSAV
+       TRA     NXTFIL
+* Done with TAPE
+EOFNAM EQU     *
+*
+* Exit
+*
+DIE    EQU     *
+RETXR2 AXT     0,2
+RETXR4 AXT     0,4
+       TRA     1,4
+       REM
+*
+* Process text/BSS data.
+*
+RDTEXT EQU     *
+       CAL     NMBUFF+3      Get the record length
+       ALS     18
+       STD     RECLEN
+       STD     TXTTAP
+       LXA     TXTTAP,4      Fix Start of reading.
+       ZET     TXTFLG
+       TXI     *+1,4,-1      Back up one for Line Marked
+       SXA     RECLEN,4
+       TSX     BFOPEN,4      Open file
+       PAR     =HW
+       PAR     SAVF1
+       PAR     SAVF2
+       PAR     BUF1
+       PAR     BUF2
+       PAR     BUF3
+       PAR     ERROPN
+       ENB     =0
+* Loop reading text data.
+TXTLP  EQU     *
+       TCOB    *
+       ZET     BINFLG        Check mode.
+       TRA     RDBIN
+       RTDB    2             Read TEXT info from B2
+       TRA     LDCHAN
+RDBIN  RTBB    2
+LDCHAN RCHB    TXTTAP
+       TCOB    *
+       TEFB    EOFTXT
+       ZET     BINFLG
+       TRA     NOTPCK
+       NZT     TXTFLG
+       TRA     NOTPCK
+       SCHB    TEMP          Get Last address transfered.
+       CAL     TEMP
+       SUB     TXTTAP        Subtract base.
+       STA     CNTBLK        Set record length
+       ADD     =1            Bump by one and put in Write call.
+       ALS     18
+       STD     RECLEN
+NOTPCK EQU     *
+       ENB     ENBWD
+       TSX     BFWRIT,4      Write to file
+       PAR     SAVF1
+       PAR     SAVF2
+RECLEN PAR     TXTDAT,,14
+       PAR     ERRWRT
+       TRA     TXTLP
+*
+EOFTXT EQU     *
+       ENB     ENBWD
+       TSX     BFCLOS,4      Close file
+       PAR     SAVF1
+       PAR     SAVF2
+       PAR     ERRCLS
+       TRA     NXTFIL
+       EJECT
+*
+* Process user UFDs
+*
+USRUFD EQU     *
+       ENB     =0          
+       TCOB    *
+       RTDB    2             Read UFD info from B2
+       RCHB    NMTAPE
+       TCOB    *
+       TEFB    EOFUFD
+       ENB     ENBWD
+       CLA     NMBUFF        Pick up UFD name
+       STO     MFDP1
+       STO     UFDP1
+       CLA     NMBUFF+1
+       STO     MFDP2
+       STO     UFDP2
+       TSX     ATTACH,4      Try ATTACH to UFD
+       PAR     MFDP1
+       PAR     MFDP2
+       PAR     ADDUSR        Go add it if not defined
+       TRA     NXTUFD        It's defined, Check next.
+ADDUSR TSX     EPRINT,4      Adding new UFD
+       PZE     UFDADD,,5
+       TSX     UPDMFD,4      Add it
+       PAR     MFDP1
+       PAR     MFDP2
+       PAR     ERRMFD
+       PAR     ERCODE
+       TRA     USRUFD
+EOFUFD TRA     NXTFIL
+*
+* Process LINKS
+*
+PROLNK EQU     *
+       ENB     =0          
+       TCOB    *
+       RTDB    2             Read LINK info from B2
+       RCHB    NMTAPE
+       TCOB    *
+       TEFB    EOFLNK
+       ENB     ENBWD
+       CLA     NMBUFF        Pick up LINK name
+       STO     LNKP0
+       CLA     NMBUFF+1
+       STO     LNKP1
+       CLA     NMBUFF+2      Pick up PROG/PROB
+       STO     LNKP2
+       CLA     NMBUFF+3
+       STO     LNKP3
+       CLA     NMBUFF+4      Pick up Target name
+       STO     LNKP4
+       CLA     NMBUFF+5
+       STO     LNKP5
+       TSX     EPRINT,4      Adding new LINK
+       PZE     LNKADD,,14
+       TSX     LINK,4        Add it
+       PAR     LNKP0
+       PAR     LNKP1
+       PAR     LNKP2
+       PAR     LNKP3
+       PAR     LNKP4
+       PAR     LNKP5
+       PAR     =O104
+       PAR     ERRLNK
+       TRA     PROLNK
+EOFLNK TRA     NXTFIL
+*
+* Process User Quotas
+*
+USRQUO EQU     *
+       ENB     =0          
+       TCOB    *
+       RTDB    2             Read Quota info from B2
+       RCHB    NMTAPE
+       TCOB    *
+       TEFB    EOFQUO
+       ENB     ENBWD
+       CLA     NMBUFF        Pick up account name
+       STO     ATTU1
+       STO     MFDP1
+       STO     QUOP1
+       CLA     NMBUFF+1
+       STO     ATTU2
+       STO     MFDP2
+       STO     QUOP2
+       TSX     EPRINT,4      ATTACH message
+       PZE     ATTMSG,,6     ..
+       TSX     ATTACH,4      Try ATTACH to account
+       PAR     QUOP1
+       PAR     QUOP2
+       PAR     ERRQUO        
+ADDQUO CLA     NMBUFF+2
+       STO     QUOP3
+       CLA     NMBUFF+3
+       STO     QUOP4
+       CLA     NMBUFF+4
+       STO     QUOP5
+       TSX     EPRINT,4      Adding Quota message
+       PZE     QUOADD,,12
+       LDQ     NMBUFF+2      Get DRUM Quota
+       TSX     DTBC,4
+       TZE     DSKQUO
+       STO     TEMP
+       TSX     ALLOT,4
+       PAR     =1            DRUM
+       PAR     TEMP
+       PAR     =-0
+DSKQUO LDQ     NMBUFF+3      Get DISK Quota
+       TSX     DTBC,4
+       TZE     TAPQUO
+       STO     TEMP
+       TSX     ALLOT,4
+       PAR     =2            DISK
+       PAR     TEMP
+       PAR     =-0
+TAPQUO LDQ     NMBUFF+4      Get TAPE Quota
+       TSX     DTBC,4
+       TZE     USRQUO
+       STO     TEMP
+       TSX     ALLOT,4
+       PAR     =3            TAPE
+       PAR     TEMP
+       PAR     =-0
+       TRA     USRQUO
+EOFQUO TRA     NXTFIL
+       EJECT
+*
+* ERROR processors
+*
+ERROPN CAL     OPNTYP        Here on open error
+       TRA     PRTERR
+ERRWRT CAL     WRTTYP        Here on write error
+       TRA     PRTERR
+ERRCLS CAL     CLSTYP        Here on close error
+       TRA     PRTERR
+ERRSAV CAL     SAVTYP        HERE ON ERROR SAVING FILE
+PRTERR SLW     SAVCOD
+       TSX     EPRINT,4
+       PZE     SAVERR,,8     .. PRINT ERROR MESSAGE
+       TRA     DIE
+ERRQUO EQU     *
+ERRMFD TSX     EPRINT,4      HERE ON ERROR INITIALIZING MFD
+       PZE     MFDERR,,5     .. PRINT ERROR MESSAGE
+       TRA     DIE
+ERRLNK TSX     IODIAG,4      Get the error diagnostic info
+       PAR     ERRBLK,,6
+       LDQ     ERRBLK+2      Get the error code.
+       TSX     BTDC,4
+       STO     LNKCOD
+       CLA     ERRBLK+4
+       STO     LNKE1
+       CLA     ERRBLK+5
+       STO     LNKE2
+       TSX     EPRINT,4      HERE ON ERROR LINK CREATION
+       PZE     LNKERR,,9     .. PRINT ERROR MESSAGE
+       TRA     DIE
+       EJECT
+*
+* Messages
+*
+UFDADD BCI     / ADDING UFD /
+UFDP1  PZE     0
+       BCI     / /
+UFDP2  PZE     0
+*
+MFDERR BCI     / MFD INITIALIZATION ERROR /
+MFDP1  PZE     0
+       BCI     / /
+MFDP2  PZE     0
+*
+SAVERR BCI     / FILE ERROR IN /
+SAVCOD PZE     0
+       BCI     / ON /
+SAVF1  PZE     0
+       BCI     / /
+SAVF2  PZE     0
+*
+CPYMSG BCI     / COPY TO /
+CPYMOD PZE     0
+       BCI     / FILE /
+CPYF1  PZE     0
+       BCI     / /
+CPYF2  PZE     0
+*
+ATTMSG BCI     / ATTACHING TO /
+ATTU1  PZE     0
+       BCI     / /
+ATTU2  PZE     0
+*
+TEXT   BCI     /TEXT/
+IMAGE  BCI     /IMAGE/
+BSSMOD BCI     /BSS/
+*
+LNKADD BCI     / ADDING LINK /
+LNKP0  PZE     0
+       BCI     / /
+LNKP1  PZE     0
+       BCI     / TO /
+LNKP2  PZE     0
+       BCI     / /
+LNKP3  PZE     0
+       BCI     / /
+LNKP4  PZE     0
+       BCI     / /
+LNKP5  PZE     0
+*
+LNKERR BCI     / LINK CREATE ERROR /
+LNKCOD PZE     0
+       BCI     / ON /
+LNKE1  PZE     0
+       BCI     / /
+LNKE2  PZE     0
+*
+QUOADD BCI     / ADDING QUOTA TO /
+QUOP1  PZE     0
+       BCI     / /
+QUOP2  PZE     0
+       BCI     / DRUM /
+QUOP3  PZE     0
+       BCI     / DISK /
+QUOP4  PZE     0
+       BCI     / TAPE /
+QUOP5  PZE     0
+*
+OPNTYP BCI    /OPEN/
+WRTTYP BCI    /WRITE/
+CLSTYP BCI    /CLOSE/
+SAVTYP BCI    /SAVE/
+*
+* STORAGE AREAS
+*
+* UFDs to be ADDED, M1416 CMFL02 must be first
+*
+UFDLST BCI     2, M1416CMFL01
+       BCI     2, M1416CMFL02
+       BCI     2, M1416CMFL03
+       BCI     2, M1416CMFL04
+       BCI     2, M1416CMFL05
+NUMUFD EQU     *-UFDLST
+*
+TXTFLG BSS     1
+BINFLG BSS     1
+USERID BSS     2
+USERUD OCT     0,0
+ERCODE OCT     0
+TEMP   OCT     0
+ORIGIN PZE     IMGORG
+SIZBLK PZE     BLKSIZ
+SAVOPT VFD     O18/0,O18/D.DSK+D.OPT+D.DIR+D.TSF+D.COM+D.SAV
+*
+TXTTAP IORT    TXTDAT,,22
+       IOCD    0,,0
+NMTAPE IORT    NMBUFF,,14
+       IOCD    0,,0
+IOTAPE IORT    IMGORG,1,BLKSIZ    Read into BCORE starting at IMGORG
+       IOCD    0,,0
+       EJECT
+*
+ERRBLK BSS     6             IODIAG error block
+NMBUFF BSS     14            Name processing buffer.
+CNTBLK OCT     777777000000  
+TXTDAT BSS     34            Text mode buffer.
+*
+BUF1   BSS     BLKSIZ        Buffered I/O buffers.
+BUF2   BSS     BLKSIZ
+BUF3   BSS     BLKSIZ
+*
+* DUMMY ROUTINES AS WE DONT NEED THEM FOR SETUP.
+*
+CHANLI EQU     *
+STOPE  EQU     *
+STARTE EQU     *
+SETPRM EQU     *
+       TRA     1,4
+WRTELY EQU     *
+WRHI   EQU     *
+       TRA     2,4
+GETPRM EQU     *
+       TRA     3,4
+       END
