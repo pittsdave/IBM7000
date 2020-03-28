@@ -1,0 +1,7 @@
+       NOLNK
+       LBL     RSTF
+       ENTRY   RESETF   
+       ENTRY   UNLINK   
+RESETF TIA     =HRESETF 
+UNLINK TIA     =HUNLINK 
+       END  

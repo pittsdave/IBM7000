@@ -1,0 +1,7 @@
+       NOLNK
+       LBL     TLCK
+       ENTRY   TILOCK   
+       ENTRY   FERRTN   
+TILOCK TIA     =HTILOCK 
+FERRTN TIA     =HFERRTN 
+       END  

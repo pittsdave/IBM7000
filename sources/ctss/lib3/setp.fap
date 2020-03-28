@@ -1,0 +1,5 @@
+       NOLNK
+       LBL     SETP
+       ENTRY   SETPRI   
+SETPRI TIA     =HSETPRI 
+       END  

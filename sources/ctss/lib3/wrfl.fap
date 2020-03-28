@@ -1,0 +1,13 @@
+* CONSOLE INPUT/OUTPUT CALLS TO SUPERVISOR
+       TTL     D.R. WIDRIG  NOV. 1966                                   
+       NOLNK
+       LBL     WRFLX
+       ENTRY   WRFLX    
+       ENTRY   WRFLXA   
+       ENTRY   RDFLXA   
+       REM
+WRFLX  TIA     =HWRFLX  
+WRFLXA TIA     =HWRFLXA 
+RDFLXA TIA     =HRDFLXA 
+       REM
+       END  

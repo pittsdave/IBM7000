@@ -1,0 +1,9 @@
+       DETAIL
+*RECP     FOR TIME SHARING MOD XI FOREGROUND LIBRARY    JDH    DEC 62   
+       LBL     RECO
+       ENTRY   RECOUP   
+       REM     CALLS EXIT FOREVER.  
+       REM
+RECOUP TSX     $EXIT,4  
+       TRA     *-1
+       END  

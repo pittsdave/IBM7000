@@ -1,0 +1,5 @@
+       NOLNK
+       LBL     RDTM
+       ENTRY   RDYTIM   
+RDYTIM TIA     =HRDYTIM 
+       END  

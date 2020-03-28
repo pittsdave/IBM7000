@@ -1,0 +1,9 @@
+       NOLNK
+       LBL     TSEN18
+*      SETCLC, GETCLC.  DUMMIES FOR TSS SUPERVISOR ENTRIES. 
+*      AUGUST 64             LOUIS POUZIN 
+       ENTRY   SETCLC   
+       ENTRY   SETCLS   
+SETCLC TIA     =HSETCLC 
+SETCLS TIA     =HSETCLS 
+       END  

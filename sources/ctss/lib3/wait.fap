@@ -1,0 +1,5 @@
+       NOLNK
+       LBL     WAIT
+       ENTRY   WAIT     
+WAIT   TIA     =HWAIT   
+       END  

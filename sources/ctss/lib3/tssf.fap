@@ -1,0 +1,8 @@
+       NOLNK
+       LBL     TSSF
+*      SUBROUTINIZED ENTRIES TO CTSS SUPERVISOR - LP - DEC 63     
+       ENTRY   TSSFIL   
+       ENTRY   USRFIL   
+TSSFIL TIA     =HTSSFIL 
+USRFIL TIA     =HUSRFIL 
+       END  

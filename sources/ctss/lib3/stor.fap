@@ -1,0 +1,5 @@
+       NOLNK
+       LBL     STOR
+       ENTRY   STORGE   
+STORGE TIA     =HSTORGE 
+       END  

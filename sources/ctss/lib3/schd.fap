@@ -1,0 +1,5 @@
+       LBL     SCHD
+       NOLNK
+       ENTRY   SCHEDL
+SCHEDL TIA     =HSCHEDL
+       END

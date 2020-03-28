@@ -1,0 +1,6 @@
+* TSS ENTRIES FOREGROUND LIBRARY L. P.    JULY 64
+       NOLNK
+       LBL     SLEEP
+       ENTRY   SLEEP    
+SLEEP  TIA     =HSLEEP  
+       END  

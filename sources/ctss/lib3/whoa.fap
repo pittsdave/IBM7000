@@ -1,0 +1,5 @@
+       NOLNK
+       LBL     WHOA
+       ENTRY   WHOAMI   
+WHOAMI TIA     =HWHOAMI 
+       END  
