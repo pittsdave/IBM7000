@@ -1,0 +1,395 @@
+*
+* 7750 diagnostic - this program reads the data from the connected 
+* lines and issues a message to line 35 (console) of the form:
+*      LINE nn:<msg>
+*
+*
+* XR1 is typically -line number
+*
+       DETAIL
+       PMC    ON
+MINLIN EQU    4
+MAXLIN EQU    37
+BUFLEN EQU    64
+INTSAV EQU    42
+INTLOC EQU    43
+*
+SETSW  MACRO  A
+       LAR    =O77
+       SAR    A
+SETSW  END
+*
+*
+DIAG   LMTM
+       TSX    INIT,4
+LOOP   CAL    RDCHEK                          CHECK ALL ERRORS
+       ORA    WRCHEK
+       ORA    SEQCHK
+       ORA    ADAPTC
+       ORA    UNUEND
+       ORA    IOCHEK
+       TNZ    ERROR
+       NZT    ANYINP                          SKIP IF INPUT
+       TRA    LOOP
+       STZ    ANYINP
+       RSCE   CHREAD                          READ FROM CHANNEL
+       TCOE   *                               WAIT FOR DONE
+       ZET    RDCHEK
+       TRA    ERROR
+       AXT    INPBUF-1,6
+       SXA    INPPTR,6
+       STZ    INPCTR
+       TSX    GETINC,4                        GET INPUT CHAR
+       TRA    ENOINP                          NO INPUT, ERROR
+       CAS    MSGNUM                          RIGHT MSG NUM?
+       TRA    EBDMSG
+       TRA    *+2
+       TRA    EBDMSG                          NO, ERROR
+       ADD    =1
+       ANA    =O3777
+       STO    MSGNUM
+LOOP1  TSX    GETINC,4                        GET INPUT CHAR
+       TRA    LOOP                            MESSAGE DONE
+       PAX    ,1                              VALIDATE LINE
+       TXL    EBDLIN,1,MINLIN+1023            TOO LOW?
+       TXH    EBDLIN,1,MAXLIN+1023            TOO HIGH?
+       ANA    =O77                            MASK OFF HIGH
+       PAC    ,1                              USE COMPLEMENT
+       TSX    GETINC,4                        GET CHARACTER
+       TRA    ENODAT                          NONE, ERROR
+       PAI                                    SAVE CHARACTER
+       RFT    2000                            CONTROL?
+       TRA    CONTRL                          YES
+       CLA    UNITID,1                        GET UNIT ID
+       TZE    STRTID                          ZERO? NOT STARTED
+       TMI    CONTID                          MINUS? IN PROGRESS
+       PIA                                    RESTORE CHAR
+       COM
+       ANA    =O177                           CONVERT TO ASCII
+       CAS    =O15                            CR?
+       TRA    *+2
+       TRA    EOLINE                          YES
+       PAI                                    SAVE
+       CLA    RCVCNT,1
+       CAS    BUFLMT                          ROOM LEFT?
+       TRA    LOOP1                           NO
+       TRA    *+1                             YES
+       ADD    RCVPTR,1
+       PAC    ,2                              CHARACTER COUNT
+       CLA    RCVCNT,1
+       ADD    =1
+       STO    RCVCNT,1                        INCREMENT
+       STI    0,2                             STORE
+       TRA    LOOP1
+*
+STRTID PIA                                    GET CHAR
+       ALS    30                              SAVE AS DEV TYPE
+       SSM                                    - SIGN IS ID-IN-PROG
+       STO    UNITID,1
+       TRA    LOOP1
+*
+CONTID ALS    6                               AC HAS UNITID, SI NEW CHAR
+       ANA    =O007777777700                  ISOLATE MIDDLE 4 CHAR
+       OAI                                    SI HAS LOW 5 CHAR
+       CAL    UNITID,1                        SAVE DEV TYPE
+       ANA    =O770000000000                  HI CHAR
+       OAI                                    SI HAS 6 CHAR ID
+       STI    UNITID,1
+       TRA    LOOP1
+*
+CONTRL RFT    1000                            COMPLETION MSG?
+       TRA    COMPLT                          YES
+       ANA    =O77                            CONTROL TYPE
+       TZE    EBDCTL                          ZERO IS INVALID
+       PAC    ,2
+       TXL    EBDCTL,2,-NCC                   BAD CONTROL?
+       TRA    CCTV,2                          DISPATCH ON CONTROL CHAR
+CCTV   SYN    *-1
+       TRA    DIALUP
+       TRA    ENDID
+       TRA    NCVCC    
+       TRA    NCVCC    
+       TRA    HANGUP    
+NCC    SYN    *-CCTV
+*
+DIALUP STZ    UNITID,1                        UNITID NEXT
+       STZ    RCVCNT,1
+       STZ    XMTCNT,1
+       AXT    MSGDIA,2
+       TSX    PNTMSG,4
+       TRA    LOOP1
+*
+ENDID  CLA    UNITID,1                        CLEAR ID-IN-PROG (SIGN)
+       SLW    UNITID,1
+       TRA    LOOP1
+*
+HANGUP STZ    UNITID,1                        DIALUP NEXT
+       STZ    RCVCNT,1
+       STZ    XMTCNT,1
+       AXT    MSGHNG,2
+       TSX    PNTMSG,4
+       TRA    LOOP1
+*
+NCVCC  STZ    RCVCNT,1                        QUIT, INTR, CLEAR BUF
+       TRA    LOOP1
+*
+COMPLT ANA    =O37                            COMPLETION, GET COUNT
+       SUB    XMTCNT,1                        SUBTRACT FROM OUTSTANDING
+       STO    XMTCNT,1
+       TMI    ERBDCN                          <0? LOSE
+       TRA    LOOP1
+*
+EOLINE CLA    RCVCNT,1                        GET CHAR COUNT
+       ADD    RCVPTR,1
+       PAC    ,2
+       STZ    0,2                             STORE ZERO
+       CLA    RCVPTR,1
+       PAX    ,2
+       TSX    PNTMSG,4                        PRINT BUFFER
+       STZ    RCVCNT,1                        RESET COUNT
+       TRA    LOOP1
+*
+* GET NEXT 12B MESSAGE ON INPUT
+*
+GETINC ZET    CTPTR                           MORE IN THIS WORD?
+       TRA    GETNXT                          YES
+       AXT    36,7
+       SXA    CTPTR,7
+       AXC    24,6
+       SXA    INPCTR,6                        RESET COUNTER
+       CLA    INPPTR
+       ADD    =1                              INCR POINTER
+       STO    INPPTR
+GETNXT CLA*   INPPTR                          GET WORD
+       LXA    INPCTR,6
+       ARS    0,6                             SHIFT CHAR INTO PLACE
+       TXI    *+1,6,12                        INCR COUNTER
+       SXA    INPCTR,6
+       LXA    CTPTR,7
+       TXI    *+1,7,-12                       INCR COUNTER
+       SXA    CTPTR,7
+       ANA    =O7777                          MASK TO 12B
+       CAS    =O3777                          EOM?
+       TRA    2,4                             NO, SKIP RETURN
+       TRA    *+2
+       TRA    2,4
+       STZ    CTPTR
+       TRA    1,4
+*
+* TYPE OUTPUT MESSAGE
+*
+* XR1 = -LINE NUMBER
+* XR2 = START OF BUFFER ADDRESS
+* XR4 = RETURN ADDRESS
+*
+PNTMSG SXA    SVXR4,4                         SAVE XR4, XR2
+       SXA    SVXR2,2
+       AXT    OUTBUF-1,6
+       SXA    OUTPTR,6
+       STZ    OUTCTR                          INIT OUTPUT CTR
+       STZ    OUTNUM                          INIT MSG CHAR COUNT
+       CLA    =O2043
+       TSX    PUTCTL,4
+       PXA    0                               COUNT IS 0, FOR NOW
+       TSX    PUTCTL,4
+       PCA    ,1                              GET LINE #
+       XCL
+       PXA    0
+       DVP    =10                             CONVERT TO DECIMAL
+       ADD    =O60
+       STO    LINE+6
+       XCL
+       ADD    =O60
+       STO    LINE+5                          STORE IN MESSAGE
+       AXC    LINE,2
+       TSX    PUTSTR,7                        LINE dd:
+       LAC    SVXR2,2
+       TSX    PUTSTR,7                        MESSAGE
+       CLA    =O15
+       TSX    PUTCHR,4                        TERMINATING CR
+       CLA    =O7777
+       TSX    PUTCTL,4                        PAD with TERMINATING EOM
+       ZET    OUTCTR
+       TRA    *-3
+       CLA    OUTNUM                          COUNT - OVERHEAD
+       SUB    =3
+       AXC    35,5
+       STO    XMTCNT,5
+       ALS    12
+       ORS    OUTBUF                          PUT IN PLACE
+       AXT    OUTBUF,6                        SET ADDRESS
+       SXA    WRCMD,6
+       CLA    OUTPTR                          SET COUNT
+       SUB    OUTBEG
+       ALS    18
+       STD    WRCMD
+       RSCE   CHWRIT                          WRITE TO CHANNEL
+       TCOE   *                               WAIT FOR DONE
+       ZET    WRCHEK
+       TRA    ERROR
+       LXA    SVXR2,2                         RESTORE XR'S
+       LXA    SVXR4,4
+       TRA    1,4
+*
+* PUT STRING OF ZERO-TERMINATED CHARACTERS INTO OUTPUT BUFFER
+*
+* XR2 = -START OF STRING
+*
+PUTSTR CLA    0,2                             GET CHAR
+       TZE    1,7                             ZERO? DONE
+       TSX    PUTCHR,4                        PUT IN BUFFER
+       TXI    PUTSTR,2,-1                     NEXT
+       TRA    1,7
+*
+* PUT CHARACTER INTO OUTPUT BUFFER
+* ALTERNATE ENTRY FOR CONTROL CHARACTERS, NO CONVERSION
+*
+PUTCHR ANA    =O177
+       ERA    =O177                           COMPLEMENT
+       ALS    1                               LEFT 1
+       ORA    =1                              START BIT
+PUTCTL STO    TEMP
+PUTLP  ZET    OUTCTR                          NEXT WORD?
+       TRA    PUTOK                           NO
+       CLA    =3                              RESET COUNTER
+       STO    OUTCTR
+       CLA    OUTPTR
+       ADD    =1
+       STO    OUTPTR                          INCREMENT PTR
+PUTOK  CAL*   OUTPTR                          GET WORD
+       ALS    12
+       ORA    TEMP
+       SLW*   OUTPTR
+       CLA    OUTNUM
+       ADD    =1
+       STO    OUTNUM
+       CLA    OUTCTR
+       SUB    =1
+       STO    OUTCTR
+       TRA    1,4
+*
+INIT   STZ    ANYINP
+       STZ    INPMSG
+       STZ    UNUEND
+       STZ    IOCHEK
+       STZ    ADAPTC
+       STZ    SEQCHK
+       STZ    RDCHEK
+       STZ    WRCHEK
+       AXT    MAXLIN,1
+       CLA    RCVBAS
+INITLP STZ    UNITID+MAXLIN,1
+       STZ    RCVCNT+MAXLIN,1
+       STZ    XMTCNT+MAXLIN,1
+       STO    RCVPTR+MAXLIN,1
+       ADD    BUFLNT
+       TIX    INITLP,1,1
+       RICE                                   RESET CHANNEL
+       AXT    0,5                             DELAY
+       TIX    *-1,5,1
+       AXT    ONES,1
+       SXA    WRCMD,1                         SET UP WRITE CMD
+       AXT    1,1
+       SXD    WRCMD,1
+       RSCE   CHWRIT                          START 7750
+       TCOE   *                               WAIT FOR DONE
+       ZET    WRCHEK
+       TRA    ERROR
+       TRA    1,4
+*
+* Error halts (for now)
+*
+ERROR  HTR    *
+ENOINP HTR    *
+EBDMSG HTR    *
+ENODAT HTR    *
+EBDCTL HTR    *
+EBDLIN HTR    *
+ERBDCN HTR    *
+*
+* Channel programs
+*
+CHWRIT SMS    6                               TURN OFF ATN INTR
+       XMT    INTLOC,,1
+       TCH    EW7750                          SET UP ERR HANDLR
+       CTLWN  0
+WRCMD  CPYD   **,,**                          SET UP BY PROGRAM
+WAIT   XMT    INTLOC,,1
+       TCH    CHECK                           SET UP INT HANDLR
+       SMS    0                               ENABLE ATN INTR
+       WTR    *                               DONE
+*
+CHREAD SMS    6                               TURN OFF ATN INTR
+       XMT    INTLOC,,1
+       TCH    ER7750                          SET UP ERR HANDLR
+       CTLRN  0
+       CPYD   INPBUF,,BUFLEN                  READ
+       TCH    WAIT                            FINISH UP
+*
+EW7750 SETSW  WRCHEK
+       TCH    ERCHEK
+*
+ER7750 SETSW  RDCHEK
+       TCH    ERCHEK
+*
+CHECK  TCM    RD7750,,.104                    ATN?
+       TCH    ERCHEK
+RD7750 SETSW  ANYINP
+       LIPT   WAIT
+*
+ERCHEK TCM    ERR.10,,.110
+ERCH.1 TCM    ERR.20,,.120
+ERCH.2 TCM    ERR.40,,.140
+ERCH.3 TCM    ERR.01,,.101
+ERCH.4 LIPT   WAIT
+*
+ERR.10 SETSW  UNUEND
+       TCH    ERCH.1
+ERR.20 SETSW  SEQCHK
+       TCH    ERCH.2
+ERR.40 SETSW  IOCHEK
+       TCH    ERCH.3
+ERR.01 SETSW  ADAPTC
+       TCH    ERCH.4
+*
+* Data and arrays
+*
+MSGNUM DEC    0                               MESSAGE NUMBER
+ANYINP DEC    0
+INPPTR DEC    0                               INPUT BUF PTR
+INPCTR DEC    0                               INPUT BUF CHAR CTR
+INPMSG DEC    0                               MESSAGE NUMBER
+OUTPTR DEC    0                               OUTPUT BUF PTR
+OUTCTR DEC    0                               OUTPUT BUF CTR
+OUTNUM DEC    0                               OUTPUT CHAR NUM CHARS
+CTPTR  DEC    0
+TEMP   DEC    0
+SVXR2  DEC    0
+SVXR4  DEC    0
+UNUEND DEC    0
+SEQCHK DEC    0
+IOCHEK DEC    0
+ADAPTC DEC    0
+RDCHEK DEC    0
+WRCHEK DEC    0
+BUFLMT PZE    BUFLEN-1
+OUTBEG PZE    OUTBUF-1
+RCVBAS PZE    RCVBUF
+BUFLNT PZE    BUFLEN
+.101   BOOL    101
+.104   BOOL    104
+.110   BOOL    110
+.120   BOOL    120
+.140   BOOL    140
+ONES   OCT    777777777777
+LINE   OCT    114,111,116,105,40,71,71,72,0   LINE dd:
+MSGDIA OCT    104,111,101,114,125,120,0       DIALUP
+MSGHNG OCT    110,101,116,107,125,120,0       HANGUP
+UNITID BSS    MAXLIN                          UNIT ID'S
+RCVCNT BSS    MAXLIN                          RCV BUFS CHAR CTR
+RCVPTR BSS    MAXLIN                          RCV BUF POINTERS (,2)
+XMTCNT BSS    MAXLIN                          XMT CHAR CTR
+INPBUF BSS    BUFLEN+1                        INPUT BUFFER
+OUTBUF BSS    BUFLEN+1                        OUTPUT BUFFER
+RCVBUF BSS    MAXLIN*BUFLEN                   RCV BUFFERS
+       END    DIAG

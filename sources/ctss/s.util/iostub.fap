@@ -1,0 +1,33 @@
+* STUBS for the drum diagnostic
+       COUNT   50
+       ENTRY   CHNGUS
+       ENTRY   IOFINI
+       ENTRY   IOINIT
+       ENTRY   SETAB
+       ENTRY   SETRAP
+       ENTRY   SETUSR
+       ENTRY   TAPKEY
+       ENTRY   TRAPA
+       ENTRY   TRAPB
+       ENTRY   USTAT
+*
+       LBL     IOSTUB
+*
+CHNGUS EQU     *
+IOFINI EQU     *
+SETRAP EQU     *
+TAPKEY EQU     *
+TRAPA  EQU     *
+TRAPB  EQU     *
+       TRA     2,4
+*
+SETAB  EQU     *
+       TRA     4,4
+*
+IOINIT EQU     *
+USTAT  EQU     *
+       TRA     5,4
+*
+SETUSR EQU     *
+       TRA     7,4
+       END
