@@ -1,0 +1,23 @@
+           EXTERNAL FUNCTION (OUT)
+           STATEMENT LABEL OUT
+           NORMAL MODE IS INTEGER
+           ENTRY TO FIXUP.
+           WHOAMI.(A(2)...2)
+           FSTATE.(A(1),$ SAVED$,T(8)...8,TEST,CODE)
+TEST       WHENEVER (T(7).G.0.AND.T(7).A.1K.NE.0).OR.CODE.E.3, T'O PROGL
+           FIX(5)=$..PLOT$
+           TAB(1)=$..PLOT$
+GO         PRNTP.(FIX)
+              VECTOR VALUES FIX=$  FIX PROBLEM, THEN TYPE ' R $,$$,
+          1   $ ' TO CONTINUE $,777777777777K
+           SCLS.(TAB,1)
+              VECTOR VALUES TAB=$  SAVE$,$$,$     T$
+          1   ,777777777777K
+           SCLC.(1,1)
+           CHNCOM.(1)
+           TRANSFER TO OUT
+PROGL      FIX(5)=$$
+           TAB(1)=A(1)
+           TRANSFER TO GO
+           DIMENSION A(2), T(8)
+           END OF FUNCTION

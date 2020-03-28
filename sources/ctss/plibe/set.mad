@@ -1,0 +1,65 @@
+           EXTERNAL FUNCTION (A,B)
+           NORMAL MODE IS INTEGER
+           DIMENSION BUF(432)
+           DIMENSION T(8)
+           VECTOR VALUES MODE = 0K
+           VECTOR VALUES DEV = 2
+           VECTOR VALUES CALLED = 0B
+           ENTRY TO STRTPL.
+           NAM1=$.PLOT.$
+           NAM2=BZEL.(DERBC.(A))
+           WHENEVER CALLED, ERNOTE.(8,0)
+           CALLED=1B
+BEGIN      FSTATE.(NAM1,NAM2,T(8)...8,NONE,ERCD)
+           WHENEVER T(7).A.1K.NE.0
+              DELFIL.(NAM1,NAM2,ER1,ERCD)
+           OTHERWISE
+              ASK(2)=NAM1
+              ASK(3)=NAM2
+              PRNTP.(ASK)
+              VECTOR VALUES ASK=$  OLD FILE  $,$$,$$,
+          1      $  DO YOU WANT TO DELETE IT -  $,377777777777K
+              RDFLXC.(ANS,6)
+              WHENEVER LJUST.(ANS).E.$YES$
+                 DELFIL.(NAM1,NAM2,ER1,ERCD)
+              OTHERWISE
+                 FIXUP.(BEGIN)
+              END OF CONDITIONAL
+           END OF CONDITIONAL
+NONE       OPEN.($W$,NAM1,NAM2,MODE,DEV,ER2,ERCD)
+           BUFFER.(NAM1,NAM2,BUF(432)...432)
+           STRTUP.(NAM1,NAM2)
+           FUNCTION RETURN
+          R
+ER1        WHENEVER ERCD.E.6
+              FSTATE.(NAM1,NAM2,T(8)...8)
+              PRIV(4)=$   000$.V.(OCABC.(T(7)).A.777777K)
+              PRNTP.(PRIV)
+              VECTOR VALUES PRIV=$  CAN'T DELETE FILE IN $,$$,$  MODE$
+              VECTOR VALUES PRIV(6)=777777777777K
+              FIXUP.(BEGIN)
+           OTHERWISE
+           PRNTER.(371K)
+              FIXUP.(BEGIN)
+           END OF CONDITIONAL
+          R
+ER2        WHENEVER ERCD.E.15
+              PRNTP.(FULL)
+              V'S FULL=$ SPACE EXAUSTED - YOU MUST CLEAR TRACKS$
+          1      ,777777777777K
+              FIXUP.(BEGIN)
+           OTHERWISE
+              PRNTER.(371K)
+              FIXUP.(BEGIN)
+           END OF CONDITIONAL
+ 
+           ENTRY TO ENDPL.
+           CALLED=0B
+           ENDUP.
+           CLOSE.(NAM1,NAM2,ER3,ERCD)
+           FUNCTION RETURN
+          R
+ER3        PRNTER.(371K)
+           FUNCTION RETURN
+          R
+           END OF FUNCTION

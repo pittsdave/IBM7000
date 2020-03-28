@@ -1,0 +1,141 @@
+           EXTERNAL FUNCTION
+           NORMAL MODE IS INTEGER
+           MODE NUMBER 5 CALL , BACK
+           BOOLEAN EOF2SW, ENDSW, ALTSW
+           DIMENSION NAM2(18), T(8), BUF(864)
+           INSERT FILE .OPS.
+           ENTRY TO COMBPL.
+           CALL=.XR.4
+           TYPE=COLT.(CALL)
+           BACK=.XR.4
+           NARGS=TYPE.RS.18
+           TYPE=TYPE.A.7K
+           WHENEVER TYPE.E.0.OR.NARGS.L.3.OR.NARGS.G.19, T'O ER1
+           OUTFIL=BZEL.(DEFBC.(CALL.ARG.1))
+CK1        FSTATE.(PT,OUTFIL,T(8)...8,NONE)
+           TRANSFER TO ER2
+NONE       THROUGH CK2, FOR K=2,1,K.G.NARGS
+           NAM2(K)=BZEL.(DEFBC.(CALL.ARG.K))
+           FSTATE.(PT,NAM2(K),T(8)...8,ER3)
+CK2        CONTINUE
+           WHENEVER STOP, TRANSFER TO ER4
+           STRTPL.(CALL.ARG.1)
+           THROUGH GO, FOR K =2,1,K.G.NARGS
+           WHENEVER FLAG(K), TRNSFR.
+GO         CONTINUE
+           ENDPL.
+           T=BACK.OUT.0
+          R
+          R   ERROR RETURNS
+          R
+ER1        BADCL(4)=BZEL.(OCABC.(CALL))
+           PRNTP.(BADCL)
+           VECTOR VALUES BADCL=$BAD CALL TO COMBPL FROM $,$$,$ ABS. $,
+          1   777777777777K
+           EXIT.
+          R
+ER2        WHENEVER T(6).A.1K.E.1K
+              DELFIL.(PT,OUTFIL,ER2A,ERCD)
+              TRANSFER TO NONE
+           END OF CONDITIONAL
+ER2A       CBPL(4)=PT
+           CBPL(5)=OUTFIL
+           PRNTP.(CBPL)
+           VECTOR VALUES CBPL=$  COMBPL FOUND OLD FILE $,$$,$$,
+          1   777777777777K
+           FIXUP.(CK1)
+          R
+ER3        NFND(1)=PT
+           NFND(2)=NAM2(K)
+           PRNTP.(NFND)
+           V'S NFND=$FILE$,$$,$$,$NOT FOUND - DO YOU WANT TO IGNORE IT$
+          1    ,777777777777K
+           T=RDFLXC.(ANS,6)
+           WHENEVER LJUST.(ANS).E.$YES   $
+              FLAG(K)=0B
+           OTHERWISE
+              STOP=1B
+           END OF CONDITIONAL
+           TRANSFER TO CK2
+          R
+ER4        FIXUP.(RSTRT)
+RSTRT      STOP=0B
+           TRANSFER TO CK1
+          R
+          R   PROGRAM DATA
+          R
+           VECTOR VALUES STOP=0B
+           VECTOR VALUES FLAG(0)...FLAG(20)=1B
+           VECTOR VALUES PT=$.PLOT.$
+          R
+          R   INTERNAL FUNCTIONS
+          R
+           INTERNAL FUNCTION
+           ENTRY TO TRNSFR.
+           EOFCT=432
+           BLOCKS=33
+           LAST=6
+           WORD=429
+           ENDSW=0B
+           EOF2SW=0B
+           OPEN.($R$,PT,NAM2(K),-0,-0,ERRK1)
+           RDFILE.(PT,NAM2(K),0,BUF(432)...432, EOF,EOFCT,ERRK1,ERCD)
+           RDFILE.(PT,NAM2(K),0,BUF(864)...432,EOF2,EOFCT,ERRK1,ERCD)
+PLOTDK     WHENEVER BUF(WORD+4).NE.$ (PLOT$.OR.BUF(WORD+3).NE.$ TAPE)$,
+          1   TRANSFER TO ERRK2
+           THROUGH LOOP1, FOR L1=0,1,L1.G.BLOCKS
+           WHENEVER L1.E.BLOCKS
+              LIM=LAST
+           OTHERWISE
+              LIM=6
+           END OF CONDITIONAL
+           TAGS=BUF(WORD)
+           THROUGH LOOP2, FOR L2=1,1,L2.G.LIM
+           TAG=.UNPAC.TAGS
+           WHENEVER TAG.E.0
+              FACTOR.(BUF(WORD-L2*2+1))
+           OTHERWISE
+              PLOT1.(BUF(WORD-L2*2+1),BUF(WORD-L2*2),TAG)
+           END OF CONDITIONAL
+LOOP2      CONTINUE
+              WORD=WORD-13
+LOOP1      CONTINUE
+           WHENEVER ENDSW, TRANSFER TO END
+           WHENEVER ALTSW
+              J=432
+           WORD=861
+              ALTSW=0B
+           OTHERWISE
+              J=864
+              WORD=429
+              ALTSW=1B
+           END OF CONDITIONAL
+           WHENEVER EOF2SW, TRANSFER TO EOF
+           EOFCT=432
+           RDFILE.(PT,NAM2(K),0,BUF(J)...432,EOF2,EOFCT,ERRK1,ERCD)
+           TRANSFER TO PLOTDK
+          R
+EOF        FWAIT.(PT,NAM2(K), ERRK1, ERCD)
+           BLOCKS=(EOFCT-3)/13
+           LAST=(EOFCT-BLOCKS*13-3)/2
+           BLOCKS=BLOCKS+1
+           ENDSW=1B
+           TRANSFER TO PLOTDK
+          R
+EOF2       EOF2SW=1B
+           TRANSFER TO PLOTDK
+          R
+END        CLOSE.(PT,NAM2(K),ERRK1,ERCD)
+           FUNCTION RETURN
+ERRK1      PRNTER.(371K)
+           EXIT.
+ERRK2      NOPLOT(1)=PT
+           NOPLOT(2)=NAM2(K)
+           PRNTP.(NOPLOT)
+              V'S NOPLOT=$ FILE $,$$,$$,$ IS OF IMPROPER FORMAT$
+          1   ,777777777777K
+           EXIT.
+          R
+           END OF FUNCTION
+          R
+           END OF FUNCTION
