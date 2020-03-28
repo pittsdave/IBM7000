@@ -1,0 +1,57 @@
+* PETER R. BOS .... DUMMY ASKOPR FOR FOREGROUND RELOADER ....
+       REM
+       PCC     ON 
+       ENTRY   ASKOPR        ASK OPERATOR QUESTION    
+       LBL     FGAS     
+       PCC     OFF
+       REM
+       EXTERN  RSSRB,PRCODE,WAIT,GETLSG   
+       REM
+ASKOPR SXA     ASKX4,4       SAVE XRS.    
+       SXA     ASKX2,2       ..     
+       LDI     1,4           SEE IF NULL ARG    
+       LNT     400000        ..     
+       LNT     300000        ..     
+       TRA     1,4           .. YES, RETURN     
+       TSX     RSSRB,4       RESET ANY INPUT LINES    
+       PAR     0             ..     
+       REM
+PMSG   LXA     ASKX4,2       HERE TO PRINT MESSAGE TO OPERATOR    
+PLOOP  LDI     1,2           HERE FOR LINE IN MESSAGE 
+       LNT     400000        CHECK VALID ARG    
+       LNT     300000        ..     
+       TRA     ZZZ           NO, SKIP TO SLEEP OR EXIT
+       STI     PRM           YES, SAVE MESSAGE POINTER
+       CAL     2,2           GET TRANSFER ADDRESS     
+       PDX     ,4            ..     
+       SXA     PRC,4         SAVE   
+       TSX     PRCODE,4      PRINT LINE TO OPERATOR   
+PRC    PAR     -             ..     
+PRM    PAR     -,,-          ..     
+       TXI     PLOOP,2,-2    POINT AT NEXT ARG, REPEAT
+       REM
+ZZZ    TSX     WAIT,4        SLEEP, WAIT FOR REPLY    
+       PAR     =1            .. INPUT WAIT
+       PAR     =0            ..     
+       TSX     GETLSG,4      PICK UP OPERATOR SIGNAL  
+       LXA     ASKX4,2       RELOAD X2    
+       REM
+CLOOP  LDI     1,2           GET ARG WORD 
+       LNT     400000        WAS THAT LAST ONE  
+       LNT     300000        ..     
+       TRA     PMSG          .. YES, WRONG CODE GIVEN, ASK AGAIN  
+       CAL     2,2           NO, TRY THIS ONE   
+       STA     TRA           .. TRANSFER ADDRESS
+       PDX     ,4            .. CODE
+       PXA     ,4            ..     
+       SUB     KEYVAL        RESPONSE GIVEN     
+       TZE     FOUND         MATCH, SKIP  
+       TXI     CLOOP,2,-2    NO MATCH, REPEAT   
+       REM
+FOUND  SYN     *  
+ASKX4  AXT     -,4           RESTORE XRS  
+ASKX2  AXT     -,2           ..     
+TRA    TRA     -             SKIP TO CALLER PROGRAM   
+       REM
+       INSERT  BCMEQB   
+       END  

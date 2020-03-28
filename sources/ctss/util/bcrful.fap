@@ -1,0 +1,52 @@
+* BCRFUL., BCLFUL., FULBCD.- 6 TO 12 BIT CONVERSION.
+       TTL     PETER R. BOS --- AUGUST 1967                             
+       REM
+       PCC     ON 
+       NOLNK
+       ENTRY   BCRFUL        CONVERT RIGHT HALF BCD TO 12 BIT.    
+       ENTRY   BCLFUL        CONVERT LEFT HALF BCD TO 12 BIT.     
+       ENTRY   FULBCD        CONVERT 12 BIT TO BCD.   
+       LBL     BCRFUL   
+       PCC     OFF
+       REM
+       REM     $BDRFUL  
+       REM
+BCRFUL STL     RQL           SET FLAG FOR RIGHT HALF. 
+       TRA     *+2           SKIP.  
+       REM
+       REM
+       REM     $BCLFUL  
+       REM
+BCLFUL STZ     RQL           SET FLAG FOR LEFT HALF.  
+       REM
+       LDQ*    1,4           PICK UP BCD WORD.  
+       ZET     RQL           IF RIGHT HALF,     
+       RQL     18            SHIFT TOWARD AC.   
+       ZAC                   CLEAR AC.    
+       LGL     6             CONVERT.     
+       ALS     6             ..     
+       LGL     6             ..     
+       ALS     6             ..     
+       LGL     6             ..     
+       REM
+       TRA     2,4           RETURN RESULT IN AC.     
+       REM
+       REM
+       REM     $FULBCD  
+       REM
+FULBCD LDQ*    1,4           PICK UP 12 BIT WORD.     
+       ZAC                   CLEAR AC.    
+       RQL     6             CONVERT.     
+       LGL     6             ..     
+       RQL     6             ..     
+       LGL     6             ..     
+       RQL     6             ..     
+       LGL     6             ..     
+       REM
+       TRA     2,4           RETURN RESULT IN AC.     
+       REM
+       REM
+RQL    PZE  
+       REM
+       REM
+       END  

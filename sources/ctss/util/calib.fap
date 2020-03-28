@@ -1,0 +1,49 @@
+       EVEN
+       LMTM 
+       STZ     5  
+       TSX     CLOCON,4 
+       CAL     7TRA     
+       SLW     7  
+       STZ     6  
+       AXT     0,1
+       CLA     =614     
+       COM  
+       ANA     =O377777777777 
+       SLW     5  
+       LAS     5  
+       HTR     *  
+       TRA     *-2
+       TRA     TEST1    
+       EVEN 
+TEST1  DUP     2,99     
+       STT     TEM
+       XCA  
+       STT     TEM
+       TXI     TEST1,1,1
+*     
+7TRA   TRA     *+1
+       STZ     5  
+       LAC     6,2
+       TXI     *+1,2,TEST1    
+       SCA     LENGTH,2 
+       PXA     0,1
+       XCA  
+       MPY     =200     
+       XCA  
+       ADD     LENGTH   
+       STO     LENGTH   
+       LRS     35 
+       DVP     =50000   
+       STQ     PCNT     
+       TSX     $.PRINT,4
+       STR     FMT
+       STR     LENGTH   
+       STR     PCNT     
+       STR  
+       TIA     =HDORMNT 
+LENGTH
+PCNT  
+TEM   
+CLOCON TIA     =HCLOCON 
+FMT    BCI ,3X,VI12,H' IN 10 SEC. ', I4, H' PERCENT '*
+       END  

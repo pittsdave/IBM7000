@@ -1,0 +1,323 @@
+       REM
+       EXTERN  COMLOC,ACORE   
+       EXTERN  BCOCT,BCDEC,ZEL
+       EXTERN  GETLOC,GETARY  
+       EXTERN  .FMT,WRFLX     
+       EXTERN  SETBRK,CHNCOM  
+       EXTERN  GETCLS,GETARG  
+       REM
+       LMTM 
+       TSX     SETBRK,4 
+       PZE     OUT
+       TSX     GETCLS,4 
+       PZE     CBUF,,0  
+       AXT     19,1     
+       STZ     GO 
+       TRA     *+4
+MORE   TSX     GETARG,4 
+       PZE     CBUF,,20 
+       AXT     20,1     
+       TSX     WRFLX,4  
+       PZE     *,,0     
+       CAL     CBUF+20,1
+       ERA     =H     * 
+       TZE     NOMOD    
+       ANA     =O77     
+       TNZ     NOMOD    
+       STZ     .O.
+       STZ     .D.
+       STZ     .B.
+       STZ     .Q.
+       STZ     .NZ.     
+       LDQ     CBUF+20,1
+       AXT     6,2
+       ZAC  
+       LGL     6  
+       AXT     NMODE,3  
+       LAS     MODES+NMODE,3  
+       TRA     *+2
+       XEC     MODES+NMODE+1,3
+       TIX     *-3,3,2  
+MLP    TIX     *-7,2,1  
+       TNX     QTEST,1,1
+       CAL     CBUF+20,1
+       ERA     FENCE    
+       TZE     QTEST    
+       REM
+       AXC     0,4
+       CLA     SP 
+       NZT     .O.
+       TRA     *+4
+       LDQ     .OCT     
+       DST     FMT,4    
+       TXI     *+1,4,-2 
+       NZT     .D.
+       TRA     *+4
+       LDQ     .DEC     
+       DST     FMT,4    
+       TXI     *+1,4,-2 
+       NZT     .B.
+       TRA     *+4
+       LDQ     .BCD     
+       DST     FMT,4    
+       TXI     *+1,4,-2 
+       ZAC  
+       LDQ     .TRA     
+       DST     FMT,4    
+       REM
+NOMOD  TSX     GETERM,6 
+       STA     ALOC     
+       SUB     =36
+       STA     ADR
+       TXL     1LOC,1,1 
+       CAL     CBUF+20,1
+       ERA     FENCE    
+       TZE     1LOC     
+       ERA     =O171717444444 
+       SLW     .N.
+       TNX     LOSS,1,1 
+       TSX     GETERM,6 
+       NZT     .N.
+       TRA     *+4
+       SUB     ALOC     
+       ADD     =1 
+       TMI     LOSS     
+       TZE     LOSS     
+       PAX     ,2 
+       TNX     LSTBUF,2,36    
+       REM
+NXTBUF CAL     ADR
+       ADD     =36
+       STA     ADR
+       TSX     GETARY,4 
+ADR    PZE     ** 
+       PZE     BUFF,,36 
+       AXT     36,3     
+       CAL     BUFF+36,3
+       TSX     PLINE,7  
+       TIX     *-2,3,1  
+       TIX     NXTBUF,2,36    
+       REM
+LSTBUF CAL     ADR
+       ADD     =36
+       STA     *+3
+       SXD     *+3,2    
+       TSX     GETARY,4 
+       PZE     ** 
+       PZE     BUFF,,** 
+       AXT     36,3     
+       CAL     BUFF+36,3
+       TSX     PLINE,7  
+       TNX     *+2,3,1  
+       TIX     *-3,2,1  
+       REM
+OUT    TSX     WRFLX,4  
+       PZE     *,,0     
+       ZET     GO 
+       TRA     MORE     
+       TSX     CHNCOM,4 
+       PZE     0  
+       REM
+1LOC   TSX     GETLOC,4 
+ALOC   PZE     ** 
+       TSX     PLINE,7  
+       TRA     OUT
+       REM
+PLINE  ZET     .NZ.     
+       TZE     SKIPPR   
+       SLW     PLTEM    
+       TSX     .FMT,4   
+       PZE     ALOC,2,5 
+FMT    PZE     0,0,2    
+       PZE     PLTEM,2,12     
+       PZE  
+       TRA     WRLIN    
+       BSS     4  
+WRLIN  SLW     *+2
+       TSX     WRFLX,4  
+       PZE     **,,**   
+SKIPPR CAL     ALOC     
+       ADD     =1 
+       STA     ALOC     
+       TRA     1,7
+       REM
+MODES  BCI     1,00000O 
+       STL     .O.
+       BCI     1,00000D 
+       STL     .D.
+       BCI     1,00000B 
+       STL     .B.
+       BCI     1,00000G 
+       STL     GO 
+       BCI     1,00000Q 
+       TRA     QUIT     
+       BCI     1,00000N 
+       STL     .NZ.     
+NMODE  EQU     *-MODES  
+       REM
+QUIT   STZ     GO 
+       STL     .Q.
+       TRA     MLP
+       REM
+GETERM STZ     EQ 
+       STZ     MNS
+       STZ     NAM
+       STZ     VALUE    
+       STZ     VALTEM   
+       AXT     0,5
+GT     CAL     CBUF+20,1
+       AXT     NARG,4   
+       LAS     ARGS+NARG,4    
+       TRA     *+2
+       XEC     ARGS+NARG+1,4  
+       TIX     *-3,4,2  
+       TSX     EVAL,7   
+       NZT     EQ 
+       TRA     *+5
+       STA     *+2
+       TSX     GETLOC,4 
+       PZE     ** 
+       STZ     EQ 
+       ZET     MNS
+       TRA     *+3
+       ADD     VALUE,5  
+       TRA     *+5
+       SUB     VALUE,5  
+       TMI     *+3
+       COM  
+       ADD     =1 
+       STA     VALUE,5  
+       STZ     MNS
+       STL     NAM
+GETIX  TIX     GT,1,1   
+GOTERM NZT     NAM
+       TRA     LOSS     
+       TXH     *+3,5,0  
+       CAL     VALUE    
+       TRA     1,6
+       CAL     VALTEM   
+       STA     *+2
+       TSX     GETLOC,4 
+       PZE     ** 
+       ADM     VALUE    
+       TRA     1,6
+       REM
+ARGS   BCI     1,     + 
+       TRA     PLUS     
+       BCI     1,     - 
+       TRA     MINUS    
+       BCI     1,     * 
+       TRA     STAR     
+       BCI     1,     / 
+       TRA     SLASH    
+       BCI     1,     = 
+       TRA     EQUAL    
+       BCI     1,   ... 
+       TRA     GOTERM   
+       BCI     1,  THRU 
+       TRA     GOTERM   
+FENCE  OCT     777777777777   
+       TRA     GOTERM   
+NARG   EQU     *-ARGS   
+       REM
+MINUS  STL     MNS
+PLUS   NZT     NAM
+       TRA     LOSS     
+       STZ     NAM
+       TRA     GETIX    
+STAR   AXT     -1,5     
+       TRA     GETIX    
+EQUAL  STL     EQ 
+       TRA     GETIX    
+SLASH  AXT     0,5
+       CAL     VALTEM   
+       STA     *+2
+       TSX     GETLOC,4 
+       PZE     ** 
+       ADM     VALUE    
+       STA     VALUE    
+       STZ     VALTEM   
+       TRA     GETIX    
+       REM
+EVAL   SLW     EVTEM    
+       TSX     ZEL,4    
+       PTH     EVTEM    
+       STO     EVTEM    
+       LDI     EVTEM    
+       PIA  
+       ANA     =HYYYYYY 
+       TZE     EVOCT    
+       PIA  
+       ANA     =H 
+       TZE     EVDEC    
+       PIA  
+       ERA     =H     . 
+       ANA     =O77     
+       TNZ     *+6
+       PIA  
+       ARS     6  
+       PAI  
+       ANA     =H 
+       TZE     EVDEC    
+       AXT     36,4     
+       LDQ     EVTEM    
+       ZAC  
+       LGL     6  
+       TNZ     *+3
+       TIX     *-2,4,6  
+       TRA     1,7
+       CAL     EVTEM    
+       LDQ     =H 
+       LGL     36,4     
+       SLW     EVTEM    
+       TSX     COMLOC,4 
+       PTH     EVTEM    
+       TNZ     1,7
+       TSX     ACORE,4  
+       PTH     EVTEM    
+       ARS     18 
+       TRA     1,7
+       REM
+EVOCT  TSX     BCOCT,4  
+       PTH     EVTEM    
+       TRA     1,7
+       REM
+EVDEC  STI     EVTEM    
+       TSX     BCDEC,4  
+       PTH     EVTEM    
+       TRA     1,7
+       REM
+QTEST  ZET     .Q.
+       TRA     OUT
+LOSS   TSX     WRFLX,4  
+       PZE     IMP,,4   
+*IMPROPER USE OF COMMAND.     
+       TRA     OUT
+       REM
+SP     PZE     0,0,2    
+.BCD   PZE     PLTEM,1,6
+.OCT   PZE     PLTEM,2,12     
+.DEC   PZE     PLTEM,4,11     
+.TRA   TRA     WRLIN    
+       REM
+MNS   
+NAM   
+.N.   
+.Q.   
+.NZ.  
+GO    
+EVTEM  BSS     0  
+PLTEM 
+VALUE                        *
+VALTEM                       *
+EQ    
+       REM
+IMP    BCI     4,IMPROPER USE OF COMMAND. 
+CBUF   BSS     20 
+BUFF   BSS     36 
+       REM
+.B.    EQU     BUFF     
+.D.    EQU     BUFF+1   
+.O.    EQU     BUFF+2   
+       REM
+       END  
