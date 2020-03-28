@@ -1,0 +1,572 @@
+          R'P'  01/19/69
+          R
+            WHENEVER (COMARG.(2,FN1).E.FENCE).OR.(COMARG.(1,FN).E.FENCE)
+              WHENEVER FN.E.$  HELP$.OR.FN.E.$(HELP)$, TRANSFER TO HELP
+              PRFULL.($'1'RINCOMPLETE '1COMMAND.'*'B$)
+              CHNCOM.(0)
+            END OF CONDITIONAL
+            GETBUF.(IN,360)
+            GETBUF.(OUT,84)
+            GETBUF.(ITABS,150)
+            GETBUF.(OTABS,150)
+            MODE=0
+            LMSW=0B
+            LNSZ=0
+            HDRSW=0B
+            DATESW=0B
+            CC=0B
+            NCCS=1B
+            PS=0B
+            NIT=0
+            NOT=0
+            MADSW=0B
+            THROUGH AL, FOR I=3,1,COMARG.(I,ARG).E.FENCE
+            ARGX=ARG
+            WHENEVER ARG.A.77K.E.34K
+              ARG=LJUST.(ARG.A.7777777777K2.V.60K)
+              WHENEVER ARG.A.77K10.NE.74K10, TRANSFER TO BAD
+              ARG=BZEL.(RJUST.(ARG.A.7777777777K.V.60K10))
+            END OF CONDITIONAL
+            WHENEVER ARG.E.$     6$
+              MODE=6
+            OR WHENEVER ARG.E.$     9$
+              MODE=9
+              CC=0B
+              NCCS=0B
+            OR WHENEVER ARG.E.$    12$
+              MODE=12
+              CC=0B
+              NCCS=0B
+            OR WHENEVER ARG.E.$    CC$
+              CC=1B
+              NCCS=0B
+            OR WHENEVER ARG.E.$   NCC$
+              CC=0B
+              NCCS=0B
+            OR WHENEVER ARG.E.$    WR$
+              WR=1B
+            OR WHENEVER ARG.E.$    PS$
+              PS=1B
+            OR WHENEVER ARG.E.$   HDR$
+              HDRSW=1B
+              PAGENO=1
+              PGNO=2
+              TRANSFER TO PHDR1
+            OR WHENEVER ARG.E.$  DATE$
+              DATESW=1B
+              PGNO=0
+PHDR1         FTIME.(GTDYTM.(0),DATE,TIME)
+              DATE(1)=(DATE.A.7777K).LS.18.V.$/00'  $
+              DATE=(DATE.A.7777K8).RS.6.V.(DATE.A.7777K4).RS.12
+          1     .V.$ 00/00$
+                VECTOR VALUES PGN=$ PAGE 1'8$
+                DIMENSION DATE(1)
+            OR WHENEVER ARG.E.$ ITABS$
+              GETTAB.(NIT,ITABS(ITABS))
+            OR WHENEVER ARG.E.$ OTABS$
+              GETTAB.(NOT,OTABS(OTABS))
+            OR WHENEVER ARG.E.$  HELP$
+HELP          PRMESS.
+              PRFULL.($'UP NAME1 NAME2 -MODES-$)
+              PRFULL.($'UMODES 'LARE:$)
+              PRFULL.($'U  6 9 12 CC NCC WR PS HDR DATE HELP$)
+              PRFULL.(
+          1     $'U  ITAB 'N  OTAB 'N  LL 'N  PGL 'N  BLKSIZ 'N'8$,
+          2     $  FILE 'LNAME4$)
+              PRFULL.($'U  ITABS '4LIST  OTABS '4LIST$)
+              PRFULL.($    LIST CONTAINS: 'U'N CTSS FAP MAD$)
+              TRANSFER TO EGRETS
+            OR WHENEVER COMARG.(I+1,ARG1).NE.FENCE
+              I=I+1
+              WHENEVER ARG.E.$  ITAB$
+                ITD=BCDC.(ARG1)
+                WHENEVER ITD.E.0, TRANSFER TO ILL
+              OR WHENEVER ARG.E.$  OTAB$
+                OTD=BCDC.(ARG1)
+                WHENEVER OTD.E.0, TRANSFER TO ILL
+              OR WHENEVER ARG.E.$    LL$
+                SLL=BCDC.(ARG1)
+                WHENEVER SLL.E.0, TRANSFER TO ILL
+              OR WHENEVER ARG.E.$   PGL$
+                SPGL=BCDC.(ARG1)
+                WHENEVER SPGL.E.0, TRANSFER TO ILL
+              OR WHENEVER ARG.E.$BLKSIZ$
+                LNSZ=BCDC.(ARG1)
+                WHENEVER LNSZ.E.0, TRANSFER TO ILL
+                CC=0B
+                NCCS=0B
+              OR WHENEVER ARG.E.$  FILE$
+                FILESW=1B
+                FNARY=FN
+                FNARY(1)=ARG1
+                DELETE.(FNARY,FNARY(1),0,EGRETS)
+                DIMENSION FNARY(1)
+                OPENW.(FN,ARG1)
+              OTHERWISE
+                TRANSFER TO BAD
+              END OF CONDITIONAL
+            OTHERWISE
+BAD           PRFULL.($'R'X'8$,ARGX,$ NOT RECOGNIZED.'B$)
+              TRANSFER TO EGRETS
+ILL           PRFULL.($'R'X'8$,ARGX,$'X '8$,ARG1,$ ILLEGAL.'B$)
+              TRANSFER TO EGRETS
+AL          END OF CONDITIONAL
+            WHENEVER (SPGL.L.5.OR.(SPGL.L.8.AND.HDRSW)).AND.SPGL.NE.0
+              PRFULL.($'R'3   PGL '8$,BZEL.(DEFBC.(SPGL)),$ ILLEGAL.'B$)
+              TRANSFER TO EGRETS
+            END OF CONDITIONAL
+            WHENEVER NIT.E.0
+              THROUGH ITDL, FOR I=ITD+1,ITD,I.G.150
+              NIT=NIT+1
+              ITABS(ITABS+NIT)=I
+ITDL          CONTINUE
+            END OF CONDITIONAL
+            WHENEVER NOT.E.0
+              THROUGH OTDL, FOR I=OTD+1,OTD,I.G.150
+              NOT=NOT+1
+              OTABS(OTABS+NOT)=I
+OTDL          CONTINUE
+            END OF CONDITIONAL
+            SETBRK.(BRKOUT)
+          R
+          R  THINK ABOUT MODE
+          R
+            OPENF.(FN,FN1)
+            EOFCT=360
+            RDWAIT.(FN,FN1,1,IN(IN+360)...360,EOFT,EOFCT)
+EOFT        IL=360-EOFCT
+            THROUGH LLM, FOR I=360,-1,I.LE.IL.OR.LMSW
+            WHENEVER IN(IN+I).A.LM .E.LM, LMSW=1B
+LLM         CONTINUE
+            WHENEVER MODE.E.0
+              N9=0B
+              N12=0B
+              THROUGH LT, FOR I=360,-1,I.LE.IL.OR.N9.AND.N12
+              CHAR=IN(IN+I)
+              WHENEVER CHAR.A.LM.E.LM, TRANSFER TO LT
+              WHENEVER .NOT.N9.AND.CHAR.A.600600600600K.NE.0,N9=1B
+              WHENEVER .NOT.N12.AND.CHAR.A.720072007200K.NE.0,N12=1B
+LT            CONTINUE
+              WHENEVER .NOT.N9.AND.N12
+                MODE=9
+                NCCS=0B
+                CC=0B
+              OR WHENEVER .NOT.N12.AND.N9
+                MODE=12
+                NCCS=0B
+                CC=0B
+              OTHERWISE
+                MODE=6
+              END OF CONDITIONAL
+            END OF CONDITIONAL
+            IN(IN+IL+1)=0
+            THROUGH CCTL, FOR I=360,-1,I.LE.IL.OR..NOT.NCCS
+            PCC=IN(IN+I-1).RS.30
+PCL         THROUGH PCL, FOR J=0,1,J.G.NPCC.OR.PCC.E.PCCL(J)
+            WHENEVER J.G.NPCC.OR.IN(IN+I).A.LM.NE.LM
+              NCCS=0B
+              CC=0B
+            OTHERWISE
+              I=I-IN(IN+I).A.77777K
+              CC=1B
+            END OF CONDITIONAL
+CCTL        CONTINUE
+          R
+          R  GET UNITID AND PICK UP TIMING CODES
+          R
+            WHOAMI.(OUT(OUT+4)...4)
+            WHENEVER OUT(OUT+1) .E. $(FIB) $
+              ID=10
+              TRANSFER TO GETTIM
+            OTHERWISE
+              ID = OUT(OUT+1) .RS. 30
+              WHENEVER ID.G.9
+                PRFULL.($'R'1ILLEGAL '1CONSOLE 'UID:'X'8$,OUT(OUT+1),
+          1       $'B'9$)
+                TRANSFER TO BRKOUT
+              END OF CONDITIONAL
+GETTIM        TCR = TCR(ID)
+              TCRLF=TCRLF(ID)
+              WHENEVER FILESW, TCRLF=1
+              TBS = TBS(ID)
+              TSP = TSP(ID)
+              TTAB = TTAB(ID)
+              TLF = TLF(ID)
+              WHENEVER FILESW, TLF=1
+              LL=LL(ID)
+              WHENEVER SLL.NE.0, LL=SLL
+              PGL=PGL(ID)
+              WHENEVER SPGL.NE.0, PGL=SPGL
+              D(8)=PGL/5
+              D(7)=(PGL-1)/4
+              D(6)=(PGL-2)/3
+              D(5)=2*D(7)
+              D(1)=PGL
+            END OF CONDITIONAL
+            WHENEVER LNSZ.NE.0
+              LMSW=0B
+            OR WHENEVER .NOT.LMSW.AND.MODE.E.6
+              LNSZ=14
+            OTHERWISE
+              LNSZ=0
+            END OF CONDITIONAL
+            SETSIZ.(MODE,LNSZ,LMSW)
+            SETFUL.(0)
+            AX=1
+            BX=1
+            AY=0
+            WHENEVER CC.OR.PS
+              CCN=CC
+              CCX=CC.OR.PS
+              BY=0
+            OTHERWISE
+              BY=1
+              CCN=0B
+              CCX=0B
+            END OF CONDITIONAL
+            K=1
+            WHENEVER DATESW.OR.HDRSW
+              BY=4
+              AY=4
+              PRTCHR.(PTCHAR.)
+              PRFULA.($'*'*'X$,FN,$ 'X'8$,FN1,DATE...2,TIME,PGN...PGNO,
+          1     $'*'*'9$)
+            END OF CONDITIONAL
+            EOFSW=0B
+LOOP        N=READF.(IN(IN),360,777K,EOF)
+            THROUGH CHARL, FOR I=1,1,I.G.N
+            CHAR=IN(IN+I).A.177K
+            WHENEVER MODE.E.9, CHAR=ASCTSS.(CHAR)
+            WHENEVER CHAR.E.57K, TRANSFER TO CHARL
+            PTF=1B
+            CKP=1B
+            WHENEVER CCN
+              CCN=0B
+L2            THROUGH L2, FOR J=0,1,J.G.NPCC.OR.CHAR.E.PCCL(J)
+              WHENEVER J.G.NPCC, TRANSFER TO CKHDR
+              PTF=0B
+              TRANSFER TO PCCP(J)
+          R
+          R 1 2 3 4 5 -- SKIPS
+PCCP(1)
+PCCP(5)
+PCCP(6)
+PCCP(7)
+PCCP(8)       WHENEVER BY.E.BY/PGL*PGL, TRANSFER TO CKHDR
+              X=((BY-BY/PGL*PGL)/D(J)+1)*D(J)
+              WHENEVER X.G.PGL, X=PGL
+              BY=BY/PGL*PGL+X+2
+              TRANSFER TO CKHDR
+          R
+          R SPACE 0 -
+PCCP(0)
+PCCP(2)
+PCCP(3)       BY=BY+D(J)
+              TRANSFER TO CKHDR
+          R
+          R + / S T
+PCCP(4)
+PCCP(9)
+PCCP(10)
+PCCP(11)      BY=BY+D(J)
+              CKP=0B
+              TRANSFER TO CKHDR
+          R
+            OR WHENEVER CCX.OR..NOT.(CC.OR.PS)
+              CKP=CCX
+CKHDR         CCX=0B
+              WHENEVER AY/PGL.NE.(BY+2)/PGL.AND.HDRSW
+                BY=BY+4
+                AY=AY+1
+                AX=1
+                PTCHAR.(SP(0))
+                WHENEVER TLF.G.0
+                  CHR=SP(0)
+                OTHERWISE
+                  CHR=SP(1)
+                END OF CONDITIONAL
+SK1             X=AY-AY/PGL*PGL
+                WHENEVER X.NE.0, X=PGL-X
+                AY=AY+X
+                THROUGH SK2, FOR X=X,-1,X.E.0
+SK2             PTCHAR.(CHR)
+                PAGENO=PAGENO+1
+                PGN(1)=BZ57.(DEFBC.(PAGENO))
+                PRFULA.($'*'*'X$,FN,
+          1       $ 'X'8$,FN1,DATE...2,TIME,PGN...PGNO,
+          2       $'*'*'9$)
+                AY=AY+4
+                WHENEVER BY.L.AY, BY=AY
+                WHENEVER AY/PGL.NE.(BY+2)/PGL, TRANSFER TO SK1
+              END OF CONDITIONAL
+          R
+              WHENEVER CKP
+                MOD=BY-(BY/PGL)*PGL
+                WHENEVER MOD.G.PGL-3.OR.MOD.L.2
+                  BY=((BY+3)/PGL)*PGL+2
+                END OF CONDITIONAL
+              END OF CONDITIONAL
+              WHENEVER .NOT.PTF, TRANSFER TO CHARL
+            END OF CONDITIONAL
+          R
+L1          THROUGH L1, FOR J=0,1,J.G.NSPC .OR. CHAR.E.SP(J)
+            WHENEVER J.LE.NSPC
+              TRANSFER TO SPP(J)
+          R  CR
+SPP(0)        BX=1
+              BY=BY+1
+              CCN=CC
+              CCX=CC.OR.PS
+              TRANSFER TO CHARL
+          R  LF
+SPP(1)        BY=BY+1
+              CCX=CC.OR.PS
+              TRANSFER TO CHARL
+          R  TAB
+SPP(2)        CONTINUE
+TL1           THROUGH TL1, FOR TI=1,1,ITABS(ITABS+TI).G.BX
+              BX=ITABS(ITABS+TI)
+              TRANSFER TO CHARL
+          R  SP
+SPP(3)        BX=BX+1
+              TRANSFER TO CHARL
+          R  BS
+SPP(4)        BX=BX-1
+              TRANSFER TO CHARL
+          R  CR NO LF
+SPP(5)        BX=1
+              TRANSFER TO CHARL
+          R
+            OTHERWISE
+FILOUT        WHENEVER CHAR.E.MADBS.AND.BX.E.12.AND.MADSW
+                BX=11
+                TRANSFER TO CHARL
+              END OF CONDITIONAL
+L3            THROUGH L3, FOR J=0,1,J.G.NNOSP.OR.CHAR.E.NOSP(J)
+              WHENEVER J.LE.NNOSP
+                PTCHAR.(CHAR)
+                TRANSFER TO CHARL
+              END OF CONDITIONAL
+              WHENEVER BX.G.LL
+                WHENEVER WR
+                  BX=1
+                  BY=BY+1
+                OTHERWISE
+                  TRANSFER TO NOPT
+                END OF CONDITIONAL
+              END OF CONDITIONAL
+              WHENEVER AX.E.BX.AND.AY.E.BY, TRANSFER TO PCHAR
+              WHENEVER BY.E.AY.AND.BX.E.AX+1
+                PTCHAR.(SP(3))
+                TRANSFER TO PCHAR
+              OR WHENEVER BX.E.1.AND.BY.E.AY+1
+                PTCHAR.(SP(0))
+                TRANSFER TO PCHAR
+              END OF CONDITIONAL
+          R  FILL FROM A TO B
+            THROUGH RL, FOR J=0,1,J.G.NSPC
+RL          NC(J)=0
+            WHENEVER BY.G.AY .AND. TLF.G.0
+              NCR=1
+              AX=1
+              AY=AY+1
+            END OF CONDITIONAL
+            WHENEVER AX.L.BX
+              HORZ.(AX,BX)
+            OTHERWISE
+              WHENEVER TCR*AX+HORZ.(1,BX).L.(AX-BX)*TBS.AND.
+          1     (BY.G.AY.OR.TCRLF.E.0)
+                WHENEVER BY.G.AY
+                  NCR=NCR+1
+                  AY=AY+1
+                  AX=1
+                OTHERWISE
+                  NCRLF=1
+                  AX=1
+                END OF CONDITIONAL
+              OTHERWISE
+                NBS=AX-BX
+                NSP=0
+                NTAB=0
+              END OF CONDITIONAL
+            END OF CONDITIONAL
+            WHENEVER TLF.G.0
+              NCR=NCR+BY-AY
+            OTHERWISE
+              NLF=NLF+BY-AY
+            END OF CONDITIONAL
+            THROUGH FILL, FOR J=0,1,J.G.NSPC
+            THROUGH FILL1, FOR L=1,1,L.G.NC(J)
+            PTCHAR.(SP(J))
+FILL1       CONTINUE
+FILL        CONTINUE
+PCHAR       WHENEVER EOFSW, TRANSFER TO DONE
+            AX=BX
+            AY=BY
+            PTCHAR.(CHAR)
+            AX=AX+1
+NOPT        BX=BX+1
+            END OF CONDITIONAL
+CHARL       CONTINUE
+            TRANSFER TO LOOP
+DONE        WHENEVER K.NE.0
+              WHENEVER FILESW
+                WTA.(OUT(OUT),K-1)
+                CLOSEW.
+              OTHERWISE
+                PNTLIN.(OUT(OUT),K-1)
+              END OF CONDITIONAL
+            END OF CONDITIONAL
+BRKOUT      CLOSEF.
+EGRETS      SETBCD.(0)
+            CHNCOM.(0)
+          R
+EOF         EOFSW=1B
+            WHENEVER CC
+              WHENEVER BY.NE.(BY/PGL)*PGL
+                BY=(BY/PGL+1)*PGL+1
+              END OF CONDITIONAL
+            OTHERWISE
+              BY=BY+2
+              BX=1
+            END OF CONDITIONAL
+            TRANSFER TO FILOUT
+          R
+            INTERNAL FUNCTION (PTC)
+            ENTRY TO PTCHAR.
+            WHENEVER FILESW
+              C=TSSASC.(PTC)
+            OTHERWISE
+              C=PTC
+            END OF CONDITIONAL
+            OUT(OUT+K)=C
+            K=K+1
+            WHENEVER K.G.84
+              WHENEVER FILESW
+                WTA.(OUT(OUT),84)
+              OTHERWISE
+                PNTLIN.(OUT(OUT),84)
+              END OF CONDITIONAL
+              K=1
+            END OF CONDITIONAL
+            FUNCTION RETURN
+            END OF FUNCTION
+          R
+          R
+            INTERNAL FUNCTION (AA,BB)
+            ENTRY TO HORZ.
+            A=AA
+            B=BB
+TL2         THROUGH TL2, FOR ATI=1,1,OTABS(OTABS+ATI).G.A
+TL3         THROUGH TL3, FOR BTI=1,1,OTABS(OTABS+BTI).G.B
+            NTAB=BTI-ATI
+            WHENEVER NTAB.G.0
+              A1=OTABS(OTABS+BTI-1)
+              T=(A1-A)*TTAB+NTAB*TSP
+              A=A1
+              ATI=BTI
+            OTHERWISE
+              T=0
+            END OF CONDITIONAL
+            NSP=B-A
+            LTAB=OTABS(OTABS+ATI)-A
+            NBS=LTAB-NSP
+            TMSP=NSP*TSP
+            TMBS=TTAB*LTAB+TSP+TBS*NBS
+            WHENEVER TMSP.LE.TMBS
+              NBS=0
+              T=T+TMSP
+            OTHERWISE
+              NSP=0
+              NTAB=NTAB+1
+              T=T+TMBS
+            END OF CONDITIONAL
+            FUNCTION RETURN T
+            END OF FUNCTION
+          R
+            INTERNAL FUNCTION (NN,A)
+            ENTRY TO GETTAB.
+            WHENEVER COMARG.(I+1).E.FENCE, TRANSFER TO BAD
+            N=NN
+            THROUGH TAL, FOR I=I+1,1,COMARG.(I,ARG1).E.FENCE
+            WHENEVER ARG1.E.$   FAP$
+              THROUGH FCL, FOR J=0,1,FAPTAB(J).E.0
+              N=N+1
+FCL           A(N)=FAPTAB(J)
+            OR WHENEVER ARG1.E.$   MAD$
+              WHENEVER ARG.E.$ ITABS$, MADSW=1B
+              THROUGH MCL, FOR J=0,1,MADTAB(J).E.0
+              N=N+1
+MCL           A(N)=MADTAB(J)
+            OR WHENEVER ARG1.E.$  CTSS$
+              THROUGH XCL, FOR J=15,15,J.G.150
+              N=N+1
+XCL           A(N)=J
+            OR WHENEVER ZEL.(ARG1).A.$$.E.0
+              N=N+1
+              A(N)=BCDEC.(ARG1)
+            OTHERWISE
+              TRANSFER TO RET
+            END OF CONDITIONAL
+TAL         CONTINUE
+RET         I=I-1
+SORT        CH=0B
+            THROUGH SL, FOR J=2,1,J.G.N
+            WHENEVER A(J).E.A(J-1)
+              A(J)=A(N)
+              N=N-1
+              CH=1B
+            OR WHENEVER A(J).L.A(J-1)
+              ARG1=A(J-1)
+              A(J-1)=A(J)
+              A(J)=ARG1
+              CH=1B
+            END OF CONDITIONAL
+SL          CONTINUE
+            WHENEVER CH, TRANSFER TO SORT
+            N=N+1
+            A(N)=1000
+            NN=N
+            FUNCTION RETURN
+            END OF FUNCTION
+          R
+            INTERNAL FUNCTION (Z)
+            ENTRY TO BCDC.
+            WHENEVER ZEL.(Z).A.$$.NE.0, TRANSFER TO BAD
+            FUNCTION RETURN BCDEC.(Z)
+            END OF FUNCTION
+          R
+            VECTOR VALUES NSPC=5
+            VECTOR VALUES SP=55K,107K,72K,60K,135K,136K
+            VECTOR VALUES NNOSP=2
+            VECTOR VALUES NOSP=113K,132K,133K
+            VECTOR VALUES NPCC=11
+            VECTOR VALUES PCCL=60K,1K,0K,40K,20K,2K,3K,4K,5K,61K,62K,63K
+            VECTOR VALUES D=0,66,1,2,-1,32,21,16,13,0,1,2
+            VECTOR VALUES MADBS=35K
+            VECTOR VALUES LM=777777K6
+            VECTOR VALUES FENCE = 777777777777K
+            VECTOR VALUES FAPTAB=8,16,35,40,45,50,55,60,65,70,75,80,85,0
+            VECTOR VALUES MADTAB=12,17,22,27,32,37,42,47,52,57,62,67,
+          1     72,77,82,87,0
+            DIMENSION IN(0),OUT(0),NC(5),ITABS(0),OTABS(0)
+          R
+          R  TIMING TABLE FOR EACH DEVICE
+          R
+            VECTOR VALUES TCR = 0,2,8,128,176,176,8,8,8,1,1
+            VECTOR VALUES TCRLF=0,1,1,0,0,0,1,0,1,0,0
+            VECTOR VALUES TBS = 0,1K5,112,1K5,1K5,1K5,1K5,88,112,1,1
+            VECTOR VALUES TSP = 0,88,72,64,88,88,88,88,72,1,1
+            VECTOR VALUES TTAB = 0,24,8,1K5,1K5,1K5,24,24,8,1,1
+            VECTOR VALUES TLF = 0,1,0,0,0,0,0,1,0,1,0
+            VECTOR VALUES LL=0,87,129,68,68,68,87,87,129,79,1K5
+            VECTOR VALUES PGL=0,66,66,66,66,66,66,66,66,56,66
+            VECTOR VALUES ITD=10
+            VECTOR VALUES OTD=10
+          R
+            EQUIVALENCE (NCR,NC(0)),(NLF,NC(1)),(NTAB,NC(2)),
+          1   (NSP,NC(3)),(NBS,NC(4)),(NCRLF,NC(5))
+            NORMAL MODE IS INTEGER
+            BOOLEAN N9,N12,CC,NCCS,CCN,EOFSW,WR,PS,CH,LMSW,DATESW
+            BOOLEAN FILESW,HDRSW,MADSW,CCX,PTF,CKP
+            END OF PROGRAM

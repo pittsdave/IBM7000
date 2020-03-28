@@ -1,0 +1,94 @@
+          R     REMARK COMMAND FOR NEW FILE SYSTEM
+          R          D.R. WIDRIG  FEB. 1966
+          R
+          R     LOADING INSTRUCTIONS
+          R          MAD REMARK (LIST)
+          R          FAP (MAIN) (LIST)
+          R          NCLOAD (MAIN) REMARK
+          R          SAVE REMARK
+          R
+            EXTERNAL FUNCTION (BUFF)
+            ENTRY TO FIRST.
+            ENTRY TO REMARK.
+          R
+            NORMAL MODE IS INTEGER
+          R
+            VECTOR VALUES MESS1 =
+          1  $COMMAND FORM IS ... REMARK NAME1 -NAME2-$,777777777777K
+            VECTOR VALUES MESS2 = $NAME2 IS TAKEN AS 'BCD' IF OMITTED$,
+          1      777777777777K
+            VECTOR VALUES MESS3 =
+          1 $REMARKS MUST BE CARD-IMAGE AND LESS THAN FIVE RECORDS LONG$
+          2   ,777777777777K
+            VECTOR VALUES LINE(1)...LINE(14) = $      $
+            VECTOR VALUES USER = $  USER$
+            VECTOR VALUES REMARK = $REMARK$
+          R
+            VECTOR VALUES FENCE = 777777777777K
+            VECTOR VALUES LINMK = 777777K
+            VECTOR VALUES MXWORD = 2160
+          R
+          R     GET COMMAND ARGUMENTS
+          R
+            WHENEVER COMARG.(1,N1) .E. FENCE
+                 PRNTP.(MESS1)
+                 PRNTP.(MESS2)
+GRIPE            PRNTP.(MESS3)
+                 CHNCOM.(0)
+            OR WHENEVER COMARG.(2,N2) .E. FENCE
+                 N2 = $   BCD$
+            END OF CONDITIONAL
+          R
+          R     SET ERROR RETURN AND CHECK REMARK FILE
+          R
+            FERRTN.(ERR1)
+            FSTATE.(N1,N2,LTH...1)
+            WHENEVER (LTH.G.MXWORD) .OR. (((LTH/14)*14).NE.LTH),
+          1     TRANSFER TO GRIPE
+          R
+          R     SO FAR SO GOOD, NOW SET BUFFERS
+          R
+            BUFF1 = 1K5 - GMEM.(DUMMY)
+            BUFF2 = BUFF1 - 432
+            EXMEM.(LTH+432)
+          R
+          R     READ IN REMARK FILE
+          R
+            OPEN.($R$,N1,N2,DUMMY)
+            RDFILE.(N1,N2,1,BUFF(BUFF2)...LTH)
+            CLOSE.(N1,N2)
+          R
+          R     MAKE SURE IT IS CARD-IMAGE
+          R
+            WHENEVER ((BUFF(BUFF2).RS.18) .E. LINMK), TRANSFER TO GRIPE
+          R
+          R     MOVE TO PUBLIC FILE AND WRITE HEADER
+          R
+            TSSFIL.
+            OPEN.($W$,USER,REMARK,0)
+            BUFFER.(USER,REMARK,BUFF(BUFF1)...432)
+            WRWAIT.(USER,REMARK,0,LINE(14)...14)
+          R
+          R     GET IDENTIFICATION
+          R
+            GETTM.(LINE(8),LINE(7))
+            WHOAMI.(LINE(12)...2)
+            WRFILE.(USER,REMARK,0,LINE(14)...14)
+          R
+          R     NOW APPEND USER'S REMARK
+          R
+            WRFILE.(USER,REMARK,0,BUFF(BUFF2)...LTH)
+            CLOSE.(USER,REMARK)
+          R
+          R     MOVE BACK TO USER'S DIRECTORY
+          R
+            USRFIL.
+            CHNCOM.(0)
+          R
+          R     ERROR, ANNOUNCE IT
+          R
+ERR1        PRNTER.(61K)
+            CLOSE.($ALL$,-0,NERR1)
+NERR1       CHNCOM.(1)
+          R
+            END OF FUNCTION

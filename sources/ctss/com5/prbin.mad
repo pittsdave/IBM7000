@@ -1,0 +1,287 @@
+PRBIN     R PRINT A FILE IN SPREAD OCTAL (BINARY).
+          R
+          R D. A. ANDERSON AND R. A. ROACH   02/24/69
+          R
+          R USAGE:
+          R
+          R
+          R PRBIN N1 N2 -START- -'THRU'/'TO'/'...' END- -NWORDS-
+          R      -DELTA- -BLOCKSIZE- -'OFF'/'OFFON'/'ONOFF'- -N3- -N4-
+          R
+          R  LOADING INSTRUCTIONS:
+          R
+          R  LAED NCLOAD PRBIN (SRCH) (SYS) XLIBE
+          R  SAVE PRBIN
+          R
+          R
+            NORMAL MODE IS INTEGER
+            DIMENSION B0(0),B1(0),B2(0),B3(0),BON(50),BOFF(50)
+            BOOLEAN STARTF,ENDF,LLF,DELTAF,TEMPF,OFF,ON,NEWON,NEWOFF,OCT
+            BOOLEAN BLKSZF
+            VECTOR VALUES STARTF = 0B
+            VECTOR VALUES ENDF = 0B
+            VECTOR VALUES LLF = 0B
+            VECTOR VALUES DELTAF = 0B
+            VECTOR VALUES BLKSZF = 0B
+            VECTOR VALUES ON = 1B
+            VECTOR VALUES OFF = 0B
+            VECTOR VALUES NEWON = 1B
+            VECTOR VALUES NEWOFF = 1B
+            VECTOR VALUES OCT = 0B
+            VECTOR VALUES FENCE = 777777777777K
+            VECTOR VALUES MAXON = 25,19,25,19,19,19,19,19,25,16
+            VECTOR VALUES BL = 605757575757K
+            VECTOR VALUES CR = 555757575757K
+            EQUIVALENCE (BL,BOFF(49))
+            EQUIVALENCE (TEMP,TEMPF)
+            VECTOR VALUES LM = 777777K6
+            VECTOR VALUES N4 = $   BIN$
+            VECTOR VALUES RECCNT = 432
+            VECTOR VALUES MAXOFF = 29
+            VECTOR VALUES ARGS1 = 3,$    TO$,$  THRU$,$   ...$
+            VECTOR VALUES ARGS2 = 6,$     O$,$   OFF$,$ (OFF)$,$ OFFON$,
+          1   $ONOFF$,$     *$
+          R
+          R
+          R PROCESS COMMAND BUFFER AND SET UP FLAGS
+          R
+            N1 = COMARG.(1)
+            WHENEVER N1 .E. FENCE .OR. N1 .E. $(HELP)$
+HELP           PRMESS.
+               PRMESS.($ CORRECT USAGE IS:$)
+               PRMESS.
+               PRMESA.(COMARG.(0),
+          1           $ N1  N2  -START- -'THRU'/'TO'/'...' $)
+               PRMESS.($END- -NWORDS- -DELTA- -BLOCKSIZE-$)
+               PRMESS.($      -'OFF'/'OFFON'/'ONOFF'- -N3- -N4-$)
+               EXITM.
+            END OF CONDITIONAL
+          R
+            WHENEVER COMARG.(2,N2) .E. FENCE
+              TRANSFER TO HELP
+BADFMT        PRMESS.($ILLEGAL ARGUMENT:$,TEMP)
+               EXITM.
+            END OF CONDITIONAL
+          R
+            J = 3
+            NUMBER.(START,STARTF,GO,OCT)
+            WHENEVER COMARG.(J,TEMP) .E. FENCE, TRANSFER TO GO
+LOOPA       THROUGH LOOPA, FOR K = 1,1,K.G.ARGS1 .OR. TEMP.E.ARGS1(K)
+            WHENEVER K .LE. ARGS1
+               J = J+1
+               NUMBER.(END,ENDF,BADFMT,TEMPF)
+            END OF CONDITIONAL
+            NUMBER.(NON,LLF,GO,TEMPF)
+            NUMBER.(DELTA,DELTAF,GO,TEMPF)
+            NUMBER.(BLKSIZ,BLKSZF,GO,TEMPF)
+            TEMPF = 0B
+            NUMBER.(TEMP,TEMPF,GO,TEMPF)
+            WHENEVER TEMPF, TRANSFER TO HELP
+          R
+GO          WHENEVER .NOT.STARTF, START = 1
+            WHENEVER START .E. 0, START = 1
+            WHENEVER .NOT.ENDF, END = 377777777777K
+            WHENEVER .NOT.DELTAF, DELTA = 1
+            WHENEVER .NOT.BLKSZF, BLKSIZ = 1
+          R
+            WHENEVER BLKSIZ .G. DELTA
+              PRMESS.($BLOCK SIZE GREATER THAN DELTA.$)
+              EXITM.
+            END OF CONDITIONAL
+          R
+            WHOAMI.(BOFF(3)...4)
+            CONSOL = BOFF.RS.30
+            WHENEVER CONSOL .G. 9, CONSOL = 0
+            GETTM.(DATE,TIME)
+            WHENEVER LLF
+               NOFF = NON
+            OTHERWISE
+               NON = (MAXON(CONSOL)-1)/3
+               NOFF = 9
+            END OF CONDITIONAL
+          R
+            GETBUF.(B0,432)
+            FERRTN.(IOERR)
+            SETBRK.(EXITM.)
+            OPEN.($R$,N1,N2)
+          R
+          R
+            WHENEVER ON
+               PRMESS.(CR,N1,BL,N2,BL,BL,DATE,BL,TIME,CR)
+            END OF CONDITIONAL
+          R
+            WHENEVER OFF
+               GETBUF.(B1,432)
+               GETBUF.(B2,432)
+               GETBUF.(B3,432)
+               BFOPEN.($W$,N3,N4,B1(B1+432),B2(B2+432),B3(B3+432),IOERR)
+          R
+               BOFF(48) = 777777000012K
+               BOFF(47) = $1$
+               BOFF(46) = N1
+               BOFF(45) = BL
+               BOFF(44) = BZ57.(N2)
+               BOFF(43) = $  FOR$
+               BOFF(42) = BOFF(3)
+               BOFF(41) = BZ57.(BOFF(2)) - 1K10
+               BOFF(40) = $$
+               BOFF(39) = DATE
+               BOFF(38) = TIME
+               BOFF(37) = 777777000001K
+               BOFF(36) = BL
+               BOFF(35) = 777777000001K
+               BOFF(34) = BL
+          R
+               BFWRIT.(N3,N4,BOFF(48)...15,IOERR)
+            END OF CONDITIONAL
+          R
+            THROUGH LOOP, FOR LOC1 = START,DELTA,LOC1.G.END
+            WHENEVER BLKSZF
+              WHENEVER ON.AND.ONCNT.G.1
+                PRMESS.(BON(1)...ONCNT)
+                NEWON=1B
+                ONCNT=1
+              END OF CONDITIONAL
+              WHENEVER OFF.AND.OFFCNT.G.2
+                BOFF(50)=OFFCNT.V.LM
+                MCOUNT=OFFCNT+1
+                BFWRIT.(N3,N4,BOFF(50)...MCOUNT,IOERR)
+                NEWOFF=1B
+                OFFCNT=2
+              END OF CONDITIONAL
+            END OF CONDITIONAL
+            THROUGH LOOP, FOR LOC=LOC1,1,LOC.E.LOC1+BLKSIZ
+            TEMP = (LOC-1)/432 * 432 + 1
+            WHENEVER TEMP .NE. RELLOC
+               RELLOC = TEMP
+               RDWAIT.(N1,N2,RELLOC,B0(B0+432)...432,EOF,EOFCT)
+            END OF CONDITIONAL
+BACK        TEMP = LOC - RELLOC
+            WHENEVER TEMP .G. RECCNT, TRANSFER TO FINALE
+            WORD = B0(B0+432-TEMP)
+          R
+          R
+            WHENEVER .NOT.ON, TRANSFER TO OVER1
+            WHENEVER NEWON
+               WHENEVER .NOT. OCT
+                  BON(1) = BZEL.(DEFBC.(LOC))
+               OTHERWISE
+                  BON(1) = OCRBC.(LOC)
+               END OF CONDITIONAL
+               NEWON = 0B
+               ONCNT = 1
+               ONWRDS = 0
+            END OF CONDITIONAL
+          R
+            BON(ONCNT+1) = BL
+            BON(ONCNT+2) = OCLBC.(WORD)
+            BON(ONCNT+3) = OCRBC.(WORD)
+            ONCNT = ONCNT + 3
+            ONWRDS = ONWRDS + 1
+          R
+            WHENEVER ONWRDS.GE.NON
+               PRMESS.(BON(1)...ONCNT)
+               NEWON = 1B
+               ONCNT = 1
+            OR WHENEVER ONCNT .GE. MAXON(CONSOL)
+               PRMESS.(BON(1)...ONCNT)
+               BON(1) = $$
+               ONCNT = 1
+            END OF CONDITIONAL
+          R
+OVER1       WHENEVER .NOT. OFF, TRANSFER TO LOOP
+            WHENEVER NEWOFF
+               WHENEVER .NOT. OCT
+                 BOFF(48) = BZEL.(DEFBC.(LOC))
+               OTHERWISE
+                 BOFF(48) = OCRBC.(LOC)
+               END OF CONDITIONAL
+               NEWOFF = 0B
+               OFFCNT = 2
+               OFFWDS = 0
+            END OF CONDITIONAL
+          R
+            BOFF(50-OFFCNT-1) = BL
+            BOFF(50-OFFCNT-2) = OCLBC.(WORD)
+            BOFF(50-OFFCNT-3) = OCRBC.(WORD)
+            OFFCNT = OFFCNT + 3
+            OFFWDS = OFFWDS + 1
+          R
+            WHENEVER OFFWDS .GE. NOFF
+               BOFF(50) = OFFCNT.V.LM
+               MCOUNT = OFFCNT+1
+               BFWRIT.(N3,N4,BOFF(50)...MCOUNT,IOERR)
+               NEWOFF = 1B
+               OFFCNT = 2
+            OR WHENEVER OFFCNT .GE. MAXOFF
+               BOFF(50) = OFFCNT.V.LM
+               MCOUNT = OFFCNT+1
+               BFWRIT.(N3,N4,BOFF(50)...MCOUNT,IOERR)
+               OFFCNT = 2
+               BOFF(48) = $$
+            END OF CONDITIONAL
+LOOP        CONTINUE
+          R
+          R
+EOF         RECCNT = EOFCT - 1
+            TRANSFER TO BACK
+          R
+          R
+IOERR       PRDIAG.
+          R
+          R
+FINALE      WHENEVER ON .AND. ONCNT.G.1, PRMESS.(BON(1)...ONCNT)
+            WHENEVER OFF .AND. OFFCNT .G. 2
+               BOFF(50) = OFFCNT .V. LM
+               MCOUNT = -OFFCNT-1
+               BFWRIT.(N3,N4,BOFF(50)...MCOUNT,IOERR)
+               BFCLOS.(N3,N4,IOERR)
+            END OF CONDITIONAL
+            EXITM.
+          R
+            INTERNAL FUNCTION (A,B,C,D)
+            STATEMENT LABEL C
+            BOOLEAN B,D
+            ENTRY TO NUMBER.
+          R
+NUM         WHENEVER COMARG.(J,TEMP).E.FENCE, TRANSFER TO C
+            J = J+1
+LOOPA2      THROUGH LOOPA2, FOR K = ARGS2,-1,K.E.0 .OR. TEMP.E.ARGS2(K)
+            TRANSFER TO ARGT(K)
+          R
+ARGT(0)     WHENEVER ZEL.(TEMP) .A. $$ .NE. 0, TRANSFER TO BADFMT
+            A = BCDEC.(TEMP)
+            B = 1B
+ARGT(6)     FUNCTION RETURN
+          R
+ARGT(1)     WHENEVER COMARG.(J,TEMP) .E. FENCE, TRANSFER TO BADFMT
+            J = J + 1
+            WHENEVER ZEL.(TEMP).A.$YYYYYY$ .NE. 0, TRANSFER TO BADFMT
+            A = BCOCT.(TEMP)
+            D = 1B
+            B = 1B
+            FUNCTION RETURN
+          R
+          R
+          R   'OFF' OR '(OFF)'
+          R
+ARGT(2)
+ARGT(3)     ON = 0B
+          R
+          R 'OFFON' OR 'ONOFF'
+          R
+ARGT(4)
+ARGT(5)     OFF = 1B
+            WHENEVER COMARG.(J,N3) .E. FENCE
+               N3 = N1
+               TRANSFER TO C
+            END OF CONDITIONAL
+          R
+            J = J+2
+            WHENEVER COMARG.(J-1,N4) .NE. FENCE, TRANSFER TO NUM
+            N4 = $   BIN$
+            TRANSFER TO C
+          R
+            END OF FUNCTION
+          R
+            END OF PROGRAM

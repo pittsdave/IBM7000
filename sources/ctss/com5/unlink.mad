@@ -1,0 +1,238 @@
+          R CHMODE, DELETE, RENAME AND UNLINK COMMANDS.
+          R WRITTEN BY ROGER ROACH 3/26/68
+          R MODIFIED 07/05/71 BY P. BOS FOR MOVFIL FUNCTION
+          R
+          R
+            NORMAL MODE IS INTEGER
+            BOOLEAN SCANI, ONCE, OLDER
+            DIMENSION COMBUF(20), ENTRY(10), WHO(8)
+            EQUIVALENCE (COMBUF(20), FENCE), (NAME3, MODE)
+            EQUIVALENCE (ENTRY(10), NAME1), (ENTRY(9), NAME2)
+            VECTOR VALUES FENCE = 777777777777K
+            VECTOR VALUES B = 605757575757K
+            VECTOR VALUES TYPE = $ FILES$
+            VECTOR VALUES FIRST = 263151626357K
+            VECTOR VALUES SECOND = $SECOND$
+            VECTOR VALUES STAR = $     *$
+            VECTOR VALUES ANSWER = $NO$
+            VECTOR VALUES ONCE = 1B
+            VECTOR VALUES OLDER = 0B
+          R
+          R
+            GCLS.(COMBUF,0)
+LOOPI       THROUGH LOOPI, FOR N = 1,1,COMBUF(N).E.FENCE
+            WHOAMI.(WHO(8)...8)
+            COMMND = LJUST.(COMBUF).A.77K10
+            WHENEVER COMMND .E. $C00000$
+              C=1
+              D=3
+            OR WHENEVER COMMND .E. $D00000$
+              C=2
+              D=2
+            OR WHENEVER COMMND .E. $R00000$
+              C=3
+              D=4
+              OLDER=1B
+            OR WHENEVER COMMND .E. $U00000$
+              C=4
+              D=2
+              TYPE = $ LINKS$
+            OR WHENEVER COMMND .E. $M00000$
+              C=5
+              D=4
+            OTHERWISE
+              TSK.
+            END OF CONDITIONAL
+            WHENEVER COMBUF(1).E.FENCE, TRANSFER TO PFORMT(C)
+          R
+          R NOW JUMP THROUGH THE COMMAND BUFFERS 'D' AT A TIME.
+          R   THE FIRST 2 ARGUMENTS ARE ALWAYS NAME1 AND NAME2.
+          R
+            THROUGH LOOP, FOR I=1,D,COMBUF(I).E.FENCE.OR.I.G.N
+            NAME1 = COMBUF(I)
+            NAME2 = COMBUF(I+1)
+            NAME3 = COMBUF(I+2)
+            NAME4 = COMBUF(I+3)
+            WHENEVER NAME2 .E. FENCE
+              PRMESA.(NAME1)
+              TRANSFER TO ICOMPT
+            OR WHENEVER (C.E.1 .OR. C.E.3) .AND. NAME3 .E. FENCE
+              PRMESA.(NAME1,B,NAME2)
+              TRANSFER TO ICOMPT
+            END OF CONDITIONAL
+            MASK1 = NAMASK.(NAME1)
+            MASK2 = NAMASK.(NAME2)
+            WHENEVER MASK1.A.MASK2 .E. FENCE
+              SCANI = 0B
+              FSTATE.(NAME1,NAME2,ENTRY(8)...8,FSERR2,ERCODE)
+            OTHERWISE
+              SCANI = 1B
+              WHENEVER ONCE
+                ONCE = 0B
+                UPDATE.
+                SCNFIL.($U.F.D.(FILE)$)
+              END OF CONDITIONAL
+              ISCAN.(NAME1,NAME2)
+              SCAN.(ENTRY(10)...7,DONE1)
+BACK          WHENEVER ( C.E.4 .AND. ENTRY(6).A.7K5.NE.0) .OR.
+          1  (ENTRY(6).A.7K5.E.0 .AND. C .NE. 4)
+                SCAN.(ENTRY(10)...7,DONE1)
+                TRANSFER TO BACK
+              END OF CONDITIONAL
+            END OF CONDITIONAL
+            TRANSFER TO FUNC(C)
+          R
+DONE1       WHENEVER COMBUF(I).E.STAR
+              EITHER = SECOND
+              NAME = COMBUF(I+1)
+            OR WHENEVER COMBUF(I+1).E.STAR
+              EITHER = FIRST
+              NAME = COMBUF(I)
+            OTHERWISE
+              PRMESS.(TYPE,B,COMBUF(I),B,COMBUF(I+1),$ NOT FOUND.$)
+              TRANSFER TO LOOP
+            END OF CONDITIONAL
+            PRMESS.(604546575757K,TYPE,$ WITH$,EITHER,$ NAME$,NAME,
+          1   $ FOUND.$)
+            TRANSFER TO LOOP
+          R
+          R ... THE CHMODE FUNCTION
+          R
+FUNC(1)     CONTINUE
+FUN(1)      WHENEVER SCANI
+               MODE=NEWMOD.(ENTRY(6).RS.28,COMBUF(I+2),BADMOD)
+            OTHERWISE
+               MODE=NEWMOD.(ENTRY(7),COMBUF(I+2),BADMOD)
+            END OF CONDITIONAL
+            CHFILE.(NAME1,NAME2,MODE,-0,-0,IOERR)
+            TRANSFER TO NEXT
+          R
+BADMOD      PRMESS.($ ILLEGAL MODE  -$,MODE)
+            TRANSFER TO LOOP
+          R
+          R ... THE DELETE FUNCTION
+          R
+FUN(2)      CONTINUE
+FUNC(2)     WHENEVER MASK1.V.MASK2 .E. 0
+              NAME1 = STAR
+              NAME2 = STAR
+              SCANI = 0B
+              FSTATE.(NAME1,NAME2,ENTRY(8)...8,IOERR)
+            END OF CONDITIONAL
+            DELETE.(NAME1,NAME2)
+            TRANSFER TO NEXT
+          R
+          R ... THE DELETE INTERNAL FUNCTION
+          R
+            INTERNAL FUNCTION (N1,N2)
+            ENTRY TO DELETE.
+            FSTATE.(N1,N2,ENTRY(1)...2,FSERR,FSCODE)
+            WHENEVER ENTRY.RS.35 .E. 1
+              WHENEVER C.E. 3
+                PRMESA.(N1,B,N2,$ IS A LINK.  IT CANNOT BE DELETED.$)
+                FUNCTION RETURN 0
+              END OF CONDITIONAL
+              PRMESA.(N1,B,N2,$ IS A LINK.  DO YOU WISH TO DELETE IT:$)
+              WHENEVER WHO(5) .NE. $(FIB)$, RDFLXC.(ANSWER,6)
+              WHENEVER ANSWER.NE.$YES$, TRANSFER TO NOPE
+            END OF CONDITIONAL
+            WHENEVER ENTRY.A. 134K .NE. 0
+              WHENEVER OLDER, PRMESA.($OLDER$)
+              PRMESA.(N1,B,N2,603162601457K,OCRBC.(ENTRY).V.575757K6,
+          1       $' MODE.  DO YOU WISH TO DELETE IT:$)
+              WHENEVER WHO(5).NE.$(FIB)$, RDFLXC.(ANSWER,6)
+              WHENEVER ANSWER.NE.$YES$
+NOPE            PRMESS.(N1,B,N2,$ NOT DELETED.$)
+                FUNCTION RETURN 0
+              END OF CONDITIONAL
+              CHFILE.(N1,N2,1,-0,-0,NOPE)
+            END OF CONDITIONAL
+            DELFIL.(N1,N2,NOPE)
+            FUNCTION RETURN 1
+FSERR       WHENEVER FSCODE.NE.3, TRANSFER TO NOPE
+            FUNCTION RETURN 1
+            END OF FUNCTION
+          R
+          R ... THE RENAME FUNCTION
+          R
+FUNC(3)     WHENEVER NAME4 .E. FENCE, NAME4 = STAR
+            MASK3 = NAMASK.(NAME3)
+            MASK4 = NAMASK.(NAME4)
+            MASK3P = COM.(MASK3)
+            MASK4P = COM.(MASK4)
+            NAME3 = NAME3.A.MASK3
+            NAME4 = NAME4.A.MASK4
+FUN(3)      N3 = (NAME1.A.MASK3P).V.NAME3
+            N4 = (NAME2.A.MASK4P).V.NAME4
+            WHENEVER NAME1.E.N3 .AND. NAME2.E.N4, TRANSFER TO CHANGE
+            WHENEVER DELETE.(N3,N4).E.0
+              PRMESS.(NAME1,B,NAME2,$ NOT RENAMED$)
+            OTHERWISE
+CHANGE        CHFILE.(NAME1,NAME2,-0,N3,N4,IOERR)
+            END OF CONDITIONAL
+            TRANSFER TO NEXT
+          R
+          R ... THE UNLINK FUNCTION
+          R
+FUN(4)      WHENEVER ENTRY(6).A.7K5.NE.0, TRANSFER TO NEXT
+FUNC(4)     UNLINK.(NAME1,NAME2,IOERR)
+            TRANSFER TO NEXT
+          R
+          R ... THE MOVFIL FUNTION
+          R
+FUNC(5)     CONTINUE
+FUN(5)      WHENEVER WHO(1).A.2K .E. 2K, TRANSFER TO MVOK
+            WHENEVER NAME3 .NE. WHO(8), TRANSFER TO MVBAD
+            WHENEVER NAME4 .E. WHO(3), TRANSFER TO MVOK
+            WHENEVER WHO(1).A.1K .NE. 1K, TRANSFER TO MVBAD
+            WHENEVER NAME4.A.777777770000K .NE. $CMFL00$,
+          1     TRANSFER TO MVBAD
+MVOK        MOVFIL.(NAME1, NAME2, NAME3, NAME4, IOERR)
+            TRANSFER TO NEXT
+          R
+MVBAD       PRMESS.($ ILLEGAL USE OF COMMAND$)
+            TRANSFER TO LOOP
+          R
+          R  ... NEXT - GET THE NEXT ENTRY.
+          R
+NEXT        WHENEVER .NOT. SCANI, TRANSFER TO LOOP
+            SCAN.(ENTRY(10)...7,LOOP)
+            WHENEVER ENTRY(6).A.7K5.E.0 .AND. C.NE.4,TRANSFER TO NEXT
+            TRANSFER TO FUN(C)
+          R
+          R ... IOERR (AND FSERR2) - I/O ERROR RETURNS
+          R
+FSERR2      WHENEVER C.E.4 .AND. ERCODE.NE.3, TRANSFER TO FUNC(C)
+IOERR       PRNTER.(61K)
+            TRANSFER TO NEXT
+          R
+LOOP        CONTINUE
+            CHNCOM.(0)
+          R
+          R ... PRINT CORRECT FORMATS.
+          R
+PFORMT(1)   PRMESS.(COMBUF(0),
+          1    $ NAME1 NAME2 MODE NAME1' NAME2' MODE' ...$)
+          R
+          R TRANSFER TO PFMT
+          R
+PFORMT(2)   PRMESS.(COMBUF(0),$ NAME1 NAME2 NAME1' NAME2' ...$)
+            TRANSFER TO PFMT
+          R
+PFORMT(3)   PRMESS.(COMBUF(0),$ OLDNM1 OLDNM2 NEWNM1 NEWNM2 OLDNM1' OLDN
+          1 M 2' NEWNM1' NEWNM2' ...$)
+            TRANSFER TO PFMT
+          R
+PFORMT(4)   TRANSFER TO PFORMT(2)
+          R
+PFORMT(5)   PRMESS.(COMBUF(0), $ NAME1 NAME2 PROB PROG NAME1' NAME2' PRO
+          1 B ' PROG' ...$)
+          R
+PFMT        PRMESS.($THE LISTF ASTERISK CONVENTION APPLIES.$)
+            CHNCOM.(0)
+          R
+          R ... INCOMPLETE SET OF ARGUMENTS
+          R
+ICOMPT      PRMESS.($ IS AN INCOMPLETE SET OF ARGUMENTS.$)
+            CHNCOM.(0)
+            END OF PROGRAM

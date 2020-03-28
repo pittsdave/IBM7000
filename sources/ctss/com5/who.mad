@@ -1,0 +1,281 @@
+ WHO      R     PRINT LIST OF CTSS USERS.
+          R     CODED IN MAD BY N. MORRIS - 2/67
+          R
+          R
+            NORMAL MODE IS INTEGER
+          R
+          R INSERT FILE .XOR.
+            DEFINE BINARY OPERATOR .XOR., PRECEDENCE SAME AS .A.
+            MODE STRUCTURE 1 .XOR. 1 TO 1
+       JMP      *+1,LA,*+3
+       JMP      *+15,AT,*+1
+       JMP      *+17,BT,*+9
+       JMP      *+1,MQ,*+3
+       JMP      *+9,AT,*+1
+       JMP      *+13,BT,*+4
+       JMP      *+1,AC,*+9
+       STO      T
+       JMP      *+7
+       STQ      T
+       JMP      *+5
+       SLW      T
+       JMP      *+3
+       XCL
+       JMP      *+2
+       CAL      A
+       ERA      B
+       OUT      LAC
+       XCL
+       ERA      A
+       OUT      LAC
+       END
+          R
+            VECTOR VALUES      N = $N     $
+            VECTOR VALUES NUSERS = $NUSERS$
+            VECTOR VALUES  PROBN = $PROBN $
+            VECTOR VALUES  PROGN = $PROGN $
+            VECTOR VALUES  UNAME = $UNAME $
+            VECTOR VALUES  GRPNO = $GRPNO.$
+            VECTOR VALUES UNITID = $UNITID$
+            VECTOR VALUES  UTIME = $UTIME $
+            VECTOR VALUES  ITIME = $ITIME $
+            VECTOR VALUES SYSNAM = $000000$
+            VECTOR VALUES SYSTIM = $SYSTIM$
+            VECTOR VALUES SYSDAT = $SYSDAT$
+            VECTOR VALUES     PB = $PB    $
+          R
+          R
+            DIMENSION ARG (19), TUSED (50)
+            DIMENSION TIME (1), TIMEON (1)
+            VECTOR VALUES SPACE = 605757575757K
+            VECTOR VALUES FENCE = 777777777777K
+            VECTOR VALUES SLPTIM = 0
+          R
+          R
+            BOOLEAN NUMBER.
+            VECTOR VALUES FIRST = 1B
+            VECTOR VALUES HEADSW = 1B
+            VECTOR VALUES PROBSW = 0B
+            VECTOR VALUES PROGSW = 0B
+            VECTOR VALUES NAMESW = 0B
+            VECTOR VALUES GRPSW = 0B
+            VECTOR VALUES FOUND = 0B
+          R
+          R
+          R
+          R
+          R     PICK UP AND CHECK PARAMETERS.
+          R
+            PRMESS.
+            SETBRK. (CHN)
+            GCLS. (ARG, 0)
+          R
+            THROUGH ARGLP, FOR I = 1, 1, I .G. 19 .OR. ARG (I) .E. FENCE
+          R
+            WHENEVER ARG (I) .E. $ GROUP$ .OR. ARG (I) .E. $   GRP$
+                 HEADSW = 0B
+                 GRPSW = 1B
+                 I = I + 1
+                 WHENEVER ARG(I) .E. FENCE .OR. .NOT. NUMBER. (ARG(I)),
+          1           TRANSFER TO ILARG
+                 TGRP = BCDEC. (ARG (I))
+          R
+            OR WHENEVER ARG (I) .E. $     *$
+                 HEADSW = 0B
+                 TRANSFER TO CKPG
+          R
+            OR WHENEVER NUMBER. (ARG (I))
+                 SLPTIM = BCDEC. (ARG (I)) * 60
+          R
+            OTHERWISE
+                 HEADSW = 0B
+                 PROBSW = 1B
+                 TPROB = ARG (I)
+                 GTPROB. (TPROB, ILARG)
+          R
+CKPG             I = I + 1
+                 WHENEVER ARG (I) .E. FENCE
+                      ARG(I) = $     *$
+                      TRANSFER TO ENDST
+                 END OF CONDITIONAL
+                 WHENEVER NUMBER. (ARG (I))
+                      PROGSW = 1B
+                      TPROG = ARG (I)
+                 OR WHENEVER ARG (I) .E. $     *$
+                      CONTINUE
+                 OTHERWISE
+                      NAMESW = 1B
+                      TNAME = ARG (I)
+                 END OF CONDITIONAL
+          R
+            END OF CONDITIONAL
+          R
+ARGLP       CONTINUE
+          R
+          R
+          R
+          R     GET COMMON SYMBOL VALUES.
+          R
+ENDST       N      = COMLOC. (N     )
+            NUSERS = COMLOC. (NUSERS)
+            PROBN  = COMLOC. (PROBN )
+            PROGN  = COMLOC. (PROGN )
+            UNAME  = COMLOC. (UNAME )
+            GRPNO  = COMLOC. (GRPNO )
+            UNITID = COMLOC. (UNITID)
+            UTIME  = COMLOC. (UTIME )
+            ITIME  = COMLOC. (ITIME )
+            SYSNAM = COMLOC. (SYSNAM)
+            SYSTIM = COMLOC. (SYSTIM)
+            SYSDAT = COMLOC. (SYSDAT)
+            PB     = COMLOC. (PB    )
+          R
+          R
+          R     PRINT OUT NAME OF SYSTEM.
+          R
+            PRMESS. (SYSNAM, $ STARTED AT$, CTIME. (GLOC. (SYSTIM)),
+          1      DATEF. (GLOC. (SYSDAT)), $.$)
+          R
+          R
+          R     PRINT OUT NUMBER OF USERS.
+          R
+LOOP        PRMESS.
+            FTIME. (GTDYTM. (0), TIME (1), TIME)
+            PRMESS. (CVT. (GLOC. (NUSERS), 2), $  USERS AT$,
+          1      BZEL. (TIME), DATEF. (TIME (1)), $.$)
+          R
+          R
+          R     CHECK FOR BACKGROUND PERCENTAGE.
+          R
+            PCNT = GLOC. (PB)
+            WHENEVER PCNT .NE. 0
+                 PRMESS. ($BACKGROUND PERCENTAGE =$, CVT. (PCNT, 2),
+          1    $.$)
+            END OF CONDITIONAL
+            PRMESS.
+          R
+          R
+          R     PRINT HEADER, IF DESIRED.
+            WHENEVER HEADSW
+                 PRMESS. (HEADR ... 8)
+            END OF CONDITIONAL
+            VECTOR VALUES HEADR =
+          1   $LINE   USER     NAME  GRP UNIT  TUSED TIMEON$
+          R
+          R
+          R     PRINT USER STATISTICS.
+          R
+            FOUND = 0B
+            THROUGH USRLP, FOR I = 1, 1, I .G. N
+          R
+          R     PICK UP AND CHECK PROBLEM NUMBER.
+            PROB = GLOC. (PROBN + I)
+            WHENEVER (PROB .NE. TPROB .AND. PROBSW) .OR.
+          1      PROB .E. 0, TRANSFER TO USRLP
+          R
+          R     PICK UP AND CHECK PROGRAMMER NUMBER.
+            PROG = GLOC. (PROGN+ I)
+            WHENEVER PROG .NE. TPROG .AND. PROGSW, TRANSFER TO USRLP
+          R
+          R     PICK UP AND CHECK USER NAME.
+            NAME = GLOC. (UNAME + I)
+            WHENEVER NAME .NE. TNAME .AND. NAMESW, TRANSFER TO USRLP
+          R
+          R     PICK UP AND CHECK PARTY GROUP.
+            GRP = GLOC. (GRPNO + I)
+            WHENEVER .ABS. GRP .NE. TGRP .AND. GRPSW, TRANSFER TO USRLP
+          R
+            TUSED = GLOC. (UTIME + I)
+            PRMESA. (CVT. (I, 2), PROB, PROG, SPACE, NAME,
+          1      SCVT. (GRP, 3), SPACE, GLOC. (UNITID + I),
+          2      CTIME. (TUSED) )
+          R
+            WHENEVER FIRST
+                 FTIME. (GLOC. (ITIME + I), TIMEON (1), TIMEON)
+                 WHENEVER TIMEON (1) .E. LASTIM
+                      TIMEON (1) = $ $
+                 OTHERWISE
+                      LASTIM = TIMEON (1)
+                      TIMEON (1) = DATEF. (TIMEON (1))
+                 END OF CONDITIONAL
+                 PRMESS. (SPACE, BZEL. (TIMEON), TIMEON (1))
+          R
+            OTHERWISE
+                 DELTA = TUSED - TUSED (I)
+                 WHENEVER DELTA .GE. 0
+                      PRMESS. (CTIME. (DELTA))
+                 OTHERWISE
+                      PRMESS.
+                 END OF CONDITIONAL
+          R
+            END OF CONDITIONAL
+          R
+            TUSED (I) = TUSED
+            FOUND = 1B
+          R
+USRLP       CONTINUE
+          R
+          R
+          R     END OF STATISTICS - EXIT OR SLEEP.
+          R
+            WHENEVER (PROBSW .OR. PROGSW .OR. GRPSW .OR. NAMESW)
+          1      .AND. .NOT. FOUND
+                 PRMESS. ($USER(S) NOT FOUND.$)
+            END OF CONDITIONAL
+          R
+            PRMESS.
+            WHENEVER FIRST
+                 FIRST = 0B
+                 HEADR (6) = $D DUSE$
+                 HEADR (7) = $D     $
+            END OF CONDITIONAL
+          R
+            WHENEVER SLPTIM .NE. 0
+                 SLEEP.
+            OTHERWISE
+                 CHNCOM. (1)
+            END OF CONDITIONAL
+            TRANSFER TO LOOP
+          R
+          R
+          R
+          R     ILARG - COMPLAIN ABOUT BAD PARAMETER.
+          R
+ILARG       PRMESS. ($ILLEGAL PARAMETER:$, ARG (I))
+CHN         CHNCOM. (0)
+          R
+          R
+          R     CONVERSION FUNCTIONS.
+          R
+            INTERNAL FUNCTION CTIME. (T) =
+          1      BZEL. (HRMIN. (T))
+          R
+            INTERNAL FUNCTION DATEF. (D) =
+          1      ((D .RS. 6) .A. 7777K6) .V.
+          2      ((D .RS. 12) .A. 7777K) .V.
+          3      $ 00/00$
+          R
+            INTERNAL FUNCTION NUMBER. (N) =
+          1      ZEL. (N) .A. $ $ .E. 0
+          R
+            INTERNAL FUNCTION CVT. (I, N) =
+          1      BZEL. (DEFBC. (I)) .XOR.
+          2      (373737373737K .LS. (N * 6))
+          R
+            INTERNAL FUNCTION (I, N)
+            ENTRY TO SCVT.
+          R
+            WHENEVER I .RS. 35 .E. 0
+                 FUNCTION RETURN CVT. (I, N)
+            OTHERWISE
+                 FUNCTION RETURN RJUST. (((LJUST. (BZEL. (DEFBC.
+          1          (I)))) .RS. 6) .V. $-00000$) .XOR.
+          2           (373737373737K .LS. (N * 6))
+            END OF CONDITIONAL
+            END OF FUNCTION
+          R
+          R
+          R
+          R
+          R
+            END OF PROGRAM

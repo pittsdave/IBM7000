@@ -1,0 +1,5 @@
+       ENTRY   MAIN
+       EXTERN  QED
+VQED   TRA     QED
+MAIN   TRA*    VQED     
+       END     MAIN

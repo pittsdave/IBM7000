@@ -1,0 +1,56 @@
+* WRFX., WRFXA., RDFX., RDFXA.- MAD CALLS TO WRFLX, ETC.
+       TTL     PETER R. BOS --- AUGUST 1967                             
+       PCC     ON 
+       NOLNK
+       ENTRY   WRFX     
+       ENTRY   WRFXA    
+       ENTRY   RDFX     
+       ENTRY   RDFXA    
+       LBL     WRFX     
+       PCC     OFF
+       REM
+       REM     ALLOW MAD CALLS FOR CONSOLE I/O. 
+       REM
+       IFF     XBUILD,0,1                                        DGPHACK
+WRFX   CAL     $WRFLX   
+       IFF     XBUILD,1,1                                        DGPHACK
+WRFX   CAL     VRFLX                                             DGPHACK
+       TRA     GO 
+       IFF     XBUILD,0,1                                        DGPHACK
+WRFXA  CAL     $WRFLXA  
+       IFF     XBUILD,1,1                                        DGPHACK
+WRFXA  CAL     VRFLXA                                            DGPHACK
+       TRA     GO 
+       IFF     XBUILD,0,1                                        DGPHACK
+RDFX   CAL     $RDFLX                                            DGPHACK
+       IFF     XBUILD,1,1                                        DGPHACK
+RDFX   CAL     VDFLX   
+       TRA     GO 
+       IFF     XBUILD,0,1                                        DGPHACK
+RDFXA  CAL     $RDFLXA  
+       IFF     XBUILD,1,1                                        DGPHACK
+RDFXA  CAL     VDFLXA                                            DGPHACK
+GO     STA     TSX
+       SXA     FX4,4    
+       REM
+       CAL     1,4           PICK UP A(N)...N FROM MAD.     
+       STA     WR 
+       PDC     0,4           GET COUNT.   
+       CAL     0,4           ..     
+       PAX     0,4           ..     
+       SXD     WR,4          ..     
+TSX    TSX     -,4
+WR     PZE     -,0,-    
+       REM
+FX4    AXT     -,4
+       TRA     1,4
+       IFF     XBUILD,1,1                                        DGPHACK
+VRFLX  TTR     WRFLX                                             DGPHACK
+       IFF     XBUILD,1,1                                        DGPHACK
+VRFLXA TTR     WRFLXA                                            DGPHACK
+       IFF     XBUILD,1,1                                        DGPHACK
+VDFLX  TTR     RDFLX                                             DGPHACK
+       IFF     XBUILD,1,1                                        DGPHACK
+VDFLXA TTR     RDFLXA                                            DGPHACK
+       REM
+       END  

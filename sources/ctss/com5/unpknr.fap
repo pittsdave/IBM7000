@@ -1,0 +1,43 @@
+* GLIMS IS USED TO EVALUATE THE THE MAD EXPRESSION
+       TTL     FILE NAME -- UNPNR FAP                                   
+       ENTRY   UNPKNR   
+       INSERT  WMACS    
+       EJECT
+UNPKNR SXA     UP07,1   
+       SXA     UP08,2   
+       SCA     UP09,4   
+       STZ     CHCNT         INITIALIZE COUNT   
+       GLIMS   (1,4),HLDW,BMPW,CHKW GET LIMITS  
+       GLIMS   (2,4),HLDC,(BMPC1,BMPC2),(CHKC1,CHKC2) 
+       CAL*    3,4           GET BYTE SIZE
+       STA     UP03          ..     
+       ALS     18            ..     
+       STD     UP04          ..     
+HLDW   AXC     --,1          FIRST WORD   
+HLDC   AXC     --,2          FIRST CHARACTER    
+UP01   AXT     36,4          IR4 COUNTS CHARS IN WORD 
+       LDQ     ,1 
+UP02   ZAC  
+UP03   LGL     -- 
+       SLW     ,2 
+       CAL     CHCNT    
+       ADD     =1 
+       SLW     CHCNT    
+CHKC1  PZE     UP07,2,--
+BMPC1  TXI     *+1,2,-- 
+UP04   TIX     UP02,4,--
+CHKW   PZE     UP05,1,--
+BMPW   TXI     UP01,1,--
+*     
+UP05   CAL     =O60          FILL CHARACTER BUFFER IF WORDS RAN OUT     
+UP06   SLW     ,2            ..     
+CHKC2  PZE     UP07,2,--     ..     
+BMPC2  TXI     UP06,2,--     ..     
+*     
+       CAL     CHCNT         GET COUNT OF CHARS UNPACKED.   
+UP07   AXT     --,1          RETURN 
+UP08   AXT     --,2          ..     
+UP09   AXC     --,4          ..     
+       TRA     1,4           ..     
+CHCNT                        CHARACTER COUNT    
+       END  

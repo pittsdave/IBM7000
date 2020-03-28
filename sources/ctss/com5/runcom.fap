@@ -1,0 +1,89 @@
+* PETER R. BOS -- RUNCOM COMMAND REGENERATED 2/13/68
+       REM
+       PCC     ON 
+       LBL     RUNCOM   
+       PCC     OFF
+       REM
+       EXTERN  GETCLS,CHNCOM,NEXCOM,FSTATE,WRFLX,SCHAIN,BRAKE     
+       EXTERN  .SETUP   
+       UNLIST     
+       INSERT  MACRO
+       LIST
+       REM
+*     
+*  USAGE IS ...   RUNCOM NAME1 -ARGS-     
+*  WHERE THE NAME OF THE MACRO-COMMAND FILE IS EITHER 
+*  NAME1 RUNCOM OR NAME1 BCD, AND ARGS ARE ARGUMENTS TO     
+*  BE SUBSTITUTED.
+*     
+       REM
+       TSX     .SETUP,4      LOAD DUMMY FROM XLIBE    
+       CALL    GETCLS((CBUFF,0,0)) GET COMMAND BUFFER 
+       CAL     CBUFF+1       FILE NAME1   
+       SLW     FILNAM        ..     
+       ERA     =O777777777777 IF NO ARGUMENTS TO COMMAND,   
+       TNZ     START         ..     
+       TYPE    (/USAGE IS...  RUNCOM NAME1 -ARGS-/)    
+       TYPE    (/MACRO FILE NAME2 IS RUNCOM OR BCD/)   
+       TYPE    (/ARGS ARE ARGUMENTS TO BE SUBSTITUTED/)
+       CALL    CHNCOM(0)     EXIT   
+       REM
+START  CALL    FSTATE(FILNAM,RUNCOM,=-0,NFL1)   
+       TRA     OKFIL         FILE FOUND, SKIP   
+       EJECT
+NFL1   CALL    FSTATE(FILNAM,BCD,=-0,NFL2)
+       CAL     BCD           FILE NAME2 IS BCD, SET UP FOR SCHAIN 
+       SLW     FILNAM-1      ..     
+       TRA     OKFIL         SKIP   
+NFL2   CAL     FILNAM        FILE NOT FOUND, COMPLAIN 
+       SLW     YULOSE+1      ..     
+       TYPE    (/ FILE ****** RUNCOM NOT FOUND, NO EXECUTION/),YULOSE    
+       TSX     BRAKE,4       WHOA...
+       CALL    CHNCOM((0,0,0)) EXIT 
+       REM
+OKFIL  AXC     2,4           GO LOOK FOR FENCE. 
+       CAL     CBUFF,4       ..     
+       ERA     =O777777777777 ..    
+       TZE     *+3           ..     
+       TXI     *+1,4,-1      ..     
+       TXH     *-4,4,-19     LOOP TILL 20 WORDS CHECKED     
+       PCA     0,4           NUMBER OF ARGS TO AC     
+       PAX     0,4           BACK TO X4   
+       TXL     NOARG,4,2     IF NO SUBS. ARGS, SKIP   
+       TXI     *+1,4,CBUFF-1 GET ADDRESS OF LAST ARG  
+       SXD     CHAIN+2,4     INSERT IN CALL     
+       TRA     RUN            AND SKIP    
+NOARG  CAL     SKP           SET UP DUMMY INSTRUCTION 
+       SLW     CHAIN+2       ..     
+       REM
+RUN    CAL     FILNAM        TYPE COMMENT..     
+       SLW     XXSTRT        ..     
+       TYPE    (/****** STARTED/),XXSTRT   
+       REM
+CHAIN  CALL    SCHAIN(FILNAM,(CBUFF+2,...,-))   
+SKP    TRA     *+1           DUMMY INS.   
+       REM
+       SLW     ...FIL        SAVE POSSIBLE SAVED FILE NAME  
+       CAL     FILNAM        SET UP OTHER COMMENT     
+       SLW     XXFINI   
+       TYPE    (/****** HAS BEEN RUN/),XXFINI    
+       CAL     ...FIL        CHECK FOR SAVED FILE     
+       TZE     XIT           NO, GO TO CHNCOM   
+       ARS     18            MIGHT BE, CHECK FOR '...XXX'   
+       ERA     =O333333      ..     
+       TNZ     XIT           NO, EXIT     
+       CAL     =HRESTOR      YES, RESTORE CORE IMAGE  
+       LDQ     ...FIL        ..     
+       TSX     NEXCOM,4      VIA NEXCOM   
+       REM
+XIT    CALL    CHNCOM(0)     EXIT VIA CHNCOM    
+       REM
+CBUFF  BSS     20            COMMAND BUFFER     
+...FIL PZE  
+       BCI     1,RUNCOM 
+FILNAM PZE  
+       REM
+RUNCOM BCI     1,RUNCOM 
+BCD    BCI     1,   BCD 
+       REM
+       END  
