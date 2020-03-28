@@ -1,0 +1,193 @@
+CPU = i386
+MAKECPU = /D_X86_
+PCPU = /G3
+
+!include <ntwin32.mak>
+
+CFLAGS = /nologo /D_WIN32 /DWIN32 /W3 /Zi /MD $(PCPU)
+
+BCDDUMP = bd.obj
+PATCHDASD = patchdasd.obj
+OBJ2CBN = obj2cbn.obj
+OBJ2BIN = obj2bin.obj
+OBJ2IMG = obj2img.obj
+BCDSPLIT = bsplit.obj
+BINCMP = bincmp.obj
+DISASM = disasm.obj
+MKDASD = mkdasd.obj
+GELBL2TXT = gelbl2txt.obj
+BSS2OBJ = bss2obj.obj prsf2.obj
+BCD2BSSOBJ = bcd2bss.obj
+
+GENDATEOBJ = gendate.obj
+GENEXTOBJ = gendate.obj
+BCD2TXTOBJ = bcd2txt.obj prsf2.obj
+TXT2BCDOBJ = txt2bcd.obj prsf2.obj
+
+PUNCHCTSSOBJ = punchctss.obj
+PLOTCVTOBJ = plotcvt.obj calcomp.obj
+
+USERADDOBJ = useraddctss.obj usersupport.obj
+USERDELOBJ = userdelctss.obj usersupport.obj
+USERREPORTOBJ = userreportctss.obj usersupport.obj
+
+all: obj2bin.exe obj2img.exe bd.exe bsplit.exe bincmp.exe disasm.exe \
+	gelbl2txt.exe mkdasd.exe gendate.exe txt2bcd.exe bcd2txt.exe \
+	patchdasd.exe bss2obj.exe punchctss.exe plotcvt.exe genext.exe \
+	useraddctss.exe userdelctss.exe userreportctss.exe
+
+
+obj2bin.exe: $(OBJ2BIN)
+	link $(OBJ2BIN) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+obj2img.exe: $(OBJ2IMG)
+	link $(OBJ2IMG) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+obj2cbn.exe: $(OBJ2CBN)
+	link $(OBJ2CBN) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+bd.exe: $(BCDDUMP)
+	link $(BCDDUMP) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+patchdasd.exe: $(PATCHDASD)
+	link $(PATCHDASD) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+bsplit.exe: $(BCDSPLIT)
+	link $(BCDSPLIT) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+bincmp.exe: $(BINCMP)
+	link $(BINCMP) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+disasm.exe: $(DISASM)
+	link $(DISASM) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+gelbl2txt.exe: $(GELBL2TXT)
+	link $(GELBL2TXT) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+mkdasd.exe: $(MKDASD)
+	link $(MKDASD) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+bss2obj.exe: $(BSS2OBJ)
+	link $(BSS2OBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+bcd2bss.exe: $(BCD2BSS)
+	link $(BCD2BSS) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+bcd2txt.exe: $(BCD2TXTOBJ)
+	link $(BCD2TXTOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+txt2bcd.exe: $(TXT2BCDOBJ)
+	link $(TXT2BCDOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+gendate.exe: $(GENDATEOBJ)
+	link $(GENDATEOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+genext.exe: $(GENEXTOBJ)
+	link $(GENEXTOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+punchctss.exe: $(PUNCHCTSSOBJ)
+	link $(PUNCHCTSSOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+plotcvt.exe: $(PLOTCVTOBJ)
+	link $(PLOTCVTOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+useraddctss.exe: $(USERADDOBJ)
+	link $(USERADDOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+userdelctss.exe: $(USERDELOBJ)
+	link $(USERDELOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+userreportctss.exe: $(USERREPORTOBJ)
+	link $(USERREPORTOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+
+clean:
+        del $(OBJ2CBN) obj2cbn.exe
+        del $(OBJ2BIN) obj2bin.exe
+        del $(OBJ2IMG) obj2img.exe
+        del $(BSS2OBJ) bss2obj.exe
+        del $(BCDDUMP) bd.exe
+        del $(PATCHDASD) patchdasd.exe
+        del $(BCDSPLIT) bsplit.exe
+        del $(BINCMP) bincmp.exe
+        del $(DISASM) disasm.exe
+        del $(GELBL2TXT) gelbl2txt.exe
+        del $(MKDASD) mkdasd.exe
+        del $(BCD2TXTOBJ) bcd2txt.exe
+        del $(BCD2BSSOBJ) bcd2bss.exe
+        del $(TXT2BCDOBJ) txt2bcd.exe
+        del $(GENDATEOBJ) gendate.exe
+        del $(GENEXTOBJ) genext.exe
+        del $(PUNCHCTSSOBJ) punchctss.exe
+        del $(PLOCVTOBJ) plotcvt.exe
+	del $(USERADDOBJ) useraddctss.exe
+	del $(USERDELOBJ) userdelctss.exe
+	del $(USERREPORTOBJ) userreportctss.exe
+
+
+obj2cbn.obj: obj2cbn.c sysdef.h objdef.h
+obj2bin.obj: obj2bin.c sysdef.h objdef.h parity.h
+obj2img.obj: obj2img.c sysdef.h objdef.h parity.h tobcd.h
+bd.obj: bd.c nativebcd.h dasd.h
+bsplit.obj: bsplit.c
+bincmp.obj: bincmp.c sysdef.h
+disasm.obj: disasm.c sysdef.h nativebcd.h
+gelbl2txt.obj: gelbl2txt.c sysdef.h nativebcd.h
+mkdasd.obj: mkdasd.c sysdef.h dasd.h
+bcd2txt.obj: bcd2txt.c sysdef.h nativebcd.h prsf2.h
+bcd2bss.obj: bcd2bss.c sysdef.h
+bss2obj.obj: bss2obj.c sysdef.h nativebcd.h prsf2.h
+txt2bcd.obj: txt2bcd.c sysdef.h prsf2.h nativebcd.h parity.h tobcd.h
+prsf2.obj: prsf2.c prsf2.h
+gendate.obj: gendate.c
+genext.obj: genext.c
+punchctss.obj: punchctss.c sysdef.h nativebcd.h
+plotcvt.obj: plotcvt.c sysdef.h nativebcd.h
+calcomp.obj: calcomp.c 
+useraddctss.obj: useraddctss.c timacc.h usersupport.h
+userdelctss.obj: userdelctss.c timacc.h usersupport.h
+userreportctss.obj: userreportctss.c timacc.h usersupport.h
+usersupport.obj: usersupport.c timacc.h usersupport.h
+
