@@ -1,0 +1,307 @@
+ARCHV     R
+          R ARCHIV COMMAND--DON WAGNER 9 SEPT 1965
+          R   MODIFIED BY R. ROACH 9/27/68
+          R
+          R
+          R LOADING-- 'ARCHV MAD' HAS TWO INSERTS,
+          R 'ASUBS MAD' AND 'AFORM MAD'.
+          R     MAD ARCHV
+          R     LAED NCLOAD ARCHV (SRCH) XLIBE
+          R     SAVE ARCHIV
+          R     RENAME ARCHIV SAVED ARCHIV TSSDC.
+          R
+          R INITIALIZATION
+          R
+            WHENEVER COMARG.(1).A.77K.E.77K
+             PRMESS.( $ARCHIV KEY NM1 NM2 FL1 FL2 ...$)
+             PRMESS.($WHERE KEY = COMBIN, TABLE, PRINT, DELETE, REPLAC$)
+             PRMESS.($XTRACT, OR UPDATE$)
+             PRMESS.($ALL KEYS MAY BE ABBREVIATED BY FIRST LETTER.$)
+OUT          CHNCOM.(0)
+            END OF CONDITIONAL
+            KEY=COMARG.(1)
+            WHENEVER KEY .E. $  TOFF$
+              TOFF = 1B
+              BOOLEAN TOFF
+              VECTOR VALUES TOFF = 0B
+              KEY = $     T$
+            END OF CONDITIONAL
+            WHENEVER KEY .E. $   TON$
+               TON = 1B
+               KEY = $     T$
+               BOOLEAN TON
+                VECTOR VALUES TON = 0B
+            END OF CONDITIONAL
+            NM1=COMARG.(2)
+            NM2=COMARG.(3)
+            SETBRK.(OUT)
+          R
+            GETTM.(DATE,TIME)
+              DIMENSION ANAM(2)
+              EQUIVALENCE (NM1,ANAM(0)), (NM2,ANAM(1))
+            WHENEVER NM1.A.77K.E.77K .OR. NM2.A.77K.E.77K
+                 PRMESS.($NOT ENOUGH ARGUMENTS$)
+                 CHNCOM.(0)
+            END OF CONDITIONAL
+          R
+          R FILTAB IS A TABLE OF SPECIFIED FILES.
+          R FILTAB(0) CONTAINS COUNT.
+          R
+            WHENEVER NM2.E.$SOURCE$.OR.NM2.E.$ARCHIV$
+              NAMTYP=1B
+              THROUGH IN00, FOR FILTAB=0,2,COMARG.(FILTAB+4).A.77K.E.77K
+          1      .OR.FILTAB.E.FILTBZ
+              FILTAB(FILTAB+1)=COMARG.(FILTAB+4)
+              WHENEVER COMARG.(FILTAB+5).A.77K.E.77K
+              PRMESS.( $LAST ARGUMENT INCOMPLETE, RETYPE REQUEST$)
+              CHNCOM.(0)
+              OTHERWISE
+                  FILTAB(FILTAB+2)=COMARG.(FILTAB+5)
+              END OF CONDITIONAL
+IN00          CONTINUE
+            OTHERWISE
+              NAMTYP=0B
+              THROUGH IN01, FOR FILTAB=0,1,COMARG.(FILTAB+4).A.77K.E.77K
+          1      .OR. FILTAB.E.FILTBZ
+IN01        FILTAB(FILTAB+1)=COMARG.(FILTAB+4)
+            END OF CONDITIONAL
+          R
+          R TEMPORARY FILE NAME IS PROB PROG
+          R
+            WHOAMI.(WHBUF(8)...8)
+              DIMENSION WHBUF(8)
+              DIMENSION TFIL(2)
+            TM1=WHBUF(8)
+            TM2=WHBUF(7)
+              EQUIVALENCE (TM1,TFIL(0)), (TM2,TFIL(1))
+          R
+          R COMBIN--MAKE ORIGINAL ARCHIV
+          R
+            WHENEVER KEY.E.$COMBIN$ .OR. KEY.E.$     C$
+            FSTATE.(NM1,NM2,FSBUF(8)...8,CM01)
+            WHENEVER NAMTYP
+            THROUGH CMP1A, FOR I=1,2,I.G.FILTAB
+CMP1A       WHENEVER FILTAB(I).E.NM1.AND.FILTAB(I+1).E.NM2,
+          1   TRANSFER TO CM01
+            OTHERWISE
+            THROUGH CMP1B, FOR I = 1,1,I.G.FILTAB
+CMP1B       WHENEVER FILTAB(I).E.NM1, TRANSFER TO CM01
+            END OF CONDITIONAL
+            PRMESS.($ YOU HAVE NOT INCLUDED THE OLD$,NM1,NM2,$.$)
+            PRMESA.($ IS THIS OK,$)
+            WHENEVER .NOT. YES.(0), TRANSFER TO FORGET
+CM01        CONTINUE
+            WHENEVER NAMTYP
+            THROUGH CM03A, FOR FILTBP=1,2,FILTBP.G.FILTAB
+            WHENEVER .NOT.CPFIL.(FILTAB(FILTBP),FILTAB(FILTBP+1)),
+          1    PRNTER.(61K)
+CM03A       CONTINUE
+            OTHERWISE
+            THROUGH CM03, FOR FILTBP=1,1,FILTBP.G.FILTAB
+            WHENEVER .NOT. CPFIL.(FILTAB(FILTBP),NM2),
+          1    PRNTER.(61K)
+CM03        CONTINUE
+            END OF CONDITIONAL
+            WHENEVER TMOPSW, CLS.(NM1,NM2)
+            TRANSFER TO EXT
+FORGET      PRMESS.($NOTHING DONE.$)
+            CHNCOM.(0)
+          R
+          R TABLE--PRINT TABLE OF CONTENTS.
+          R
+            OR WHENEVER KEY.E.$ TABLE$ .OR. KEY.E.$     T$
+            COPYSW=0B
+            PRSSW=0B
+            VECTOR VALUES BL = 605757575757K
+            VECTOR VALUES CR = 555757575757K
+TB01        WHENEVER FILTAB.E.0
+                      GNEXT.(TFNF)
+               WHENEVER FIRST
+                  FIRST = 0B
+                  WHENEVER TOFF, OFF.($ARCHIV$,$OUTPUT$)
+                  WHENEVER TON, OFFON.($ARCHIV$,$OUTPUT$)
+                      PRMESS.
+                  PRMESS.($ ***$,NM1,BL,NM2,BL,BL,DATE,BL,TIME)
+                 PRMESS.
+               END OF CONDITIONAL
+            BOOLEAN FIRST
+            VECTOR VALUES FIRST = 1B
+            OTHERWISE
+                 SEARCH.(TFNF)
+                  WHENEVER FIRST
+                 FIRST = 0B
+                      WHENEVER TOFF, OFF.($ARCHIV$,$OUTPUT$)
+                      WHENEVER TON, OFFON.($ARCHIV$,$OUTPUT$)
+                 END OF CONDITIONAL
+            END OF CONDITIONAL
+            PTLNMK.
+            TRANSFER TO TB01
+          R
+TFNF        PRMESS.
+            TRANSFER TO FNF
+          R
+          R DELETE--REMOVE ENTRIES
+          R
+            OR WHENEVER KEY.E.$DELETE$ .OR. KEY.E.$     D$
+DL01        COPYSW=1B
+            PRSSW=1B
+            WMRKSW=1B
+            SEARCH.(REN)
+            COPYSW=0B
+            GNEXT.(REN)
+            TRANSFER TO DL01
+          R
+          R XTRACT-
+          R
+            OR WHENEVER KEY.E.$XTRACT$ .OR. KEY.E.$     X$ .OR.
+          1   KEY.E.$    XT$
+XT01        COPYSW=0B
+            PRSSW=1B
+            WHENEVER FILTAB.NE.0
+                 SEARCH.(FNF)
+            OTHERWISE
+                 WHENEVER .NOT. GOTNXT, GNEXT.(FNF)
+            END OF CONDITIONAL
+            NW1=FLN1.(PRLNMK)
+            NW2=FLN2.(PRLNMK)
+            COPYSW=1B
+            WMRKSW=0B
+            GNEXT.(XT02)
+            GOTNXT=1B
+            TRANSFER TO XT03
+XT02        NAMO=1B
+XT03        WHENEVER CLS.(NW1,NW2)
+                 WHENEVER KEY.E.$    XT$, CHFILE.(NW1,NW2,001K,-0,-0)
+            END OF CONDITIONAL
+            WHENEVER NAMO,TRANSFER TO FNF
+            TRANSFER TO XT01
+          R
+          R REPLAC
+          R
+            OR WHENEVER KEY.E.$REPLAC$ .OR. KEY.E.$     R$ .OR.
+          1     KEY.E.$    RD$
+RP01        COPYSW=1B
+            PRSSW=1B
+            WMRKSW=1B
+            WHENEVER FILTAB.NE.0
+                 SEARCH.(RP02)
+            OTHERWISE
+                 WHENEVER .NOT. GOTNXT, GNEXT.(RP02)
+            END OF CONDITIONAL
+            GOTNXT=0B
+            WHENEVER .NOT. CPFIL.(FLN1.(PRLNMK),FLN2.(PRLNMK))
+                 PRNTER.(61K)
+                 COPYSW=1B
+            OTHERWISE
+            WHENEVER DELST.L.DELSTZ
+                 DELST=DELST+1
+                 DELST1(DELST)=FLN1.(PRLNMK)
+                 DELST2(DELST)=FLN2.(PRLNMK)
+            END OF CONDITIONAL
+                 COPYSW=0B
+            END OF CONDITIONAL
+            GNEXT.(RP02)
+            GOTNXT=1B
+            TRANSFER TO RP01
+RP02        WHENEVER NAMTYP
+               TYP=1
+            OTHERWISE
+               TYP=0
+            END OF CONDITIONAL
+            THROUGH RP03, FOR JI=1,1,JI+TYP*(JI-1).G.FILTAB
+            WHENEVER NAMTYP
+               JJ=2*JI-1
+               CNM2=FILTAB(JJ+1)
+            OTHERWISE
+               JJ=JI
+               CNM2=NM2
+            END OF CONDITIONAL
+            WHENEVER .NOT. FILFND(JI)
+            PRMESS.(FILTAB(JJ),BL,CNM2,$ ADDED$,606346605757K,NM1,BL,
+          1    NM2)
+                 WHENEVER .NOT. CPFIL.(FILTAB(JJ),CNM2)
+                      PRNTER.(61K)
+                 OTHERWISE
+                      FILFND(JI)=1B
+                 WHENEVER DELST.L.DELSTZ
+                      DELST=DELST+1
+                      DELST1(DELST)=FILTAB(JJ)
+                      DELST2(DELST)=CNM2
+                 END OF CONDITIONAL
+                 END OF CONDITIONAL
+RP03        END OF CONDITIONAL
+            WHENEVER CLS.(NM1,NM2)
+            WHENEVER KEY.E.$    RD$
+                 THROUGH RPD01, FOR I=1,1,I.G.DELST
+RPD01                 DELT.(DELST1(I),DELST2(I))
+            END OF CONDITIONAL
+            END OF CONDITIONAL
+            TRANSFER TO EXT
+            BOOLEAN GOTNXT
+            DIMENSION DELST1(100), DELST2(100)
+            VECTOR VALUES DELSTZ=100
+          R
+          R UPDATE--CONDITIONAL REPLAC
+          R
+            OR WHENEVER KEY.E.$UPDATE$ .OR. KEY.E.$     U$
+UP01        COPYSW=1B
+            PRSSW=1B
+            WMRKSW=1B
+            WHENEVER FILTAB.NE.0
+                 SEARCH.(REN)
+            OTHERWISE
+                 WHENEVER .NOT. GOTNXT, GNEXT.(REN)
+            END OF CONDITIONAL
+            FSTATE.(FLN1.(PRLNMK),FLN2.(PRLNMK),FSBUF(8)...8,UP02)
+            WHENEVER FSBUF(2).A.377777777777K.G.DATTM.(PRLNMK).A.
+          1     377777777777K
+                 PTLNMK.
+                 COPYSW=0B
+                 WHENEVER .NOT. CPFIL.(FLN1.(PRLNMK),FLN2.(PRLNMK)),
+          1         COPYSW=1B
+            OTHERWISE
+UP02             COPYSW=1B
+            END OF CONDITIONAL
+            GNEXT.(REN)
+            GOTNXT=1B
+            TRANSFER TO UP01
+          R
+          R ERROR
+          R
+            OTHERWISE
+            PRMESS.(KEY,$ -- NOT A VALID ARGUMENT.$)
+            CHNCOM.(0)
+            END OF CONDITIONAL
+          R
+          R GRACEFUL EXIT
+          R
+SPC         PRMESS.
+            TRANSFER TO FNF
+REN         CLS.(NM1,NM2)
+FNF         WHENEVER NAMTYP
+               THROUGH FN01A, FOR I = 1,1,I.G.FILTAB/2
+               WHENEVER .NOT.FILFND(I)
+            PRMESS.(FILTAB(2*I-1),BL,FILTAB(2*I),$ NOT FOUND I$,
+          1  456057575757K,NM1,BL,NM2)
+FN01A          END OF CONDITIONAL
+            OTHERWISE
+               THROUGH FNO1B, FOR I=1,1,I.G.FILTAB
+               WHENEVER .NOT.FILFND(I)
+                 PRMESS.(FILTAB(I),BL,NM2,$ NOT FOUND I$,456057575757K,
+          1   NM1,BL,NM2)
+FNO1B          END OF CONDITIONAL
+            END OF CONDITIONAL
+EXT         CHNCOM.(0)
+            PRMESS.($FRAM$)
+            PRMESS.($NOTIFY SYSTEMS STAFF$)
+            DORMNT.
+          R
+          R ASUBS CONTAINS INTERNAL FUNCTIONS SEARCH., GNEXT., CPFIL.,
+          R CLS., YES.
+          R AFORM CONTAINS INTERNAL FUNCTIONS MKLNMK., BDLNMK., DATTM.,
+          R FLN1., FLN2., CNT.
+          R AFORM CONTAINS ALL INFORMATION ON THE ACTUAL LINE MARK FORMA
+          R
+            INSERT FILE ASUBS
+            INSERT FILE AFORM
+            END OF PROGRAM

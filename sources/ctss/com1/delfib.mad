@@ -1,0 +1,90 @@
+ DELFIB   R     DELETE A FIB JOB.
+          R
+          R     3/9/66 - NOEL I. MORRIS
+          R
+          R
+            NORMAL MODE IS INTEGER
+            DIMENSION CARD (13), BUFF1 (431), BUFF2 (431)
+          R
+          R     PRESET DECLARATIONS.
+          R
+            VECTOR VALUES FIBJOB = $FIBJOB$
+            VECTOR VALUES   FILE = $  FILE$
+            VECTOR VALUES  C0056 = $ C0056$
+          R VECTOR VALUES FIBMON = $ 99995$
+            VECTOR VALUES FIBMON = $FIBMON$
+            VECTOR VALUES     RW = $RW$
+            VECTOR VALUES RELLOC = 1
+            VECTOR VALUES  FENCE = 777777777777K
+            VECTOR VALUES    MZE = -0
+          R
+            EQUIVALENCE (PROBN, NOJOB (5)), (PROGN, NOJOB (6)),
+          1      (JOBNAM, NOJOB (1))
+          R
+          R
+          R     PICK UP JOB NAME AND SET UP.
+          R
+            JOBNAM = COMARG. (1)
+            WHENEVER JOBNAM .E. FENCE
+                 PRNTP. (USAGE)
+                 VECTOR VALUES USAGE = $ USAGE IS 'DELFIB  JOBNAM' .$,
+          1           777777777777K
+                 TRANSFER TO CHN
+            END OF CONDITIONAL
+          R
+            WHOAMI. (CARD (1) ... 2)
+            PROBN = CARD (1)
+            PROGN = CARD
+          R
+            FERRTN. (ERROR)
+          R
+          R
+          R     LINK TO FIBJOB FILE AND SEARCH FOR USER'S JOB.
+          R
+            LINK. (FIBJOB, FILE, C0056, FIBMON, MZE, MZE, 120K, ERR1)
+            BFOPEN. (RW, FIBJOB, FILE, BUFF1 (431), MZE, MZE, ERR1)
+            UNLINK. (FIBJOB, FILE)
+          R
+READ        BFREAD. (FIBJOB, FILE, CARD (13) ... 14, NOTFND, CT, ERROR)
+            RELLOC = RELLOC + 14
+          R
+            WHENEVER  CARD (13) .NE. PROBN .OR.
+          1      CARD (11) .NE. PROGN .OR.
+          2      CARD (10) .NE. JOBNAM,
+          3           TRANSFER TO READ
+          R
+          R
+          R     CARD FOUND.  REWRITE FILE DELETING IT.
+          R
+            BUFFER. (FIBJOB, FILE, BUFF2 (431) ... 432)
+          R
+RWLOOP      BFREAD. (FIBJOB, FILE, CARD (13) ... 14, RWFIN, CT, ERROR)
+            WRWAIT. (FIBJOB, FILE, RELLOC - 14, CARD (13) ... 14)
+          R
+            RELLOC = RELLOC + 14
+            TRANSFER TO RWLOOP
+          R
+RWFIN       TRFILE. (FIBJOB, FILE, RELLOC - 14, TRERR)
+          R
+TRERR       CONTINUE
+CLOS        BFCLOS. (FIBJOB, FILE, ERROR)
+CHN         CHNCOM. (0)
+          R
+          R
+          R     FILE SYSTEM ERROR ENCOUNTERED.
+          R
+ERR1        UNLINK. (FIBJOB, FILE)
+ERROR       DSKER.
+          R
+          R
+          R     FIB JOB NOT FOUND.
+          R
+NOTFND      PRNTP. (NOJOB)
+            VECTOR VALUES NOJOB =
+          1  $ JOB  000000  NOT FOUND FOR   000000000000.$,
+          2      777777777777K
+            TRANSFER TO CLOS
+          R
+          R
+          R
+            END OF PROGRAM

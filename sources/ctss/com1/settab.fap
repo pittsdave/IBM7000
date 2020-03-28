@@ -1,0 +1,195 @@
+       NOLNK
+       LBL   SETTAB
+       ENTRY SETTAB
+       ENTRY SETCOL
+       ENTRY UNTAB
+*
+ZERO   DEC   0
+*
+SETTAB TRA   (L000    
+(L001  EQU   *
+(L002  CLA   ZERO  
+       STO   I  
+(L003  LXA   **,4             CARD
+       SXD   (L004,4  
+       LXA   I,4      
+(L004  TXH   (L005,4,**
+       LAC   I,1      
+SET010 CLA   **,1             CARD
+       STO   TABS,1   
+       LXA   I,4      
+       TXI   *+1,4,1  
+       SXA   I,4      
+       TRA   (L003    
+(L005  EQU   *
+RET010 AXT   **,4     
+       TRA   1,4      
+(L000  SXA   RET010,4 
+       CLA   1,4             CARD
+       STA   (L003           4  
+       STA   SET010          11       
+       TRA   (L001    
+*
+SETCOL TRA   (L006    
+(L007  CAL   **               WORD     
+       SLW   COLVAL   
+RET020 AXT   **,4     
+       TRA   1,4      
+(L006  SXA   RET020,4 
+       CLA   1,4      
+       STA   (L007            27       
+       TRA   (L007    
+*
+UNTAB  TRA   (L010    
+(L011  EQU   *
+(L012  CLA   =1  
+       STO   I  
+       LXA   I,4      
+(L013  TXH   (L014,4,84       124    
+       LAC   I,1      
+UNT010 CLA   **,1             CARD
+       STO   TCARD,1  
+       CLA   )S001    
+UNT020 STO   **,1             CARD
+       LXA   I,4      
+       TXI   *+1,4,1  
+       SXA   I,4      
+       TRA   (L013    
+(L014  CLA   =1  
+       STO   TAB      
+       STO   COL      
+UNT030 STO   **               CARD     
+       CAL   COLVAL   
+       SLW   PRVTB    
+(L015  CLA   =1  
+       STO   I  
+       LXA   I,4      
+(L016  TXH   (L017,4,84       124    
+       LAC   I,1      
+       CLA   TCARD,1  
+       STO   TCARD    
+       SUB   =O55       
+       TNZ   (L020    
+       CAL   FALSE    
+       SLW   VAL      
+       TRA   RET030   
+(L020  CLA   COL      
+       SUB   =72              110      
+       TMI   (L021    
+       TZE   (L021    
+       CLA   TCARD    
+       SUB   =O60       
+       TZE   (L022    
+       CAL   TRUE     
+       SLW   VAL      
+       TRA   RET030   
+(L022  TRA   (L023    
+(L021  CAL   COLVAL   
+       SLW   THSTB    
+       CLA   TCARD    
+       SUB   =O72       
+       TNZ   (L024    
+       CAL   TRUE     
+       SLW   THSTB    
+TABSET CLA   TAB      
+       SUB   TABS     
+       TMI   (L025    
+       TZE   (L025    
+       CLA   COL      
+       ADD   =2  
+       STO   COL      
+       TRA   (L026    
+(L025  LAC   TAB,1    
+       CLA   TABS,1   
+       SUB   COL      
+       TZE   *+2      
+       TPL   (L027    
+       CLA   TAB      
+       ADD   =1  
+       STO   TAB      
+       TRA   TABSET   
+       TRA   (L030    
+(L027  LAC   TAB,1    
+       CLA   TABS,1   
+       STO   COL      
+(L030  EQU   *
+(L026  TRA   (L031    
+(L024  CAL   PRVTB    
+       TZE   (L032    
+       CLA   TCARD    
+       SUB   =O35       
+       TNZ   (L032    
+       CLA   COL      
+       SUB   =1  
+       TMI   (L033    
+       TZE   (L033    
+       CLA   COL      
+       SUB   =1  
+       STO   COL      
+UNSET  CLA   TAB      
+       SUB   =1  
+       TMI   (L034    
+       TZE   (L034    
+       LAC   TAB,1    
+       CLA   TABS,1   
+       SUB   COL      
+       TMI   (L034    
+       TZE   (L034    
+       CLA   TAB      
+       SUB   =1  
+       STO   TAB      
+       TRA   UNSET    
+(L034  EQU   *
+(L033  TRA   (L035    
+(L032  LAC   COL,1    
+       CLA   TCARD    
+UNT040 STO   **,1             CARD
+       SUB   )S001    
+       TZE   (L036    
+       CLA   COL      
+UNT050 SUB   **               CARD     
+       TMI   (L036    
+       TZE   (L036    
+       CLA   COL      
+UNT060 STO   **               CARD     
+(L036  CLA   COL      
+       ADD   =1  
+       STO   COL      
+(L035  EQU   *
+(L031  CAL   THSTB    
+       SLW   PRVTB    
+(L023  LXA   I,4      
+       TXI   *+1,4,1  
+       SXA   I,4      
+       TRA   (L016    
+(L017  CAL   FALSE    
+       SLW   VAL      
+RET030 AXT   **,4     
+       TRA   1,4      
+(L010  SXA   RET030,4 
+       CLA   1,4      
+       STA   UNT010           45       
+       STA   UNT020           50       
+       STA   UNT030           60       
+       STA   UNT040           203      
+       STA   UNT050           207      
+       STA   UNT060           213      
+       TRA   (L011    
+*
+FALSE  DEC   0
+TRUE   DEC   1
+COLVAL OCT   1
+TABS   DEC   0,0,0,0,0,0
+       DEC   0,0,0,0,0,0
+       DEC   0,0,0,0,0,0
+       DEC   0,0,0,0,0,0
+       DEC   0,0,0,0,0,0
+)S001  BCI   1,00000 
+I      BSS   1
+TAB    BSS   1
+COL    BSS   1
+PRVTB  BSS   1
+THSTB  BSS   1
+VAL    BSS   1
+TCARD  BSS   84
+       END

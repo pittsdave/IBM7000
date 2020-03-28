@@ -1,0 +1,44 @@
+       TTL     EDUTL --- UTILITY ROUTINES FOR 'ED' IN ALGOL             
+       ENTRY   WRFLEX        OUTPUT ON TYPEWRITER     
+       ENTRY   WFLEXA        OUTPUT ON TYPEWRITER W/O C/R   
+       ENTRY   LS 
+       REM
+WRFLXA TIA     =HWRFLXA 
+       REM
+WRFLX  TIA     =HWRFLX  
+       REM
+WRFLEX SXA     XR1,1         OUTPUT ON TYPEWRITER     
+       AXT     WRFLX,1       ..     
+       TRA     WRITE         ..     
+       REM
+WFLEXA SXA     XR1,1         ..     
+       AXT     WRFLXA,1      ..     
+       REM
+WRITE  SXA     WR.2,1        SAVE ROUTINE TO CALL     
+       SXA     XR4,4    
+       CAL*    2,4           GET COUNT    
+       TNZ     WR.1          BCD OR BCI   
+       CAL*    1,4           BCI    
+       STD     WR.2+1        ..     
+       STA     WR.2+1        ..     
+       TRA     WR.2          ..     
+WR.1   ALS     18            ..     
+       STD     WR.2+1        ..     
+       CAL     1,4           .
+       STA     WR.2+1        ..     
+WR.2   TSX     **,4          ..     
+       ***     **,,**        ..     
+XR1    AXT     **,1          ..     
+XR4    AXT     **,4          ..     
+       TRA     1,4
+       REM
+LS     SXA     LSX1,1        SAVE INDEX 1 
+       CAL*    2,4           GET SHIFT    
+       PAC     ,1            ..     
+       LDQ*    1,4           GET WORD     
+       LGL     0,1           SHIFT IT     
+       XCA                   AND LEAVE IN ARITHMETIC AC     
+LSX1   AXT     **,1          ..     
+       TRA     1,4           ..     
+       REM
+       END  

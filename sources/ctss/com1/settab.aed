@@ -1,0 +1,87 @@
+          BEGIN
+      COMMENT ..... GENERAL ROUTINE TO INTERPRET TABS ..... $,
+          INTEGER ARRAY TABS(30),TCARD(84) $,
+          INTEGER I,COL,TAB $,
+          BOOLEAN PRVTB,THSTB,COLVAL,VAL $,
+          PRESET TABS = 0 $,
+          PRESET COLVAL = 1B $,
+      COMMENT ..... ENTRY TO SET UP TAB SETTINGS ..... $,
+ 
+          DEFINE PROCEDURE SETTAB(CARD) WHERE INTEGER ARRAY CARD TOBE
+               BEGIN
+               FOR I = 0 STEP 1 UNTIL CARD
+               DO TABS(I) = CARD(I) $,
+               END $,
+ 
+      COMMENT .... ENTRY TO SET INTERPRETATION OF COLON CHAR. ... $,
+ 
+          DEFINE PROCEDURE SETCOL(WORD) WHERE BOOLEAN WORD TOBE
+               COLVAL = WORD $,
+ 
+      COMMENT ..... ENTRY TO UNPACK CARD WITH TABS ..... $,
+ 
+          DEFINE BOOLEAN PROCEDURE UNTAB(CARD) WHERE INTEGER ARRAY CARD
+           TOBE
+               BEGIN
+               FOR I = 1 STEP 1 UNTIL 84
+               DO   BEGIN
+                    TCARD(I) = CARD(I) $,
+                    CARD(I) = .BCD. '00000 ' $,
+                    END $,
+               CARD = COL = TAB = 1 $,
+               PRVTB = COLVAL $,
+               FOR I = 1 STEP 1 UNTIL 84
+               DO   BEGIN
+                    IF (TCARD = TCARD(I)) EQL 55C
+                    THEN BEGIN
+                         VAL = FALSE $,
+                         GOTO RETURN $,
+                         END $,
+                    IF COL GRT 72
+                    THEN BEGIN
+                         IF TCARD NEQ 60C
+                         THEN BEGIN
+                              VAL = TRUE $,
+                              GOTO RETURN $,
+                              END $,
+                         END
+                    ELSE BEGIN
+                         THSTB = COLVAL $,
+                         IF TCARD EQL 72C
+                         THEN BEGIN
+                              THSTB = TRUE $,
+TABSET $                      IF TAB GRT TABS
+                              THEN COL = COL+2
+                              ELSE IF TABS(TAB) LEQ COL
+                                   THEN BEGIN
+                                        TAB = TAB+1 $,
+                                        GOTO TABSET $,
+                                        END
+                                   ELSE COL = TABS(TAB) $,
+                              END
+                         ELSE IF PRVTB AND TCARD EQL 35C
+                              THEN BEGIN
+                                   IF COL GRT 1
+                                   THEN BEGIN
+                                        COL = COL-1 $,
+UNSET $                                 IF TAB GRT 1 AND TABS(TAB) GRT
+                                         COL
+                                        THEN BEGIN
+                                             TAB = TAB-1 $,
+                                             GOTO UNSET $,
+                                             END $,
+                                        END $,
+                                   END
+                              ELSE BEGIN
+                                   IF (CARD(COL) = TCARD) NEQ .BCD.
+                                      '00000 ' AND COL GRT CARD
+                                   THEN CARD = COL $,
+                                   COL = COL+1 $,
+                                   END $,
+                         PRVTB = THSTB $,
+                         END $,
+                    END $,
+               VAL = FALSE $,
+               END $,
+ 
+          END FINI

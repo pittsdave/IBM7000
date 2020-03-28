@@ -1,0 +1,8 @@
+* PRNTER - (DUMMY MODULE FOR THE ED COMMAND)
+*          (CALLS PRNTER VIA NEXCOM.)
+       NOLNK
+       ENTRY   PRNTER
+PRNTER CAL     =HPRNTER
+       LDQ     =O-71
+       TIA     =HNEXCOM
+       END

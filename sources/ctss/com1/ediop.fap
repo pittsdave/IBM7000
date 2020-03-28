@@ -1,0 +1,563 @@
+*      EDIOP   --- I/O SUBROUTINES FOR 'ED', ALGOL VERSION
+       NOLNK
+       ENTRY   DSEEK         TO OPEN CARD FILE FOR READING  
+       ENTRY   RDCARD        TO READ A CARD FROM CARD FILE  
+       SPACE   1
+       ENTRY   DASIGN        TO OPEN CARD FILE FOR WRITING  
+       ENTRY   WRCARD        TO WRITE A CARD INTO FILE
+       ENTRY   DFILE         TO CLOSE OUT THE WRITE FILE    
+       SPACE   1
+       ENTRY   RENAME        TO RENAME A FILE   
+       SPACE   1
+       ENTRY   UPDATE        TO UPDATE USER UFD 
+       ENTRY   CHFILE        TO CHANGE THE NAME/MODE OF A FILE    
+       ENTRY   RESET         TO RESET USER FILE STATUS
+       ENTRY   IODIAG   
+       SPACE   1
+       ENTRY   WRFLX    
+       ENTRY   WRFLXA   
+       SPACE   1
+       ENTRY   RDTYPE        TO READ A LINE FROM CONSOLE    
+       ENTRY   PRCARD        TO PRINT A LINE ON CONSOLE     
+       SPACE   1
+       EXTERN  PRNTER,SETBCD,DELETE 
+       SPACE   1
+       EJECT
+CALL   MACRO   N,A
+       TSX     N,4
+       ARG     (A)
+CALL   END  
+       SPACE   1
+ARG    MACRO   PARS     
+       IRP     PARS     
+       PAR     PARS     
+       IRP  
+ARG    END  
+       SPACE   1
+SYSENT MACRO   NAME     
+       REM  
+       IRP     NAME     
+       PMC     ON
+NAME   TIA     =H'NAME  
+       PMC     OFF
+       IRP  
+SYSENT END  
+       SPACE   1
+PAR    OPSYN   PTH
+BLK    OPSYN   TIX           FLAG NON-DECR. BLKS
+       SPACE   1
+BUFLN  EQU     432           CURRENT LENGTH OF DISK/DRUM RECORDS  
+CRDLN  EQU     14 
+SWN    EQU     3  
+       SPACE   1
+RDLN   EQU     BUFLN+CRDLN    
+SMBLN  EQU     BUFLN/SWN
+WBLN   EQU     SMBLN+CRDLN    
+       SPACE   1
+BUFSUM EQU     BUFLN+RDLN+WBLN  SUM OF BUFFERS TAKEN FROM MEM-BOUND     
+       TTL     CARD-IMAGE INPUT FROM DISK
+DSEEK  SXA     X4,4          OPEN A FILE FOR READING  
+       CLA*    1,4           GET FIRST NAME     
+       LDQ*    2,4           GET SECOND NAME    
+       DST     RD            SAVE FOR READING   
+       CAL     3,4           POSSIBLE ERROR RETURN    
+       STA     ERRTN         ..     
+       CAL     RB.           FIND LOCATION OF READ BUFFER   
+GETRB  TRA     *+1           ONE-SHOT SWITCH    
+       CALL    GETBUF(RDBF)   
+       STA     RB.
+       STL     GETRB         CLOSE THIS PATH    
+       STA     RE.
+       STA     R. 
+       STZ     NXTEOF   
+       CALL    OPEN(=HR,RD,RD+1,M,M,ERSEEK,ERRCOD)    
+       CALL    RPRIME() 
+       NZT     EOFCT    
+       STL     NXTEOF   
+       TRA     X4            RETURN 
+       SPACE   1
+ERSEEK CAL     ERRCOD   
+       SUB     =12           IS IT FILE NOT FOUND     
+       TNZ     ERRTRA        NO, FAKE 'FERRTN'  
+       CALL    WRFLX((RD,,4)) 
+       TRA     ERRTN    
+       SPACE   1
+RDCARD SXA     X4,4          READ A CARD FROM FILE    
+       CAL     1,4           LINE ARRAY   
+       STA     RDLIN         ..     
+       CAL     2,4           LENGTH 
+       STA     LENGTH        ..     
+       CAL     3,4           LINENO 
+       STA     RDLNO         ..     
+       CAL     4,4           POSSIBLE ERROR RETURN    
+       STA     ERRTN         ..     
+       ZET     NXTEOF   
+       TRA     RCLOS    
+       ZET     RWAIT    
+       CALL    FWAIT(RD,RD+1) 
+       STZ     RWAIT    
+       AXT     CRDLN,4  
+       LAC     R.,1     
+       CAL     0,1
+       SLW     BUF+CRDLN,4    
+       TXI     *+1,1,-1 
+       TIX     *-3,4,1  
+       CAL     R. 
+       ACL     CRDF     
+       STA     R. 
+       ACL     CRDF     
+       LAS     RE.
+       TRA     RDREC    
+       AXT     0,0
+RDUNP  SYN     *  
+       EJECT
+CHARSW TRA     *+1           ONE-SHOT SWITCH    
+       CAL     BUF+12        GET CHARACTERS FROM ID FIELD   
+       ANA     =O777777000000               ..  
+       SLW     SEQCHR        3 CHARS IN SEQUENCE FIELD
+       ANA     =O777700000000               ..  
+       SLW     SQCHR1        2 CHARS IN SEQUENCE FIELD
+       STL     CHARSW        DON'T GO THROUGH THIS SEQUENCE AGAIN 
+       AXT     0,1           ..     
+       AXT     14,2          ..     
+RDC1   LDQ     BUF+14,2      UNPACK CARD  
+       AXT     6,4           ..     
+RDC2   ZAC                   ..     
+       LGL     6             ..     
+       TXI     *+1,1,-1      .. COUNTS CHARACTERS     
+RDLIN  SLW     **,1          ..     
+       TIX     RDC2,4,1      ..     
+       TIX     RDC1,2,1      ..     
+       PCA     0,1           CHARACTER COUNT    
+LENGTH SLW     **            .. SAVE IT   
+       CAL     BUF+12        COLUMNS 73-78
+       LDQ     BUF+13        COLUMNS 79-84
+       LGL     12            COLUMNS 75-80 TO AC
+       SLW     TNUM     
+       ANA     =H 
+       ARS     4  
+       CVR     TB4,,6   
+       ANA     TNUM     
+       XCL  
+       STZ     TNUM          ..     
+       AXT     6,4           ..     
+RDDTBC ZAC                   CONVERT LINE NUMBER TO BINARY  
+       LGL     3             ..     
+       ADM     TNUM          ..     
+       LGL     3             ..     
+       ADM     TNUM          ..     
+       ACL     TNUM          ..     
+       SLW     TNUM          ..     
+       TIX     RDDTBC,4,1    ..     
+RDLNO  SLW     **            SAVE BINARY LINE NUMBER  
+       TRA     X4            RETURN 
+       SPACE   1
+RDREC  ZET     EOFSW    
+       TRA     RDEOF1   
+       CALL    RPRIME() 
+       TRA     RDUNP    
+       SPACE   1
+RDEOF1 STL     NXTEOF   
+       TRA     RDUNP    
+       SPACE   1
+RCLOS  CALL    CLOSE(RD,RD+1) 
+ERRTN  TRA     ** 
+       SPACE   1
+RPRIME SXA     RPRX,4   
+       CAL     RE.
+       SUB     R. 
+       TZE     NOMOVE   
+       PAX     ,4 
+       LAC     R.,1     
+       LAC     RB.,2    
+       LDQ     0,1
+       STQ     0,2
+       TXI     *+1,1,-1 
+       TXI     *+1,2,-1 
+       TIX     *-4,4,1  
+NOMOVE ACL     RB.
+       STA     RDLOC    
+       STA     RE.
+       CAL     RB.
+       STA     R. 
+       AXT     BUFLN,4  
+       SXA     EOFCT,4  
+       STL     EOFSW    
+       CALL    RDFILE(RD,RD+1,=0)   
+RDLOC  ARG     ((**,,BUFLN)EOFRD,EOFCT)   
+       STZ     EOFSW    
+EOFRD  CAL     RE.
+       ACL     EOFCT    
+       STA     RE.
+RPRX   AXT     **,4     
+       TRA     1,4
+       TTL     CARD-IMAGE OUTPUT TO DISK
+DASIGN SXA     X4,4          OPEN FILE FOR WRITING    
+       CLA*    1,4           GET FIRST NAME     
+       LDQ*    2,4           SECOND NAME  
+       DST     WR            SAVE WRITE NAMES   
+       CAL     3,4           GET LOCATION OF ERR. RETURN    
+       STA     ERRTN         ..     
+       CAL     WB.
+GETWB  TRA     *+1           ONE-SHOT SWITCH    
+       CALL    GETBUF(BUFCON) 
+       STA     WBUFFS        ..     
+       CALL    GETBUF(WRBF)   
+       STA     WB.
+       STA     WRLOC    
+       STL     GETWB         CLOSE THIS PATH    
+       STA     W. 
+       ACL     SMBF     
+       STA     WE.
+       AXT     SWN,4    
+       SXA     WRCT,4   
+       STZ     WRSW     
+       CALL    OPEN(=HW,WR,WR+1,=O20)     
+       CALL    BUFFER(WR,WR+1)
+WBUFFS ARG     ((**,,BUFLN))  
+       TRA     X4            RETURN 
+       REM
+WRCARD NZT*    2,4           WRITE A CARD INTO FILE   
+       TRA     5,4           SKIP IF NOTHING TO WRITE 
+       SXA     X4,4          ..     
+       CAL     1,4           MOVE PARAMETERS (BASE)   
+       STA     WRC1+1        ..     
+       CAL     2,4           .. (LENGTH)  
+       STA     WRC1+2        ..     
+       CLA     4,4           POSSIBLE ERROR RETURN    
+       STA     ERRTN         ..     
+WRC1   CALL    PACK(**,**)   PACK CHARACTERS INTO CARD IMAGE
+       XEC     X4 
+       LDQ*    3,4
+       PXD     ,0 
+       DVP     =1000000 
+       LDQ     =0 
+       LRS     2  
+       AXT     6,1
+       VDP     DTAB,1,6 
+       TIX     *-1,1,1  
+       XCL  
+       LDQ     =H            BLANKS TO MQ 
+       LGR     12            SHIFT LINE NUMBER TO COLUMN 75-80    
+       PAI                   PREPARE TO TEST FOR NUMBER W/ 6 DIGITS     
+       ORA     SQCHR1        ..     
+       LFT     17            TEST FOR NUMBER .GE. 100000    
+       TRA     *+2           NON-ZERO, LEAVE 2-CHAR. ID     
+       ORA     SEQCHR        'OR' IN 3 CHARS OF ID    
+       SLW     BUF+12        PLACE LINE NUMBER INTO CARD IMAGE    
+       STQ     BUF+13        ..     
+       NZT     WRSW     
+       TRA     WRCX     
+       STZ     WRSW     
+       ZET     WWAIT    
+       TRA     WRCY     
+       CALL    FWAIT(WR,WR+1) 
+       CAL     WB1
+       TRA     *+3
+WRCY   CAL     WRCT     
+       SUB     =1 
+       STA     WRCT     
+       CAL     W. 
+       SUB     WE.
+       TZE     WRCZ     
+       PAX     ,4 
+       LAC     WB.,2    
+       LDQ     SMBLN,2  
+       STQ     0,2
+       TXI     *+1,2,-1 
+       TIX     *-3,4,1  
+WRCZ   ACL     WB.
+       STA     W. 
+       TRA     *+2
+WRCX   CAL     W. 
+       PAC     ,2 
+       ACL     CRDF     
+       LAS     WE.
+       AXT     0,0
+       STL     WRSW     
+       SLW     W. 
+       AXT     CRDLN,4  
+       LDQ     BUF+CRDLN,4    
+       STQ     0,2
+       TXI     *+1,2,-1 
+       TIX     *-3,4,1  
+       NZT     WRSW     
+       TRA     X4 
+       AXC     WRWAIT,1 
+       NZT     WRCT     
+       AXC     WRFILE,1 
+       AXC     *+1,4    
+       TRA     0,1
+       ARG     (WR,WR+1,=0)   
+WRLOC  ARG     ((**,,SMBLN))  
+       TRA     X4            RETURN 
+       SPACE   1
+DFILE  SXA     X4,4          CLOSE OUT WRITE FILE     
+       CAL     1,4
+       STA     ERRTN    
+       CAL     WB.
+       NZT     WRSW     
+       TRA     WCLOS    
+       NZT     WWAIT    
+       CALL    FWAIT(WR,WR+1) 
+       CAL     WE.
+WCLOS  SLW     TNUM     
+       STA     WRLC1    
+       CAL     W. 
+       SUB     TNUM     
+       TZE     WCL1     
+       SLW     TNUM     
+       CALL    WRWAIT(WR,WR+1,=0)   
+WRLC1  BLK     **,,TNUM 
+WCL1   CALL    CLOSE(WR,WR+1) 
+       TRA     X4            RETURN 
+       TTL     UTILITY DISK SUBROUTINES
+RENAME SXA     X4,4          RENAME A FILE
+       CLA*    1,4           OLD 1  
+       LDQ*    2,4           OLD 2  
+       DST     OLD           ..     
+       CLA*    3,4           NEW 1  
+       LDQ*    4,4           NEW 2  
+       DST     NEW           ..     
+       CAL     5,4           ERROR RETURN 
+       STA     ERRTN         ..     
+       STZ     ARY+1         SET MODE TO ZERO, IN CASE NO FILE    
+       CALL    FSTATE(NEW,NEW+1(ARY,,2)*) 
+       CAL     ARY+1    
+       ANA     =O176    
+       SLW     MODES    
+       CALL    DELETE(NEW,NEW+1,=0,ERRTN) 
+       CALL    CHFILE(OLD,OLD+1,MODES,NEW,NEW+1,ERRTN)
+       TRA     X4            RETURN 
+       TTL     ERROR TRAPS FOR DISK I/O
+ERRTRA TXL     *+1,,ERX4+2   MAKE IT LOOK LIKE MAD STMT LABEL     
+       SXA     ERX4,4   
+       CALL    SETBCD() 
+       CALL    PRNTER() 
+       CALL    WRFLXA((DOYOU,,4))   
+       CALL    RDYES(*+2)     
+       TRA     ERRTN    
+       CALL    WRFLX((TRYMSG,,6))   
+       CALL    DORMNT() 
+ERX4   AXT     **,4     
+       TRA     0,4
+       SPACE   1
+TIRRTN TXL     *+1,,TIRX4+2  AS AT 'ERRTRA'     
+       SXA     TIRX4,4  
+       CAL     0,4
+       PAC     ,2            GET S/R LOCATION   
+       LDQ*    0,2           GET S/R NAME (ASSUME TSX-TIA-BCD)    
+       STQ     LOCKMS+6      SAVE FOR PRINTING  
+       ANA     =O77777  
+       SUB     OPNC     
+       TNZ     *+2
+       TXI     *+1,4,-1 
+       CLA*    1,4
+       LDQ*    2,4
+       DST     LOCKMS        PUT FILE-NAME IN MESSAGE 
+       CALL    SETBCD() 
+       CALL    WRFLXA((LOCKMS,,10)) 
+       CALL    WRFLXA((LOCKM1,,2))  
+       CALL    RDYES(ERRTN)   
+       CALL    TILOCK(=0)     
+TIRX4  AXT     **,4     
+       TRA     0,4
+       TTL     OBTAIN I/O BUFFERS FROM USER'S MEMORY BOUND
+GETBUF SXA     GETBX4,4      SAVE   
+       STZ     BUF           RESET WORD   
+       CALL    GETMEM()      FIND CURRENT MEMORY BOUND
+       STA     BUF           (=FIRST LOCATION FOR RETURNED BUFFER)
+       XEC     GETBX4        RESTOR X4    
+       ACL*    1,4           ADD CALLER'S DESIRED BUFFER LENGTH   
+       CALL    SETMEM()      EXTEND MEMORY TO CONTAIN NEW BUFFER  
+       CAL     BUF           RETURN ADDRESS OF NEW BUFFER IN AC   
+GETBX4 AXT     **,4          ..     
+       TRA     2,4           RETURN 
+       TTL     CONSOLE INPUT-OUTPUT
+RDYES  SXA     RDX4,4        SKELETON READ-LEFT-JUSTIFIED ROUTINE 
+RDJ1   CALL    RDFLXA((BUF,,1))  READ ONE WORD FROM CONSOLE 
+       LDQ     BUF           ..     
+       PXD     ,0            ..     
+       LGL     6             ..     
+       SUB     =O77          CHECK FOR INPUT FROM 'WRMESS'  
+       TZE     RDJ1          IGNORE INTER-CONSOLE COMMUNICATIONS  
+       CAL     BUF
+       ARS     18 
+       SUB     =H000YES 
+RDX4   AXT     **,4          ..     
+       TNZ*    1,4
+       TRA     2,4           RETURN TO CALLER   
+       SPACE   1
+RDTYPE SXA     X4,4          READ A LINE FROM USER CONSOLE  
+       CAL     1,4           GET ARRAY BASE FOR LINE  
+       STA     RLIN          ..     
+       CAL     2,4           GET BASE OF LOCATION LENGTH    
+       STA     RLEN          ..     
+RDT3   CALL    RDFLXA(BUF)   READ LINE FROM CONSOLE   
+       PAX     0,4           CHAR. COUNT TO IR4 
+       LDQ     BUF           GET 1ST WORD FROM INPUT BUFFER 
+       PXD     ,0            ..     
+       LGL     6             ..     
+       SUB     =O77          IS IT INTER-CONSOLE COMMUNICATIONS BUF.    
+       TZE     RDT3          YES, IGNORE LINE   
+       TXL     *+2,4,84      SKIP IF COUNT.LE.84
+       AXT     85,4          OTHERWISE SET COUNT= 85  
+       TXI     *+1,4,-1      REDUCE COUNT BY ONE
+       PXA     0,4           COUNT TO AC  
+RLEN   SLW     **            RETURN COUNT TO CALLER   
+       AXT     0,1           ..     
+       AXT     14,2          ..     
+RDT1   LDQ     BUF+14,2      MOVE CHARACTERS TO CALLER ARRAY
+       AXT     6,4           ..     
+RDT2   ZAC                   ..     
+       LGL     6             ..     
+       TXI     *+1,1,-1      ..     
+RLIN   SLW     **,1          ..     
+       TIX     RDT2,4,1      ..     
+       TIX     RDT1,2,1      ..     
+       AXC     85,1          PLACE RETURN CHARACTER AT END OF STRING    
+       CAL     =O55          ..     
+       SLW*    RLIN          ..     
+       TRA     X4            RETURN 
+       SPACE   1
+PRCARD SXA     X4,4          PRINT CARD ON USER CONSOLE     
+       ZET*    2,4           IS LENGTH= 0 
+       TRA     PRC1          NO, SKIP     
+       CALL    WRFLX(*)      YES, TYPE RETURN ONLY    
+       TRA     X4            AND RETURN   
+PRC1   CAL     1,4           MOVE PARAMETERS (ARRAY BASE ADDRESS) 
+       STA     PRC2+1        ..     
+       CAL     2,4           .. (LOCATION OF LENGTH)  
+       STA     PRC2+2        ..     
+PRC2   CALL    PACK(**,**)   PACK CHARACTERS INTO CARD IMAGE
+       CALL    WRFLX((BUF,,14))  TYPE LINE TO USER'S CONSOLE
+X4     AXT     **,4          RETURN 
+       TRA     1,4           ..     
+       TTL     FORM CARD IMAGE BUFFER FROM UNPACKED INPUT ARRAY
+PACK   SXA     PKX4,4        UTILITY ROUTINE TO PACK CHARACTER STRING   
+       CAL     1,4           GET LOCATION OF CHARACTER STRING     
+       STA     PKLIN         ..     
+       CAL*    2,4           GET LENGTH OF STRING     
+       PAC     ,4            LENGTH TO XR.
+       TXI     *+1,4,-1      ..     
+       SXD     PKLEN,4       ..     
+       AXC     1,1           FOR ALGOL    
+       AXT     14,2          ..     
+PK1    LDQ     =H            PACK CHARACTERS INTO CARD IMAGE
+       AXT     6,4           ..     
+PKLIN  CAL     **,1          ..     
+       RQL     6             ..     
+       LGR     6             ..     
+       RQL     6             ..     
+       TXI     *+1,1,-1      MOVE FORWD. IN STORAGE   
+PKLEN  TXL     PKEND,1,**    .. SKIP IF NO MORE CHARACTERS  
+       TIX     PKLIN,4,1     ..     
+       STQ     BUF+14,2      ..     
+       TIX     PK1,2,1       ..     
+       TRA     PKX4          AND RETURN   
+PKEND  TNX     *+3,4,1       FILL OUT REST OF WORD WITH BLANKS    
+       RQL     6             ..     
+       TRA     PKEND         ..     
+       STQ     BUF+14,2      SAVE LAST NON-BLANK WORD 
+       LDQ     =H            ..     
+PKBLK  TNX     PKX4,2,1      FILL OUT REST OF LINE WITH BLANK WORDS     
+       STQ     BUF+14,2      ..     
+       TRA     PKBLK         ..     
+PKX4   AXT     **,4          HERE FOR RETURN    
+       TRA     3,4           ..     
+       TTL     SYSTEM SUBROUTINE ENTRIES
+       REM     DIRECT CALLS PROVIDED AS ENTRY POINTS  
+       REM
+RESET  TIA     =HRESETF      DIFFERENT NAMES FOR SAME FUNCTION    
+       REM
+       SYSENT  (UPDATE,FSTATE,DELFIL,CHFILE,IODIAG)   
+       REM
+       REM
+       REM     CALLS FOR DISK I/O   
+       REM
+       SYSENT  (OPEN,BUFFER,RDFILE,WRFILE,WRWAIT,FWAIT,CLOSE)     
+       REM
+       REM
+       REM     SYSTEM ERROR TRAPS   
+       REM
+       SYSENT  (FERRTN,TILOCK)
+       REM
+       REM
+       REM     OTHER CALLS TO CTSS SUPERVISOR   
+       REM
+       SYSENT  (GETMEM,SETMEM,WRFLX,WRFLXA,RDFLXA,DORMNT)   
+       TTL     VARIABLES AND CONSTANTS FOR EDIOP
+LOCKMS BCI     2, 
+       BCI     5, IS 'LOCKED' ON CALL TO 'NAME' 
+       VFD     H18/...,O18/575757   
+       SPACE   1
+DOYOU  BCI     4,DO YOU WISH TO PROCEED,  
+       SPACE   1
+LOCKM1 BCI     1,TO WAI 
+       VFD     H6/T,O30/7360575757  
+       SPACE   1
+TRYMSG BCI     6,TYPE 'START' TO REPEAT LAST CALL     
+       SPACE   1
+M      MZE                   ..     
+       SPACE   1
+       DEC     1E5B31,1E4B25,1E3B19,1E2B13,1E1B7,1E0B1
+DTAB   SYN     *  
+       SPACE   1
+TB4    VFD     O6/17,30/*     
+       DUP     1,3
+       VFD     O6/,30/TB4     
+       SPACE   1
+OPNC   PZE     OPEN          CHECK ON TILOCK RETURN   
+       SPACE   1
+CRDF   PZE     CRDLN    
+BUFCON PZE     BUFLN    
+RDBF   PZE     RDLN     
+WRBF   PZE     WBLN     
+       SPACE   1
+SMBF   PZE     SMBLN    
+WB1    PZE     SWN-1    
+       SPACE   1
+SEQCHR BCI     1,   000      COL 73-75    
+SQCHR1 BCI     1,  0000      COL 73-74    
+       SPACE   1
+RD     BCI     2,************ 
+       BCI     2, NOT FOUND.  
+       SPACE   1
+WR     BCI     2,$$$$$$$$$$$$ 
+NEW    BCI     2,'''''''''''' 
+OLD    BCI     2,============ 
+       SPACE   1
+FILNAM BCI     2,------------ 
+       SPACE   1
+FN     SYN     FILNAM   
+       SPACE   1
+ERRCOD PZE     **            ..     
+       SPACE   1
+EOFCT  PZE     ** 
+       SPACE   1
+RWAIT  EQU     EOFCT    
+       SPACE   1
+RB.    PZE     ** 
+R.     PZE     ** 
+RE.    PZE     ** 
+       SPACE   1
+  WB.  PZE     ** 
+  W.   PZE     ** 
+  WE.  PZE     ** 
+       SPACE   1
+WRCT   PZE     ** 
+       SPACE   1
+WWAIT  SYN     WRCT     
+       SPACE   1
+WRSW   PZE     ** 
+       SPACE   1
+EOFSW  EQU     0             USE LOWER CORE FOR TEMPORARIES 
+TNUM   EQU     1             ..     
+NXTEOF EQU     2             ..     
+       SPACE   1
+BUF    EQU     3             (BSS 14, 14-WORD LINE-BUFFER)  
+MODES  EQU     17            ..     
+ARY    EQU     18            (BSS 2, READ BUFFER FOR 'FSTATE')    
+       SPACE   1
+TEMP   SYN     ARY
+       END  

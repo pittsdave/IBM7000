@@ -1,0 +1,238 @@
+          R SEARCH. FINDS THE NEXT 'SUPER LINE MARK' WHOSE
+          R NAME IS IN THE TABLE FILTAB SET UP DURING
+          R INITIALIZATION.
+          R
+          R THE SEARCH WILL INCLUDE PRLNMK, THE PRESENT LINE MARK,
+          R IFF PRSSW.E.1B
+          R
+            INTERNAL FUNCTION (EOFXT)
+            STATEMENT LABEL EOFXT
+            ENTRY TO SEARCH.
+            WHENEVER NAMTYP
+               WHENEVER .NOT. COPYSW
+               THROUGH SR00A, FOR I=1,1,I.G.FILTAB
+SR00A       WHENEVER .NOT. FILFND(I), TRANSFER TO SRP0A
+               BFCLOS.(NM1,NM2,GERR)
+               AROPSW=0B
+               TRANSFER TO EOFXT
+            END OF CONDITIONAL
+SRP0A       CONTINUE
+            WHENEVER PRSSW.AND.AROPSW, TRANSFER TO SR02A
+SR01A       GNEXT.(EOFXT)
+SR02A       THROUGH SR03A, FOR FILTBP=1,2,FILTBP.G.FILTAB
+            PNTR=(FILTBP+1)/2
+            WHENEVER FLN1.(PRLNMK).E.FILTAB(FILTBP)
+          1    .AND.FLN2.(PRLNMK).E.FILTAB(FILTBP+1)
+          2    .AND..NOT.FILFND(PNTR)
+            FILFND(PNTR)=1B
+            FUNCTION RETURN
+SR03A       END OF CONDITIONAL
+            TRANSFER TO SR01A
+            OTHERWISE
+            WHENEVER .NOT.COPYSW
+               THROUGH SR00, FOR I=1,1,I.G.FILTAB
+SR00           WHENEVER .NOT.FILFND(I), TRANSFER TO SRP0
+               BFCLOS.(NM1,NM2,GERR)
+               AROPSW=0B
+               TRANSFER TO EOFXT
+            END OF CONDITIONAL
+SRP0        CONTINUE
+            WHENEVER PRSSW.AND.AROPSW, TRANSFER TO SR02
+SR01        GNEXT.(EOFXT)
+SR02        WHENEVER FLN2.(PRLNMK).NE.NM2
+               TRANSFER TO SR01
+            OTHERWISE
+               THROUGH SR03, FOR FILTBP=1,1,FILTBP.G.FILTAB
+            WHENEVER FLN1.(PRLNMK).E.FILTAB(FILTBP)
+          1    .AND..NOT.FILFND(FILTBP)
+                  FILFND(FILTBP)=1B
+                  FUNCTION RETURN
+SR03           END OF CONDITIONAL
+            TRANSFER TO SR01
+            END OF CONDITIONAL
+            END OF CONDITIONAL
+            END OF FUNCTION
+          R
+          R GNEXT. FINDS THE NEXT 'SUPER LINE MARK,' READING
+          R SERIALLY THROUGH THE ARCHIV FILE AND COPYING IT
+          R INTO THE TEMPORARY FILE IFF COPYSW.E.1B.
+          R PRLNMK, THE PRESENT LINE MARK, IS COPIED IFF WMRKSW.E.1B
+          R
+            INTERNAL FUNCTION (EOFXT)
+            STATEMENT LABEL EOFXT
+            ENTRY TO GNEXT.
+            WHENEVER .NOT. AROPSW
+                 BFOPEN.($R$,NM1,NM2,BUF1(BUFZ),BUF2(BUFZ),-0,GERR)
+                 BFREAD.(NM1,NM2,PRLNMK(LMKZ)...LMKZ,FRMER,EOFCT,GERR)
+                 WHENEVER BDLNMK.(PRLNMK)
+                 TRANSFER TO FRMER
+                 END OF CONDITIONAL
+            AROPSW=1B
+            FUNCTION RETURN
+            END OF CONDITIONAL
+            WHENEVER COPYSW .AND. .NOT. TMOPSW
+                 DELETE.(TM1,TM2,0,OUT)
+                 BFOPEN.($W$,TM1,TM2,BUF3(BUFZ),BUF4(BUFZ),BUF5(BUFZ),
+          1        GERR)
+                 TMOPSW=1B
+            END OF CONDITIONAL
+            WHENEVER COPYSW .AND. WMRKSW
+                 BFWRIT.(TM1,TM2,PRLNMK(LMKZ)...LMKZ,GERR)
+            END OF CONDITIONAL
+            WHENEVER .NOT. ADJSW
+                 AFZ=CNT.(PRLNMK)
+                 THROUGH COPY, FOR I=CPBUFZ,CPBUFZ,I.GE.AFZ
+                      BFREAD.(NM1,NM2,CPBUF(CPBUFZ)...CPBUFZ,
+          1             FRMER,EOFCT,GERR)
+                      WHENEVER COPYSW
+                           BFWRIT.(TM1,TM2,CPBUF(CPBUFZ)...CPBUFZ,GERR)
+                      END OF CONDITIONAL
+COPY             CONTINUE
+                 REMN=CPBUFZ-(I-AFZ)
+                 BFREAD.(NM1,NM2,CPBUF(REMN)...REMN,
+          1        FRMER,EOFCT,GERR)
+                 WHENEVER COPYSW
+                      WHENEVER .NOT. WMRKSW
+                           THROUGH FXT, FOR I = 27, -9, I.L.0
+                           WHENEVER ((CPBUF (1) .RS. I) .A. 777K).E.000K
+                           CPBUF (1) = CPBUF (1) .V. 003K .LS. I
+                           TRANSFER TO EFXT
+FXT                        END OF CONDITIONAL
+EFXT                  END OF CONDITIONAL
+                      BFWRIT.(TM1,TM2,CPBUF(REMN)...REMN,GERR)
+                 END OF CONDITIONAL
+            END OF CONDITIONAL
+            BFREAD.(NM1,NM2,PRLNMK(LMKZ)...LMKZ,EOF,EOFCT,GERR)
+            WHENEVER BDLNMK.(PRLNMK),TRANSFER TO FRMER
+            ADJSW=0B
+            FUNCTION RETURN
+EOF         BFCLOS.(NM1,NM2,GERR)
+            AROPSW=0B
+            TRANSFER TO EOFXT
+FRMER       PRMESS.($ARCHIV FORMAT ERROR IN$,NM1,BL,NM2)
+            BFCLOS.($   ALL$,-0,GERR)
+            CHNCOM.(1)
+GERR        PRNTER.(61K)
+            CHNCOM.(1)
+            END OF FUNCTION
+          R
+          R CPFIL.(A,B) COPIES FILE A B INTO THE TEMPORARY FILE.
+          R CPFIL. ALWAYS MAKES THE LINE MARK NWLNMK AND WRITES
+          R IT AT THE BEGINNING OF THE ENTRY UNLESS THE FILE IS AN
+          R ARCHIV FILE ALREADY.
+          R
+          R RETURNS 1B IFF SUCCESSFUL
+          R
+            BOOLEAN CPFIL.
+            INTERNAL FUNCTION(A,B)
+            ENTRY TO CPFIL.
+            WHENEVER .NOT. MKLNMK.(A,B,CT)
+                 FUNCTION RETURN 0B
+            OTHERWISE
+                 WHENEVER .NOT. TMOPSW
+                      DELETE.(TM1,TM2,0,OUT)
+                      BFOPEN.($W$,TM1,TM2,BUF3(BUFZ),BUF4(BUFZ),
+          1             BUF5(BUFZ),GERR)
+                      TMOPSW=1B
+                 END OF CONDITIONAL
+                 BFOPEN.($R$,A,B,BUF6(BUFZ),BUF7(BUFZ),-0,GERR)
+                 FRSTSW=1B
+                 THROUGH CPF01, FOR I=CPBUFZ,CPBUFZ,I.G.CT
+                      BFREAD.(A,B,CPBUF(CPBUFZ)...CPBUFZ,
+          1             CPFEF,EOFCT,GERR)
+                      WHENEVER BDLNMK.(CPBUF(CPBUFZ-LMKZ)) .AND. FRSTSW
+                           BFWRIT.(TM1,TM2,NWLNMK(LMKZ)...LMKZ,GERR)
+                      END OF CONDITIONAL
+                 FRSTSW=0B
+CPF01                 BFWRIT.(TM1,TM2,CPBUF(CPBUFZ)...CPBUFZ,GERR)
+                 REMN=CPBUFZ-(I-CT)
+                 BFREAD.(A,B,CPBUF(REMN)...REMN,CPFEF,EOFCT,GERR)
+                 WHENEVER  BDLNMK.(CPBUF(REMN-LMKZ)) .AND. FRSTSW
+                      BFWRIT.(TM1,TM2,NWLNMK(LMKZ)...LMKZ,GERR)
+                 END OF CONDITIONAL
+          R 
+          R     ERASE '003' CHARACTER AT END
+          R 
+            THROUGH FDLOOP, FOR I = 27,-9,(I.L.0)
+                 WHENEVER ((CPBUF(1).RS.I).A.777K).E.003K,
+          1           CPBUF(1) = CPBUF(1) .EX. (3K.LS.I)
+FDLOOP      CONTINUE
+                 BFWRIT.(TM1,TM2,CPBUF(REMN)...REMN,GERR)
+                 BFCLOS.(A,B,GERR)
+                 FUNCTION RETURN 1B
+            END OF CONDITIONAL
+CPFEF       PRINT COMMENT $ERROR IN FSTATE.--NOTIFY SYSTEMS STAFF.$
+            PRINT COMMENT $DORMNT CALLED$
+            DORMNT.
+            END OF FUNCTION
+            NORMAL MODE IS INTEGER
+            BOOLEAN COPYSW, PRSSW, WMRKSW, AROPSW, TMOPSW, FRSTSW
+            BOOLEAN NAMO, ADJSW, NAMTYP
+            VECTOR VALUES BUFZ=432
+            DIMENSION BUF1(432), BUF2(432), BUF3(432), BUF4(432),
+          1   BUF5(432), BUF6(432), BUF7(432)
+            DIMENSION CPBUF(432)
+              VECTOR VALUES CPBUFZ=432
+            VECTOR VALUES FILTBZ=16
+            DIMENSION FILTAB(16)
+            BOOLEAN FILFND
+            DIMENSION FILFND(16)
+          R
+          R CLS.(A,B) CLOSES THE TEMPORARY FILE AND RENAMES IT A B
+          R
+            BOOLEAN CLS.
+            INTERNAL FUNCTION (A,B)
+            ENTRY TO CLS.
+            WHENEVER TMOPSW
+                 BFCLOS.(TM1,TM2,GERR)
+                 TMOPSW=0B
+                 DIMENSION FNM(2)
+                 FNM(0)=A
+                 FNM(1)=B
+                 FSTATE.(A,B,FSBUF(8)...8,NFND)
+                   EQUIVALENCE (MODE,FSBUF(7))
+                 MODE=MODE.A.134K
+CL01        DELETE.(A,B,0,NDEL1)
+            CHFILE.(TM1,TM2,-0,A,B)
+                 WHENEVER MODE.NE.000K .AND. KEY.NE.$    XT$
+                      CHFILE.(A,B,MODE,-0,-0)
+                 MODEP = (OCRBC.(MODE).A.777777K).V.575757K6
+                 PRMESS.(A,BL,B,BL,$CREATED IN '$,MODEP,$' MODE.$)
+                 END OF CONDITIONAL
+                 FUNCTION RETURN 1B
+NDEL1            FUNCTION RETURN 0B
+            OTHERWISE
+                 FUNCTION RETURN 0B
+            END OF CONDITIONAL
+NFND        MODE=000K
+            TRANSFER TO CL01
+            END OF FUNCTION
+          R
+          R
+          R YES. READS A LINE AND RETURNS 1B IFF IT IS 'YES'
+          R
+            BOOLEAN YES.
+            INTERNAL FUNCTION
+            ENTRY TO YES.
+            RDFLXC.(YESNO,6)
+            WHENEVER YESNO.E.$YES   $
+                 FUNCTION RETURN 1B
+            OTHERWISE
+                 FUNCTION RETURN 0B
+            END OF CONDITIONAL
+            END OF FUNCTION
+          R
+          R DELT. DELETES A FILE AND TELLS YOU ABOUT IT.
+          R RETURNS 1B IFF SUCCESSFUL.
+          R
+            BOOLEAN DELT.
+            INTERNAL FUNCTION (A,B)
+            ENTRY TO DELT.
+            FNM(0)=A
+            FNM(1)=B
+            DELETE.(A,B,0,NOTDEL)
+                 PRMESS.(A,BL,B,$ DELETED.$)
+                 FUNCTION RETURN 1B
+NOTDEL      PRMESS.(A,BL,B,$ NOT DELETED.$)
+            FUNCTION RETURN 0B
+            END OF FUNCTION

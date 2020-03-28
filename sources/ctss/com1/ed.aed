@@ -1,0 +1,519 @@
+          BEGIN
+      COMMENT .. CONTEXT EDITOR FOR CARD IMAGE PROGRAMS .. $,
+          INTEGER BLANK,TAB,STAR,FENCE,TNAME,ENAME,TCLASS,OLDNAM,CLASS,
+           LENGTH,LINENO,LINCR,HILINE,COUNT,EDCT,NEWNAM,K,I,N,Q,J,PRC,
+           OP,PRCT,STR1,TLP,STR2,ESTR,XXWORD,PRINAM,TLINI,SAVCT,BLANKS,
+           STR2M1,STR2P1,STRDIF,STR1P1,EDWD,INPWD $,
+          INTEGER PROCEDURE LS,NUM,GET,COMARG $,
+          INTEGER ARRAY FAP,MAD,MADTRN,ALGOL,GPSS,XXXCWD,CCT $,
+          INTEGER ARRAY LINE(85),EDLIN,TLIN,WHOAM(2) $,
+          BOOLEAN OK,MODIFY,GLOBAL,VERMOD,NDCHAR,TRNCSW $,
+          BOOLEAN PROCEDURE UNTAB $,
+          PROCEDURE RED,DELETE,WRFLEX,SETTAB,DASIGN,DSEEK,RDTYPE,BLACK,
+           PRCARD,WRLINE,MOVETO,VERPRN,RDCARD,CLOSE,SETCOL,SETBCD,DFILE,
+           RENAME,CHFILE,UPDATE,CHNCOM,FLIP,RESET,WRCARD,WHOAMI $,
+          TNAME .BCD. '(INPT1' $,
+          ENAME .BCD. '(INPUT' $,
+          BLANKS .BCD. ' ' $,
+          PRESET
+               BEGIN
+               FENCE = 777777777777C $,
+               BLANK = 60C $,
+               TAB = 72C $,
+               STAR = 545757575757C $,
+               END $,
+      COMMENT .......... TAB SETTINGS .......... $,
+          PRESET
+               BEGIN
+               FAP = 3,8,16,30 $,
+               MAD = 12,12,17,22,27,32,37,42,47,52,57,62,67 $,
+               MADTRN = 12,7,12,17,22,27,32,37,42,47,52,57,62 $,
+               ALGOL = 12,11,16,21,26,31,36,41,46,51,56,61,66 $,
+               GPSS = 11,2,7,19,25,31,37,43,49,55,61,67 $,
+               END $,
+          PRESET
+               BEGIN
+               LENGTH = 0 $,
+               LINENO = 0 $,
+               HILINE = 0 $,
+               LINCR = 10 $,
+               VERMOD = 0B $,
+               TRNCSW = 1B $,
+               OK = 0B $,
+               END $,
+          SWITCH RQUEST = APPEND,BLKOUT,BOTTOM,BRIEF,CHANGE,CLIP,COLON,
+           DELLIN,FILE,FIND,INSERT,KILL,LOCATE,MERGE,NEXLIN,OVRLAY,
+           XPRINT,QUIT,RETYPE,SERIAL,TABSET,TOP,VERIFY,WRITE $,
+          XXXCWD .BCD. '000000APPEND BLANKBOTTOM BRIEFCHANGE  CLIP COLON
+DELETE  FILE  FINDINSERT  KILLLOCATE MERGE  NEXTOVRLAY PRINT  QUITRETYPE
+SERIALTABSET   TOPVERIFY WRITE' $,
+          XXWORD .BCD. '000000     A    BL     B    BR     C    CL    CO
+     D    FL     F     I     K     L     M     N     O     P     Q     R
+     S    TA     T    VE     W' $,
+          PRESET CCT = 24 $,
+      COMMENT .......... START OF MAIN PROGRAM .......... $,
+          WHOAMI(WHOAM TO 2) $,
+          TCLASS = WHOAM(1) $,
+          RED() $,
+          DELETE(TNAME,TCLASS,0,ERROR) $,
+          DELETE(ENAME,TCLASS,0,ERROR) $,
+          EDWD = .BCI. 'EDIT:' $,
+          INPWD = .BCI. 'INPUT:' $,
+          OLDNAM = COMARG(1) $,
+          CLASS = COMARG(2) $,
+          NEWNAM = COMARG(3) $,
+          IF OLDNAM EQL FENCE
+          THEN BEGIN
+               WRFLEX(.BCI. 'NO FILE OR CLASS NAME GIVEN.' ,0) $,
+               GOTO ERROR $,
+               END
+          ELSE IF CLASS EQL FENCE
+               THEN BEGIN
+                    CLASS = OLDNAM $,
+                    NEWNAM = OLDNAM = FENCE $,
+                    END $,
+          IF CLASS EQL .BCD. '   FAP' OR CLASS EQL .BCD. '  PEST'
+          THEN BEGIN
+               SETTAB(FAP) $,
+               TRNCSW = FALSE $,
+               END
+          ELSE IF CLASS EQL .BCD. 'MADTRN' OR CLASS EQL .BCD. 'FORTRN'
+               THEN SETTAB(MADTRN)
+               ELSE IF CLASS EQL .BCD. '   MAD'
+                    THEN SETTAB(MAD)
+                    ELSE IF CLASS EQL .BCD. ' ALGOL'
+                         THEN SETTAB(ALGOL)
+                         ELSE IF CLASS EQL .BCD. '  GPSS'
+                              THEN SETTAB(GPSS)
+                              ELSE IF CLASS NEQ .BCD. ' COMIT'
+                                   THEN WRFLEX(.BCI. 'TABS NOT SET' ,0)
+                                         $,
+          DASIGN(ENAME,TCLASS,ERROR) $,
+          IF OLDNAM EQL FENCE
+          THEN GOTO PINPUT $,
+          DSEEK(OLDNAM,CLASS,PINPUT) $,
+          OK = TRUE $,
+          IF NEWNAM NEQ FENCE
+          THEN OLDNAM = NEWNAM $,
+      COMMENT .......... CONTROL WORD DISPATCHER .......... $,
+PEDIT $   RED() $,
+          WRFLEX(EDWD,0) $,
+NEXT $    RDTYPE(EDLIN,COUNT) $,
+          IF COUNT EQL 0
+          THEN GOTO PINPUT $,
+          EDCT = 0 $,
+          XXXCWD = GET() $,
+          FOR I = 1 STEP 1 UNTIL CCT
+          DO   IF XXXCWD EQL XXWORD(I) OR XXXCWD EQL XXXCWD(I)
+               THEN GOTO RQUEST(I) $,
+      COMMENT .......... NOT A REQUEST .......... $,
+          WRFLEX(.BCI. 'NOT A REQUEST:' ,0) $,
+PCARD $   BLACK() $,
+          PRCARD(EDLIN,COUNT) $,
+          RED() $,
+          GOTO NEXT $,
+      COMMENT .......... INSERT,INPUT MODE .......... $,
+PINPUT $  WRFLEX(INPWD,0) $,
+          BLACK() $,
+INPUT $   RDTYPE(EDLIN,COUNT) $,
+          IF COUNT EQL 0
+          THEN GOTO PEDIT $,
+          IF UNTAB(EDLIN) AND TRNCSW
+          THEN BEGIN
+               RED() $,
+               WRFLEX(.BCI. 'TRUNCATED:' ,0) $,
+               PRCARD(EDLIN,72) $,
+               BLACK() $,
+               END $,
+          WRLINE() $,
+          LINENO = 0 $,
+          FOR I = 1 STEP 1 UNTIL 72
+          DO LINE(I) = EDLIN(I) $,
+          LENGTH = EDLIN $,
+          GOTO INPUT $,
+OVRLAY $  MOVETO(TLIN) $,
+          FOR I = 1 STEP 1 UNTIL TLIN
+          DO   IF TLIN(I) NEQ BLANK
+               THEN LINE(I) = TLIN(I) $,
+          IF TLIN GRT LENGTH
+          THEN LENGTH = TLIN $,
+          VERPRN() $,
+          GOTO NEXT $,
+BLKOUT $  MOVETO(TLIN) $,
+          FOR I = 1 STEP 1 UNTIL TLIN
+          DO   IF TLIN(I) NEQ BLANK
+               THEN LINE(I) = BLANK $,
+          VERPRN() $,
+          GOTO NEXT $,
+      COMMENT .......... DELETE LINE OR CARDS .......... $,
+DELLIN $  IF (N = NUM()) EQL 0
+          THEN N = 1 $,
+          FOR I = 2 STEP 1 UNTIL N
+          DO   BEGIN
+               IF NOT OK
+               THEN GOTO EOF $,
+               RDCARD(LINE,LENGTH,LINENO,EOF) $,
+               END $,
+          LENGTH = LINENO = 0 $,
+          GOTO NEXT $,
+      COMMENT .......... RETYPE CURRENT CARD .......... $,
+INSERT $  IF EDCT GEQ COUNT
+          THEN GOTO PINPUT $,
+          WRLINE() $,
+RETYPE $  MOVETO(LINE) $,
+          LENGTH = LINE $,
+          GOTO NEXT $,
+      COMMENT .......... NEXT CARD .......... $,
+NEXLIN $  IF (N = NUM()) EQL 0
+          THEN N = 1 $,
+          FOR I = 1 STEP 1 UNTIL N
+          DO   BEGIN
+               WRLINE() $,
+               IF NOT OK
+               THEN CLOSE() $,
+               RDCARD(LINE,LENGTH,LINENO,EOF) $,
+               END $,
+          VERPRN() $,
+          GOTO NEXT $,
+      COMMENT ......... FIND MATCHING CARD .......... $,
+FIND $    MOVETO(TLIN) $,
+FIND2 $   WRLINE() $,
+          IF NOT OK
+          THEN CLOSE() $,
+          RDCARD(LINE,LENGTH,LINENO,EOF) $,
+          FOR I = 1 STEP 1 UNTIL TLIN
+          DO   IF TLIN(I) NEQ BLANK AND TLIN(I) NEQ LINE(I)
+               THEN GOTO FIND2 $,
+          VERPRN() $,
+          GOTO NEXT $,
+      COMMENT .......... LOCATE LINE WITH CHAR. STRING ... $,
+LOCATE $  WRLINE() $,
+          IF NOT OK
+          THEN CLOSE() $,
+          RDCARD(LINE,LENGTH,LINENO,EOF) $,
+          FOR I = 1 STEP 1 UNTIL 84
+          DO   BEGIN
+               J = I $,
+               FOR K = EDCT+1 STEP 1 UNTIL COUNT
+               DO   BEGIN
+                    IF J GRT 84
+                    THEN GOTO LOCATE $,
+                    IF EDLIN(K) NEQ LINE(J)
+                    THEN GOTO LOC2 $,
+                    J = J+1 $,
+                    END $,
+               VERPRN() $,
+               GOTO NEXT $,
+LOC2 $         END $,
+          GOTO LOCATE $,
+      COMMENT .......... PRINT CARD OR CARDS .......... $,
+XPRINT $  N = NUM() $,
+          BLACK() $,
+          PRC = 72 $,
+          IF (OP = GET()) EQL .BCD. 'LINENO' OR OP EQL .BCD. '     L'
+          THEN PRC = 80 $,
+PRINT1 $  PRCT = LENGTH $,
+          IF PRCT GRT PRC
+          THEN PRCT = PRC $,
+          PRCARD(LINE,PRCT) $,
+          IF (N = N-1) LEQ 0
+          THEN GOTO EPRINT $,
+          WRLINE() $,
+          IF NOT OK
+          THEN GOTO EOF $,
+          RDCARD(LINE,LENGTH,LINENO,EOF) $,
+          GOTO PRINT1 $,
+EPRINT $  RED() $,
+          GOTO NEXT $,
+      COMMENT .......... TOP,GO TO TOP OF CARD FILE .......... $,
+TOP $     WRLINE() $,
+          IF OK
+          THEN BEGIN
+               RDCARD(LINE,LENGTH,LINENO,ENDTOP) $,
+               GOTO TOP $,
+               END $,
+ENDTOP $  CLOSE() $,
+          GOTO NEXT $,
+      COMMENT .. BOTTOM,GOTO BOTTOM OF CARD FILE .. $,
+BOTTOM $  WRLINE() $,
+          IF OK
+          THEN BEGIN
+               RDCARD(LINE,LENGTH,LINENO,ENDBOT) $,
+               GOTO BOTTOM $,
+               END $,
+ENDBOT $  LENGTH = 0 $,
+          OK = FALSE $,
+          GOTO PINPUT $,
+      COMMENT .. CHANGE,REPLACE CHARACTER STRING .. $,
+CHANGE $  Q = EDLIN(STR1 = EDCT = EDCT+1) $,
+          STR1P1 = STR1+1 $,
+          FOR EDCT = EDCT+1 STEP 1 WHILE EDLIN(EDCT) NEQ Q AND EDCT LEQ
+           COUNT
+          DO   BEGIN
+               END $,
+          STRDIF = (STR2M1 = (STR2P1 = (STR2 = EDCT)+1)-2)-STR1 $,
+          FOR EDCT = EDCT+1 STEP 1 WHILE EDLIN(EDCT) NEQ Q AND EDCT LEQ
+           COUNT
+          DO   BEGIN
+               END $,
+          EDCT = (ESTR = EDCT)+1 $,
+          IF (N = NUM()) EQL 0
+          THEN N = 1 $,
+          GLOBAL = ((OP = GET()) EQL .BCD. '     G' OR OP EQL .BCD. 'GLO
+BAL' ) $,
+REPEAT $  IF LENGTH LEQ 0
+          THEN GOTO ECHNG2 $,
+          MODIFY = FALSE $,
+          IF N LEQ 1
+          THEN MODIFY = TRUE $,
+          FOR I = 1 STEP 1 UNTIL 72
+          DO TLIN(I) = LINE(I) $,
+          LENGTH = TLP = 1 $,
+FNDSTR $  FOR TLP = TLP STEP 1 UNTIL 72
+          DO   BEGIN
+               J = TLP $,
+               FOR I = STR1P1 STEP 1 UNTIL STR2M1
+               DO   BEGIN
+                    IF EDLIN(I) NEQ TLIN(J) OR J GRT 72
+                    THEN GOTO FNDS2 $,
+                    J = J+1 $,
+                    END $,
+               GOTO FOUND $,
+FNDS2 $        LINE(LENGTH) = TLIN(TLP) $,
+               IF LENGTH GRT 72
+               THEN GOTO ECHNG $,
+               LENGTH = LENGTH+1 $,
+               END $,
+          LINE(LENGTH) = BLANK $,
+          GOTO ECHNG $,
+FOUND $   TLP = TLP+STRDIF $,
+          MODIFY = TRUE $,
+          FOR I = STR2P1 STEP 1 WHILE I LES ESTR
+          DO   BEGIN
+               LINE(LENGTH) = EDLIN(I) $,
+               IF LENGTH GEQ 72
+               THEN GOTO ECHNG $,
+               LENGTH = LENGTH+1 $,
+               END $,
+          IF GLOBAL
+          THEN GOTO FNDSTR $,
+          FOR TLP = TLP STEP 1 UNTIL 72
+          DO   BEGIN
+               LINE(LENGTH) = TLIN(TLP) $,
+               IF LENGTH GEQ 72
+               THEN GOTO ECHNG $,
+               LENGTH = LENGTH+1 $,
+               END $,
+          LINE(LENGTH) = BLANK $,
+ECHNG $   FOR LENGTH = LENGTH+1 STEP 1 UNTIL 84
+          DO LINE(LENGTH) = BLANK $,
+          LENGTH = 84 $,
+          IF MODIFY
+          THEN VERPRN() $,
+ECHNG2 $  IF (N = N-1) LEQ 0
+          THEN GOTO NEXT $,
+          WRLINE() $,
+          IF NOT OK
+          THEN GOTO EOF $,
+          RDCARD(LINE,LENGTH,LINENO,EOF) $,
+          GOTO REPEAT $,
+      COMMENT .......... SERIAL,SET LINE INCREMENT .......... $,
+SERIAL $  IF (LINCR = NUM()) EQL 0
+          THEN LINCR = 10 $,
+          GOTO NEXT $,
+      COMMENT .......... TABSET,SET CONSOLE TABS .......... $,
+TABSET $  TLIN = 0 $,
+          FOR I = 1 STEP 1 UNTIL 30
+          DO   BEGIN
+               IF (TLIN(I) = TLINI = NUM()) EQL 0
+               THEN BEGIN
+                    SETTAB(TLIN) $,
+                    GOTO NEXT $,
+                    END $,
+               IF I GRT 1 AND TLINI LEQ TLIN(I-1) OR TLINI GRT 84
+               THEN BEGIN
+TABERR $            WRFLEX(.BCI. 'ILLEGAL TAB SETTING IGNORED:' ,0) $,
+                    GOTO PCARD $,
+                    END $,
+               TLIN = I $,
+               END $,
+      COMMENT .. CONTROL SHOULD NEVER GET HERE, BUT .... $,
+          GOTO TABERR $,
+      COMMENT .......... VERIFY MODE .......... $,
+VERIFY $  VERMOD = TRUE $,
+          EDWD = .BCI. 'EDIT:' $,
+          INPWD = .BCI. 'INPUT:' $,
+          GOTO NEXT $,
+      COMMENT .......... BRIEF MODE .......... $,
+BRIEF $   VERMOD = FALSE $,
+          EDWD = .BCI. 'E:' $,
+          INPWD = .BCI. 'I:' $,
+          GOTO NEXT $,
+COLON $   IF (OP = GET()) EQL .BCD. '  TEXT' OR OP EQL .BCD. '     T'
+          THEN SETCOL(0)
+          ELSE IF OP EQL .BCD. 'BACKSP' OR OP EQL .BCD. '     B'
+               THEN SETCOL(1)
+               ELSE BEGIN
+                    WRFLEX(.BCI. 'ILLEGAL ARGUMENT OF COLON REQUEST:' ,0
+                     ) $,
+                    GOTO PCARD $,
+                    END $,
+          GOTO NEXT $,
+CLIP $    IF (OP = GET()) EQL .BCD. '    ON'
+          THEN TRNCSW = TRUE
+          ELSE IF OP EQL .BCD. '   OFF'
+               THEN TRNCSW = FALSE
+               ELSE BEGIN
+                    WRFLEX(.BCI. 'ILLEGAL ARGUMENT OF CLIP REQUEST:' ,0)
+                     $,
+                    GOTO PCARD $,
+                    END $,
+          GOTO NEXT $,
+KILL $
+MERGE $
+APPEND $
+WRITE $
+NULL $    WRFLEX(.BCI. 'THIS FUNCTION NOT YET CODED:' ,0) $,
+          GOTO PCARD $,
+      COMMENT .......... FILE,END OF EDITING .......... $,
+FILE $    IF (PRINAM = GET()) EQL BLANKS
+          THEN BEGIN
+               IF (PRINAM = OLDNAM) EQL FENCE
+               THEN BEGIN
+                    SETBCD() $,
+                    WRFLEX(.BCI. 'NO FILE NAME GIVEN' ,0) $,
+                    GOTO NEXT $,
+                    END $,
+               END $,
+FILE1 $   WRLINE() $,
+          IF OK
+          THEN BEGIN
+               RDCARD(LINE,LENGTH,LINENO,XEND) $,
+               GOTO FILE1 $,
+               END $,
+XEND $    DFILE(NOFILE) $,
+          RENAME(ENAME,TCLASS,PRINAM,CLASS,NODEL) $,
+L3 $      CHFILE(TNAME,TCLASS,1,-0,-0,L4) $,
+          DELETE(TNAME,TCLASS,0,L4) $,
+L4 $      UPDATE() $,
+ERROR $   BLACK() $,
+         WRFLEX(STAR,1) $,
+          CHNCOM(0) $,
+NODEL $   FLIP() $,
+          GOTO PEDIT $,
+      COMMENT ............. QUIT, DELETE TEMP. FILES, LEAVE ....... $,
+QUIT $    RESET() $,
+         CHFILE(ENAME,TCLASS,1,-0,-0,L3) $,
+         DELETE(ENAME,TCLASS,0,L3) $,
+          GOTO L3 $,
+      COMMENT .......... END OF FILE READING EDIT FILE .......... $,
+EOF $     RED() $,
+          WRFLEX(.BCI. 'END OF FILE REACHED BY:' ,0) $,
+          LENGTH = 0 $,
+          OK = FALSE $,
+          GOTO PCARD $,
+      COMMENT .......... HERE FOR DISK FILE ERROR .......... $,
+NOFILE $  WRFLEX(.BCI. 'NOTHING IN FILE' ,0) $,
+          OK = FALSE $,
+          LENGTH = LINENO = HILINE = 0 $,
+          DASIGN(ENAME,TCLASS,ERROR) $,
+          GOTO PINPUT $,
+      COMMENT .... ATTEMPT TO TERMINATE, THEN REVERSE FILES ..... $,
+ 
+          DEFINE PROCEDURE CLOSE TOBE
+               BEGIN
+               DFILE(NOFILE) $,
+               FLIP() $,
+               END $,
+ 
+      COMMENT ..... REVERSE AND RE-OPEN FILES $,
+ 
+          DEFINE PROCEDURE FLIP TOBE
+               BEGIN
+         CHFILE(TNAME,TCLASS,1,-0,-0,IGNERR) $,
+IGNERR $ DELETE(TNAME,TCLASS,0,ERROR) $,
+               CHFILE(ENAME,TCLASS,16,TNAME,TCLASS,ERROR) $,
+               UPDATE() $,
+               DSEEK(TNAME,TCLASS,NOFILE) $,
+               OK = TRUE $,
+               DASIGN(ENAME,TCLASS,ERROR) $,
+               LENGTH = LINENO = HILINE = 0 $,
+               END $,
+ 
+      COMMENT .......... PROCEDURE TO SET UP LINENO,ETC. ..... $,
+ 
+          DEFINE PROCEDURE WRLINE TOBE
+               BEGIN
+               IF LENGTH NEQ 0
+               THEN BEGIN
+                    IF LINENO LEQ HILINE
+                    THEN LINENO = HILINE+LINCR $,
+                    WRCARD(LINE,LENGTH,LINENO,ERROR) $,
+                    IF LINENO GRT HILINE
+                    THEN HILINE = LINENO $,
+                    END $,
+               END $,
+ 
+      COMMENT ..... PROCEDURE TO VERIFY LINE ........ $,
+ 
+          DEFINE PROCEDURE VERPRN TOBE
+               BEGIN
+               IF VERMOD
+               THEN BEGIN
+                    BLACK() $,
+                    PRCARD(LINE,72) $,
+                    RED() $,
+                    END $,
+               END $,
+ 
+      COMMENT ....... PROCEDURES GET AND NUM(UTILITY)... $,
+ 
+          DEFINE INTEGER PROCEDURE GET TOBE
+               BEGIN
+               SAVCT = EDCT $,
+               NDCHAR = TRUE $,
+               XXWORD = BLANKS $,
+               FOR EDCT = EDCT+1 WHILE (NDCHAR OR (EDLIN(EDCT) NEQ BLANK
+                AND EDLIN(EDCT) NEQ TAB)) AND EDCT LEQ COUNT
+               DO   IF EDLIN(EDCT) NEQ TAB AND EDLIN(EDCT) NEQ BLANK
+                    THEN BEGIN
+                         XXWORD = LS(XXWORD,6) .V. EDLIN(EDCT) $,
+                         NDCHAR = FALSE $,
+                         END $,
+               XXWORD = XXWORD $,
+               END $,
+ 
+          DEFINE INTEGER PROCEDURE NUM TOBE
+               BEGIN
+               SAVCT = EDCT $,
+               NDCHAR = TRUE $,
+               XXWORD = 0 $,
+               FOR EDCT = EDCT+1 WHILE (NDCHAR OR (EDLIN(EDCT) NEQ BLANK
+                AND EDLIN(EDCT) NEQ TAB)) AND EDCT LEQ COUNT
+               DO   IF EDLIN(EDCT) LES 10
+                    THEN BEGIN
+                         XXWORD = XXWORD*10+EDLIN(EDCT) $,
+                         NDCHAR = FALSE $,
+                         END $,
+               XXWORD = XXWORD $,
+               END $,
+ 
+      COMMENT ... PROCEDURE TO MOVE AND UN-TAB 'EDLIN' $,
+ 
+          DEFINE PROCEDURE MOVETO(LIN) WHERE INTEGER ARRAY LIN TOBE
+               BEGIN
+               IF EDLIN(EDCT) NEQ BLANK
+               THEN EDCT = EDCT-1 $,
+               I = 0 $,
+               FOR I = I+1 WHILE I LEQ 84 AND EDCT LES 84
+               DO LIN(I) = EDLIN(EDCT = EDCT+1) $,
+               IF UNTAB(LIN) AND TRNCSW
+               THEN BEGIN
+                    BLACK() $,
+                    WRFLEX(.BCI. 'TRUNCATED:' ,0) $,
+                    PRCARD(LIN,72) $,
+                    RED() $,
+                    END $,
+               END $,
+ 
+          END FINI

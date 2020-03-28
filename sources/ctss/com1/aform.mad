@@ -1,0 +1,158 @@
+          R
+          R     THE FORMAT OF 'SUPER LINE MARK' IN ASCII ARCHIV FILES
+          R     IS DEFINED AS FOLLOWS:
+          R     FF NL NL NL DEL DEL DEL DEL
+          R     NAME1 SP SP NAME2 SP SP MM/DD/YY SP SP
+          R     HHMM.M SP SP ZZZZZZ DEL DEL DEL DEL NL NL NL NL
+          R     TOTALLING 14 WORDS.  ZZZZZZ IS THE WORD COUNT.
+          R     THE FOLLOWING INTERNAL FUNCTIONS DIDDLE
+          R     WITH THIS INFO AND ARE CALLED BY THE REST OF THE
+          R     ARCHIV ROUTINES.
+          R          D.R. WIDRIG  APRIL 1967
+          R
+          R     MKLNMK.(A,B,CT) MAKES A 'SUPER LINE MARK' FOR 'A B'
+          R     IN NWLNMK AND SET 'CT' = FILE SIZE. THE ROUTINE
+          R     RETURNS 1B IF OK, 0B IF FILE DOES NOT EXIST.
+          R
+            INTERNAL FUNCTION (A,B,CT)
+            ENTRY TO MKLNMK.
+            BOOLEAN MKLNMK.
+            FSTATE.(A,B,CT...1,NTFND)
+            RCONV.(BZEL.(DEFBC.(CT)),NWLNMK(4),NWLNMK(3))
+          R
+          R     PREPARE LINE MARK
+          R
+            VECTOR VALUES NWLNMK(13) = 177 177 011 011K, 014 012 012
+          1     012K
+            VECTOR VALUES NWLNMK(1) = 012 012 012 012K, 177 177 177 177K
+            LCONV.(A,NWLNMK(12),NWLNMK(11))
+            LCONV.(B,NWLNMK(10),NWLNMK(9))
+          R
+          R     GET TIME OF CREATION, IF NOT ALREADY DONE
+          R
+            VECTOR VALUES GOTTM = 0B
+            WHENEVER .NOT. GOTTM
+                 GOTTM = 1B
+                 GETTIM.(PDATE,PTIME)
+                 RCONV.(PTIME,NWLNMK(6),NWLNMK(5))
+                 TEMP1 = (PDATE.A.7777K8) .V. $00/00/$ .V.
+          1           ((PDATE.RS.6).A.7777K2)
+                 LCONV.(TEMP1,NWLNMK(8),NWLNMK(7))
+                 NWLNMK(7) = (NWLNMK(7).A.777777K6) .V.
+          1           TSSASC.((PDATE.RS.6).A.77K).LS.9 .V.
+          2           TSSASC.(PDATE.A.77K)
+            END OF CONDITIONAL
+            FUNCTION RETURN 1B
+          R
+NTFND       FUNCTION RETURN 0B
+            END OF FUNCTION
+          R
+          R     BDLNMK.(LMK) RETURNS 1B IF LMK(LMKZ)...LMKZ
+          R     IS NOT A 'SUPER LINE MARK', 0B IF IT IS.
+          R
+            BOOLEAN BDLNMK.
+            INTERNAL FUNCTION BDLNMK.(LMK)=(LMK(14) .NE. NWLNMK(14))
+          1      .OR. (LMK(13) .NE. NWLNMK(13))
+          2      .OR. (LMK(2) .NE. NWLNMK(2))
+          3      .OR. (LMK(1) .NE. NWLNMK(1))
+          R
+          R     DATTM.(LMK) RETURNS THE DATE AND TIME OF ARCHIVING
+          R     OF THE FILE HEADED BY LMK(LMKZ)...LMKZ IN FILE SYSTEM
+          R     FORMAT.
+          R
+            INTERNAL FUNCTION (LMK)
+            ENTRY TO DATTM.
+            TEMP1 = CONVL.(LMK(8),LMK(7))
+            TEMP1 = (TEMP1.A.7777K8) .V. ((TEMP1.LS.6).A.7777K4)
+            TEMP1 = TEMP1 .V. (CONVR.(LMK(8),LMK(7)).A.7777K)
+            TEMP2 = CONVR.(LMK(6),LMK(5))
+          R
+          R     NOW, CONVERT IBM BCD INTO FILE SYSTEM FORMAT
+          R
+            FUNCTION RETURN (BCDEC.(TEMP1.A.7777K).LS. 27) .V.
+          1      (BCDEC.((TEMP1.RS.12).A.7777K).LS.18) .V.
+          2      (BCDEC.(TEMP1.RS.24).LS.23) .V.
+          3      (BCDEC.(TEMP2.RS.24)*3600 +
+          4      BCDEC.((TEMP2.RS.12).A.7777K)*60 +
+          5      BCDEC.(TEMP2.A.77K)*6)
+            END OF FUNCTION
+          R
+          R     INTERNAL FUNCTIONS TO GET NAMES AND COUNTS
+          R
+            INTERNAL FUNCTION CNT.(LMK) = BCDEC.(CONVR.(LMK(4),LMK(3)))
+            INTERNAL FUNCTION FLN1.(LMK) = CONVL.(LMK(12),LMK(11))
+            INTERNAL FUNCTION FLN2.(LMK) = CONVL.(LMK(10),LMK(9))
+          R
+          R     PTLNMK. PRINTS OUT THE CURRENT 'SUPER LINE MARK'
+          R
+            INTERNAL FUNCTION
+            ENTRY TO PTLNMK.
+            PRMESS. (CONVL.(PRLNMK(12),PRLNMK(11)), BL,
+          1      CONVL.(PRLNMK(10),PRLNMK(9)), BL,
+          2      CONVL.(PRLNMK(8),PRLNMK(7)),
+          3      CONVR.(PRLNMK(8),PRLNMK(7)) .LS. 24 .V. 60575757K,
+          4      CONVR.(PRLNMK(6),PRLNMK(5)), BL,
+          5      CONVR.(PRLNMK(4),PRLNMK(3)) )
+            FUNCTION RETURN
+            END OF FUNCTION
+          R
+            DIMENSION PRLNMK(14),NWLNMK(14)
+            VECTOR VALUES LMKZ = 14
+            DIMENSION FSBUF (432)
+          R
+          R     UTILITY ROUTINES FOR ASCII-BCD AND BCD-ASCII
+          R     NOT VERY PLEASANT BUT WIDRIG GETS LAZY SOMETIMES
+          R
+          R
+          R     THIS ROUTINE CONVERTS 6 BCD CHARS TO 8 ASCII
+          R     RIGHT-ADJUSTED WITH LEADING BLANKS
+          R
+            INTERNAL FUNCTION (ARG1,ARG2,ARG3)
+            ENTRY TO RCONV.
+            ARG2 = 040 040K6 .V. (TSSASC.(ARG1.RS.30).LS.9) .V.
+          1      TSSASC.((ARG1.RS.24).A.77K)
+            ARG3 = (TSSASC.((ARG1.RS.18).A.77K).LS.27)
+          1      .V. (TSSASC.((ARG1.RS.12).A.77K).LS.18)
+          2      .V. (TSSASC.((ARG1.RS.6).A.77K) .LS. 9)
+          3      .V. TSSASC.(ARG1.A.77K)
+            FUNCTION RETURN
+            END OF FUNCTION
+          R
+          R     THIS ROUTINE CONVERTS 6 BCD CHARS TO 8 ASCII
+          R     LEFT-ADJUSTED WITH TRAILING BLANKS
+          R
+            INTERNAL FUNCTION (ARG1,ARG2,ARG3)
+            ENTRY TO LCONV.
+            ARG2 = (TSSASC.((ARG1.RS.30)).LS.27)
+          1      .V. (TSSASC.((ARG1.RS.24).A.77K).LS.18)
+          2      .V. (TSSASC.((ARG1.RS.18).A.77K).LS.9)
+          3      .V. TSSASC.((ARG1.RS.12).A.77K)
+            ARG3 = 040 040K .V. (TSSASC.((ARG1.RS.6).A.77K).LS.27) .V.
+          1      (TSSASC.(ARG1.A.77K).LS.18)
+            FUNCTION RETURN
+            END OF FUNCTION
+          R
+          R     THIS ROUTINE CONVERTS THE RIGHT 6 ASCII CHARS
+          R     INTO 6 BCD CHARS
+          R
+            INTERNAL FUNCTION (ARG2,ARG3)
+            ENTRY TO CONVR.
+            FUNCTION RETURN (ASCTSS.(ARG2.RS.9).LS.30) .V.
+          1      (ASCTSS.(ARG2).LS.24) .V.
+          2      (ASCTSS.(ARG3.RS.27).LS.18) .V.
+          3      (ASCTSS.(ARG3.RS.18).LS.12) .V.
+          4      (ASCTSS.(ARG3.RS.9).LS.6) .V. ASCTSS.(ARG3)
+            END OF FUNCTION
+          R
+          R     THIS ROUTINE CONVERTS THE RIGHT 6 ASCII CHARS
+          R     INTO 6 BCD CHARS
+          R
+            INTERNAL FUNCTION (ARG2,ARG3)
+            ENTRY TO CONVL.
+            FUNCTION RETURN (ASCTSS.(ARG2.RS.27).LS.30) .V.
+          1      (ASCTSS.(ARG2.RS.18).LS.24) .V.
+          2      (ASCTSS.(ARG2.RS.9).LS.18) .V.
+          3      (ASCTSS.(ARG2) .LS. 12) .V.
+          4      (ASCTSS.(ARG3.RS.27).LS.6) .V.
+          5      (ASCTSS.(ARG3.RS.18))
+            END OF FUNCTION
