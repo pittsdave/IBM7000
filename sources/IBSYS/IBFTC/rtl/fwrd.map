@@ -1,0 +1,29 @@
+$*     7090/7094 BCD WRITE ROUTINE-FWRD                                 3F4E0000
+$IBMAP FWRD    30,()OK                                                  3F4E0010
+       TTL     FWRD-BCD WRITE ROUTINE                                   3F4E0020
+*              BCD WRITE ROUTINE                                        3F4E0030
+*              CALLING SEQUENCE IS                                      3F4E0040
+*              CALL .FWRD.(ARG,LF) COMPIKED FOR WRITE(N,F)              3F4E0050
+*              ARG= LOC OF PZE UNITXX WHERE XX IS LOGICAL UNIT N.       3F4E0060
+*      LF= LOC LF= LOC OF FORMAT STATEMENT F.                           3F4E0070
+*                                                                       3F4E0080
+       ENTRY   .FWRD.                                                   3F4E0090
+OUTBUF EQU     .OUTBF                                                   3F4E0091
+.FWRD. SXA     SYSLOC,4              SAVE RETURN TO MAIN PROGRAM AND SET3F4E0100
+       SXA     LNKG,4                LINKAGE DIRECTOR FOR ERROR TRACE.  3F4E0110
+       SXA     RTRN,4                RETURN TO MAIN PROGRAM             3F4E0115
+       CALL    .FIOS.(ARG1,ARG2)     CALL I/O INITIALIZATION ROUTINE    3F4E0116
+       ORG     *-2                   OVERLAY CALL WITH ARGUMENTS        3F4E0120
+ARG1   PZE     0,,0                  ADDRESS= REED ,DEC. =BIN           3F4E0130
+ARG2   IOCD    OUTBUF,,**            TRANSMIT A LINE                    3F4E0140
+       CALL    .FIOH.(RTNWR,RTRN)    BUILD A BUFFER                     3F4E0150
+       ORG     *-2                   OVERLAY CALL WITH ARGUMENTS        3F4E0160
+RTNWR  TRA     WRENT                 TRA=OUTPUT,WRENT =LOC. OF WRITE    3F4E0170
+RTRN   PZE                           CONTAINS RETURN TO MAIN PROGRAM    3F4E0180
+WRENT  SXA     WRRT,2                COME HERE TO TRANSMIT              3F4E0190
+       SXD     .FILL.,1              STORE WORD COUNT                   3F4E0200
+       TSX     .FRTD.,4              WRITE A LINE                       3F4E0210
+WRRT   AXT     **,2                  RESTORE XR                         3F4E0220
+       TRA     1,2                   AND RETURN                         3F4E0230
+LNKG   LDIR                                                             3F4E0240
+       END                                                              3F4E0250

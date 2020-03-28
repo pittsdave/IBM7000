@@ -1,0 +1,10 @@
+$IBMAP .XCC.   ()OK                                                  $5$3F0FC010
+       ENTRY   CC.1                                                  $5$3F0FC020
+       ENTRY   CC.2                                                  $5$3F0FC030
+       ENTRY   CC.3                                                  $5$3F0FC040
+       ENTRY   CC.4                                                  $5$3F0FC050
+CC.1   DEC     155B8                                                 $5$3F0FC060
+CC.2   DEC     163B8                                                 $5$3F0FC070
+CC.3   DEC     155B16                                                $5$3F0FC080
+CC.4   DEC     182B8                                                 $5$3F0FC090
+       END                                                           $5$3F0FC100

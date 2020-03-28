@@ -1,0 +1,21 @@
+$IBMAP FBCD.   35                                                    $5$3F4R0000
+       TTL     ALTERNATE I/O BCD COORDINATOR AND BCD BUFFER  $5$    (11)3F4R0010
+       LBL     .BCD,BEGIN     FBCD.                                  (7)3F4R0013
+       ENTRY   ..FBCD                                                $5$3F4R0020
+       ENTRY   ..FBCW                                                $5$3F4R0030
+       ENTRY   ..FBCB                                                $5$3F4R0040
+SIZE   SET     23                  SETS BCD BUFFER = 23             (11)3F4R0050
+..FBCD ZAC                         READ REQUEST                      $5$3F4R0060
+       TRA     *+2                                                   $5$3F4R0070
+..FBCW CAL     PTW                 WRITE REQUEST                     $5$3F4R0080
+       SXA     LK.DR,4             SAVE X4 IN LINKAGE DIRECTOR       $5$3F4R0090
+       CALL    ..FIOS(SEL)         CALL FIOS. AND                    $5$3F4R0100
+       ORG     *-1                  SET UP I/O COMMAND               $5$3F4R0110
+ SEL   IORT    ..FBCB,,SIZE        WORD COUNT = SIZE                 $5$3F4R0120
+       LXA     LK.DR,4             RESTORE X4                        $5$3F4R0130
+       TRA     1,4                 EXIT TO FRDD. OR FWRD.            $5$3F4R0140
+*                              ZERO PREFIX INDICATES BCD READ        $5$3F4R0150
+ PTW   PTW     0,,0                 PREFIX INDICATES BCD WRITE       $5$3F4R0160
+..FBCB BSS     SIZE                BCD BUFFER LOCATION               $5$3F4R0170
+ LK.DR LDIR                                                          $5$3F4R0180
+       END                                                           $5$3F4R0190

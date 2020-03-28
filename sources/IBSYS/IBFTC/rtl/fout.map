@@ -1,0 +1,243 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - FOUT              3F2F0000
+$IBMAP FOUT    200                                                   $5$3F2F0010
+       TTL     FOUT - FORTRAN BLOCKED OUTPUT SUBROUTINE FOR SYSOU    (8)3F2F0020
+       REM                                                              3F2F0030
+       REM     CALLING SEQUENCE IS CALL .FOUT.(ARG)                     3F2F0040
+       REM     ARG IS OF THE FORM   PZE  LOCATION,,COUNT                3F2F0050
+       REM     WHERE LOCATION IS THE FIRST WORD OF A BCD                3F2F0060
+       REM     IMAGE OF LENGTH COUNT.                                   3F2F0070
+       REM                                                              3F2F0080
+       ENTRY   .FOUT.                                                   3F2F0090
+NLRPB  SET     0                   IF NON ZERO ONLY 5 RECORDS A BLOCK(8)3F2F0091
+       USE                                                              3F2F0100
+.FOUT. TXI     BEGIN,,0                                                 3F2F0110
+SV2    AXT     **,2                                                     3F2F0120
+SV1    AXT     **,1                                                     3F2F0130
+SV4    AXT     **,4                                                     3F2F0140
+       LDI     *+2                                                      3F2F0150
+       TRA     1,4                                                      3F2F0160
+       PZE     **                                                       3F2F0170
+BEGIN  STI     *-1                                                      3F2F0180
+       SXA     SV4,4                                                    3F2F0190
+       SXA     SV1,1                                                    3F2F0200
+       SXA     SV2,2                                                    3F2F0210
+       CLA*    3,4                                                      3F2F0220
+       STO     ARG                   SAVE INCOMING ARGUMENT.            3F2F0230
+       STA     LOC                   SET TO PICK UP BCD DATA FOR OUTPUT.3F2F0240
+       ZET     FIRST                 IS THIS FIRST TIME THROUGH.        3F2F0250
+       TRA     LOADBF                NO.                                3F2F0260
+       STL     FIRST                 YES. INITIALIZE FOR WRITING SYSOU. 3F2F0270
+       CLA*    OTUN                  PLACE LOCATION OF FCB FOR SYSOU1$5$3F2F0280
+       STA     OPN                   IN IOCS CALLING SEQUENCES       $5$3F2F0290
+       STA     DFILE                                                 $5$3F2F0299
+       STA     FILE                                                  $5$3F2F0300
+       STA     RITE                                                  $5$3F2F0310
+       STA     WRITE                                                 $5$3F2F0312
+       PAC     0,4                   GET BLOCK SIZE                  $5$3F2F0313
+       LDI     1,4                   FROM SECOND BUFFER              $5$3F2F0314
+       CLA     4,4                   POOL CONTROL WORD               $5$3F2F0315
+       PDC     0,4                                                   $5$3F2F0316
+       CLA     1,4                                                   $5$3F2F0317
+       ARS     4                                                     $5$3F2F0318
+       STD     BLKSZ                 STORE BLOCK SIZE                $5$3F2F0319
+       STD     CHKCT-1               INITIALIZE NEW BUFFER TEST      $5$3F2F0320
+       STZ     PFLAG                                                 $5$3F2F0321
+       LNT     004000                IS THE MODE OF OUTPUT BCD OR BIN$5$3F2F0322
+       STL     PFLAG                 BCD--SET FOR 720 STYLE OUTPUT   $5$3F2F0323
+       LXA     .BUFSZ,4              GET MAXIMUM LOGICAL RECORD SIZE.   3F2F0330
+       NZT     PFLAG                 INCREMENT SIZE FOR              $5$3F2F0350
+       TXI     *+1,4,1               LOGICAL RECORD CONTROL WORD IF 14013F2F0360
+       SXD     LOCBUF,4              SEQUENCES WITH THIS COUNT.         3F2F0380
+       SXD     BUFPT,4                                                  3F2F0390
+       TXI     *+1,4,-1                                                 3F2F0400
+       SXD     SVV5,4                                                   3F2F0410
+       LFT     040000                IS SYSOU OPEN.                     3F2F0530
+       TRA     OPND                  YES.                               3F2F0540
+       TSX     .OPEN,4               NO. OPEN SYSOU.                    3F2F0550
+OPN    MON     **                                                       3F2F0560
+OPND   TSX     .WRITE,4              LOCATE BUFFER.                     3F2F0570
+FILE   PZE     **,,.WEOB.            IOCS PLACES IN BUFADD ADDRESS      3F2F0580
+LOCBUF IOSTN*  BUFADD,,**            OF BUFFER LOCATED.                 3F2F0590
+       NZT     PFLAG                 MAKE BUFFER CONTROL WORD IF     $5$3F2F0610
+       TSX     NEWBUF,2              1401 STYLE OUTPUT.                 3F2F0620
+OPND1  STZ     COUNT                 RESET COUNT OF WORDS IN BUFFER.    3F2F0630
+       STZ     RECCT                 RESET COUNT OF RECORDS IN BUFFER.  3F2F0640
+LOADBF LXD     ARG,4                 GET WORD COUNT.                    3F2F0650
+       PXA     0,4                                                      3F2F0660
+       NZT     PFLAG                                                 $5$3F2F0680
+       TXI     *+1,4,1               INCREMENT FOR RECORD FLAG WORD IF  3F2F0690
+       SXD     INCCT,4               1401 STYLE OUTPUT.                 3F2F0700
+       ZET     KOUNT                                                    3F2F0710
+       TRA     FIX                                                      3F2F0720
+INC    SXD     RITCT,4                                                  3F2F0730
+       LXA     COUNT,4                                                  3F2F0740
+INCCT  TXI     *+1,4,**                                                 3F2F0750
+       SXA     COUNT,4               INCREMENT COUNT OF WORDS PLACED    3F2F0760
+       ZET     PFLAG                                                    3F2F0780
+       TRA     STORE                                                    3F2F0790
+       XCA                           FOR 1401 STYLE OUTPUT,             3F2F0800
+       PXD     0,0                   COMPUTE NUMBER OF                  3F2F0810
+       MPY     SIX                   CHARACTERS IN LOGICAL              3F2F0820
+       XCA                           RECORD, CONVERT TO BCD             3F2F0830
+       TSX     BCVR,2                AND PLACE IN RECORD                3F2F0840
+       LXA     BCDINT,4              FLAG WORD.                         3F2F0850
+       PXD     0,4                                                      3F2F0860
+       ORA     RECWD                                                    3F2F0870
+STORE  LXD     ARG,4                 PREPARE TO STORE RECORD            3F2F0880
+       AXT     0,1                   IN BUFFER.                         3F2F0890
+       AXT     0,2                                                      3F2F0900
+       ZET     PFLAG                 IF 1401 STYLE,                     3F2F0910
+       TRA     LOC                   STORE RECORD FLAG                  3F2F0920
+       SLW*    BUFADD                WORD.                              3F2F0930
+       TXI     *+1,2,-1                                                 3F2F0940
+LOC    CLA     **,1                                                     3F2F0950
+       STO*    BUFADD                STORE OUTPUT RECORD IN             3F2F0960
+       TXI     *+1,2,-1              BUFFER.                            3F2F0970
+       TXI     *+1,1,-1                                                 3F2F0980
+       TIX     LOC,4,1                                                  3F2F0990
+       ZET     PFLAG                                                    3F2F1000
+       TRA     SETMK                                                    3F2F1010
+       LXA     RECCT,4                                                  3F2F1020
+       TXI     *+1,4,1               UPDATE RECORD COUNT FOR BUFFER     3F2F1030
+       SXA     RECCT,4               FLAG WORD, CONVERT TO BCD          3F2F1040
+       PXA     0,4                   AND PLACE IN FLAG WORD.            3F2F1050
+       TSX     BCVR,2                                                   3F2F1060
+       LXA     BCDINT,4                                                 3F2F1070
+       PXA     0,4                                                      3F2F1080
+       ORA     BLKWD                                                    3F2F1090
+       XEC     BUFBEG                STORE UPDATED BUFFER FLAG WORD.    3F2F1100
+WRIT   TSX     .WRITE,4              RELEASE RECORD TO IOCS AND         3F2F1110
+RITE   PZE     **,,.WEOB.            LOCATE NEXT AVAILABLE SPACE IN     3F2F1120
+RITCT  IOCPN   **,,**                CURRENT BUFFER OR LOCATE NEW    $5$3F2F1130
+BUFPT  IOSTN*  BUFADD,,**            BUFFER.                            3F2F1140
+       STD     CHKCT                 SAVE NUMBER OF REMAINING WORDS  $5$3F2F1145
+       CLA     .JLIN                 UPDATE LINES OUTPUT COUNT.         3F2F1150
+       ADD     ONE                                                      3F2F1160
+       STO     .JLIN                                                    3F2F1170
+       LDC     BUFPT,4               REINITIALIZE COUNTS IF A NEW    $5$3F2F1200
+       TXI     *+1,4,**              BUFFER HAS BEEN LOCATED,        $5$3F2F1210
+CHKCT  TXH     SV2,4,**              OTHERWISE RETURN TO CALLER.     $5$3F2F1220
+       NZT     PFLAG                 INITIALIZE IF NEW BUFFER WAS    $5$3F2F1240
+       TSX     NEWBUF,2              LOCATED.                           3F2F1250
+FIXCT  STZ     COUNT                                                    3F2F1260
+       STZ     RECCT                                                    3F2F1270
+       LXD     LOCBUF,4              RESTORE ACTUAL WORD COUNT       $5$3F2F1290
+       SXD     BUFPT,4                                                  3F2F1300
+       TRA     SV2                   RETURN TO CALLER.               $5$3F2F1320
+FIX    STZ     KOUNT                                                    3F2F1330
+       TXI     INC,4,1                                                  3F2F1340
+SETMK  XCA                                                              3F2F1350
+       NZT     RECCT                 SET RECORD MARK IN PREVIOUS        3F2F1360
+       TRA     SVV2                  RECORD IF THERE IS A PREVIOUS      3F2F1370
+SVV    AXT     **,1                  RECORD IN BUFFER.                  3F2F1380
+       CAL     MASK1                                                    3F2F1390
+SVV7   ANS     **,1                                                     3F2F1400
+       CAL     RECMK                                                    3F2F1410
+SVV1   ORS     **,1                                                     3F2F1420
+SVV2   XCA                                                              3F2F1430
+       ANA     MASK                  TEST CURRENT LINE TO SEE WHERE     3F2F1440
+       SSP                           RECORD MARK CAN BE PLACED.         3F2F1450
+       SUB     BLANK                                                    3F2F1460
+       TZE     SVV3                  LAST CHARACTER IS BLANK.           3F2F1470
+       LXD     ARG,4                 LAST CHARACTER NOT BLANK. CHECK TO 3F2F1480
+SVV5   TXH     FIFTH,4,**            FORCE BUFFER FULL               $5$3F2F1490
+       CLA     BLANKS                ADDITIONAL WORD. IF SO, ADD        3F2F1500
+       STO*    BUFADD                WORD OF BLANKS AND STORE IN        3F2F1510
+       TXI     *+1,4,1               BUFFER.                            3F2F1520
+       SXD     RITCT,4               INCREMENT WORD COUNT IN IOCS       3F2F1530
+       LXA     COUNT,4               CALLING SEQUENCE, IN               3F2F1540
+       TXI     *+1,4,1               CUMULATIVE WORD COUNT,             3F2F1550
+       SXA     COUNT,4               AND IN TEST FOR NEW BUFFER.        3F2F1560
+       TRA     SVV4                                                     3F2F1580
+SVV3   TXI     *+1,2,1                                                  3F2F1590
+SVV4   SXA     SVV,2                 SET UP FOR STORING RECORD MARK     3F2F1600
+       LXA     BUFADD,4              NEXT TIME THROUGH.                 3F2F1610
+       SXA     SVV1,4                                                   3F2F1620
+       SXA     SVV7,4                                                   3F2F1630
+       LXA     RECCT,4               UPDATE RECORD COUNT.               3F2F1640
+       TXI     *+1,4,1                                                  3F2F1650
+       NZT*    SYSJOB+1              IF IN DC MODE                   $5$3F2F1651
+       TRA     FIFTH                 UNBLOCK BCD OUTPUT              $5$3F2F1652
+       IFF     NLRPB=0                                               (8)3F2F1653
+       TXH     FIFTH,4,4                                                3F2F1660
+       SXA     RECCT,4                                                  3F2F1670
+       TRA     WRIT                                                     3F2F1680
+FIFTH  LXD     BLKSZ,4               FORCE BUFFER FULL.              $5$3F2F1710
+       SXD     BUFPT,4                                                  3F2F1720
+       TRA     WRIT                                                     3F2F1740
+BCVR   AXT     36,4                  CONVERSION OF BINARY INTEGER       3F2F1750
+       STZ     BCDINT                TO BCD INTEGER.                    3F2F1760
+BCVR1  XCA                                                              3F2F1770
+       PXD     0,0                                                      3F2F1780
+       DVP     TEN                                                      3F2F1790
+       ALS     36,4                                                     3F2F1800
+       ORS     BCDINT                                                   3F2F1810
+       XCA                                                              3F2F1820
+       TZE     BCVR2                                                    3F2F1830
+       TXI     BCVR1,4,-6                                               3F2F1840
+BCVR2  TRA     1,2                                                      3F2F1850
+NEWBUF LXA     BUFADD,4              INITIALIZE FOR NEW BUFFER.         3F2F1860
+       SXA     BUFBEG,4                                                 3F2F1870
+       TXI     *+1,4,1                                                  3F2F1880
+       SXA     BUFADD,4                                                 3F2F1890
+       STL     KOUNT                                                    3F2F1900
+       AXT     1,4                                                      3F2F1910
+       SXA     COUNT,4                                                  3F2F1920
+       TRA     2,2                                                      3F2F1930
+.WEOB. PDC     0,4                   FIND LOCATION OF COMMAND WHICH  $5$3F2F1933
+       TXI     *+1,4,-1              WAS NOT EXECUTED                $5$3F2F1934
+       SXA     WRITE+1,4             INITIALIZE IOCS CALLING SEQUENCE$5$3F2F1935
+       XCA                           FIND LOCATION OF NORMAL         $5$3F2F1936
+       PAX     0,2                   RETURN FROM IOCS                $5$3F2F1937
+       TSX     .WRITE,4              TRY TO WRITE AGAIN, IF END-OF-  $5$3F2F193B
+ WRITE PZE     **,,WERR              BUFFER CONDITION STILL PERSISTS,$5$3F2F193C
+       TCH     **                    PRINT ERROR MESSAGE, OTHERWISE  $5$3F2F193D
+       TRA     0,2                   RETURN TO NORMAL PROCESSING.    $5$3F2F193E
+DMPUNB NZT     FIRST                 IF THERE IS AN OUTPUT BUFFER    $5$3F2F193F
+       TRA     1,2                   FOR UN06,                       $5$3F2F193G
+       STZ     FIRST                 RESET INITIALIZATION SWITCH     $5$3F2F193H
+       TSX     .WRITE,4              UNBUFFER UN06 WITH WRITE OF     $5$3F2F193I
+DFILE  PZE     **,,.WEOB.            ZERO WORD COUNT.                $5$3F2F193J
+       IOCD    *,,0                  RETURN TO FDMP TO READ IN       $5$3F2F193K
+       TRA     1,2                   DMPREC AND CONTINUE.            $5$3F2F193L
+ARG    PZE     **                    INCOMING ARGUMENT.                 3F2F1940
+FIRST  PZE     **                    FIRST TIME THROUGH FLAG.           3F2F1950
+PFLAG  PZE     **                    ZERO IF BLOCKED WITH CONTROL WORDS,3F2F1960
+       REM                           NON-ZERO IF BLOCKED WITH RECORD    3F2F1970
+       REM                           MARKS.                             3F2F1980
+OTUN   PZE     .UN06.                                                   3F2F2000
+BLKSZ  PZE     **                    DECREMENT CONTAINS BLOCK SIZE.     3F2F2010
+COUNT  PZE     **                    COUNT OF WORDS PLACED IN BUFFER.   3F2F2020
+KOUNT  PZE                                                              3F2F2030
+RECCT  PZE     **                    COUNT OF RECORDS PLACED IN BUFFER. 3F2F2040
+BUFADD PZE     **,2                                                     3F2F2050
+ONE    DEC     1                                                        3F2F2060
+SIX    DEC     6                                                        3F2F2070
+TEN    DEC     10                                                       3F2F2080
+RECWD  OCT     500000200460          RECORD FLAG WORD.                  3F2F2090
+BUFBEG SLW     **                    STORE BLOCK FLAG WORD.             3F2F2100
+BLKWD  OCT     760000000000          BLOCK FLAG WORD.                   3F2F2110
+BCDINT PZE     **                                                       3F2F2120
+BLANK  BCI     1,00000                                                  3F2F2130
+BLANKS BCI     1,                                                       3F2F2140
+RECMK  OCT     000000000072                                             3F2F2150
+MASK   OCT     000000000077                                             3F2F2160
+MASK1  OCT     777777777700                                             3F2F2170
+  WERR TSX     .MWR,4                ISSUE END-OF-BUFFERS ERROR      $5$3F2F2180
+       PZE     1                     MUST BE WRITTEN ON-LINE.           3F2F2190
+       PZE     MSG,,10                                                  3F2F2200
+       TRA     .LXERR                                                   3F2F2210
+MSG    BCI     9,0END-OF-BUFFER EXIT WRITING SYSOU1. EXECUTION TERMINAT 3F2F2220
+       BCI     1,ED.                                                    3F2F2230
+LNKG   LDIR                                                             3F2F2240
+       USE     A                                                        3F2F2250
+       ORG     .LXOUT                                                   3F2F2260
+       CALL    .FOUT.(.LXARG)                                           3F2F2270
+       ORG     .FPOUT                                                   3F2F2280
+       CALL    .FOUT.(.FPARG)                                           3F2F2290
+       ORG     .FXOUT                                                   3F2F2300
+       CALL    .FOUT.(.FXARG)                                           3F2F2310
+       ORG     .DFOUT                OVERLAY (NOP) IN .LXCON         $5$3F2F2311
+       TSX     DMPUNB,2              TO UNBUFFER SYSOU1 BEFORE DUMPS $5$3F2F2312
+       USE                                                              3F2F2320
+       END                                                              3F2F2330

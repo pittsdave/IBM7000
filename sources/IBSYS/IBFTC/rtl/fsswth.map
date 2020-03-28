@@ -1,0 +1,25 @@
+$*     7090/7094 FORTRAN MACHINE INDICATOR TEST - FSSWTH                3FC50000
+$IBMAP FSSWTH  20                                                       3FC50010
+       LBL     SSWT,BEGIN     FSSWTH                                 (7)3FC50013
+       TTL     FSSWTH/SENSE SWITCH TEST ROUTINE                         3FC50020
+SSWTCH SAVE    (4)                                                      3FC50030
+       CLA     4,4            INITIALIZE LOCATION                       3FC50040
+       STA     SWSTO          FOR TEST RESULT                           3FC50050
+       CLA*    3,4            SENSE SWITCH NUMBER                       3FC50060
+       PAC     0,4            COMP. TO IR4                              3FC50070
+       TXL     SWFX,4,-7      ERROR IF 0 OR G.T. 6                      3FC50080
+       CLA     =1             1 IF SS DOWN                              3FC50090
+       SWT     0,4            TEST                                      3FC50100
+SWRT   CLA     =2             2 IF SS UP                                3FC50110
+SWSTO  STO     **             STORE RESULT                              3FC50120
+       RETURN  SSWTCH                                                   3FC50130
+SWFX   CALL    .FXEM.(ER53)   ERROR                                     3FC50140
+       TRA     SWRT           CONSIDER SS UP                            3FC50150
+       SPACE   2                                                        3FC50160
+ER53   PZE     53                                                       3FC50170
+       PZE     E53MES,,6                                                3FC50180
+       PZE     E53OMS,,4                                                3FC50190
+       SPACE                                                            3FC50200
+E53MES BCI     6,0NON-EXISTENT SENSE SWITCH TESTED.                     3FC50210
+E53OMS BCI     4,0SWITCH DECLARED 'UP'.                                 3FC50220
+       END                                                              3FC50230

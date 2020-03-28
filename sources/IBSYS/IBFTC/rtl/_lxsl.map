@@ -1,0 +1,302 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .LXSL                           3AL00000
+$IBMAP .LXSL                                                            3AL00010
+       TTL     .LXSL/OBJECT TIME READ-WRITE SELECT ROUTINE          (14)3AL00020
+* OBJECT TIME READ/WRITE SELECT ROUTINE                                 3AL00030
+*                                                                       3AL00040
+* PURPOSE-                                                              3AL00050
+*    THIS ROUTINE WILL READ OR WRITE A SPECIFIED UNIT                   3AL00060
+*      (729,7340,1301)IN BCD OR BINARY USING IOEX                       3AL00070
+*                                                                       3AL00080
+* ENTRY-                                                                3AL00090
+*    CALL    .LXSEL(L)                                                  3AL00100
+*                                                                       3AL00110
+* INPUT-                                                                3AL00120
+*    1) L= LOC OF CONTROL WORD OF THE FORMAT-                           3AL00130
+*              PFX     U,,S                                             3AL00140
+*       WHERE  PFX=PZE  READ BCD                                        3AL00150
+*                 =PON  READ BINARY                                     3AL00160
+*                 =PTW  WRITE BCD                                       3AL00170
+*                 =PTH  WRITE BINARY                                    3AL00180
+*              U  =SYSUNI INDEX                                         3AL00190
+*              S  =LOC OF I/O COMMAND SEQUENCE                          3AL00200
+*    2) LAST COMMAND OF I/O SEQUENCE AS  TCH .LTCH                      3AL00210
+*                                                                       3AL00220
+* OUTPUT-                                                               3AL00230
+*    1) CONTENTS OF INDICATORS UPON ENTRY TO SEL- IN CELL .LXIND        3AL00240
+*    2) FLAGWORD READ FROM DISK IN CELL .LXFLG                          3AL00250
+*                                                                       3AL00260
+HYPER  SET     0                   =0 FOR NO HYPERTAPE                  3AL00270
+*                                  =1 FOR HYPERTAPE                     3AL00280
+DISK   SET     0                   =0 FOR NO DISK                       3AL00290
+*                                  =1 FOR DISK                          3AL00300
+A7909  SET     0                   SET BY PROGRAM                       3AL00310
+*                                                                       3AL00320
+       IFT     HYPER=1,OR                                               3AL00330
+       IFT     DISK=1                                                   3AL00340
+A7909  SET     1                                                        3AL00350
+*                                                                       3AL00360
+       ENTRY   .LXIND                                                   3AL00380
+       ENTRY   .LTCH                                                    3AL00390
+       ENTRY   .LXFLG                                                   3AL00400
+       ENTRY   .LXDIS                                                   3AL00410
+       ENTRY   .LXTST                                                $5$3AL00412
+       ENTRY   .LXOVL                                                $5$3AL00413
+       ENTRY   .LXSL1                                               (10)3AL00414
+       ENTRY   .LXSEL                                                (2)3AL00415
+       ENTRY   .LXMOD              IF NE 0, SWITCH MODES ON RED. RD.(10)3AL00416
+       EJECT                                                            3AL00420
+       USE                                                              3AL00430
+.LXSEL SXA     SYSLOC,4                                              (2)3AL00431
+.LXSL1 SXA     LNKG,4                                               (10)3AL00433
+       SXA     SV2,2                                                 (2)3AL00435
+       STI     SVIND                                                 (2)3AL00440
+*           ALTERNATE I/O FORTRAN SYSTEM OVERLAYS THE FOLLOWING      $5$3AL00441
+*              CELL DURING OUTPUT TRANSMISSION -- TSX ..FREQ,2       $5$3AL00442
+.LXTST NOP                                                           $5$3AL00443
+       STZ     WRFLG               PRESET I/O                        $5$3AL00444
+       STZ     BIFLG                CONTROL                          $5$3AL00445
+       STZ     NIFLG                 LOGIC                           $5$3AL00446
+       BES     A7909-1               FLAGS                           $5$3AL00447
+       STZ     PFLG                  *                               $5$3AL00448
+       BES     DISK-1                *                               $5$3AL00449
+       LDI*    3,4                 CONTROL PARAMETER                    3AL00450
+       PIA                                                              3AL00460
+       PAC     0,2                                                   $5$3AL00461
+       TXI     *+1,2,SYSOU1                                          $5$3AL00463
+       TXH     *+2,2,0             CLEAR BUFFERS IF SYSOU1           $5$3AL00465
+       XEC     .DFOUT                                                $5$3AL00467
+       PIA                                                           $5$3AL00469
+       PDX     0,4                 LOC OF I/O SEQUENCE                  3AL00470
+       STA     SL01                SYSUNI INDEX                         3AL00480
+       LAC     SYSUNI,2                                                 3AL00490
+ SL01  CAL     **,2                                                     3AL00500
+       STA     SL03                L(UCW)                               3AL00510
+       STD     SMSCMD              STORE HA2                        (14)3AL00515
+       LXA     SL01,2              CHECK FOR PERIPHERAL                 3AL00520
+       TXH     SL02,2,12                                                3AL00530
+       TXL     SL02,2,3                                                 3AL00540
+       STL     PFLG                                                     3AL00550
+       BES     DISK*5-5                                             (14)3AL00560
+ SL02  LFT     200000              CHECK MODES                          3AL00570
+       STL     WRFLG               WRITE                                3AL00580
+       LFT     100000                                                   3AL00590
+       STL     BIFLG               BINARY                               3AL00600
+ SL03  AXC     **,2                -L(UCW) TO IR2                       3AL00610
+       ZET     1,2                 DELAY UNTIL DORMANT                  3AL00620
+       TRA     *-1                                                      3AL00630
+       LDI     0,2                 UNIT CONTROL WORD                    3AL00640
+       LFT     020000              DATA CHANNEL TYPE                    3AL00650
+       TRA     SL20                  7909                               3AL00660
+       SXA     TNSB,4                7607                               3AL00670
+       CLA     TNSA                                                     3AL00680
+       ZET     WRFLG                                                    3AL00683
+       SSM                                                              3AL00687
+*              ** CALL TO ACTION                                        3AL00690
+SL04   STO     1,2            SET SELECT WORD                           3AL00700
+       TSX     .ACTV,4                                                  3AL00710
+       MZE     SL03                                                     3AL00720
+*           ALTERNATE I/O FORTRAN SYSTEM OVERLAYS THE FOLLOWING      $5$3AL00721
+*              CELL DURING OUTPUT TRANSMISSION -- TRA .LXOVL+3       $5$3AL00722
+.LXOVL NOP                                                           $5$3AL00723
+       ZET     1,2                 DELAY TILL DONE  MUST FOLLOW NOP  $5$3AL00730
+       TRA     *-1                  *               MUST FOLLOW ZET  $5$3AL00740
+*              THE PRIOR SEQUENCE OF INSTRUCTIONS (NOP,ZET,TRA) MUST $5$3AL00741
+*               BE IN ORDER - REQUIRED BY FORTRAN ALT. I/O SYSTEM    $5$3AL00742
+       LDI     SVIND                                                 (2)3AL00810
+SV2    AXT     **,2                                                  (2)3AL00811
+       LXA     LNKG,4                                                (2)3AL00813
+       TRA     1,4                                                   (2)3AL00815
+*              ** MULTIPURPOSE SELECT ROUTINE                           3AL00820
+ SL10  PAC     0,2                 -L(UCB) TO IR2                       3AL00830
+       TMI     SL13                CHECK SEL (+) OR (-)                 3AL00840
+       CAL     1,2                   (+)                                3AL00850
+       STA*    .RCHX               FORM RCHX                            3AL00860
+       ZET     NIFLG               IS THIS 7909                         3AL00870
+       TRA     SL12                  YES                                3AL00880
+       BES     A7909*2-2                                                3AL00890
+       CAL     0,2                 FORM UNIT ADDRESS                    3AL00900
+       ARS     18                                                       3AL00910
+       NZT     BIFLG               CHECK MODE.                          3AL00911
+       STZ     SYSJOB+2            BCD. RESET MODSW.                    3AL00912
+       ZET     BIFLG               CHECK MODE                           3AL00920
+       ORA     BINBIT                BINARY                             3AL00930
+       NZT     .LXMOD              IF .LXMOD ZERO, ONE MODE READ    (10)3AL00931
+       TRA     SL10.1                                               (10)3AL00932
+       LDI*    .URRX               CONTAINS RETRY COUNT (INIT. 0)   (10)3AL00933
+       RFT     000001              INVERT MODE OF READ              (10)3AL00934
+       ERA     BINBIT              AT EVERY ODD-NUMBERED ATTEMPT,   (10)3AL00935
+       STA     .LXMOD              AND SAVE TAPE ADDRESS USED       (10)3AL00936
+SL10.1 ZET     WRFLG               CHECK OPERATION                  (10)3AL00940
+       TRA     SL11                  WRITE                              3AL00950
+       STA     *+2                   READ                               3AL00960
+       ZET*    SYSJOB+1              SKIP SELECT IF DCS.                3AL00961
+       RDS     **                  READ SELECT                          3AL00970
+       TRA     SL12                                                     3AL00980
+SL11   STA     *+2                   WRITE SELECT                       3AL00990
+       ZET*    SYSJOB+1              SKIP SELCT IF DCS.                 3AL00991
+       WRS     **                  WRITE SELECT                         3AL01000
+ SL12  XEC*    .RCHX                                                    3AL01010
+       TRA     1,4                 BACK TO IOEX                         3AL01020
+.LXMOD PZE     **                                                   (10)3AL01025
+*              IF .LXMOD IS NON-ZERO ON ENTRY TO .LXSL, THE         (10)3AL01026
+*              SELECT(+) ROUTINE WILL SWITCH MODES EVERY OTHER TIME (10)3AL01027
+*              ON A READ ERROR.  AFTER THE SELECT, THE ADDRESS      (10)3AL01028
+*              OF .LXMOD WILL CONTAIN THE LAST TAPE ADDRESS USED.   (10)3AL01029
+*              .LXMOD MUST BE RESET TO ZERO BY THE USER IF MODE     (10)3AL0102A
+*              SWITCHING IS NO LONGER WANTED.                       (10)3AL0102B
+ SL13  STZ     1,2                   (-)                                3AL01030
+       STI     .LXIND              SAVE INDICATORS                      3AL01040
+       TRA     1,4                 BACK TO IOEX                         3AL01050
+*              ** TRANSFER POINTS                                       3AL01060
+ SL20  TRA     SL90                                                     3AL01070
+ SL30  TRA     SL90                                                     3AL01080
+ SL40  TRA     SL90                                                     3AL01090
+       EJECT                                                            3AL01100
+*              ** 7909 PROCESSING PACKAGE **                            3AL01110
+       USE     A                                                        3AL01120
+       ORG     SL20                                                     3AL01130
+       IFT     A7909=1                                                  3AL01140
+       TRA     SL21                                                     3AL01150
+       USE                                                              3AL01160
+SL21   STL     NIFLG               7909                                 3AL01170
+       CAL     SMSCMD                                                   3AL01180
+       ARS     6                   POSITION AC                      (14)3AL01185
+       LFT     000040              CHECK INTERFACE                      3AL01190
+       ORA     LOCONE                INTERFACE 2                        3AL01200
+       NZT     BIFLG               CHECK MODE                           3AL01210
+       ORA     BINBIT                BCD                                3AL01220
+       LFT     000100              COMPONENT TYPE                       3AL01230
+       TRA     SL40                  DISK                               3AL01240
+       TRA     SL30                  HYPERTAPE                          3AL01250
+       BES     A7909*10-10                                          (14)3AL01260
+       EJECT                                                            3AL01270
+*              ** HYPERTAPE PROCESSING PACKAGE                          3AL01280
+       USE     A                                                        3AL01290
+       ORG     SL30                                                     3AL01300
+       IFT     HYPER=1                                                  3AL01310
+       TRA     SL31                                                     3AL01320
+       USE                                                              3AL01330
+ SL31  SXA     HTSD,4              I/O COMMAND LIST                     3AL01340
+       SLW     HTSMS               SET SMS COMMAND                      3AL01350
+       RIS     HYPRES              PUT UNIT NUMBER INTO                 3AL01360
+       CAL     HYPSEL               HYPER SELECT WORD                   3AL01370
+       ANA     HYPRES                                                   3AL01380
+       OAI                                                              3AL01390
+       STI     HYPSEL                                                   3AL01400
+       AXT     0,4                                                      3AL01410
+       NZT     WRFLG               CHECK OPERATION                      3AL01420
+       TXI     *+1,4,-1              READ                               3AL01430
+       CLA     HTSA,4                                                   3AL01440
+       TRA     SL04                GO TO ACTION CALL                    3AL01450
+       BES     HYPER*12-12                                              3AL01460
+       EJECT                                                            3AL01470
+*              ** DISK PROCESSING PACKAGE                               3AL01480
+       USE     A                                                        3AL01490
+       ORG     SL40                                                     3AL01500
+       IFT     DISK=1                                                   3AL01510
+       TRA     SL41                                                     3AL01520
+       USE                                                              3AL01530
+ SL41  ZET     PFLG                IS THIS PERIPHERAL                   3AL01540
+       TRA     SL92                  YES - ERROR                        3AL01550
+       SLW     DISSMS                                                   3AL01560
+       SXA     DISD,4              I/O COMMAND LIST                     3AL01570
+       CAL     .LXDIS                                                   3AL01580
+       PAI                                                              3AL01590
+       PDX     0,4                                                      3AL01600
+       LFT     400000              IS SEEK REQUESTED                    3AL01610
+       TRA     SL42                  YES                                3AL01620
+       PXA     0,4                                                      3AL01630
+       LRS     35                                                       3AL01640
+       DVP     LOC4TY              IS SEEK REQUIRED                     3AL01650
+       TNZ     SL43                  NO                                 3AL01660
+ SL42  PXA     0,4                 PERFORM SEEK                         3AL01670
+       STA     3,2                                                      3AL01680
+       CLS     2,2                                                      3AL01690
+       STO     2,2                                                      3AL01700
+       BES     DISK*17-17                                               3AL01710
+       TSX     .ACTV,4                                                  3AL01720
+       PZE     SL03                                                     3AL01730
+ SL43  CAL     .LXDIS              FORM DISK ORDER                      3AL01740
+       TSX     .DECVD,4            CONVERT DECR TO BCD                  3AL01750
+       LAC     SL03,4              -L(UCW) TO IR4                       3AL01760
+       TSX     .FDAMT,2                                                 3AL01770
+DISSMS PZE     **                    HA2                                3AL01780
+       PZE     DISORD                L(ORDER TO BE COMPOSED)            3AL01790
+       LAC     SL03,2                                                   3AL01800
+       AXT     0,4                                                      3AL01810
+       NZT     WRFLG               CHECK OPERATION                      3AL01820
+       TXI     *+1,4,-1              READ                               3AL01830
+       CLA     DISA,4                                                   3AL01840
+       STZ     .LXDIS                                                   3AL01850
+       TRA     SL04                GO TO ACTION CALL                    3AL01860
+       BES     DISK*15-15                                               3AL01870
+       EJECT                                                            3AL01880
+*              ** ERROR ROUTINES                                        3AL01890
+ SL90  TSX     .MWR,4                                                   3AL01900
+       PZE     1                                                        3AL01910
+       PZE     SL91,,8                                                  3AL01920
+       TRA     .LXSTP                                                   3AL01930
+ SL91  BCI     8, .LXSEL FOR UNIT REQUESTED IS NOT IN LIBRARY.          3AL01940
+       BES     -12*HYPER*DISK                                           3AL01950
+ SL92  TSX     .MWR,4                                                   3AL01960
+       PZE     1                                                        3AL01970
+       PZE     SL93,,9                                                  3AL01980
+       TRA     .LXSTP                                                   3AL01990
+       BES     DISK*4-4                                                 3AL02000
+ SL93  BCI     9, SYSOU, SYSIN, OR SYSPP CANNOT BE ASSIGNED TO DISK     3AL02010
+       BES     DISK*9-9                                                 3AL02020
+*              ** CONSTANTS MASKS AND STORAGES                          3AL02030
+*              BIFLG, .LXIND, AND WRFLG MUST BE CONSECUTIVE          $5$3AL02031
+BIFLG  PZE                         EQ 0 BCD   NEQ 0 BINARY              3AL02040
+.LXIND PZE                         INDICATOR STORAGE                    3AL02050
+WRFLG  PZE                         EQ 0 READ  NEQ 0 WRITE               3AL02060
+*              BIFLG, .LXIND, AND WRFLG MUST BE CONSECUTIVE AND      $5$3AL02061
+*                IN THIS ORDER - REQUIRED BY FORTRAN ALT. I/O SYSTEM $5$3AL02062
+BINBIT OCT     000000000020        BINARY 729 - BCD HYPER MODE          3AL02070
+NIFLG  PZE                         EQ 0 7607  NEQ 0 7909                3AL02080
+LOCONE OCT     000000000001        ONE                                  3AL02090
+SMSCMD OCT     600                 SMS SETTING 00 HA2               (14)3AL02100
+       BES     A7909*3-3                                                3AL02110
+HTSMS  PZE                         HYPER SMS COMMAND                    3AL02120
+HYPRES OCT     777760777777        UNIT RESET MASK                      3AL02130
+HYPSEL OCT     120600120112        HYPER SELECT COMMAND                 3AL02140
+       BES     HYPER*3-3                                                3AL02150
+.LXDIS PZE                                                              3AL02160
+.LXFLG PZE                         DISK FLAG WORD                       3AL02170
+LOC4TY OCT     000000000050        FORTY                                3AL02180
+DISORD DVTA    ,,,                 DISK ORDER                           3AL02190
+PFLG   PZE                                                              3AL02200
+       BES     DISK*4-4                                                 3AL02210
+*              ** SELECT COMMANDS                                       3AL02220
+.LTCH  CPYD    0,,0                TRAP SEQUENCE                        3AL02230
+       TCH     SYSTWT                                                   3AL02240
+       BES     A7909-1                                                  3AL02250
+HTSA   FOR     HTSB,,SL10          HYPER                                3AL02260
+       PZE     HTSC,,SL10                                               3AL02270
+HTSB   SMS*    HTSMS                                                    3AL02280
+       CTLW    HYPSEL                                                   3AL02290
+       BES     HYPER*4-4                                                3AL02300
+       TCH     HTSD                                                     3AL02310
+HTSC   SMS*    HTSMS                                                    3AL02320
+       BES     HYPER*2-2                                                3AL02330
+       CTLR    HYPSEL                                                   3AL02340
+HTSD   TCH     **                                                       3AL02350
+       BES     HYPER*2-2                                                3AL02360
+DISA   FOR     DISB,,SL10     DISK                                      3AL02370
+       PZE     DISC,,SL10                                               3AL02380
+       BES     DISK*2-2                                                 3AL02390
+DISB   SMS*    DISSMS                                                   3AL02400
+       CTLW    DISORD                                                   3AL02410
+       TCH     DISD                                                     3AL02420
+       BES     DISK*3-3                                                 3AL02430
+DISC   SMS*    DISSMS                                                   3AL02440
+       CTLR    DISORD                                                   3AL02450
+       BES     DISK*2-2                                                 3AL02460
+       CPYP    .LXFLG,,1                                                3AL02470
+DISD   TCH     **                                                       3AL02480
+       BES     DISK*2-2                                                 3AL02490
+TNSA   PZE     TNSB,,SL10          729                                  3AL02500
+TNSB   TCH     **                                                       3AL02510
+SVIND  PZE     **                                                    (2)3AL02511
+LNKG   LDIR                                                          (2)3AL02513
+       END                                                              3AL02520

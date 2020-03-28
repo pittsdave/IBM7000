@@ -1,0 +1,8 @@
+$*     7090/7094 IBLIB FORTRAN SYSTEM LIBRARY - EXIT                    3F100000
+$IBMAP XIT     8                                                        3F100010
+       TTL     EXIT/TRANSFER CONTROL TO IBJOB MONITOR                   3F100020
+       ENTRY   EXIT                                                     3F100030
+       ENTRY   .EXIT.                                                   3F100040
+.EXIT. NULL                                                             3F100050
+EXIT   TRA     .LXRTN                                                   3F100060
+       END                                                              3F100070

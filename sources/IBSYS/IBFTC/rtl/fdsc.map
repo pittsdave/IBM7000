@@ -1,0 +1,277 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F9D0000
+$IBMAP FDSC    150                                                      3F9D0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F9D0015
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94.            3F9D0030
+       REM       (OR TO ANY VALUE NOT EQUAL TO 90)                      3F9D0040
+M9094  SET     90                                                       3F9D0050
+       PCC     ON                                                       3F9D0060
+       IFF     M9094=90                                                 3F9D0070
+       GOTO    BEG94                                                    3F9D0080
+       PCC     OFF                                                      3F9D0090
+       ENTRY   DSIN                                                     3F9D0100
+       ENTRY   DCOS                                                     3F9D0110
+       SPACE   3                                                        3F9D0120
+       REM     DOUBLE PRECISION SINE - COSINE SUBROUTINE                3F9D0130
+       SPACE   3                                                        3F9D0140
+*              DOUBLE PRECISION ARITHMETIC MACRO DEFINITION             3F9D0150
+       SPACE                                                            3F9D0160
+ DPOP  MACRO   SUBR,A,TAG                                               3F9D0170
+       TSX     SUBR,4                                                   3F9D0180
+ DTAG  SET     0                                                        3F9D0190
+       IFT     TAG=1                                                    3F9D0200
+ DTAG  SET     1                                                        3F9D0210
+       IFT     TAG=2                                                    3F9D0220
+ DTAG  SET     2                                                        3F9D0230
+       PZE     A,DTAG                                                   3F9D0240
+       PZE     A+1,DTAG                                                 3F9D0250
+       ENDM    DPOP                                                     3F9D0260
+       SPACE   3                                                        3F9D0270
+ DCOS  STL     TEST          TEST DISTINGUISHES DCOS FROM DSIN ENTRY    3F9D0280
+ DSIN  SXA     SYSLOC,4                                                 3F9D0290
+       SXA     LINK,4                                                   3F9D0300
+       SXA     SXR1,1                                                   3F9D0310
+       SXA     SXR2,2                                                   3F9D0320
+       CAL     3,4                                                      3F9D0330
+       ADM     K1A                                                      3F9D0340
+       STO     ARG+1                                                    3F9D0350
+       LDQ*    ARG+1                                                    3F9D0360
+       CLA*    3,4           ARGUMENT IN AC,MQ                          3F9D0370
+       NZT     TEST                                                     3F9D0380
+       TRA     A                                                        3F9D0390
+       SSM                   IF DCOS ENTRY, SUBTRACT ARG FROM PIOV2     3F9D0400
+       LRS     0               AND COMPUTE SINE FOR THIS                3F9D0410
+       DPOP    DFAD,PIOV2                                               3F9D0420
+   A   DST     ARG           SAVE SIGNED ARGUMENT                       3F9D0430
+       SSP                   FORCE POSITIVE                             3F9D0440
+       LRS     0                                                        3F9D0450
+       DPOP    DFDP,PIOV4    DIVIDE AC, MQ BY PI/4                      3F9D0460
+       DST     MDARG         SAVE QUOTIENT                              3F9D0470
+       RQL     9             LINE UP 54 BITS OF MANT, LOGICAL           3F9D0480
+       LGR     9             CHAR IN AC DECR, MANT IN REST OF AC,MQ     3F9D0490
+       PDC     ,2                                                       3F9D0500
+       TXL     SMALL,2,0                                                3F9D0510
+       TXH     SMALL,2,-103  IF QUOTIENT SMALLER THAN 2**(-26), SKIP    3F9D0520
+       AXT     0,1                                                      3F9D0530
+       TXH     B,2,-129      IF QUOTIENT SMALLER THAN 1, SKIP           3F9D0540
+       TXL     ERROR,2,-181  IF QUOTIENT BIGGER THAN 2**52, ERROR       3F9D0550
+       ANA     MASK1         REMOVE CHARACTERISTIC                      3F9D0560
+       LGL     -128,2          BRING QUOTIENT TO B17                    3F9D0570
+       ANA     MASK2             RETAIN ONLY 3 LOWER INTEGER BITS       3F9D0580
+       PDX     ,1            LAST 3 INTEGER BITS TO XR1                 3F9D0590
+       ANA     MASK1           THIS TELLS THE OCTANT ARG BELONGED TO    3F9D0600
+       LGL     9             ISOLATE FRACTION PART                      3F9D0610
+       ORA     CHAR            OF QUOTIENT AND FLOAT IT                 3F9D0620
+       STO     MDARG                                                    3F9D0630
+  K1A  OCT     -013000000001   (XCL AS OPERATION, K1A AS CONSTANT)      3F9D0640
+       ARS     9                                                        3F9D0650
+       ORA     CHAR+1                                                   3F9D0660
+       STO     MDARG+1         SAVE LOW PART UNNORMALIZED               3F9D0670
+       SXD     *+1,1         DOUBLE THE INDEX                           3F9D0680
+       TXI     *+1,1,**                                                 3F9D0690
+   B   CLA     MDARG         HIGH PART MDARG, POSSIBLY UNNORMALIZED     3F9D0700
+       SXA     SIGN,1        SAVE OCTANT FOR SIGN CONTROL               3F9D0710
+       TXL     *+2,1,6         AND REDUCE TO UPPER PLANE CASE           3F9D0720
+       TXI     *+1,1,-8                                                 3F9D0730
+       TXL     READY,1,0       OCTANT NO    RED.ARG   XR1               3F9D0740
+       TXL     MOD,1,2           1(0)          F       0    SIN FORM    3F9D0750
+       TXI     *+1,1,-2          2(2)         1-F      2    COS FORM    3F9D0760
+       TXL     READY,1,2         3(4)          F       2    COS FORM    3F9D0770
+       TXI     *+1,1,-4          4(6)         1-F      0    SIN FORM    3F9D0780
+       SPACE                                                            3F9D0790
+  MOD  CHS                   FOR 2ND AND 4TH OCTANT,                    3F9D0800
+       UFA     HALF            TAKE COMPLEMENT OF FRACTION PART         3F9D0810
+       UFS     MDARG+1           CARRY OUT 1-X IN AN EXACT FASHION      3F9D0820
+       STQ     MDARG+1             NOTING X HAD CHARACTERISTIC O20      3F9D0830
+       UFA     HALF                                                     3F9D0840
+ READY FAD     MDARG+1                                                  3F9D0850
+       DST     MDARG         NORMALIZED REDUCED ARGUMENT IS READY       3F9D0860
+       SPACE                                                            3F9D0870
+       SXD     EITHR,1       XR1=0 FOR SINE FORMULA, =2 FOR COSINE      3F9D0880
+       DPOP    DFMP,MDARG                                               3F9D0890
+       DST     SQ                                                       3F9D0900
+       AXT     22,2          COMPUTE SINE OR COSINE OF REDUCED          3F9D0910
+ EITHR TXI     *+1,2,**        ARG, USING POLYNOMIAL OF DEGREE 6        3F9D0920
+       DLD     COEF-2,2          IN SQ                                  3F9D0930
+ LOOP  DPOP    DFMP,SQ                                                  3F9D0940
+       DPOP    DFAD,COEF+2,2                                            3F9D0950
+       TIX     LOOP,2,4                                                 3F9D0960
+       TXH     D,2,2         IF COSINE FORMULA, SKIP                    3F9D0970
+       DPOP    DFMP,MDARG                                               3F9D0980
+   D   STQ     ARG+1         ADJUST SIGN ACCORDING TO ORIG ARG          3F9D0990
+       LDQ     ARG                                                      3F9D1000
+       LLS     0                                                        3F9D1010
+       LDQ     ARG+1                                                    3F9D1020
+ SIGN  AXT     **,2                                                     3F9D1030
+       TXL     *+2,2,6       IF MAGNITUDE WAS IN LOWER                  3F9D1040
+       CHS                     PLANE, CHANGE SIGN                       3F9D1050
+       LRS     0                                                        3F9D1060
+  RET  LXA     LINK,4                                                   3F9D1070
+ SXR1  AXT     **,1                                                     3F9D1080
+ SXR2  AXT     **,2                                                     3F9D1090
+       STZ     TEST                                                     3F9D1100
+       TRA     1,4                                                      3F9D1110
+       SPACE                                                            3F9D1120
+ SMALL DLD     ARG                                                      3F9D1130
+       TRA     RET                                                      3F9D1140
+       SPACE                                                            3F9D1150
+ ERROR CALL    .FXEM.(EDSC)                                             3F9D1160
+       LRS     72                                                       3F9D1170
+       TRA     RET                                                      3F9D1180
+       SPACE                                                            3F9D1190
+ CHAR  OCT     200000000000,145000000000                                3F9D1200
+ MASK1 OCT     777777          THIS MASK IS USED ALSO                   3F9D1210
+ MASK2 OCT     7777777           FOR NORMALING A NUMBER                 3F9D1220
+  ARG  BSS     2                                                        3F9D1230
+ MDARG BSS     2                                                        3F9D1240
+  SQ   BSS     1                                                        3F9D1250
+ TEST  PZE                         FLAG, ALSO LOW PART OF SQ            3F9D1260
+ PIOV2 OCT     201622077325        =DEC MOST SIGNIFICANT PI/2           3F9D1270
+       OCT     146042055061        =DEC LEAST SIGNIFICANT PI/2          3F9D1280
+ PIOV4 OCT     200622077325,145042055060                                3F9D1290
+       OCT     137763726026,104102620745    C6    1136682051698955E-9   3F9D1300
+       OCT     133743747016,100265505502    S6   .6877360570940358E-11  3F9D1310
+       OCT     -147646623713,-114740433061  C5  -.2460955082796532E-7   3F9D1320
+       OCT     -143743000706,-110575743132  S5  -.1757150074693567E-8   3F9D1330
+       OCT     156741751757,123324334421    C4   .3590859234205475E-5   3F9D1340
+       OCT     153520360277,120320455223    S4   .3133616225433375E-6   3F9D1350
+       OCT     -165525647437,-132344353644  C3  -.3259918865158837E-3   3F9D1360
+       OCT     -162462645463,-127427133062  S3  -.3657620415891387E-4   3F9D1370
+       OCT     173403603702,140015421766    C2   .1585434424375085E-1   3F9D1380
+       OCT     170506327431,135672607757    S2   .2490394570188844E-2   3F9D1390
+       OCT     -177473647462,-144337105501  C1  -.3084251375340389E+0   3F9D1400
+       OCT     -175512567471,-142422676173  S1  -.8074551218828053E-1   3F9D1410
+  ONE  OCT     201400000000,146000000000    C0   .1000000000000000E+1   3F9D1420
+ COEF  OCT     200622077325,145042055063    S0   .7853981633974483E+0   3F9D1430
+ HALF  OCT     200400000000                                             3F9D1440
+ EDSC  DEC     23                                                       3F9D1450
+       PZE     E23MES,,11                                               3F9D1460
+       PZE     E23OMS,,3                                                3F9D1470
+E23MES BCI     7,0DSIN(X) OR DCOS(X), /X/ GRT THAN OR EQ TO             3F9D1480
+       BCI     4, PI*2**50 NOT ALLOWED                                  3F9D1485
+E23OMS BCI     3,0SET RESULT = 0                                        3F9D1490
+       SPACE                                                            3F9D1500
+  LINK LDIR                                                             3F9D1510
+BEG94  NULL                                                             3F9D1520
+       PCC     ON                                                       3F9D1530
+       IFT     M9094=90                                                 3F9D1540
+       GOTO    END94                                                    3F9D1550
+       PCC     OFF                                                      3F9D1560
+       EJECT                                                            3F9D1570
+       ENTRY   DSIN                                                     3F9D1580
+       ENTRY   DCOS                                                     3F9D1590
+       SPACE   3                                                        3F9D1600
+       REM     DOUBLE PRECISION SINE - COSINE SUBROUTINE                3F9D1610
+       SPACE   3                                                        3F9D1620
+ DCOS  DLD*    3,4           ENTER HERE FOR COSINE                      3F9D1630
+       SSM                                                              3F9D1640
+       STI     SVIND                                                    3F9D1650
+       DFAD    PIOV2                                                    3F9D1660
+       TRA     *+3                                                      3F9D1670
+ DSIN  DLD*    3,4           ENTER HERE FOR SINE                        3F9D1680
+       STI     SVIND                                                    3F9D1690
+       DST     ARG                                                      3F9D1700
+       SXA     SYSLOC,4                                                 3F9D1710
+       SXA     LINK,4                                                   3F9D1720
+       SXA     SXR2,2                                                   3F9D1730
+       SSP                                                              3F9D1740
+       DFDP    COEF                                                     3F9D1750
+       DST     MDARG                                                    3F9D1760
+       RQL     9             LINE UP 54 BITS OF MANT, LOGICAL           3F9D1770
+       LGR     9             CHAR IN AC DECR, MANT IN REST OF AC MQ     3F9D1780
+       PDC     ,4                                                       3F9D1790
+       TXL     SMALL,4,0                                                3F9D1800
+       TXH     SMALL,4,-103  IF QUOTIENT SMALLER THAN 2**(-26), SKIP    3F9D1810
+       AXT     0,2                                                      3F9D1820
+       TXH     B,4,-129      IF QUOTIENT SMALLER THAN 1, SKIP           3F9D1830
+       TXL     ERROR,4,-181  IF QUOTIENT BIGGER THAN 2**52, ERROR       3F9D1840
+       ANA     MASK1         REMOVE CHARACTERISTIC                      3F9D1850
+       LGL     -128,4          BRING QUOTIENT TO B17                    3F9D1860
+       ANA     MASK2             RETAIN ONLY 3 LOWER INTEGER BITS       3F9D1870
+       PDX     ,2            LAST 3 INTEGER BITS TO XR2                 3F9D1880
+       ANA     MASK1           THIS TELLS THE OCTANT ARG BELONGED       3F9D1890
+       LGL     9             ISOLATE FRACTION PART                      3F9D1900
+       ORA     CHAR            OF QUOTIENT AND                          3F9D1910
+       RQL     27                FLOAT AND NORMALIZE IT                 3F9D1920
+       DFAD    MASK1                                                    3F9D1930
+       SXD     *+1,2         DOUBLE THE INDEX                           3F9D1940
+       TXI     *+2,2,**                                                 3F9D1950
+   B   DLD     MDARG                                                    3F9D1960
+       SXA     SIGN,2                                                   3F9D1970
+       TXL     *+2,2,6       TAKES CARE OF THE UPPER PLANE.             3F9D1980
+       TXI     *+1,2,-8      FOR THE LOWER HALF PLANE.                  3F9D1990
+       TXL     READY,2,0                                                3F9D2000
+       TXL     MOD,2,2                                                  3F9D2010
+       TXI     *+1,2,-2      FOR FIRST AND THIRD OCTANTS OUR MOD.ARG IS 3F9D2020
+       TXL     READY,2,2         THE FRACTIONAL QUOTIENT.               3F9D2030
+       TXI     *+1,2,-4      NOW XR2 IS REDUCED TO 0 OR 2               3F9D2040
+  MOD  CHS                   FOR SECOND AND FOURTH OCTANTS OUR MOD.ARG  3F9D2050
+       DFAD    HALF              IS (1-FRACTION QUOTIENT).   ADD 1      3F9D2060
+       DFAD    HALF              IN 2 STEPS                             3F9D2070
+ READY DST     MDARG                                                    3F9D2080
+       SPACE                                                            3F9D2090
+       SXD     EITHR,2       XR2=0 USE SINE FORMULA, =2 COSINE FORMULA. 3F9D2100
+       DFMP    MDARG                                                    3F9D2110
+       DST     SQ                                                       3F9D2120
+       AXT     22,4                                                     3F9D2130
+ EITHR TXI     *+1,4,**      **=0 FOR SINE FORMULA, =2 FOR COSINE FORM. 3F9D2140
+       DLD     COEF-2,4                                                 3F9D2150
+ LOOP  DFMP    SQ                                                       3F9D2160
+       DFAD    COEF+2,4                                                 3F9D2170
+       TIX     LOOP,4,4      WHEN OUT OF LOOP XR4 EITHER 2 OR 4         3F9D2180
+       TXH     *+2,4,2                                                  3F9D2190
+       DFMP    MDARG         COMPLETE SINE FORMULA.                     3F9D2200
+       STQ     ARG+1                                                    3F9D2210
+       LDQ     ARG           ADJUSTMENT OF SIGN STARTS HERE.            3F9D2220
+       LLS     0                                                        3F9D2230
+       LDQ     ARG+1                                                    3F9D2240
+ SIGN  AXT     **,2          AT THIS POINT XR2 = 0 OR 2,4,6,8,...OR 14  3F9D2250
+       TXL     *+2,2,6                                                  3F9D2260
+       CHS                   CHANGE SIGN FOR THE LOWER HALF PLANE.      3F9D2270
+       LRS     0                                                        3F9D2280
+  RET  LXA     LINK,4                                                   3F9D2290
+ SXR2  AXT     **,2                                                     3F9D2300
+       LDI     SVIND                                                    3F9D2310
+       TRA     1,4                                                      3F9D2320
+       SPACE                                                            3F9D2330
+ SMALL DLD     ARG           FOR ARG LESS THAN PI*2**(-28)              3F9D2340
+       TRA     RET             GIVE ARG AS VALUE OF SINE                3F9D2350
+       SPACE                                                            3F9D2360
+ ERROR CALL    .FXEM.(EDSC)                                             3F9D2370
+       LRS     72                                                       3F9D2380
+       TRA     RET                                                      3F9D2390
+       SPACE                                                            3F9D2400
+ CHAR  OCT     200000000000                                             3F9D2410
+       EVEN                                                             3F9D2420
+ MASK1 OCT     777777          THIS MASK IS USED ALSO                   3F9D2430
+ MASK2 OCT     7777777           FOR NORMALING A NUMBER                 3F9D2440
+  ARG  BSS     2                                                        3F9D2450
+ MDARG BSS     2                                                        3F9D2460
+  SQ   BSS     2                                                        3F9D2470
+ PIOV2 OCT     201622077325        =DEC MOST SIGNIFICANT PI/2           3F9D2480
+       OCT     146042055061        =DEC LEAST SIGNIFICANT PI/2          3F9D2490
+       OCT     137763726026,104102620745    C6    1136682051698955E-9   3F9D2500
+       OCT     133743747016,100265505502    S6   .6877360570940358E-11  3F9D2510
+       OCT     -147646623713,-114740433061  C5  -.2460955082796532E-7   3F9D2520
+       OCT     -143743000706,-110575743132  S5  -.1757150074693567E-8   3F9D2530
+       OCT     156741751757,123324334421    C4   .3590859234205475E-5   3F9D2540
+       OCT     153520360277,120320455223    S4   .3133616225433375E-6   3F9D2550
+       OCT     -165525647437,-132344353644  C3  -.3259918865158837E-3   3F9D2560
+       OCT     -162462645463,-127427133062  S3  -.3657620415891387E-4   3F9D2570
+       OCT     173403603702,140015421766    C2   .1585434424375085E-1   3F9D2580
+       OCT     170506327431,135672607757    S2   .2490394570188844E-2   3F9D2590
+       OCT     -177473647462,-144337105501  C1  -.3084251375340389E+0   3F9D2600
+       OCT     -175512567471,-142422676173  S1  -.8074551218828053E-1   3F9D2610
+       OCT     201400000000,146000000000    C0   .1000000000000000E+1   3F9D2620
+ COEF  OCT     200622077325,145042055061    S0   .7853981633974483E+0   3F9D2630
+ HALF  OCT     200400000000,145000000000                                3F9D2640
+ SVIND BSS     1                                                        3F9D2650
+ EDSC  DEC     23                                                       3F9D2660
+       PZE     E23MES,,11                                               3F9D2670
+       PZE     E23OMS,,3                                                3F9D2680
+E23MES BCI     7,0DSIN(X) OR DCOS(X), /X/ GRT THAN OR EQ TO             3F9D2690
+       BCI     4, PI*2**50 NOT ALLOWED                                  3F9D2695
+E23OMS BCI     3,0SET RESULT = 0                                        3F9D2700
+       SPACE                                                            3F9D2710
+  LINK LDIR                                                             3F9D2720
+END94  NULL                                                             3F9D2730
+       END                                                              3F9D2740

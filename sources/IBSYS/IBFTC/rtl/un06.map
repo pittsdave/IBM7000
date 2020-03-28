@@ -1,0 +1,19 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - UN06              3F5UN600
+$IBMAP UN06    6                                                        3F5UN610
+       USE                                                              3F5UN611
+       TTL     UN06 - FILE SPECIFICATIONS FOR LOGICAL UNIT 6         (8)3F5UN620
+       ENTRY   .UN06.                                                   3F5UN630
+       ENTRY   .BUFSZ                                                   3F5UN631
+.UN06. PZE     UNIT06                                                   3F5UN640
+UNIT06 FILE    ,OU,READY,OUTPUT,BLK=115,MULTIREEL,BCD,NOLIST         (8)3F5UN650
+.BUFSZ PZE     BUFSIZ                                                   3F5UN651
+BUFSIZ MAX     MINSIZ,LIMIT                                          (8)3F5UN652
+       USE     A                                                        3F5UN653
+       ORG     .TOUT.                                                   3F5UN654
+       CALL    .FOUT.(.FILL.)                                           3F5UN655
+       USE                                                              3F5UN656
+CHLIMT EQU     133                 LOGICAL RECORD SIZE IN CHARACTERS (8)3F5UN660
+LIMIT5 EQU     CHLIMT+5                                              (8)3F5UN670
+LIMIT  EQU     LIMIT5/6            LOGICAL RECORD SIZE IN WORDS      (8)3F5UN680
+MINSIZ EQU     22                  MINIMUM LOGICAL RECORD SIZE       (8)3F5UN690
+       END                                                           (8)3F5UN691

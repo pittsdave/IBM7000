@@ -1,0 +1,48 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - FEFT              3F7B0000
+$IBMAP FEFT    49                                                       3F7B0010
+       TTL     FEFT/WRITE AN END-OF-FILE MARK ON DESIGNATED UNIT        3F7B0020
+       REM                                                              3F7B0030
+       REM     CALLING SEQUENCE IS CALL .FEFT. (ARG)                    3F7B0040
+       REM     COMPILED FOR SOURCE STATEMENT END FILE N.                3F7B0050
+       REM     ARG IS LOCATION OF PZE UNITXX WHERE XX IS                3F7B0060
+       REM     LOGICAL UNIT NUMBER.                                     3F7B0070
+       REM                                                              3F7B0080
+.FEFT. SAVE    (2)I                                                     3F7B0090
+       CLA*    3,4                   FIRST WORD OF FILE CONTROL BLOCK.  3F7B0100
+       STA     CLS+1                 STORE IN IOCS                      3F7B0110
+       STA     OPN+1                 CALLING SEQUENCES.                 3F7B0120
+       PAC     0,4                   EXAMINE THIRD WORD                 3F7B0130
+       LDI     2,4                   IN FILE CONTROL BLOCK              3F7B0140
+       LFT     200000                FOR MONITOR CONTROL BIT.           3F7B0150
+       TRA     NOWEF                 SYSTEM FILE. DO NOT WRITE EOF MARK.3F7B0160
+       LDI     1,4                   GET SECOND WORD IN FCB.            3F7B0170
+       LFT     003000                IS FILE INPUT.                     3F7B0180
+       TRA     OUTFIL                NO. GO TO CLOSE WITH EOF WRITTEN.  3F7B0190
+       LFT     040000                YES. IS IT CLOSED.                 3F7B0200
+       TSX     CLS,2                 NO. CLOSE IT.                      3F7B0210
+       SIL     001000                SET BITS IN FCB                    3F7B0220
+       STI     1,4                   FOR OUTPUT.                        3F7B0230
+       TRA     *+2                                                      3F7B0240
+OUTFIL LNT     040000                IS FILE CLOSED.                    3F7B0250
+       TSX     OPN,2                 YES. OPEN FILE.                    3F7B0260
+CLOSE  TSX     CLS,2                 CLOSE FILE WITH EOF WRITTEN.       3F7B0270
+       RIL     003000                                                   3F7B0280
+       STI     1,4                                                      3F7B0290
+       NOP                                                              3F7B0300
+       NOP                                                              3F7B0310
+       RETURN  .FEFT.                RETURN TO OBJECT PROGRAM.          3F7B0320
+CLS    TSX     .CLOSE,4                                                 3F7B0330
+       MZE     **                                                       3F7B0340
+       LAC     CLS+1,4                                                  3F7B0350
+       LDI     1,4                                                      3F7B0360
+       TRA     1,2                                                      3F7B0370
+NOWEF  CALL    .FOUT.(ARG)           EOF WRITE REQUEST IGNORED          3F7B0380
+       REM                           FOR SYSTEM FILE.                   3F7B0390
+       RETURN  .FEFT.                RETURN TO OBJECT PROGRAM.          3F7B0400
+ARG    PZE     EFMES,,14                                                3F7B0410
+OPN    TSX     .OPEN,4                                                  3F7B0420
+       MON     **                                                       3F7B0430
+       TRA     1,2                                                      3F7B0440
+EFMES  BCI     9,0REQUEST TO WRITE EOF ON UNIT ASSIGNED AS SYSIN1,SYSOU 3F7B0450
+       BCI     5,1, OR SYSPP1 HAS BEEN IGNORED.                         3F7B0460
+       END                                                              3F7B0470

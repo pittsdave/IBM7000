@@ -1,0 +1,33 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - FSLDI             3F7E0000
+$IBMAP FSLDI   33                                                       3F7E0010
+       TTL     FSLDI/SHORT LIST INPUT (FOR DECIMAL ARRAYS)              3F7E0020
+       LBL     SLDI,BEGIN     FSLDI                                  (7)3F7E0030
+       REM                                                              3F7E0040
+       REM     CALLING SEQUENCES ARE                                    3F7E0050
+       REM     CALL .FSLI. (A,M) FOR SINGLE-PRECISION BCD ARRAYS,       3F7E0060
+       REM     CALL .FSDI. (A,M) FOR DOUBLE-PRECISION BCD ARRAYS.       3F7E0070
+       REM     A IS LOCATION OF THE ARRAY AND M IS THE LOCATION OF      3F7E0080
+       REM     THE NUMBER OF ELEMENTS IN THE ARRAY.                     3F7E0090
+       REM                                                              3F7E0100
+       ENTRY   .FSLI.                                                   3F7E0110
+       ENTRY   .FSDI.                                                   3F7E0120
+SAVE   SAVEN   (2)I                                                     3F7E0130
+       SXA     LNKG,4                                                   3F7E0140
+       TRA     1,1                                                      3F7E0150
+SXIT   AXT     **,1                                                     3F7E0160
+       RETURN  SAVE                                                     3F7E0170
+.FSLI. SXA     SXIT,1                ENTRY POINT FOR SINGLE-            3F7E0180
+       TSX     SAVE,1                PRECISION BCD ARRAYS.              3F7E0190
+       LXA     FCNV,1                INITIALIZE FOR LIST                3F7E0200
+       SXA     .SLI1.,1              PROCESSING.                        3F7E0210
+       TSX     .SLI.,4               GO TO SET UP LIST PROCESSING.      3F7E0220
+       TRA     SXIT                                                     3F7E0230
+.FSDI. SXA     SXIT,1                ENTRY POINT FOR DOUBLE-            3F7E0240
+       TSX     SAVE,1                PRECISION BCD ARRAYS.              3F7E0250
+       LXA     FCNV,1                INITIALIZE FOR LIST                3F7E0260
+       SXA     .SDI1.,1              PROCESSING.                        3F7E0270
+       TSX     .SDI.,4               GO TO SET UP LIST PROCESSING.      3F7E0280
+       TRA     SXIT                                                     3F7E0290
+FCNV   PZE     .FCNV.                                                   3F7E0300
+LNKG   LDIR                                                             3F7E0310
+       END                                                              3F7E0320

@@ -1,0 +1,144 @@
+$*             LIBRARY TANGENT-COTANGENT SUBROUTINE                     3F9J0000
+$IBMAP FTNC    150                                                      3F9J0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F9J0015
+       ENTRY   TAN                                                      3F9J0020
+       ENTRY   COTAN                                                    3F9J0030
+       ENTRY   CRIT                                                     3F9J0040
+       SPACE   3                                                        3F9J0050
+*              TANGENT-COTANGENT SUBROUTINE                             3F9J0060
+*                  .FXEM. ERROR IS GIVEN IN ANY OF FOLLOWING 3 CASES    3F9J0070
+*                    1. MAGNITUDE OF ARG IS GREATER THAN 2**20          3F9J0080
+*                    2. MAGNITUDE OF ARG IS LESS THAN 2**(-126) AND     3F9J0090
+*                         COTAN IS ASKED                                3F9J0100
+*                    3. ARGUMENT IS SO CLOSE TO A SINGULARITY OF THE    3F9J0110
+*                         FUNCTION THAT EVEN THE INPUT ROUNDING ERROR   3F9J0120
+*                         CAUSES RELATIVE ERROR OF 1/3                  3F9J0130
+*                 NO .FXEM. ERROR IS GIVEN IN THE NEIGHBORHOOD OF ZEROS 3F9J0140
+*                    OF THE FUNCTION                                    3F9J0150
+       SPACE   3                                                        3F9J0160
+ COTAN STL     FLAG          COTANGENT ENTRY                            3F9J0170
+  TAN  SXA     SYSLOC,4                                                 3F9J0180
+       SXA     LINK,4                                                   3F9J0190
+       CLA*    3,4           PICK UP ARG,T                              3F9J0200
+       STO     ARG                                                      3F9J0210
+       SSP                   ASSUME POSITIVE DURING REDUCTION           3F9J0220
+       LDQ     MASK1         CLEAR HIGH PART MQ                         3F9J0230
+       LRS     9                                                        3F9J0240
+       PDX     ,4            CHARACTERISTIC TO XR1                      3F9J0250
+       TXH     ERROR1,4,148  IF MAGNITUDE GREATER THAN 2**20, ERROR     3F9J0260
+       SPACE                                                            3F9J0270
+       SXA     SXR2,2                                                   3F9J0280
+       LLS     19                                                       3F9J0290
+       LRS     151,4                                                    3F9J0300
+       VDP     PIOV4,,21     X=(PI/4)Q+R   R IN AC B0, Q IN MQ B35      3F9J0310
+       STO     BUFF          SAVE REMAINDER                             3F9J0320
+       XCA                                                              3F9J0330
+       ANA     MASK1         LEAVE LAST 2 BITS OF QUOTIENT              3F9J0340
+       PAC     ,2            OCTANT 0, 1, 2, OR 3 TO -XR2               3F9J0350
+       ZET     FLAG          FOR TANGENT, CASE NUMBER = OCTANT NUMBER   3F9J0360
+       ERA     MASK2         FOR COTANGENT, CASE0=OCTANT1, CASE1=OCT0   3F9J0370
+       STO     FLAG              CASE2=OCT3, CASE3=OCT2                 3F9J0380
+       TIX     *+1,2,-3      IF OCTANT0 OR OCTANT2,                     3F9J0390
+       TXL     TEST1,2,1         REMAINDER IS REDUCED ARGUMENT          3F9J0400
+       CLA     PIOV4         IF OCTANT1 OR OCTANT3, TAKE COMPLEMENT     3F9J0410
+       SUB     BUFF              OF REMAINDER FOR REDUCED ARGUMENT      3F9J0420
+       STO     BUFF                                                     3F9J0430
+       SPACE                                                            3F9J0440
+ TEST1 LXA     FLAG,2        CASE NUMBER TO XR1 (OCTANT FOR TANGENT)    3F9J0450
+       TXH     TEST2,4,127   IF ORIGIONAL ARG MORE THAN 1/2, SKIP       3F9J0460
+       TXH     COMP,4,114    IF LESS THAN 1/2, NO SCREENING IS GIVEN    3F9J0470
+       CLA     FLONE           IF MORE THAN 2**-14, SKIP FLOATING AND   3F9J0480
+       TXH     READY,4,2         PROCEED TO COMPUTE FACTOR              3F9J0490
+       TXL     READY,2,0       IF LESS THAN 2**-126 FOR COTAN ARG, ERROR3F9J0500
+       TRA     ERROR2          OTHERWISE, FACTOR=1, SKIP FLOATING       3F9J0510
+       SPACE                                                            3F9J0520
+ TEST2 CLA     BUFF                                                     3F9J0530
+       TXL     FLOAT,2,0     IF CASE0 OR CASE3, NO SCREENING IS GIVEN   3F9J0540
+       TXH     FLOAT,2,2         SKIP                                   3F9J0550
+       LDQ     CRIT          SCREEN OUT NEIGHBORHOOD OF SINGULARITIES   3F9J0560
+       SXA     *+1,4           DO THIS BY TESTING REDUCED ARGUMENT      3F9J0570
+       AXC     **,4              AGAINST 2**(P-26) WHERE P IS EXPONENT  3F9J0580
+       RQL     -119,4              OF ORIGIONAL ARGUMENT                3F9J0590
+       TLQ     *+2                                                      3F9J0600
+       TRA     ERROR2                                                   3F9J0610
+ FLOAT LRS     8             FLOAT THE REDUCED ARGUMENT                 3F9J0620
+       ORA     CHAR                                                     3F9J0630
+       STO     BUFF                                                     3F9J0640
+       XCA                                                              3F9J0650
+       ARS     8                                                        3F9J0660
+       ORA     LCHAR                                                    3F9J0670
+       FAD     BUFF                                                     3F9J0680
+       FRN                                                              3F9J0690
+       LDQ     ARG           PRE-ADJUST SIGN OF REDUCED ARGUMENT        3F9J0700
+       LLS     0                 SO THAT THE ANSWER COMES OUT WITH      3F9J0710
+       TXL     *+2,2,1               CORRECT SIGN                       3F9J0720
+       CHS                                                              3F9J0730
+       STO     ARG                                                      3F9J0740
+       SPACE                                                            3F9J0750
+ COMP  LDQ     ARG           COMPUTE FACTOR BY                          3F9J0760
+       FMP     ARG                        13.946SQ-313.11               3F9J0770
+       STO     SQ                FACTOR=1+----------------              3F9J0780
+       CLA     D                          SQ-104.46+939.33              3F9J0790
+       FDP     SQ                                   ------              3F9J0800
+       XCA                                            SQ                3F9J0810
+       FAD     SQ                                                       3F9J0820
+       FSB     C                                                        3F9J0830
+       STO     BUFF                                                     3F9J0840
+       LDQ     A                                                        3F9J0850
+       FMP     SQ                                                       3F9J0860
+       FSB     B                                                        3F9J0870
+       FDP     BUFF                                                     3F9J0880
+       XCA                                                              3F9J0890
+       FAD     FLONE                                                    3F9J0900
+       FRN                                                              3F9J0910
+       SPACE                                                            3F9J0920
+ READY TXL     *+4,2,0       NOW BOTH REDUCED ARG AND FACTOR ARE READY  3F9J0930
+       TXH     *+3,2,2                                                  3F9J0940
+       FDP     ARG           FOR CASE1 AND CASE2,                       3F9J0950
+       TRA     *+4               ANSWER = FACTOR/ARGUMENT               3F9J0960
+       STO     BUFF          FOR CASE0 AND CASE3                        3F9J0970
+       CLA     ARG               ANSWER = ARGUMENT/FACTOR               3F9J0980
+       FDP     BUFF                                                     3F9J0990
+       XCA                                                              3F9J1000
+       FRN                                                              3F9J1010
+ SXR2  AXT     **,2                                                     3F9J1020
+  RET  LXA     LINK,4                                                   3F9J1030
+       STZ     FLAG                                                     3F9J1040
+       TRA     1,4                                                      3F9J1050
+       SPACE                                                            3F9J1060
+ERROR1 CALL    .FXEM.(ETNC1)                                            3F9J1070
+       ZAC                                                              3F9J1080
+       TRA     RET                                                      3F9J1090
+ERROR2 CALL    .FXEM.(ETNC2)                                            3F9J1100
+       CLA     OMEGA                                                    3F9J1110
+       TRA     SXR2                                                     3F9J1120
+       SPACE                                                            3F9J1130
+ FLAG  PZE                                                              3F9J1140
+  ARG  BSS     1                                                        3F9J1150
+ BUFF  BSS     1                                                        3F9J1160
+  SQ   BSS     1                                                        3F9J1170
+ CRIT  PZE     1             BIT TO TEST CLOSENESS TO SINGULARITIES     3F9J1180
+ MASK1 OCT     3                                                        3F9J1190
+ MASK2 OCT     1                                                        3F9J1200
+ CHAR  OCT     200000000000                                             3F9J1210
+ LCHAR OCT     145000000000                                             3F9J1220
+ FLONE OCT     201400000000                                             3F9J1230
+ PIOV4 OCT     +311037552421       =PI/4 AS FIXED POINT NUMBER IN B0    3F9J1240
+   A   OCT     204676213207                                             3F9J1250
+   B   OCT     211471070244                                             3F9J1260
+   C   OCT     207641656051                                             3F9J1270
+   D   OCT     212725524366                                             3F9J1280
+ OMEGA OCT     377777777777                                             3F9J1290
+ ETNC1 DEC     73                                                       3F9J1300
+       PZE     E73MES,,10                                               3F9J1310
+       PZE     E73OMS,,3                                                3F9J1320
+E73MES BCI ,0TAN(X) OR COTAN(X), /X/ GRT THAN OR EQ TO 2**20 NOT ALLOWED3F9J1330
+E73OMS BCI     3,0SET RESULT = 0                                        3F9J1340
+ ETNC2 DEC     74                                                       3F9J1350
+       PZE     E74MES,,10                                               3F9J1360
+       PZE     E74OMS,,4                                                3F9J1370
+E74MES BCI ,0TAN(X) OR COTAN(X), X TOO CLOSE TO SINGULARITY, NOT ALLOWED3F9J1380
+E74OMS BCI     4,0SET RESULT = +OMEGA                                   3F9J1390
+       SPACE                                                            3F9J1400
+  LINK LDIR                                                             3F9J1410
+       END                                                              3F9J1420

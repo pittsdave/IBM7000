@@ -1,0 +1,1544 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .RAND                           3RN00000
+$IBMAP .RAND   1600,()OK                                                3RN00010
+       LBL     RAND,BEGIN     .RAND                                  (7)3RN00013
+       TTL     .RAND/1301 RANDOM IOCS                                   3RN00020
+*                                                                       3RN00030
+       ENTRY   .RANDE                                                   3RN00040
+       ENTRY   .RANRE                                                   3RN00050
+       ENTRY   .RANCL                                                   3RN00060
+       ENTRY   .RANRP                                                   3RN00070
+       ENTRY   .RANFL                                                   3RN00080
+       ENTRY   .RANCA                                                   3RN00090
+IOEX   EQU     .ACTV                                                    3RN00120
+(ACTIV EQU     IOEX                                                     3RN00130
+(PROUT EQU     IOEX+4                                                   3RN00140
+(DECVA EQU     IOEX+12                                                  3RN00150
+(BCD5R EQU     IOEX+14                                                  3RN00160
+(URRXI EQU     IOEX+19                                                  3RN00170
+(RCTXI EQU     IOEX+20                                                  3RN00180
+(RCHXI EQU     IOEX+21                                                  3RN00190
+(TRAPX EQU     IOEX+26                                                  3RN00200
+(FDAMT EQU     IOEX+33                                                  3RN00210
+       TITLE                                                            3RN00220
+       SPACE                                                            3RN00230
+*                      COMMUNICATION REGION                             3RN00240
+       SPACE                                                            3RN00250
+.RANDE STL     DEREJ                                                    3RN00260
+       TXL     ENTER,,RNDEF                                             3RN00270
+.RANRE STL     DEREJ                                                    3RN00280
+       TXL     ENTER,,RNREQ                                             3RN00290
+.RANCL STL     DEREJ                                                    3RN00300
+       TXL     ENTER,,RNCLS                                             3RN00310
+.RANRP TRA     RNRPL                                                    3RN00320
+.RANFL PZE     RANFLG                                                   3RN00330
+.RANCA PZE     RANCAV                                                   3RN00340
+       SPACE                                                            3RN00350
+*                      STORAGE CELLS                                    3RN00360
+RANFLG PZE     **                                                       3RN00361
+RANCAV PZE     **                                                       3RN00362
+       SPACE                                                            3RN00370
+PQUEUE PZE     **,2                QUEUE,2   QUEUE SEGMENT POINTER      3RN00380
+SQUEUE PZE                         QUEUE+S   QUEUE POOL CONTROL WORD    3RN00390
+L(S)   PZE                         S, REQUEST BUFFER COUNT              3RN00400
+L(R)   PZE                         R, BETA RECORD WORD COUNT            3RN00410
+PDRHA  PZE                         DRHA POOL CONTROL WORD               3RN00420
+RSENS  PZE                         SENSE INDICATORS STORAGE             3RN00430
+CLSFLG PZE                         CLOSE FLAG                           3RN00440
+RTNFLG PZE                         RETAIN FLAG                          3RN00450
+SENSW  PZE                         SENSE WORD AT SEL(-)                 3RN00460
+ERRFLG PZE                         ERROR FLAG                           3RN00470
+ERRIND PZE                         UNRECOVERABLE ERROR                  3RN00480
+       SPACE                                                            3RN00490
+*                      CONSTANTS AND MASKS                              3RN00500
+       SPACE                                                            3RN00510
+L(0)   PZE                                                              3RN00520
+L(1)   PZE     1                                                        3RN00530
+L(6)   PZE     6                                                        3RN00540
+ADDR   OCT     000000077777                                             3RN00550
+DECRE  OCT     077777000000                                             3RN00560
+1DECR  OCT     000001000000                                             3RN00570
+MSK1   OCT     600000606060                                             3RN00580
+MSK3   OCT     770777777777                                             3RN00590
+MSK2   OCT     200000000000        HEADER                               3RN00600
+MSK4   OCT     004000000000        SEEK AND READ WAITING                3RN00610
+MSK7   OCT     001000000000        PROCESSING WAITING                   3RN00620
+MSK8   OCT     000300000000                                             3RN00630
+MSK9   OCT     040000000000        COMMON BETA CHAIN HEADER             3RN00640
+MSK10  OCT     020000000000        MUTUAL DEPENDENCE                    3RN00650
+MSK11  OCT     000200000000        SEEK AND WRITE WAITING               3RN00660
+MSK12  OCT     770077777777                                             3RN00670
+MSK13  OCT     100600000000                                            *3RN00680
+MSK14  OCT     777777770000                                             3RN00690
+MSK15  OCT     000077777777                                             3RN00700
+MSK17  OCT     000100000000        SEEK AND WRITE ISSUED                3RN00710
+MSK19  OCT     000040000000        BETA BUFFER ASSIGNED                 3RN00720
+MSK20  OCT     400000000000                                             3RN00730
+MSK21  OCT     000000700000                                             3RN00740
+MSK23  OCT     000000200000        FULL TRACK WITH ADDRESSES            3RN00750
+MSK24  OCT     000000400000        XR4-INCOMPLETE BETA SET              3RN00760
+MSK25  OCT     000000000020        BCD MODE                             3RN00770
+MSK26  OCT     000000000014                                             3RN00780
+MSKI   OCT     000037000000        I NUMBER                             3RN00790
+       SPACE                                                            3RN00800
+*                      COMMON ENTRY ROUTINE                             3RN00810
+       SPACE                                                            3RN00820
+ENTER  ENB     L(0)                                                     3RN00830
+       SXA     SVXR4,4                                                  3RN00840
+       SXA     SVXR2,2             SAVE REGISTERS                       3RN00850
+       SXA     SVXR1,1                                                  3RN00860
+       STI     RSENS               AND SENSE INDICATORS                 3RN00870
+       CAL     ERRIND                                                   3RN00880
+       TNZ     RNSLM0              PERSISTENT ERROR - KILL THE JOB      3RN00890
+DEREJ  LDC     **,1                                                     3RN00900
+       TRA     0,1                 GO TO ROUTINE                        3RN00910
+       SPACE                                                            3RN00920
+*                      COMMON EXIT ROUTINE                              3RN00930
+       SPACE                                                            3RN00940
+RANDEX STZ     RANFLG              RESET RANFLG                         3RN00950
+       ZET     RANCAV              ANY REQUEST UNSERVICED               3RN00960
+       TRA     RRQ020-1            YES                                  3RN00970
+RNDX2  ENB*    (TRAPX                                                   3RN00980
+       NZT     RTNFLG              IF RETAIN REQUESTED                  3RN00990
+       TRA     RNDX3                                                    3RN01000
+       ZET     RANCAV              AND RANCAV IS NON ZERO               3RN01010
+       TRA     SCHED               RETURN TO SCHEDULER                  3RN01020
+       STZ     RTNFLG              OTHERWISE RESET RETAIN FLAG          3RN01030
+RNDX3  NZT     CLSFLG              IS THIS A CLOSE ENTRY                3RN01040
+       TRA     SVXR4               NO                                   3RN01050
+       AXT     0,2                 YES                                  3RN01060
+       ZET*    PQUEUE              ANY REQUESTS PENDING                 3RN01070
+       TRA     SCHED               YES, GO TO WORK                      3RN01080
+       STZ     CLSFLG              NO, RESET CLOSE FLAG                 3RN01090
+SVXR4  AXT     **,4                                                     3RN01100
+SVXR2  AXT     **,2                RESTORE REGISTERS                    3RN01110
+SVXR1  AXT     **,1                                                     3RN01120
+       LDI     RSENS               AND SENSE INDICATORS                 3RN01130
+       TRA     1,4                 EXIT                                 3RN01140
+       SPACE                                                            3RN01150
+*  TSX     RANCLS,4    CLOSE MICROROUTINE                               3RN01160
+*  RETURN                                                               3RN01170
+       SPACE                                                            3RN01180
+RNCLS  STL     CLSFLG              SET CLOSE FLAG                       3RN01190
+       TRA     SCHED               AND GO TO SCHEDULER                  3RN01200
+       SPACE                                                            3RN01210
+*  TSX     RANDEF,4    1. RESERVES AT QUEUE A PUSH UP LIST OF S WORDS.  3RN01220
+*  PZE     QUEUE,,DRHA 2. DEFINES AT QUEUE+S S BUFFERS OF 6 WORDS EACH  3RN01230
+*  PZE     ,,S         PLUS ONE BUFFER POOL CONTROL WORD.               3RN01240
+*  PZE     R,,N        3. DEFINES AT DRHA N BUFFERS OF SIZE R+1         3RN01250
+*  RETURN              PLUS ONE BUFFER POOL CONTROL WORD.               3RN01260
+*                      4. STORES ALL PARAMETERS.                        3RN01270
+       SPACE                                                            3RN01280
+RNDEF  CAL     3,4                                                      3RN01290
+       PDX     0,1                                                     $3RN01300
+       CAL     2,4                                                     $3RN01310
+       STD     *+1                                                     $3RN01320
+       TXL     *+3,1,**                                                $3RN01330
+       CAL     2,4                                                     $3RN01340
+       TRA     *+2                                                     $3RN01350
+       PXD     0,1                                                      3RN01360
+       STD     L(S)                SAVE S                              $3RN01370
+       ARS     18                                                      $3RN01380
+       ACL     1,4                                                      3RN01390
+       STA     SQUEUE              QUEUE+S                              3RN01400
+       ANA     ADDR                                                     3RN01410
+       XCL                                                              3RN01420
+       CAL     L(S)                SET PARAMETERS FOR QUEUE            $3RN01430
+       ACL     L(6)                                                     3RN01440
+       TSX     RNDF,1              AND GO TO RNDF                       3RN01450
+       CAL     1,4                                                      3RN01460
+       STA     PQUEUE              SAVE QUEUE                           3RN01470
+       ARS     18                                                       3RN01480
+       STA     PDRHA               SAVE DRHA                            3RN01490
+       XCL                                                              3RN01500
+       CAL     3,4                                                      3RN01510
+       STA     L(R)                SAVE R                               3RN01520
+       ACL     L(1)                                                     3RN01530
+       TSX     RNDF,1              AGAIN                                3RN01540
+       LDC     L(S),2                                                  $3RN01550
+       SXD     RRQ020+6,2                                               3RN01560
+       SXD     RNSLM9,2                                                 3RN01570
+       SXD     SCHD2,2                                                  3RN01580
+       SXD     SCHD3,2                                                  3RN01590
+       SXD     SCHD10,2                                                 3RN01600
+       SXD     CHCK3,2                                                  3RN01610
+       SXD     LKP015,2                                                 3RN01620
+       SXD     SCHD17,2                                                 3RN01630
+       SXD     PRC017,2                                                 3RN01640
+       SXD     RNRL5,2                                                  3RN01650
+       SXD     RPL04-1,2                                                3RN01660
+       SXD     LKP04+2,2                                                3RN01670
+       SXD     PREDY4,2                                                 3RN01680
+       SXD     RLQS2,2                                                  3RN01690
+       TXI     *+1,2,1                                                  3RN01700
+       STZ*    PQUEUE              CLEAR QUEUE AREA                     3RN01710
+       TXH     *-2,2,0                                                  3RN01720
+       TXI     *+1,4,-3                                                 3RN01730
+       STZ     ERRIND                                                   3RN01740
+       TRA     SVXR2               EXIT                                 3RN01750
+       SPACE                                                            3RN01760
+*  TSX     RNDF,1   1. DEFINES IN N*M+1 LOCATIONS STARTING AT POOL      3RN01770
+*  RETURN           N BUFFERS OF TOTAL SIZE M.                          3RN01780
+*                   2. UPON ENTRY, AC CONTAINS M,,N, MQ CONTAINS POOL.  3RN01790
+       SPACE                                                            3RN01800
+RNDF   STQ     RNDF3               SAVE L(POOL)                         3RN01810
+       STA     RNDF2               SAVE M                               3RN01820
+       PDX     0,2                 AND N                                3RN01830
+       CLS     RNDF3                                                    3RN01840
+       ACL     L(1)                L(POOL)+1                            3RN01850
+       STO*    RNDF3               TO L(POOL)                           3RN01860
+       STA     RNDF1                                                    3RN01870
+       SSP                                                              3RN01875
+       TNX     RNDF4,2,1                                                3RN01880
+       ACL     RNDF2               STORE POOL+XM+1                      3RN01890
+RNDF1  STO     **                IN POOL+(X-1)M+1                       3RN01900
+       STA     *-1                                                      3RN01910
+       TRA     RNDF1-2                                                  3RN01920
+RNDF4  CLA     RNDF3                                                    3RN01930
+       STO*    RNDF1             LAST BUFFER POINTS TO POOL             3RN01940
+       TRA     1,1                 RETURN                               3RN01950
+RNDF2  PZE                         M                                    3RN01960
+RNDF3  PZE                         L(POOL)                              3RN01970
+       SPACE                                                            3RN01980
+*  TSX     RANREQ,4    1. THIS ROUTINE SETS UP THE REQUESTS ENTRIES,    3RN01990
+*  P       ALPHA,T,M   ONE PER BETA RECORD.                             3RN02000
+*  P       ERRET       2. WHEN NO MORE QUEUE SEGMENTS ARE AVAILABLE, IT 3RN02010
+*  P       A,T,PROCES  RETAINS THE CALLING SEQUENCE.                    3RN02020
+*  P       PHYS. ADDR.                                                  3RN02030
+*  VERIFICATION ADDR.                                                   3RN02040
+*  -----------------                                                    3RN02050
+*  RETURN                                                               3RN02060
+       SPACE                                                            3RN02070
+RNREQ  LDI     1,4                                                      3RN02080
+       RFT     700000              IF REQUESTED                         3RN02090
+       STL     RTNFLG              SET RETAIN FLAG                      3RN02100
+       LFT     077777                                                   3RN02110
+       TRA     *+2                                                      3RN02120
+       TRA     RRQ070             IF BETA COUNT = 0    GO               3RN02130
+       STI     ALPHA                                                    3RN02140
+       PIA                                                              3RN02150
+       PDC     0,2                                                      3RN02160
+       SXD     RRQ010,2                                                 3RN02170
+       CLA     2,4                                                      3RN02180
+       STO     ERRET               SAVE ERROR RETURN                    3RN02190
+       SXA     SVRQ4,4                                                  3RN02200
+       ZET     RANCAV              IF RANCAV IS NON ZERO                3RN02210
+       TRA     RRQ080              GIVE ERROR MESSAGE                   3RN02220
+       AXT     3,1                                                      3RN02230
+RRQ010 TXI     *+1,4,**            COMPUTE AND SAVE                     3RN02240
+       TIX     *-1,1,1                                                  3RN02250
+       TXI     *+1,4,-2                                                 3RN02260
+       SXA     SVXR4,4             RETURN ADDRESS                       3RN02270
+       LXA     SVRQ4,4                                                  3RN02280
+RRQ020 ENB     L(0)                                                     3RN02290
+       AXT     0,2                                                      3RN02300
+       SXA     SVRQ4,4                                                  3RN02310
+       NZT*    PQUEUE              GET SEGMENT                          3RN02320
+       TRA     RRQ050                                                   3RN02330
+       TXI     *+1,2,-1                                                 3RN02340
+       TXH     RRQ020+3,2,**       TRY AGAIN                            3RN02350
+       CLA     ANTE                NONE AVAILABLE.  IF AT LEAST ONE BETA3RN02360
+       TZE     RRQ035              WAS ALREADY SERVICED                 3RN02370
+RRQ030 TXI     *+1,2,1             SET POINTER TO QUEUE+S-1             3RN02380
+       CAL*    PQUEUE              AND SET THE INCOMPLETE BETA SET FLAG 3RN02390
+       ORA     MSK24               IN ALL BETA REQUESTS ALREADY SERVICED3RN02400
+       SLW*    PQUEUE              IN THIS SET                          3RN02410
+       ANA     MSK2                                                     3RN02420
+       TNZ     *+2                                                      3RN02430
+       TRA     RRQ030                                                   3RN02440
+RRQ035 ZET     SLM060                                                   3RN02450
+       TRA     SCHED+1                                                  3RN02460
+       CAL     RANCAV              RUN OUT OF SEGMENTS                  3RN02470
+       TNZ     RNDX2               EARLIER, EXIT                        3RN02480
+       SXA     RANCAV,4            JUST NOW, SET RANCAV AND GO          3RN02490
+       TRA     SCHED                                                    3RN02500
+RRQ050 CLA*    SQUEUE              SEGMENT ADDRESS                      3RN02510
+       STA*    PQUEUE              TO POINTER                           3RN02520
+       STA     *+2                                                      3RN02530
+       PAC     0,1                 AND XR1                              3RN02540
+       LDQ     **                                                       3RN02550
+       XCA                                                              3RN02560
+       STA*    SQUEUE              UPDATE                               3RN02570
+       STQ*    *-3                 AVAILABILITY CHAIN                   3RN02580
+       CAL     ALPHA                                                    3RN02590
+       SUB     1DECR                                                    3RN02600
+       SLW     ALPHA               UPDATE BETA COUNT                    3RN02610
+       NZT     ANTE                IF FIRST BETA                        3RN02620
+       ORA     MSK2                SET HEADER FLAG                      3RN02630
+       STP*    PQUEUE              POINTER PREFIX                       3RN02640
+       ALS     18                                                       3RN02650
+       STD     0,1                 ALPHA RECORD                         3RN02660
+       CLA     ERRET                                                    3RN02670
+       STO     2,1                                                      3RN02680
+       CLA     3,4                                                      3RN02690
+       STT     0,1                 MODE                                 3RN02700
+       STD     2,1                 PROCES                               3RN02710
+       ARS     2                                                        3RN02720
+       TMI     *+4                 WRITE ONLY                           3RN02730
+       ANA     MSK10                                                    3RN02740
+       ORA     MSK4                                                     3RN02750
+       TRA     *+3                                                      3RN02760
+       ANA     MSK10                                                    3RN02770
+       ORA     MSK7                                                     3RN02780
+       STD*    PQUEUE              POINTER DECREMENT                    3RN02790
+       CLA     3,4                                                      3RN02800
+       STA     *+1                                                      3RN02810
+       CLA     **                                                       3RN02820
+       STA     1,1                 L(UCB)                               3RN02830
+       CAL     4,4                                                      3RN02840
+       SLW     3,1                 PHYSICAL ADDRESS                     3RN02850
+       LDI     5,4                                                      3RN02860
+       TSX     H2ZBCD,4            CONVERT ZEROS IN HA2                 3RN02870
+       STI     4,1                 VERIFICATION ADDRESS                 3RN02880
+       STZ     5,1                 CLEAR CHAIN WORD                     3RN02890
+       CAL     ANTE                                                     3RN02900
+       ADD     1DECR                                                    3RN02910
+       STD     ANTE                                                     3RN02920
+       ORS*    PQUEUE              BETA I NUMBER                        3RN02930
+       TSX     CHECK,4             CHECK FOR COMMON BETA RECORDS        3RN02940
+SVRQ4  AXT     **,4                                                     3RN02950
+       CAL     ALPHA                                                    3RN02960
+       ANA     DECRE               MORE BETA RECORDS                    3RN02970
+       TZE     *+2                 NO                                   3RN02980
+       TXI     RRQ020+2,4,-3       PROCESS NEXT BETA                    3RN02990
+       STZ     ANTE                KEEP HOUSE                           3RN03000
+       CLA     RANCAV                                                   3RN03010
+       TZE     SCHED                                                    3RN03020
+       STZ     RANCAV                                                   3RN03030
+RRQ060 LDI*    PQUEUE                                                   3RN03040
+       RIR     400000                                                   3RN03050
+       STI*    PQUEUE              RESET INCOMPLETE BETA FLAGS          3RN03060
+       LNT     200000                                                   3RN03070
+       TXI     RRQ060,2,1                                               3RN03080
+       ZET     SLM060              IF ENTERED FROM SEL(-)               3RN03090
+       TRA     SCHED+1             GO TO SCHEDULER                      3RN03100
+       TRA     RNDX2               OTHERWISE EXIT                       3RN03110
+RRQ070 TXI     *+1,4,-1            SET UP RETURN ADDRESS                3RN03120
+       SXA     SVXR4,4                                                  3RN03130
+       TRA     SCHED               GO TO SCHEDULER                      3RN03140
+RRQ080 TSX     (PROUT,4                                                 3RN03150
+       PZE     1                                                        3RN03160
+       PZE     MESSA,,5                                                 3RN03170
+       TRA     RNSLM7              KILL THE JOB                         3RN03180
+ALPHA  PZE                                                              3RN03190
+ANTE   PZE                                                              3RN03200
+ERRET  PZE                                                              3RN03210
+MESSA  BCI     5,BETA REQUEST(S) UNSERVICED                             3RN03220
+       SPACE                                                            3RN03230
+*                      MAIN SCHEDULING ROUTINE                          3RN03240
+*          DETERMINES THE STATUS OF THE REQUESTS                        3RN03250
+*          AND TAKES SUITABLE ACTION.                                   3RN03260
+       SPACE                                                            3RN03270
+SCHED  ENB*    (TRAPX              RESTORE TRAPS                        3RN03280
+       AXT     0,2                 WRITE SCAN                           3RN03290
+       ENB     L(0)                DISABLE TRAPS                        3RN03300
+SCHD1  NZT*    PQUEUE                                                   3RN03310
+       TRA     SCHD2+1             GO TO READ SCAN                      3RN03320
+       CAL     MSK11                                                    3RN03330
+       ANA*    PQUEUE              TEST FOR WRITE WAITING               3RN03340
+       TNZ     SCHD4               YES                                  3RN03350
+       TXI     *+1,2,-1                                                 3RN03360
+SCHD2  TXH     SCHD1,2,**          NO, REPEAT                           3RN03370
+       AXT     0,2                 READ SCAN                            3RN03380
+       NZT*    PQUEUE                                                   3RN03390
+       TRA     SCHD16              GO TO ERROR SCAN                     3RN03400
+       LDI*    PQUEUE                                                   3RN03410
+       LNT     044000              READ WAITING,SINGLE REQUEST          3RN03420
+       TRA     *+2                 OR BETA CHAIN HEADER                 3RN03430
+       TRA     SCHD4+2                                                  3RN03440
+       TXI     *+1,2,-1                                                 3RN03450
+SCHD3  TXH     SCHD2+2,2,**                                             3RN03460
+       TRA     SCHD16                                                   3RN03470
+SCHD4  AXT     SCHD2-1,1                                                3RN03480
+       TRA     *+2                                                      3RN03490
+       AXT     SCHD3-1,1                                                3RN03500
+       SXA     SCHD6,1                                                  3RN03510
+       CLA*    PQUEUE                                                   3RN03520
+       PAC     ,4                  QUEUE SEGMENT TO XR4                 3RN03530
+       CLA     1,4                                                      3RN03540
+       PAC     0,4                 L(UCB) TO XR4                        3RN03550
+       ZET     1,4                                                      3RN03560
+SCHD6  TRA     **                  UNIT BUSY, BACK TO SCANNER           3RN03570
+       TRA     ACT                 GO ACTIVATE                          3RN03580
+SCHD16 ZET     SLM060              IF ENTERED FROM SEL(-)               3RN03590
+       TRA     SLM050              RETURN THERE                         3RN03600
+       AXT     0,2                 ERROR SCAN                           3RN03610
+       NZT*    PQUEUE                                                   3RN03620
+       TRA     SCHD9               GO TO PROCESSING SCAN                3RN03630
+       LDI*    PQUEUE                                                   3RN03640
+       RFT     200000                                                   3RN03650
+       TRA     ERROR               GO TO ERROR ROUTINE                  3RN03660
+       TXI     *+1,2,-1                                                 3RN03670
+SCHD17 TXH     SCHD16+3,2,**                                            3RN03680
+SCHD9  AXT     0,2                 PROCESSING SCAN                      3RN03690
+       NZT*    PQUEUE                                                   3RN03700
+       TRA     RANDEX                                                   3RN03710
+       CAL     MSK7                                                     3RN03720
+       ANA*    PQUEUE                                                   3RN03730
+       TNZ     SCHD11              PROCESSING WAITING                   3RN03740
+       TXI     *+1,2,-1            NO                                   3RN03750
+SCHD10 TXH     SCHD9+1,2,**                                             3RN03760
+       TRA     RANDEX                                                   3RN03770
+SCHD11 CLA*    PQUEUE                                                   3RN03780
+       TPL     SCHD14              NOT FORCE SEQUENTIAL                 3RN03790
+       TXL     SCHD14,2,0          FORCE SEQUENT. BUT FIRST REQUEST     3RN03800
+       SXA     SCHD13,2            SAVE XR2                             3RN03810
+SCHD12 TXI     *+1,2,1             CHECK NEXT HIGHER REQUEST            3RN03820
+       CAL     MSK8                                                     3RN03830
+       ANA*    PQUEUE              IF REQUEST NOT AT SEEK+WRITE WAITING 3RN03840
+       TZE     SCHD15              OR ISSUED RETURN TO SCANNER          3RN03850
+       TXH     SCHD12,2,0          HIT TOP OF QUEUE                     3RN03860
+SCHD13 AXT     **,2                RESTORE XR2                          3RN03870
+SCHD14 TSX     PREADY,1            IF THE OTHER MUT. DEP. REQUESTS      3RN03880
+       TRA     PROC                ARE READY GO PROCESSING              3RN03890
+       TRA     SCHD10-1                                                 3RN03900
+SCHD15 LXA     SCHD13,2                                                 3RN03910
+       TRA     SCHD10-1                                                 3RN03920
+       SPACE                                                            3RN03930
+*                      PRE-ACTIVATE ROUTINE                             3RN03940
+       SPACE                                                            3RN03950
+ACT    CLA*    PQUEUE                                                   3RN03960
+       PAC     0,1                                                      3RN03970
+       CLA     3,1                                                      3RN03980
+       TPL     ACT1                BINARY SEEK ADDRESS                  3RN03990
+       CAL     MSK14               BCD                                  3RN04000
+       ANS     2,4                 CLEAR TT IN UCB3                     3RN04010
+       CLA     3,1                                                      3RN04030
+       ANA     MSK15                                                    3RN04040
+       XCA                           SET BCD ZEROS                      3RN04041
+       XEC     .IBCDZ                INTO SEEK                          3RN04042
+       PXD     0,0                   ORDER                              3RN04043
+       XCA                                                              3RN04044
+       ANA     MSK15                                                    3RN04045
+       LGR     12                                                       3RN04050
+       ORS     2,4                 AND STORE TT                         3RN04060
+       XCA                                                              3RN04070
+       SSM                         SET TRACK FLAG                       3RN04080
+ACT1   STO     3,4                                                      3RN04090
+       CLS     2,4                                                      3RN04100
+       STO     2,4                 SET ACTIVITY FLAG                    3RN04110
+       CAL*    PQUEUE                                                   3RN04120
+       STA     1,4                 QUEUE SEGMENT TO UCB2                3RN04130
+       ANA     MSK11                                                    3RN04140
+       TZE     ACT3                READ                                 3RN04150
+       CLS     1,4                 SET WRITE FLAG                       3RN04160
+       STO     1,4                                                      3RN04170
+       CAL*    PQUEUE                                                   3RN04180
+       ANA     MSK12               CHANGE STATUS                        3RN04190
+       ORA     MSK17               SEEK+WRITE ISSUED                    3RN04200
+       SLW*    PQUEUE                                                   3RN04210
+       TRA     ACT4                                                     3RN04220
+ACT3   LDI*    PQUEUE                                                   3RN04230
+       RIL     004000              CHANGE STATUS TO S2                  3RN04240
+       SIL     002000                                                   3RN04250
+       STI*    PQUEUE                                                   3RN04260
+ACT4   AXT     RNSEL,2             SEL TO UCB2                          3RN04270
+       PXD     0,2                                                      3RN04280
+       STD     1,4                                                      3RN04290
+       TSX     (ACTIV,4            GO ACTIVATE                          3RN04300
+       PZE     1,1                                                      3RN04310
+       ZET     SLM060              ENTERED FROM SEL(-)                  3RN04320
+       TRA     SCHED+1                                                  3RN04330
+       TRA     SCHED                                                    3RN04340
+       SPACE                                                            3RN04350
+*                      SELECT (+) ROUTINE                               3RN04360
+       SPACE                                                            3RN04370
+RNSEL  SXA     SVSL1,1                                                  3RN04380
+       SXA     SVSL4,4                                                  3RN04390
+       PAC     0,4                 L(UCB) TO XR4                        3RN04400
+       TMI     RNSLM               GO TO SEL (-)                        3RN04410
+       NZT*    (URRXI              IF ATTEMPTING TO RECOVER             3RN04420
+       TRA     *+4                                                      3RN04430
+       CLA     0,4                                                      3RN04440
+       STA*    (RCHXI              GO STRAIGHT TO EXECUTE               3RN04450
+       TRA     RNSL07                                                   3RN04460
+       CLA     1,4                                                      3RN04470
+       TMI     RNSL01                                                   3RN04480
+       TSX     LOOKUP,1            IF READ                              3RN04490
+       CAL*    PQUEUE                                                   3RN04500
+       ANA     MSK19               AND NO BETA BUFFER ASSIGNED          3RN04510
+       TNZ     RNSL01-1                                                 3RN04520
+       TSX     GETBF,1             ASSIGN ONE                           3RN04530
+       TMI     RNSL06              IF NONE AVAILABLE, EXIT              3RN04540
+       LXA     SVSL1,1                                                  3RN04550
+RNSL01 AXT     0,2                                                      3RN04560
+       CLS     CMND,2              GET FREE COMMAND LIST                3RN04570
+       TMI     *+2                                                      3RN04580
+       TXI     *-2,2,-17                                                3RN04590
+       STO     CMND,2              SET IN USE FLAG                      3RN04600
+       LDQ     0,4                                                      3RN04610
+       STA*    (RCHXI              CMNDX TO RCHX VIA XR1                3RN04620
+       STA     0,4                 TO UCB                               3RN04630
+       PAC     0,2                 AND XR2                              3RN04640
+       XCA                                                              3RN04650
+       ALS     18                                                       3RN04660
+       STD     -1,2                SAVE CHAINING                        3RN04670
+       CLA     1,4                                                      3RN04680
+       PAC     0,1                 QUEUE SEGMENT TO XR1                 3RN04690
+       TMI     *+3                                                      3RN04700
+       CLA     CTLR                READ                                 3RN04710
+       TRA     *+2                                                      3RN04720
+       CLA     CTLW                WRITE                                3RN04730
+       STO     2,2                                                      3RN04740
+       CAL     MSK23                                                    3RN04750
+       ANA     0,1                                                      3RN04760
+       TNZ     RNSL02                                                   3RN04770
+       CLA     14,2                SINGLE RECORD                        3RN04780
+       TRA     *+2                                                      3RN04790
+RNSL02 CLA     15,2                OR FULL TRACK WITH ADDRESSES ORDER   3RN04800
+       STA     2,2                 TO CONTROL+READ OR WRITE COMMAND     3RN04810
+       CAL     1,1                                                      3RN04820
+       ARS     18                                                       3RN04830
+       ADD     L(1)                                                     3RN04840
+       STA     3,2                 BETA BUFFER ADDRESS                  3RN04850
+       CLA     L(R)                                                     3RN04860
+       ALS     18                  AND WORD COUNT                       3RN04870
+       STD     3,2                 TO CPYD                              3RN04880
+       LDQ     1,4                 DO NOT WRITE                        *3RN04890
+       TQP     *+3                 CHECK IF READING                    *3RN04900
+       CLA     2,1                                                      3RN04910
+       TMI     *+3                                                      3RN04920
+       PXD     0,0                                                      3RN04930
+       TRA     *+2                                                      3RN04940
+       CLA     L(1)                WRITE CHECK REQUESTED                3RN04950
+       STA     1,2                                                      3RN04960
+       LDQ     L(0)                CLEAR MQ                             3RN04970
+       CAL     4,1                                                      3RN04980
+       LGR     12                  SET UP FDAMT                         3RN04990
+       XCL                                                              3RN05000
+       ARS     12                                                       3RN05010
+       STO     RNSL03                                                   3RN05020
+       CLA     2,2                                                      3RN05030
+       STA     RNSL03+1                                                 3RN05040
+       CAL     MSK24                                                    3RN05050
+       ANA     0,1                                                      3RN05060
+       TZE     *+2                                                      3RN05070
+       CAL     MSK25               BCD MODE                             3RN05080
+       ORA     L(6)                AND INHIBIT ATTENTION BITS           3RN05090
+       ORS     RNSL03              TO SMS COMMAND                       3RN05100
+       SXA     RNSL04,2                                                 3RN05110
+       TSX     (FDAMT,2            SET UP DVSR OR DVTA                  3RN05120
+RNSL03 PZE                                                              3RN05130
+       PZE                                                              3RN05140
+RNSL04 AXT     **,2                                                     3RN05150
+       CLA     2,1                                                      3RN05160
+       TPL     RNSL05                                                   3RN05170
+       CLA     2,2                                                      3RN05180
+       PAC     0,4                 IF WRITE CHECK REQUESTED             3RN05190
+       CLA     0,4                                                      3RN05200
+       ANA     MSK15               SET UP DWRC                         *3RN05210
+       ORA     MSK13                                                   *3RN05220
+       SLW     12,2                                                    =3RN05230
+       CLA     1,4                                                      3RN05240
+       STO     13,2                                                    =3RN05250
+RNSL05 CLA     RNSL03                                                   3RN05260
+       STA     0,2                 SET UP SMS COMMAND                   3RN05270
+       LXA     SVSL1,1                                                  3RN05280
+RNSL07 LXA     SVSL4,4                                                  3RN05290
+       XEC*    (RCHXI              RESET AND START CHANNEL              3RN05300
+       TRA     1,4                 EXIT                                 3RN05310
+CTLR   CTLR    **                                                       3RN05320
+CTLW   CTLW    **                                                       3RN05330
+       PZE     ,,DSELM                                                  3RN05340
+       PZE     DCMND                                                    3RN05350
+RNSL06 CLA     *-1                 DUMMY COMMAND LIST                   3RN05360
+       LXA     SVSL1,1                                                  3RN05370
+       STA*    (RCHXI              TO RCHX                              3RN05380
+       CAL*    PQUEUE                                                   3RN05390
+       ANA     MSK12               CHANGE STATUS BACK TO 1              3RN05400
+       ORA     MSK4                                                     3RN05410
+       SLW*    PQUEUE                                                   3RN05420
+       CLA     0,4                                                      3RN05430
+       ARS     23                                                       3RN05440
+       ANA     L(1)                                                     3RN05450
+       ORA     MSK26               SET SMS                              3RN05460
+       STA     DCMND                                                    3RN05470
+       CLA     RNSL06-2            DUMMY SEL (-) TO UCB2                3RN05480
+       STD     1,4                                                      3RN05490
+       CLA     FLBITS              SET TOTAL EXCLUSION BITS             3RN05500
+       STO*    (RCTXI                                                   3RN05510
+       TRA     RNSL07                                                   3RN05520
+FLBITS PZE     *+1                                                      3RN05530
+       OCT     777777770000                                             3RN05540
+       SPACE                                                            3RN05550
+*                      SEL (-) ROUTINE                                  3RN05560
+       SPACE                                                            3RN05570
+RNSLM  CLA     0,4                                                      3RN05580
+       PAC     0,2                                                      3RN05590
+       CLS     -1,2                                                     3RN05600
+       STO     -1,2                RELEASE COMMAND LIST                 3RN05610
+       ARS     18                                                       3RN05620
+       STA     0,4                 RESTORE CHAINING                     3RN05630
+       CLA     1,4                                                      3RN05640
+       TSX     LOOKUP,1            GET POINTER                          3RN05650
+       CLA     1,4                                                      3RN05660
+       STZ     1,4                 CLEAR UCB2                           3RN05670
+       TPL     *+2                                                      3RN05680
+       SIL     000040              SET WRITE FLAG IN INDICATORS         3RN05690
+       STI     SENSW               SAVE SENSE DATA                      3RN05700
+       LFT     001000              IF UNUSUAL END                       3RN05710
+       TRA     RNSLM4              GO TO ERROR PROCEDURES               3RN05720
+       TMI     RNSLM1                                                   3RN05730
+       STL     RANFLG              SET RANFLG                          $3RN05740
+       LDI*    PQUEUE              READ COMPLETED                       3RN05750
+       RIL     002000                                                   3RN05760
+       SIL     001000                                                   3RN05770
+       STI*    PQUEUE              CHANGE S2 TO S3                      3RN05780
+       LNT     100000                                                   3RN05790
+       TRA     SLM025                                                   3RN05800
+       PIA                         IF IN BETA CHAIN                     3RN05810
+       STA     SLM010                                                   3RN05820
+SLM020 PAC     0,1                 CHANGE EQUALLY ALL OTHER REQUESTS    3RN05830
+       CAL     5,1                                                      3RN05840
+       LAS     SLM010                                                   3RN05850
+       TRA     *+2                                                      3RN05860
+       TRA     SLM025                                                   3RN05870
+       TSX     LOOKUP,1                                                 3RN05880
+       LDI*    PQUEUE                                                   3RN05890
+       PIA                                                              3RN05900
+       RIL     006000                                                   3RN05910
+       SIL     001000                                                   3RN05920
+       STI*    PQUEUE                                                   3RN05930
+       TRA     SLM020                                                   3RN05940
+RNSLM1 LDI*    PQUEUE                                                   3RN05950
+       LFT     100000              IF IN BETA CHAIN                     3RN05960
+       TSX     RELEM,4             REMOVE REQUEST                       3RN05970
+       TSX     RELBF,4             RELEASE BETA BUFFER                  3RN05980
+       TSX     RELQS,4             AND QUEUE SEGMENT, ZERO OUT POINTER  3RN05990
+SLM025 STL     SLM060                                                   3RN06000
+       ZET     RANCAV              START NEW CHANNEL ACTIVITY           3RN06010
+       TRA     RRQ020-1                                                 3RN06020
+       TRA     SCHED+1                                                  3RN06030
+SLM050 STZ     SLM060                                                   3RN06040
+SVSL4  AXT     **,4                                                     3RN06050
+SVSL1  AXT     **,1                RESTORE  REGISTERS                   3RN06060
+       TRA     1,4                 EXIT                                 3RN06070
+RNSLM3 LDI*    PQUEUE              ERROR FLAG TO POINTER                3RN06080
+       SIR     200000                                                   3RN06090
+       STI*    PQUEUE                                                   3RN06100
+       LNT     100000                                                   3RN06110
+       TRA     SLM025                                                   3RN06120
+       PIA                         COMMON BETA                          3RN06130
+       STA     SLM010                                                   3RN06140
+SLM030 PAC     0,1                                                      3RN06150
+       CAL     5,1                                                      3RN06160
+       LAS     SLM010                                                   3RN06170
+       TRA     *+2                                                      3RN06180
+       TRA     SLM025                                                   3RN06190
+       TSX     LOOKUP,1            SET ERROR FLAG                       3RN06200
+       LDI*    PQUEUE                                                   3RN06210
+       SIR     200000                                                   3RN06220
+       STI*    PQUEUE              IN ALL ELEMENTS OF CHAIN             3RN06230
+       PIA                                                              3RN06240
+       TRA     SLM030                                                   3RN06250
+RNSLM4 STL     RANFLG              SET RANFLG                          $3RN06260
+       RFT     763777              IF INVALID ADDRESS OR NO RECORD     $3RN06270
+       TRA     *+3                                                      3RN06280
+       LNT     000040              IN A READ                            3RN06290
+       TRA     RNSLM3              SET ERROR FLAG                       3RN06300
+       STI     ERRIND                                                   3RN06310
+       CLA*    PQUEUE                                                   3RN06320
+       PAC     0,1                                                      3RN06330
+       LDI     4,1                                                      3RN06340
+       TSX     H2BCDZ,4            CONVERT ZEROS                        3RN06350
+       STI     MESSB+4                                                  3RN06360
+       TRA     SVSL4                                                    3RN06370
+SLM060 PZE                                                              3RN06380
+RNSLM0 PAI                                                              3RN06390
+       TSX     (PROUT,4                                                 3RN06400
+       PZE     1                   FOR ALL OTHER ERRORS                 3RN06410
+       PZE     MESSB,,5            PRINT ERROR MESSAGE                  3RN06420
+       AXT     0,2                                                      3RN06430
+       ZET*    PQUEUE              IF NO REQUESTS WAITING               3RN06440
+       TRA     RNSLM6                                                   3RN06450
+       TSX     (PROUT,4            SAY IT SO                            3RN06460
+       PZE     1                                                        3RN06470
+       PZE     MESSC,,3                                                 3RN06480
+RNSLM5 TRA     SYSDMP              TERMINATE-UNSURMOUNTABLE ERROR      $3RN06490
+RNSLM6 RFT     000700                                                   3RN06500
+       TRA     *+2                                                      3RN06510
+       TRA     RNSLM7                                                   3RN06520
+       LNT     000040                                                   3RN06530
+       TRA     RNSLM7                                                   3RN06540
+       TSX     (PROUT,4            DATA CHECK WHILE WRITING             3RN06550
+       PZE     1                                                        3RN06560
+       PZE     MESSD,,6                                                 3RN06570
+RNSLM7 TSX     (PROUT,4                                                 3RN06580
+       PZE     2                                                        3RN06590
+       PZE     MESSE,,5+512*4      PREPARE TO LIST REQUESTS             3RN06600
+       PZE     MESSF,,6+512*4                                           3RN06610
+       STZ     COUNT2              RESET COUNTER                        3RN06620
+       AXT     0,2                                                      3RN06630
+RNSLM8 AXT     6,1                                                      3RN06640
+       LDQ*    PQUEUE                                                   3RN06650
+       RQL     6                                                        3RN06660
+       TQP     *+4                                                      3RN06670
+RNSLM2 CAL     STATUS+6,1          DETERMINE STATUS                     3RN06680
+       SLW     MESSG+5                                                  3RN06690
+       TRA     *+3                                                      3RN06700
+       RQL     1                                                        3RN06710
+       TIX     RNSLM2-1,1,1                                             3RN06720
+       CLA*    PQUEUE                                                   3RN06730
+       PAC     0,1                                                      3RN06740
+       LDI     4,1                                                      3RN06750
+       TSX     H2BCDZ,4                                                 3RN06760
+       STI     MESSG+3             VERIFICATION ADDRESS                 3RN06770
+       LDQ     0,1                                                      3RN06780
+       TSX     (BCD5R,4                                                 3RN06790
+       SLW     MESSG+1             ALPHA RECORD                         3RN06800
+       CAL     COUNT2                                                   3RN06810
+       ADD     L(1)                                                     3RN06820
+       STO     COUNT2                                                   3RN06830
+       TSX     (DECVA,4                                                 3RN06840
+       XCL                                                              3RN06850
+       ALS     24                                                       3RN06860
+       ARS     6                                                        3RN06870
+       ORA     MSK1                                                     3RN06880
+       SLW     MESSG               REQUEST NUMBER                       3RN06890
+       TSX     (PROUT,4                                                 3RN06900
+       PZE     1                                                        3RN06910
+       PZE     MESSG,,6                                                 3RN06920
+       TXI     *+1,2,-1                                                 3RN06930
+       ZET*    PQUEUE                                                   3RN06940
+RNSLM9 TXH     RNSLM8,2,**                                              3RN06950
+       TRA     RNSLM5                                                   3RN06960
+MESSB  BCI     5,PERSISTENT ERROR - BETA XXXXXX                         3RN06970
+MESSC  BCI     3,NO REQUESTS WAITING                                    3RN06980
+MESSD  BCI     6,DATA CHECK WHILE WRITING ON DISK                       3RN06990
+MESSE  BCI     5,STATUS OF REQUESTS FOLLOWS                             3RN07000
+MESSF  BCI     6,       ALPHA       BETA       STATUS                   3RN07010
+MESSG  BCI     6,                                                       3RN07020
+STATUS BCI     1,RDWAIT                                                 3RN07030
+       BCI     1,RDISSD                                                 3RN07040
+       BCI     1,PRWAIT                                                 3RN07050
+       BCI     1,PRISSD                                                 3RN07060
+       BCI     1,WRWAIT                                                 3RN07070
+       BCI     1,WRISSD                                                 3RN07080
+COUNT2 PZE                                                              3RN07090
+DSELM  PAC     0,2                 DUMMY SEL (-)                        3RN07100
+       STZ     1,2                                                      3RN07110
+       TRA     1,4                                                      3RN07120
+SLM010 PZE                                                              3RN07130
+       SPACE                                                            3RN07140
+*                      COMMAND LISTS                                    3RN07150
+       SPACE                                                            3RN07160
+CMND   PZE     *+1,,**                                                  3RN07170
+CMND1  SMS     **                                                       3RN07180
+       LCC     **                  ONE IF WRITE CHECK, ZERO OTHERWISE   3RN07190
+       PZE                         CTLR OR CTLW FROM DVSR OR DVTA       3RN07200
+       CPYD    **,,**                                                   3RN07210
+       TDC     *+2                 WRITE CHECK IF REQUESTED             3RN07220
+       TCH     SYSTWT                                                   3RN07230
+       CTLW    DWRC1               PREPARE TO WRITE CHECK               3RN07240
+       TCH     CMND1+3                                                  3RN07250
+       DVSR    ,,                                                       3RN07260
+       DVTA    ,,                                                       3RN07270
+DWRC1  DWRC    ,,                                                       3RN07280
+       PZE     *-6                                                      3RN07290
+       PZE     *-5                                                      3RN07300
+       PZE     *+1,,**                                                  3RN07310
+CMND2  SMS     **                                                       3RN07320
+       LCC     **                  ONE IF WRITE CHECK, ZERO OTHERWISE   3RN07330
+       PZE                         CTLR OR CTLW FROM DVSR OR DVTA       3RN07340
+       CPYD    **,,**                                                   3RN07350
+       TDC     *+2                 WRITE CHECK IF REQUESTED             3RN07360
+       TCH     SYSTWT                                                   3RN07370
+       CTLW    DWRC2               PREPARE TO WRITE CHECK               3RN07380
+       TCH     CMND2+3                                                  3RN07390
+       DVSR    ,,                                                       3RN07400
+       DVTA    ,,                                                       3RN07410
+DWRC2  DWRC    ,,                                                       3RN07420
+       PZE     *-6                                                      3RN07430
+       PZE     *-5                                                      3RN07440
+       PZE     *+1,,**                                                  3RN07450
+CMND3  SMS     **                                                       3RN07460
+       LCC     **                  ONE IF WRITE CHECK, ZERO OTHERWISE   3RN07470
+       PZE                         CTLR OR CTLW FROM DVSR OR DVTA       3RN07480
+       CPYD    **,,**                                                   3RN07490
+       TDC     *+2                 WRITE CHECK IF REQUESTED             3RN07500
+       TCH     SYSTWT                                                   3RN07510
+       CTLW    DWRC3               PREPARE TO WRITE CHECK               3RN07520
+       TCH     CMND3+3                                                  3RN07530
+       DVSR    ,,                                                       3RN07540
+       DVTA    ,,                                                       3RN07550
+DWRC3  DWRC    ,,                                                       3RN07560
+       PZE     *-6                                                      3RN07570
+       PZE     *-5                                                      3RN07580
+       PZE     *+1,,**                                                  3RN07590
+CMND4  SMS     **                                                       3RN07600
+       LCC     **                  ONE IF WRITE CHECK, ZERO OTHERWISE   3RN07610
+       PZE                         CTLR OR CTLW FROM DVSR OR DVTA       3RN07620
+       CPYD    **,,**                                                   3RN07630
+       TDC     *+2                 WRITE CHECK IF REQUESTED             3RN07640
+       TCH     SYSTWT                                                   3RN07650
+       CTLW    DWRC4               PREPARE TO WRITE CHECK               3RN07660
+       TCH     CMND4+3                                                  3RN07670
+       DVSR    ,,                                                       3RN07680
+       DVTA    ,,                                                       3RN07690
+DWRC4  DWRC    ,,                                                       3RN07700
+       PZE     *-6                                                      3RN07710
+       PZE     *-5                                                      3RN07720
+DCMND  SMS     **                  DUMMY COMMAND LIST                   3RN07730
+       CTLR    *+3                                                      3RN07740
+       CPYD    ,,                                                       3RN07750
+       TCH     SYSTWT                                                   3RN07760
+       OCT     100212121212                                             3RN07770
+       OCT     121212121212                                             3RN07780
+       SPACE                                                            3RN07790
+*  TSX     LOOKUP,1    1. ENTER LOOKUP WITH REQ IN AC OR TO LOOKUP -1   3RN07800
+*  RETURN              WITH REQ,,I IN AC.                               3RN07810
+*                      2. EXIT WITH QUEUE,2 = REQUEST POINTER.          3RN07820
+       SPACE                                                            3RN07830
+       STD     LKP07                                                    3RN07840
+LOOKUP AXT     0,2                 START AT QUEUE                       3RN07850
+       STA     LKP06                                                    3RN07860
+LKP01  CAL*    PQUEUE                                                   3RN07870
+       ANA     ADDR                                                     3RN07880
+       CAS     LKP06               COMPARE QUEUE SEGMENT ADDRESSES      3RN07890
+       TXI     *+3,2,-1                                                 3RN07900
+       TRA     LKP02               EQUAL                                3RN07910
+       TXI     *+1,2,-1            TRY AGAIN                            3RN07920
+LKP015 TXH     LKP01,2,**                                               3RN07930
+       TRA     ERRR1                                                    3RN07940
+LKP02  CLA     LKP07                                                    3RN07950
+       TZE     1,1                 EXIT                                 3RN07960
+       LDI*    PQUEUE                                                   3RN07970
+       LNT     200000              FIND HEADER                          3RN07980
+       TXI     *-2,2,1                                                  3RN07990
+LKP03  CAL*    PQUEUE              COMPARE I NUMBERS                    3RN08000
+       ANA     MSKI                                                     3RN08010
+       CAS     LKP07                                                    3RN08020
+       TXI     LKP04,2,-1                                               3RN08030
+       TRA     LKP05                                                    3RN08040
+       TXI     *+1,2,-1                                                 3RN08050
+LKP04  LDI*    PQUEUE                                                   3RN08060
+       LNT     200000              IF HEADER OR END OF                  3RN08070
+       TXH     LKP03,2,**          QUEUE                                3RN08080
+ERRR1  TSX     (PROUT,4                                                 3RN08090
+       PZE     1                   PRINT ERROR MESSAGE                  3RN08100
+       PZE     MESSH,,4                                                 3RN08110
+       TRA     RNSLM7              KILL THE JOB                         3RN08120
+LKP05  STZ     LKP07                                                    3RN08130
+       TRA     1,1                 EXIT                                 3RN08140
+LKP06  PZE                         REQ                                  3RN08150
+LKP07  PZE                         I NUMBER                             3RN08160
+MESSH  BCI     4,INVALID REQ IDENTIFIER                                 3RN08170
+       SPACE                                                            3RN08180
+*  TSX     PREADY,1    1. DETERMINES IF A GROUP OF MUTUALLY DEPENDENT   3RN08190
+*  READY RETURN        BETAS IS READY FOR FOR PROCESSING.               3RN08200
+*  NOT READY RETURN    2. ENTER WITH QUEUE,2 = REQUEST POINTER.         3RN08210
+       SPACE                                                            3RN08220
+PREADY SXA     SVRDY2,2                                                 3RN08230
+       LDI*    PQUEUE                                                   3RN08240
+       LNT     020000                                                   3RN08250
+       TRA     1,1                 INDEPENDENT REQUEST                  3RN08260
+       RFT     400000                                                   3RN08270
+       TRA     2,1                 INCOMPLETE BETA SET                  3RN08280
+       LFT     200000                                                   3RN08290
+       TRA     PREDY3                                                   3RN08300
+PREDY1 TXI     *+1,2,1             ARE THE OTHER MUTUALLY DEPENDENT     3RN08310
+       CAL     MSK10               REQUESTS IN PROCESSING WAITING STATUS3RN08320
+       ANA*    PQUEUE                                                   3RN08330
+       TZE     PREDY2              INDEPENDENT                          3RN08340
+       CAL     MSK7                                                     3RN08350
+       ANA*    PQUEUE                                                   3RN08360
+       TNZ     *+3                 DEPENDENT, PROCESSING WAITING        3RN08370
+SVRDY2 AXT     **,2                                                     3RN08380
+       TRA     2,1                 EXIT                                 3RN08390
+PREDY2 CAL     MSK2                                                     3RN08400
+       ANA*    PQUEUE                                                   3RN08410
+       TZE     PREDY1              NOT A HEADER                         3RN08420
+       LXA     SVRDY2,2                                                 3RN08430
+PREDY3 TXI     *+1,2,-1            NOW SCAN DOWN                        3RN08440
+       LDI*    PQUEUE                                                   3RN08450
+       LNT     200000              IS THIS A HEADER OR                  3RN08460
+PREDY4 TXH     *+3,2,**            END OF QUEUE                         3RN08470
+       LXA     SVRDY2,2            YES                                  3RN08480
+       TRA     1,1                 READY TO PROCESS                     3RN08490
+       CAL     MSK10               NO, CHECK FOR DEPENDENCE             3RN08500
+       ANA*    PQUEUE                                                   3RN08510
+       TZE     PREDY3              NO, CHECK NEXT                       3RN08520
+       CAL     MSK7                                                     3RN08530
+       ANA*    PQUEUE              YES, IS IT PROCESSING WAITING        3RN08540
+       TNZ     PREDY3              YES, CHECK NEXT                      3RN08550
+       TRA     SVRDY2              NO                                   3RN08560
+       SPACE                                                            3RN08570
+*          THIS ROUTINE SETS UP THE CALLING SEQUENCE FOR THE USERS      3RN08580
+*          PROCESSING ROUTINE AND TRANSFERS TO IT.                      3RN08590
+       SPACE                                                            3RN08600
+PROC   STZ     PRC040                                                   3RN08610
+       STZ     PROCCS                                                   3RN08620
+       CLA*    PQUEUE                                                   3RN08630
+       PAC     0,1                                                      3RN08640
+       STA     PROCCS              SET QUEUE SEGMENT, ALPHA RECORD      3RN08650
+       CLA     0,1                                                      3RN08660
+       STD     PROCCS                                                   3RN08670
+       CLA     2,1                 AND PROCESSING ROUTINE ADDRESSES     3RN08680
+       ARS     18                                                       3RN08690
+       STA     PRC070                                                   3RN08700
+       CAL     MSK10                                                    3RN08710
+       ANA*    PQUEUE              TEST FOR DEPENDENCE                  3RN08720
+       TZE     PRC050                                                   3RN08730
+PRC010 CAL     MSK2                                                     3RN08740
+       ANA*    PQUEUE                                                   3RN08750
+       TNZ     *+2                                                      3RN08760
+       TXI     PRC010,2,1          FIND HEADER                          3RN08770
+PRC015 CAL*    PQUEUE                                                   3RN08780
+       ANA     MSK10               DEPENDENCE                           3RN08790
+       TZE     *+2                                                      3RN08800
+       TSX     PRC020,4            SET I AND BETA ADDRESS               3RN08810
+       TXI     *+1,2,-1                                                 3RN08820
+       LDI*    PQUEUE                                                   3RN08830
+       LNT     200000                                                   3RN08840
+PRC017 TXH     PRC015,2,**         IF HEADER OR END OF QUEUE            3RN08850
+       TRA     PRC060              LEAVE                                3RN08860
+PRC020 SXA     PRC030,4                                                 3RN08870
+       LXA     PRC040,4                                                 3RN08880
+       TXI     *+1,4,-1                                                 3RN08890
+       STZ     PROCCS,4                                                 3RN08900
+       LDI*    PQUEUE                                                   3RN08910
+       RIL     001000              CHANGE STATUS                        3RN08920
+       SIL     000400                                                   3RN08930
+       STI*    PQUEUE              TO PROCESSING ISSUED                 3RN08940
+       LFT     100000                                                   3RN08950
+       TRA     PRC040+1            COMMON BETA                          3RN08960
+       LNT     000040                                                   3RN08970
+       TSX     GETBF,1             WRITE ONLY REQUEST                   3RN08980
+       PIA                                                              3RN08990
+PRC025 PAC     0,1                                                      3RN09000
+       CAL     1,1                                                      3RN09010
+       ARS     18                                                       3RN09020
+       ADD     L(1)                                                     3RN09030
+       STA     PROCCS,4            SET BETA ADDRESS                     3RN09040
+       RIL     777740                                                   3RN09050
+       PIA                                                              3RN09060
+       STD     PROCCS,4            AND I NUMBER                         3RN09070
+       SXA     PRC040,4            SAVE COUNT                           3RN09080
+PRC030 AXT     **,4                                                     3RN09090
+       TRA     1,4                                                      3RN09100
+PRC040 PZE                                                              3RN09110
+       SXA     SVPRC2,2                                                 3RN09120
+       PIA                                                              3RN09130
+       PAC     0,1                                                      3RN09140
+       STA     PRC048                                                   3RN09150
+PRC044 CAL     5,1                                                      3RN09160
+       LAS     PRC048                                                   3RN09170
+       TRA     *+2                                                      3RN09180
+       TRA     SVPRC2              END OF CHAIN                         3RN09190
+       TSX     LOOKUP,1                                                 3RN09200
+       LDI*    PQUEUE                                                   3RN09210
+       PIA                                                              3RN09220
+       PAC     0,1                                                      3RN09230
+       LNT     001000              ANY REQUEST IN S=3                   3RN09240
+       TRA     PRC044                                                   3RN09250
+       LDQ     1,1                 YES                                  3RN09260
+       LXA     SVPRC2,2                                                 3RN09270
+       TSX     GETBF,1             COPY INTO PROCESSING BUFFER          3RN09280
+       TSX     COPY,1                                                   3RN09290
+SVPRC2 AXT     **,2                                                     3RN09300
+       LDI*    PQUEUE                                                   3RN09310
+       TRA     PRC025-1                                                 3RN09320
+PRC048 PZE                                                              3RN09330
+PRC050 TSX     PRC020,4                                                 3RN09340
+PRC060 ENB*    (TRAPX              RESTORE TRAPS                        3RN09350
+       LXA     PRC040,4                                                 3RN09360
+       CLS     PROCCS,4            SET SIGN MINUS IN LAST WORD          3RN09370
+       STO     PROCCS,4            OF CALLING SEQUENCE                  3RN09380
+       AXC     PROCCS-1,4          SET XR4                              3RN09390
+PRC070 TSX     **,2                GO TO PROCESSING ROUTINE             3RN09400
+       SPACE                                                            3RN09410
+*          UPON RETURN FROM THE PROCESSING ROUTINE, BETA REQUESTS       3RN09420
+*          ARE PROCESSED AS SPECIFIED BY THE USER.                      3RN09430
+       SPACE                                                            3RN09440
+       CLA     PROCCS                                                   3RN09450
+       TMI     SCHED               RANRPL WAS ENTERED, NO ACTION NEEDED 3RN09460
+       ENB     L(0)                DISABLE TRAPS                        3RN09470
+       TSX     LOOKUP,1            SEEK REQUEST POINTER                 3RN09480
+       STZ     COUNT               RESET PROCCS COUNTER                 3RN09490
+       CAL     MSK10                                                    3RN09500
+       ANA*    PQUEUE              MUTUALLY DEPENDENT                   3RN09510
+       TNZ     RNRL1                                                    3RN09520
+       TSX     RNRL4,1             NO, TAKE REQUIRED ACTION             3RN09530
+       TRA     SCHED               AND EXIT                             3RN09540
+RNRL1  LDI*    PQUEUE                                                   3RN09550
+       LNT     200000                                                   3RN09560
+       TXI     *-2,2,1                                                  3RN09570
+RNRL2  CAL     MSK10                                                    3RN09580
+       ANA*    PQUEUE              MUTUAL DEPENDENCE                    3RN09590
+       TZE     RNRL3                                                    3RN09600
+       TSX     RNRL4,1             PROCESS                              3RN09610
+RNRL3  TXI     *+1,2,-1            SEARCH NEXT                          3RN09620
+       LDI*    PQUEUE                                                   3RN09630
+       LNT     200000              UNLESS HEADER OR END OF QUEUE        3RN09640
+RNRL5  TXH     RNRL2,2,**          REPEAT                               3RN09650
+       TRA     SCHED                                                    3RN09660
+RNRL4  SXA     SVRL1,1                                                  3RN09670
+       SXA     SVRL2,2             SAVE XRS                             3RN09680
+       LXA     COUNT,4                                                  3RN09690
+       TXI     *+1,4,-1            INCREMENT COUNT                      3RN09700
+       SXA     COUNT,4                                                  3RN09710
+       CAL     PROCCS,4                                                 3RN09720
+       ANA     MSK21               SHOULD THIS RECORD BE WRITTEN        3RN09730
+       TNZ     RNRL9                                                    3RN09740
+       LDI*    PQUEUE                                                   3RN09750
+       RIL     010400                                                   3RN09760
+       SIL     000200                                                   3RN09770
+       STI*    PQUEUE                                                   3RN09780
+       LFT     100000                                                   3RN09790
+       TRA     RNRL10              COMMON BETA                          3RN09800
+SVRL1  AXT     **,1                                                     3RN09810
+SVRL2  AXT     **,2                RESTORE XRS                          3RN09820
+       TRA     1,1                 EXIT                                 3RN09830
+COUNT  PZE                                                              3RN09840
+RNRL9  LDI*    PQUEUE                                                   3RN09850
+       LFT     100000                                                   3RN09860
+       TRA     RNRL15                                                   3RN09870
+       TSX     RELBF,4             RELEASE BUFFER,                      3RN09880
+       TSX     RELQS,4             QUEUE SEGMENT AND POINTER            3RN09890
+       TRA     SVRL1                                                    3RN09900
+RNRL10 PIA                                                              3RN09910
+       STA     RNRL14              SAVE ADDRESS                         3RN09920
+       PAC     0,1                                                      3RN09930
+       CAL     5,1                                                      3RN09940
+       LAS     RNRL14                                                   3RN09950
+       TRA     *+2                                                      3RN09960
+       TRA     RNRL12                                                   3RN09970
+       TSX     LOOKUP,1                                                 3RN09980
+       LDI*    PQUEUE              ANY OTHER REQUEST IN S5              3RN09990
+       RIL     010000                                                   3RN10000
+       PIA                                                              3RN10010
+       LNT     000200                                                   3RN10020
+       TRA     RNRL10+2                                                 3RN10030
+       TSX     RELEM,4             YES - REMOVE REQUEST FROM CHAIN      3RN10040
+       TSX     RELBF,4             BETA BUFFER                          3RN10050
+       TSX     RELQS,4             AND QUEUE SEGMENT                    3RN10060
+       CLA     RNRL14                                                   3RN10070
+       TSX     LOOKUP,1                                                 3RN10080
+       SXA     SVRL2,2             NEW POINTER POSITION - RESTORE XR2   3RN10090
+RNRL12 LXA     SVRL2,2                                                  3RN10100
+       CLA*    PQUEUE                                                   3RN10110
+       PAC     0,1                                                      3RN10120
+       LDQ     1,1                 SAVE BETA BUFFER                     3RN10130
+RNRL13 CAL     5,1                                                      3RN10140
+       LAS     RNRL14              ANY REQUEST IN S3                    3RN10150
+       TRA     *+2                                                      3RN10160
+       TRA     SVRL1               NO                                   3RN10170
+       TSX     LOOKUP,1                                                 3RN10180
+       LDI*    PQUEUE                                                   3RN10190
+       RIL     010000                                                   3RN10200
+       PIA                                                              3RN10210
+       PAC     0,1                                                      3RN10220
+       LNT     001000                                                   3RN10230
+       TRA     RNRL13                                                   3RN10240
+       TSX     COPY,1              COPY RECORD INTO BACK-UP BUFFER      3RN10250
+       TRA     SVRL1                                                    3RN10260
+RNRL14 PZE                                                              3RN10270
+RNRL15 LFT     010000                                                   3RN10280
+       TRA     *+3                 UNLESS SPECIAL FLAG ON               3RN10290
+       TSX     RELEM,4             REMOVE FROM BETA CHAIN               3RN10300
+       TRA     RNRL9+3             AND RETURN                           3RN10310
+       STL     RNRL18                                                   3RN10320
+       PIA                                                              3RN10330
+       STA     RNRL14                                                   3RN10340
+RNRL16 PAC     0,1                                                      3RN10350
+       CAL     5,1                                                      3RN10360
+       LAS     RNRL14                                                   3RN10370
+       TRA     *+2                                                      3RN10380
+       TRA     RNRL17                                                   3RN10390
+       TSX     LOOKUP,1                                                 3RN10400
+       LDI*    PQUEUE                                                   3RN10410
+       PIA                                                              3RN10420
+       RIL     011000              RESET SPECIAL FLAG AND S3            3RN10430
+       SIL     040000              SET S1                               3RN10440
+       ZET     RNRL18                                                   3RN10450
+       SIL     040000              MAKE HEADER ONE OF THEM              3RN10460
+       STI*    PQUEUE                                                   3RN10470
+       STZ     RNRL18                                                   3RN10480
+       TRA     RNRL16                                                   3RN10490
+RNRL17 LXA     SVRL2,2                                                  3RN10500
+       TRA     RNRL15+2                                                $3RN10510
+RNRL18 PZE                                                              3RN10520
+       SPACE                                                            3RN10530
+*  TSX     RANRPL,4    1. REPLACES THE ADDRESS OF A BETA RECORD         3RN10540
+*  PZE     REQ,,I      ALREADY DELIVERED WITH A NEW ONE.                3RN10550
+*  PZE     A           2. CHANGES STATUS OF ALL REQUESTS IN THE GROUP.  3RN10560
+*  P       PHYS. ADDR. 3. SAVES XRS AND SENSE INDICATORS.               3RN10570
+*  VERIFICATION ADDRESS                                                 3RN10580
+*  RETURN                                                               3RN10590
+       SPACE                                                            3RN10600
+RNRPL  ENB     L(0)                DISABLE TRAPS                        3RN10610
+       SXA     SVRP1,1                                                  3RN10620
+       SXA     SVRP2,2             SAVE XRS                             3RN10630
+       SXA     SVRP4,4                                                  3RN10640
+       STI     SENSRP              AND SENSE INDIC                      3RN10650
+       CLA     1,4                                                      3RN10660
+       TSX     LOOKUP-1,1          MATCH REQ,,I                         3RN10670
+       CLA*    PQUEUE                                                   3RN10680
+       PAC     0,1                                                      3RN10690
+       CLA     2,4                                                      3RN10700
+       STA     *+1                                                      3RN10710
+       CLA     **                                                       3RN10720
+       STA     1,1                                                      3RN10730
+       CAL     3,4                 REPLACE ADDRESSES                    3RN10740
+       SLW     3,1                                                      3RN10750
+       LDI     4,4                                                      3RN10760
+       TSX     H2ZBCD,4            CONVERT ZEROS IN HA2                 3RN10770
+       STI     4,1                                                      3RN10780
+       LDI*    PQUEUE                                                   3RN10790
+       LFT     100000                                                   3RN10800
+       TRA     RPL06               REQUEST IN BETA CHAIN                3RN10810
+       TSX     RELBF,4             RELEASE BETA BUFFER                  3RN10820
+RPL01  RIL     142440                                                   3RN10830
+       SIL     004000              SET S1                               3RN10840
+       STI*    PQUEUE                                                   3RN10850
+       LNT     020000                                                   3RN10860
+       TRA     RPL05               INDEPENDENT BETA                     3RN10870
+       SXA     RPL04,2                                                  3RN10880
+       LDI*    PQUEUE                                                   3RN10890
+       LNT     200000                                                   3RN10900
+       TXI     *-2,2,1             FIND HEADER                          3RN10910
+RPL02  LNT     020400              IF MUTUAL DEPENDENT AND S=4          3RN10920
+       TRA     RPL03                                                    3RN10930
+       RIL     000400                                                   3RN10940
+       SIL     001000                                                   3RN10950
+       STI*    PQUEUE              CHANGE TO S3                         3RN10960
+       LFT     100000                                                   3RN10970
+       TRA     RPL07               REQUEST IN BETA CHAIN                3RN10980
+RPL03  TXI     *+1,2,-1                                                 3RN10990
+       LDI*    PQUEUE                                                   3RN11000
+       LNT     200000              IF HEADER OR END OF QUEUE            3RN11010
+       TXH     RPL02,2,**          PROCEED                              3RN11020
+RPL04  AXT     **,2                RESTORE XR2                          3RN11030
+RPL05  TSX     CHECK,4             CHECK FOR IDENTICAL BETAS            3RN11040
+SVRP4  AXT     **,4                                                     3RN11050
+       NZT     ERRFLG              IF ENTERED FROM ERRET                3RN11060
+       TRA     *+3                                                      3RN11070
+       STZ     ERRFLG              GO TO SCHEDULER                      3RN11080
+       TRA     SCHED                                                    3RN11090
+       CLA     PROCCS              IF ENTERED FROM PROCES               3RN11100
+       SSM                         SET FLAG                             3RN11110
+       STO     PROCCS              AND RETURN THERE                     3RN11120
+SVRP1  AXT     **,1                                                     3RN11130
+SVRP2  AXT     **,2                RESTORE XRS                          3RN11140
+       LDI     SENSRP              AND SENSE INDICATORS                 3RN11150
+       ENB*    (TRAPX              RESTORE TRAPS                        3RN11160
+       TRA     5,4                 EXIT                                 3RN11170
+RPL06  TSX     ERR05,4                                                  3RN11180
+       LDI*    PQUEUE                                                   3RN11190
+       TRA     RPL01                                                    3RN11200
+RPL07  SXA     RPL08,2                                                  3RN11210
+       PIA                                                              3RN11220
+       STA     RPL09                                                    3RN11230
+       PAC     0,1                                                      3RN11240
+       CAL     5,1                                                      3RN11250
+       LAS     RPL09               IF ANY OTHER REQUEST                 3RN11260
+       TRA     *+2                                                      3RN11270
+       TRA     RPL10                                                    3RN11280
+       TSX     LOOKUP,1            IN CHAIN IS IN S=3                   3RN11290
+       LDI*    PQUEUE                                                   3RN11300
+       PIA                                                              3RN11310
+       PAC     0,1                                                      3RN11320
+       LNT     001000                                                   3RN11330
+       TRA     RPL07+4                                                  3RN11340
+       LDI     1,1                                                      3RN11350
+RPL08  AXT     **,2                                                     3RN11360
+       TSX     RELBF,4             RELEASE BUFFER                       3RN11370
+       CLA*    PQUEUE                                                   3RN11380
+       PAC     0,1                 ASSIGN COMMON BACK-UP                3RN11390
+       PIA                                                              3RN11400
+       STD     1,1                                                      3RN11410
+RPL10  LXA     RPL08,2                                                  3RN11420
+       TRA     RPL03                                                    3RN11430
+RPL09  PZE                                                              3RN11440
+SENSRP PZE                                                              3RN11450
+       SPACE                                                            3RN11460
+*  TSX     CHECK,4     1. COMPARES BETA ADDRESS WITH ALL OTHERS.        3RN11470
+*  RETURN              2. CHAINS REQUESTS OF THE SAME BETA.             3RN11480
+*                      3. P IS THE REQUEST GENERATING THE TEST,         3RN11490
+*                      P(N) IS A REQUEST IN THE COMMON BETA CHAIN.      3RN11500
+*                      4. ENTER WITH QUEUE,2 = REQUEST POINTER.         3RN11510
+       SPACE                                                            3RN11520
+CHECK  SXA     SVCK4,4                                                  3RN11530
+       SXA     SVCK2,2             SAVE XRS                             3RN11540
+       AXT     0,2                 SCAN FROM TOP                        3RN11550
+       CLA     1,1                                                      3RN11560
+       STA     CHCK4               GET UCB                              3RN11570
+CHCK1  PXA     0,2                                                      3RN11580
+       ERA     SVCK2               IS THIS THE REQUEST                  3RN11590
+       TNZ     *+2                 PRODUCING THE CHECK                  3RN11600
+       TXI     *+1,2,-1            JUMP OVER IT                         3RN11610
+       CLA*    PQUEUE                                                   3RN11620
+       PAC     0,4                 NEW QUEUE SEGMENT TO XR4             3RN11630
+       CAL     1,4                                                      3RN11640
+       ANA     ADDR                                                     3RN11650
+       ERA     CHCK4               COMPARE  UCB'S                       3RN11660
+       TNZ     CHCK2                                                    3RN11670
+       CAL     4,4                                                      3RN11680
+       ERA     4,1                 COMPARE VERIF. ADDRESSES             3RN11690
+       TNZ     CHCK2                                                    3RN11700
+       CAL     3,4                                                      3RN11710
+       ERA     3,1                 COMPARE PHYSICAL ADDRESSES           3RN11720
+       TZE     CHCK6               EQUAL, GO TO CHAINING ROUTINE        3RN11730
+       CLA     3,4                                                      3RN11740
+       LDQ     3,1                                                      3RN11750
+       TMI     *+3                                                      3RN11760
+       TQP     CHCK2               BOTH ADDR. IN BINARY                 3RN11770
+       TRA     *+4                 AC BIN, MQ BCD                       3RN11780
+       TQP     *+2                 AC BCD, MQ BIN                       3RN11790
+       TRA     CHCK2               BOTH IN BCD                          3RN11800
+       XCA                                                              3RN11810
+       STQ     CHCK5                                                    3RN11820
+       SXA     SVCK44,4                                                 3RN11830
+       TSX     (DECVA,4            CONVERT TO BCD THE ONE IN BINARY     3RN11840
+SVCK44 AXT     **,4                                                     3RN11850
+       XCL                                                              3RN11860
+       ANA     MSK15                                                    3RN11870
+       ORA     MSK20                                                    3RN11880
+       ERA     CHCK5               COMPARE                              3RN11890
+       TZE     CHCK6               EQUAL                                3RN11900
+CHCK2  TXI     *+1,2,-1                                                 3RN11910
+       CLA*    PQUEUE                                                   3RN11920
+       TZE     *+2                                                      3RN11930
+CHCK3  TXH     CHCK1,2,**                                               3RN11940
+       LXA     SVCK2,2             UNIQUE REQUEST                       3RN11950
+       CAL     MSK9                FOR THIS BETA                        3RN11960
+       ORS*    PQUEUE                                                   3RN11970
+SVCK4  AXT     **,4                                                     3RN11980
+       TRA     1,4                 EXIT                                 3RN11990
+SVCK2  PZE                         XR2                                  3RN12000
+CHCK4  PZE                                                              3RN12010
+CHCK5  PZE                                                              3RN12020
+CHCK6  SXA     SVCK22,2                                                 3RN12030
+       CLA     CHCK12+2                                                 3RN12040
+       STA     CHCK75                                                   3RN12050
+       CLA*    PQUEUE                                                   3RN12060
+       PAC     0,1                 P(N) TO XR1                          3RN12070
+       LXA     SVCK2,2                                                  3RN12080
+       CLA*    PQUEUE                                                   3RN12090
+       PAC     0,4                 P TO XR4                             3RN12100
+       LDI     5,1                                                      3RN12110
+       STA     5,1                 P TO P(N)                            3RN12120
+SVCK22 AXT     **,2                                                     3RN12130
+       CLA*    PQUEUE                                                   3RN12140
+       RFT     077777                                                   3RN12150
+       TRA     *+3                                                      3RN12160
+       STA     5,4                 IF NEW CHAIN, STORE                  3RN12170
+       TRA     *+2                                                      3RN12180
+       STI     5,4                                                      3RN12190
+       LDI*    PQUEUE              RECIPROCAL ADDRESSES                 3RN12200
+       SIL     100000              COMMON BETA FLAG TO P(N)             3RN12210
+       STI*    PQUEUE                                                   3RN12220
+       LFT     007000              IS P(N) IN S=3 OR LESS               3RN12230
+       TRA     *+2                                                      3RN12240
+       TRA     CHCK8                                                    3RN12250
+       SXA     CHCK7,1             YES                                  3RN12260
+       LNT     010000                                                   3RN12270
+       TRA     *+3                                                      3RN12280
+       CLA     CHCK12+1            IF REQUIRED SET SPECIAL FLAG         3RN12290
+       STA     CHCK75                                                   3RN12300
+       LNT     000040              IF NO BUFFER ASSIGNED TO P(N)        3RN12310
+       TSX     GETBF,1             ASSIGN ONE                           3RN12320
+CHCK7  AXT     **,1                                                     3RN12330
+       LDQ     1,1                                                      3RN12340
+       LXA     SVCK2,2                                                  3RN12350
+       CAL     MSK3                SET NEW REQUEST                      3RN12360
+       ANA*    PQUEUE                                                   3RN12370
+       RIS     MSK3                                                     3RN12380
+       OAI                                                              3RN12390
+CHCK75 SIL     100040                                                   3RN12400
+       STI*    PQUEUE              IN THE SAME STATUS                   3RN12410
+       XCA                                                              3RN12420
+       STD     1,4                 AND ASSIGN THE SAME BUFFER           3RN12430
+       TRA     SVCK4                                                    3RN12440
+CHCK8  PIA                                                              3RN12450
+       STA     CHCK12              P(N) IS END OF CHAIN                 3RN12460
+       CAL     5,4                                                      3RN12470
+       LAS     CHCK12                                                   3RN12480
+       TRA     *+2                                                      3RN12490
+       TRA     CHCK9               ALL CHAIN SCANNED                    3RN12500
+       TSX     LOOKUP,1                                                 3RN12510
+       LDI*    PQUEUE                                                   3RN12520
+       PIA                                                              3RN12530
+       PAC     0,1                                                      3RN12540
+       LFT     007000              STATUS 3 OR LOWER                    3RN12550
+       TRA     CHCK7+1             YES                                  3RN12560
+       CAL     5,1                 NO, REPEAT                           3RN12570
+       TRA     CHCK8+3                                                  3RN12580
+CHCK9  LXA     SVCK22,2                                                 3RN12590
+       LDI*    PQUEUE                                                   3RN12600
+       LFT     000300              P(N) IN S = 5 OR 6                   3RN12610
+       TRA     *+2                 YES                                  3RN12620
+       TRA     CHCK10              NO, SEARCH                           3RN12630
+       PIA                                                              3RN12640
+       PAC     0,1                                                      3RN12650
+CHCK11 LDQ     1,1                 OLD REQUEST BUFFER                   3RN12660
+       LXA     SVCK2,2                                                  3RN12670
+       TSX     GETBF,1             GET ONE FOR NEW SEGMENT              3RN12680
+       TSX     COPY,1              AND COPY OLD ONE                     3RN12690
+       LDI*    PQUEUE                                                   3RN12700
+       RIL     004000                                                   3RN12710
+       SIL     101000              COMMON BETA AND S=3                  3RN12720
+       STI*    PQUEUE                                                   3RN12730
+       TRA     SVCK4                                                    3RN12740
+CHCK10 CAL     5,4                                                      3RN12750
+       LAS     CHCK12                                                   3RN12760
+       TRA     *+2                                                      3RN12770
+       TRA     CHCK13                                                   3RN12780
+       TSX     LOOKUP,1                                                 3RN12790
+       LDI*    PQUEUE                                                   3RN12800
+       PIA                                                              3RN12810
+       PAC     0,1                                                      3RN12820
+       LFT     000300              S = 5 OR 6                           3RN12830
+       TRA     CHCK11              YES                                  3RN12840
+       CAL     5,1                                                      3RN12850
+       TRA     CHCK10+1            KEEP SEARCHING                       3RN12860
+CHCK12 PZE                                                              3RN12870
+       OCT     000000010040                                             3RN12880
+       OCT     000000000040                                             3RN12890
+CHCK13 TSX     GETBF,1             WHOLE CHAIN IN S4                    3RN12900
+       LDI*    PQUEUE              ASSIGN BUFFER                        3RN12910
+       RIL     004000              AND SET NEW REQUEST                  3RN12920
+       SIL     111000              IN S3, COMMON BETA, SPECIAL FLAG     3RN12930
+CHCK14 STI*    PQUEUE                                                   3RN12940
+       PIA                                                              3RN12950
+       PAC     0,1                                                      3RN12960
+       CAL     5,1                                                      3RN12970
+       LAS     CHCK12                                                   3RN12980
+       TRA     *+2                                                      3RN12990
+       TRA     SVCK4                                                    3RN13000
+       TSX     LOOKUP,1            SET SPECIAL FLAG IN THE REMAINING    3RN13010
+       LDI*    PQUEUE                                                   3RN13020
+       SIL     010000              ELEMENTS OF THE CHAIN                3RN13030
+       TRA     CHCK14                                                   3RN13040
+       SPACE                                                            3RN13050
+*  TSX     RELBF,4   1. RELEASES BETA BUFFER, RESTORES                  3RN13060
+*  RETURN            AVAILABILITY CHAIN.                                3RN13070
+       SPACE                                                            3RN13080
+RELBF  CLA*    PQUEUE                                                   3RN13090
+       SXA     RELBSV,1                                                 3RN13100
+       PAC     0,1                                                      3RN13110
+       CAL     1,1                                                      3RN13120
+       PDC     0,1                                                      3RN13130
+       CLA     0,1                                                      3RN13140
+       LDQ*    PDRHA                                                    3RN13150
+       STA*    PDRHA                                                    3RN13160
+       XCA                                                              3RN13170
+       STA     0,1                                                      3RN13180
+RELBSV AXT     **,1                                                     3RN13190
+       TRA     1,4                                                      3RN13200
+       SPACE                                                            3RN13210
+*  TSX     RELQS,4   1. RELEASES QUEUE SEGMENT, RESTORES AVAILABILITY   3RN13220
+*  RETURN            CHAIN.  2. RESTORES REQUEST POINTER QUEUE.         3RN13230
+       SPACE                                                            3RN13240
+RELQS  CLA*    PQUEUE                                                   3RN13250
+       PAC     0,1                                                      3RN13260
+       CLA     0,1                 RESTORE AVAIL CHAIN                  3RN13270
+       LDQ*    SQUEUE                                                   3RN13280
+       STA*    SQUEUE                                                   3RN13290
+       XCA                                                              3RN13300
+       STA     0,1                                                      3RN13310
+       CAL*    PQUEUE              IS THIS THE HEADER                   3RN13320
+       STZ*    PQUEUE                                                   3RN13330
+       ANA     MSK2                                                     3RN13340
+       TXI     *+1,2,-1                                                 3RN13350
+       TZE     *+3                                                      3RN13360
+       ZET*    PQUEUE                                                   3RN13370
+       ORS*    PQUEUE                                                   3RN13380
+RLQS2  TXL     RLQS4,2,**          DONT GO TOO FAR                      3RN13390
+       CLA*    PQUEUE                                                   3RN13400
+       TZE     1,4                                                      3RN13410
+       STZ*    PQUEUE                                                   3RN13420
+       TXI     *+1,2,1             RESTORE QUEUE                        3RN13430
+       STO*    PQUEUE                                                   3RN13440
+       TXI     RLQS2,2,-2                                               3RN13450
+RLQS4  TRA     1,4                                                      3RN13460
+       SPACE                                                            3RN13470
+*  TSX     GETBF,1     1. FINDS AN AVAILABLE BUFFER IN DRHA, AND STORES 3RN13480
+*  RETURN              ITS ADDRESS IN THE QUEUE SEGMENT.                3RN13490
+*                      2. IF NO BUFFER IS AVAILABLE, RETURNS            3RN13500
+*                      WITH THE AC NEGATIVE.                            3RN13510
+       SPACE                                                            3RN13520
+GETBF  SXA     SVGBF1,1                                                 3RN13530
+       CLA*    PDRHA                                                    3RN13540
+       STA     *+1                                                      3RN13550
+GTBF1  CLA     **                                                       3RN13560
+       TMI     1,1                 NONE AVAILABLE, EXIT                 3RN13570
+       STA*    PDRHA                                                    3RN13580
+       CLA     GTBF1               UPDATE AVAIL CHAIN                   3RN13590
+       STA*    GTBF1                                                    3RN13600
+       CLA*    PQUEUE                                                   3RN13610
+       PAC     0,1                                                      3RN13620
+       CLA     GTBF1                                                    3RN13630
+       ALS     18                  STORE BUFFER ADDRESS                 3RN13640
+       STD     1,1                 IN QUEUE SEGMENT                     3RN13650
+       CAL     MSK19                                                    3RN13660
+       ORS*    PQUEUE              AND SET BUFFER ASSIGNED FLAG         3RN13670
+SVGBF1 AXT     **,1                                                     3RN13680
+       TRA     1,1                                                      3RN13690
+       SPACE                                                            3RN13700
+*  TSX     RELEM,4     1. RELEASES REQUEST FROM COMMON BETA CHAIN.      3RN13710
+*  RETURN              2. ENTER WITH QUEUE,2 = REQUEST POINTER.         3RN13720
+       SPACE                                                            3RN13730
+RELEM  CLA*    PQUEUE                                                   3RN13740
+       STA     RELM2                                                    3RN13750
+       PAC     0,1                                                      3RN13760
+       LDQ     5,1                 NEXT ELEMENT ADDRESS                 3RN13770
+RELM1  CAL     5,1                 GET CHAIN WORD                       3RN13780
+       LAS     RELM2               COMPARE                              3RN13790
+       TRA     *+2                                                      3RN13800
+       TRA     *+3                 EQUAL                                3RN13810
+       PAC     0,1                                                      3RN13820
+       TRA     RELM1                                                    3RN13830
+       XCL                                                              3RN13840
+       STA     5,1                 HEALED IS THE WOUND                  3RN13850
+       TRA     1,4                 EXIT                                 3RN13860
+RELM2  PZE                                                              3RN13870
+       SPACE                                                            3RN13880
+*  TSX     COPY,1      1.INTO A BUFFER ATTACHED TO REQUEST QUEUE,2      3RN13890
+*  RETURN              COPY ANOTHER ONE WHOSE ADDRESS IS GIVEN          3RN13900
+*                      BY THE MQ DECREMENT.                             3RN13910
+       SPACE                                                            3RN13920
+COPY   SXA     SVCPY1,1                                                 3RN13930
+       XCL                                                              3RN13940
+       ARS     18                                                       3RN13950
+       ADD     L(1)                                                     3RN13960
+       STA     CPY1                                                     3RN13970
+       CLA*    PQUEUE                                                   3RN13980
+       PAC     0,1                                                      3RN13990
+       CAL     1,1                                                      3RN14000
+       ARS     18                                                       3RN14010
+       ADD     L(1)                                                     3RN14020
+       STA     CPY1+1                                                   3RN14030
+       LAC     L(R),1                                                   3RN14040
+       TXI     *+1,1,1                                                  3RN14050
+CPY1   CAL     **,1                                                     3RN14060
+       SLW     **,1                                                     3RN14070
+       TXH     CPY1-1,1,0                                               3RN14080
+SVCPY1 AXT     **,1                                                     3RN14090
+       TRA     1,1                                                      3RN14100
+       SPACE                                                            3RN14110
+*  TSX     H2BCDZ,4    CONVERTS BCD 12S TO ZEROS IN HA2.                3RN14120
+       SPACE                                                            3RN14130
+H2BCDZ RNT     001200                                                   3RN14140
+       TRA     *+4                                                      3RN14150
+       RFT     006500                                                   3RN14160
+       TRA     *+2                                                      3RN14170
+       RIR     007700                                                   3RN14180
+       RNT     000012                                                   3RN14190
+       TRA     1,4                                                      3RN14200
+       RFT     000065                                                   3RN14210
+       TRA     1,4                                                      3RN14220
+       RIR     000077                                                   3RN14230
+       TRA     1,4                                                      3RN14240
+       SPACE                                                            3RN14250
+*  TSX     H2ZBCD,4    CONVERTS ZEROS TO BCD 12S IN HA2.                3RN14260
+       SPACE                                                            3RN14270
+H2ZBCD RFT     007700                                                   3RN14280
+       TRA     *+2                                                      3RN14290
+       SIR     001200                                                   3RN14300
+       RFT     000077                                                   3RN14310
+       TRA     *+2                                                      3RN14320
+       SIR     000012                                                   3RN14330
+       TRA     1,4                                                      3RN14340
+       SPACE                                                            3RN14350
+*  THIS ERROR ROUTINE DEALS WITH NO RECORD FOUND AND INVALID ADDRESS    3RN14360
+*     ERROR CONDITIONS.                                                 3RN14370
+       SPACE                                                            3RN14380
+ERROR  CAL*    PQUEUE                                                   3RN14390
+       PAC     0,4                                                      3RN14400
+       STA     ERR01+2             SET REQ,,I                           3RN14410
+       ANA     MSKI                                                     3RN14420
+       STD     ERR01+2                                                  3RN14430
+       CLA     0,4                                                      3RN14440
+       ARS     18                  ALPHA AND ERRET                      3RN14450
+       STA     ERR01+1                                                  3RN14460
+       CLA     2,4                                                      3RN14470
+       STA     ERR01                                                    3RN14480
+       LDI*    PQUEUE                                                   3RN14490
+       RIR     200000                                                   3RN14500
+       STI*    PQUEUE                                                   3RN14510
+       STL     ERRFLG                                                   3RN14520
+       ENB*    (TRAPX                                                   3RN14530
+ERR01  TSX     **,4                GO TO USERS ERROR ROUTINE            3RN14540
+       PZE                                                              3RN14550
+       PZE                                                              3RN14560
+       TRA     ERR03                                                    3RN14570
+       ENB     L(0)                                                     3RN14580
+       CLA     ERR01+2                                                  3RN14590
+       TSX     LOOKUP,1                                                 3RN14600
+       LDI*    PQUEUE                                                   3RN14610
+       LNT     200000                                                   3RN14620
+       TXI     *-2,2,1                                                  3RN14630
+ERR02  LNT     100000                                                   3RN14640
+       TRA     *+3                                                      3RN14650
+       TSX     ERR05,4             COMMON BETA                          3RN14660
+       TRA     *+2                                                      3RN14670
+       TSX     RELBF,4             RELEASE BETA BUFFERS                 3RN14680
+       SXA     *+2,2                                                    3RN14690
+       TSX     RELQS,4             AND QUEUE SEGMENTS                   3RN14700
+       AXT     **,2                FOR THE WHOLE SET                    3RN14710
+       LDI*    PQUEUE                                                   3RN14720
+       ZET*    PQUEUE                                                   3RN14730
+       LFT     200000                                                   3RN14740
+       TRA     ERR04                                                    3RN14750
+       TRA     ERR02                                                    3RN14760
+ERR03  ENB     L(0)                                                     3RN14770
+       CLA     ERR01+2                                                  3RN14780
+       TSX     LOOKUP-1,1                                               3RN14790
+       LDI*    PQUEUE                                                   3RN14800
+       LNT     100000                                                   3RN14810
+       TRA     *+3                                                      3RN14820
+       TSX     ERR05,4                                                  3RN14830
+       TRA     *+2                                                      3RN14840
+       TSX     RELBF,4             RELEASE BETA BUFFER                  3RN14850
+       TSX     RELQS,4             AND QUEUE SEGMENT                    3RN14860
+ERR04  STZ     ERRFLG              RESET ERROR FLAG                     3RN14870
+       TRA     SCHED               RETURN TO SCHEDULER                  3RN14880
+ERR05  SXA     SVERR2,2                                                 3RN14890
+       SXA     ERR06,4                                                  3RN14900
+       STL     ERR11                                                    3RN14910
+       LDI*    PQUEUE              IS REQUEST IN S2                     3RN14920
+       LFT     002000                                                   3RN14930
+       TRA     ERR06+2             YES - RANRPL ENTERED FROM ERRET      3RN14940
+       LFT     010000                                                  $3RN14950
+       TRA     ERR10                                                   $3RN14960
+       TSX     RELBF,4                                                  3RN14970
+       TSX     RELEM,4                                                  3RN14980
+ERR06  AXT     **,4                                                     3RN14990
+       TRA     1,4                                                      3RN15000
+       PIA                                                              3RN15010
+       STA     ERR09                                                    3RN15020
+ERR07  PAC     0,1                                                      3RN15030
+       CAL     5,1                                                      3RN15040
+       LAS     ERR09               SEARCH FOR OTHER REQUESTS IN S2      3RN15050
+       TRA     *+2                                                      3RN15060
+       TRA     ERR08                                                    3RN15070
+       TSX     LOOKUP,1                                                 3RN15080
+       LDI*    PQUEUE              TO DETERMINE IF BUFFER               3RN15090
+       PIA                                                              3RN15100
+       LNT     002000                                                   3RN15110
+       TRA     ERR07               SHOULD BE RELEASED                   3RN15120
+SVERR2 AXT     **,2                                                     3RN15130
+       TRA     ERR06-1                                                  3RN15140
+ERR08  LXA     SVERR2,2                                                 3RN15150
+       TRA     ERR06-2                                                  3RN15160
+ERR09  PZE                                                              3RN15170
+ERR10  PIA                                                             $3RN15180
+       STA     ERR09                                                   $3RN15190
+       PAC     0,1                                                     $3RN15200
+       CAL     5,1                                                      3RN15210
+       LAS     ERR09                                                    3RN15220
+       TRA     *+2                                                      3RN15230
+       TRA     ERR08                                                    3RN15240
+       TSX     LOOKUP,1                                                 3RN15250
+       LDI*    PQUEUE                                                   3RN15260
+       PIA                                                              3RN15270
+       RIL     011000              RESET SPECIAL FLAG AND S3            3RN15280
+       SIL     004000              SET S1                               3RN15290
+       ZET     ERR11                                                    3RN15300
+       SIL     040000              MAKE HEADER ONE OF THEM              3RN15310
+       STI*    PQUEUE                                                   3RN15320
+       STZ     ERR11                                                    3RN15330
+       TRA     ERR10                                                    3RN15340
+ERR11  PZE                                                              3RN15350
+PROCCS BSS     10                  PROCESSING ROUTINE CALL. SEQ. AREA   3RN15360
+       END                                                          (14)3RN15370

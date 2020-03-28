@@ -1,0 +1,34 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - FSLBI             3F7F0000
+$IBMAP FSLBI   34                                                       3F7F0010
+       TTL     FSLBI/SHORT LIST INPUT (FOR BINARY ARRAYS)               3F7F0020
+       LBL     SLBI,BEGIN     FSLBI                                  (7)3F7F0030
+       REM                                                              3F7F0040
+       REM     CALLING SEQUENCES ARE                                    3F7F0050
+       REM     CALL .FBLI. (A,M) FOR SINGLE-PRECISION BINARY ARRAYS,    3F7F0060
+       REM     CALL .FBDI. (A,M) FOR DOUBLE-PRECISION BINARY ARRAYS.    3F7F0070
+       REM     A IS LOCATION OF THE ARRAY AND M IS THE LOCATION OF      3F7F0080
+       REM     THE NUMBER OF ELEMENTS IN THE ARRAY.                     3F7F0090
+       REM                                                              3F7F0100
+       ENTRY   .FBLI.                                                   3F7F0110
+       ENTRY   .FBDI.                                                   3F7F0120
+SAVE   SAVEN   (2)I                                                     3F7F0130
+       SXA     LNKG,4                                                   3F7F0140
+       TRA     1,1                                                      3F7F0150
+SXIT   AXT     **,1                                                     3F7F0160
+       RETURN  SAVE                                                     3F7F0170
+.FBLI. SXA     SXIT,1                ENTRY POINT FOR SINGLE-            3F7F0180
+       TSX     SAVE,1                PRECISION BINARY ARRAYS.           3F7F0190
+       LXA     FBLT,1                INITIALIZE FOR LIST                3F7F0200
+       SXA     .SLI1.,1              PROCESSING.                        3F7F0210
+       TSX     .SLI.,4               GO TO SET UP LIST PROCESSING.      3F7F0220
+       TRA     SXIT                                                     3F7F0230
+.FBDI. SXA     SXIT,1                ENTRY POINT FOR DOUBLE-            3F7F0240
+       TSX     SAVE,1                PRECISION BINARY ARRAYS.           3F7F0250
+       LXA     FBDT,1                INITIALIZE FOR LIST                3F7F0260
+       SXA     .SDI1.,1              PROCESSING.                        3F7F0270
+       TSX     .SDI.,4               GO TO SET UP LIST PROCESSING.      3F7F0280
+       TRA     SXIT                                                     3F7F0290
+FBLT   PZE     .FBLT.                                                   3F7F0300
+FBDT   PZE     .FBDT.                                                   3F7F0310
+LNKG   LDIR                                                             3F7F0320
+       END                                                              3F7F0330

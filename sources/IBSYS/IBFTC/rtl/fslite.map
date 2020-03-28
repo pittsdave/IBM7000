@@ -1,0 +1,42 @@
+$*     7090/7094 FORTRAN MACHINE INDICATOR TEST - FSLITE                3FC20000
+$IBMAP FSLITE  40                                                       3FC20010
+       LBL     SLIT,BEGIN     FSLITE                                 (7)3FC20013
+       TTL     FSLITE/SENSE LIGHT ROUTINE                               3FC20020
+       ENTRY   SLITET                                                   3FC20030
+       ENTRY   SLITE                                                    3FC20040
+SLITET CLA     4,4            ENTRY POINT FOR TESTING                   3FC20050
+       STA     SLSTO          ADDRESS FOR RESULT                        3FC20060
+       STL     SLTI           SET INDICATOR-TEST MODE.                  3FC20070
+       TRA     SLSLT          CONTINUE.                                 3FC20080
+SLITE  STZ     SLTI           E.P. FOR SETTING-INDICATE SET MODE        3FC20090
+SLSLT  SAVEN   (4)            X                                         3FC20100
+       SXA     SLLKG,4        SET UP LINKAGE.                           3FC20110
+       CLA*    3,4            GET NUMBER OF SENSE LIGHT.                3FC20120
+       PAX     0,4            X                                         3FC20130
+       TXH     SLFX,4,4       ERROR IF G.T. 4                           3FC20140
+       PAC     0,4            COMP. IN I.R.4                            3FC20150
+       ZET     SLTI           TEST OR SET MODE                          3FC20160
+       TRA     SLTST          TEST, TRANSFER                            3FC20170
+       SLN     0,4            TURN ONE LIGHT ON, OR ALL OFF.            3FC20180
+       RETURN  SLSLT          RETURN.                                   3FC20190
+SLTST  TXL     SLFX,4,0       TEST SENSE LIGHT ZERO ILLEGAL             3FC20200
+       CLA     =1             'ONE' MEANS LIGHT 'ON'.                   3FC20210
+       SLT     0,4            EXECUTE TEST                              3FC20220
+SLRT   CLA     =2             'TWO' MEANS LIGHT 'OFF'.                  3FC20230
+SLSTO  STO     **             STORE RESULT                              3FC20240
+       RETURN  SLSLT          RETURN                                    3FC20250
+SLFX   CALL    .FXEM.(ER51)   TEST OR SET NON-EXISTENT LIGHT            3FC20260
+       ZET     SLTI           WHICH, TEST OR SET                        3FC20270
+       TRA     SLRT           TEST, DECLARE LIGHT 'OFF'.                3FC20280
+       RETURN  SLSLT          SET, IGNORE REQUEST + RETURN.             3FC20290
+       SPACE   3                                                        3FC20300
+ER51   PZE     51                                                       3FC20310
+       PZE     E51MES,,7                                                3FC20320
+       PZE     E51OMS,,8                                                3FC20330
+       SPACE                                                            3FC20340
+E51MES BCI     7,0REFERENCE TO NON-EXISTENT SENSE LIGHT.                3FC20350
+E51OMS BCI     8,0DECLARED 'OFF' IF TESTING. IGNORED IF SETTING.        3FC20360
+       SPACE                                                            3FC20370
+SLTI   PZE     **                                                       3FC20380
+SLLKG  LDIR                                                             3FC20390
+       END                                                              3FC20400

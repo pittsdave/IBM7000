@@ -1,0 +1,14 @@
+$*     7090/7094 FORTRAN MACHINE INDICATOR TEST - FOVERF                3FC40000
+$IBMAP FOVERF  10                                                       3FC40010
+       LBL     FOVF,BEGIN     FOVERF                                 (7)3FC40013
+       TTL     FOVERF/OVERFLOW TEST ROUTINE                             3FC40020
+OVERFL SAVE    (4)                                                      3FC40030
+       CAL     OVFLOW         PICK UP INDICATOR CELL                    3FC40050
+       STZ     OVFLOW         RESET CELL                                3FC40060
+       ANA     =O000004000000 TEST FOR OVERFLOW BIT                     3FC40070
+       LDQ     =1             'ONE' MEANS OVERFLOW                      3FC40080
+       TNZ     *+2            X                                         3FC40090
+       RQL     1              'TWO' MEANS NO OVERFLOW                   3FC40100
+       STQ*    3,4            STORE TEST RESULT                         3FC40110
+       RETURN  OVERFL         RETURN                                    3FC40120
+       END                                                              3FC40130

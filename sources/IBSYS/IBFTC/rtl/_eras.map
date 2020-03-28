@@ -1,0 +1,10 @@
+$IBMAP .ERAS.  9                                                        3F0ER000
+       ENTRY   E.1                                                      3F0ER010
+       ENTRY   E.2                                                      3F0ER020
+       ENTRY   E.3                                                      3F0ER030
+       ENTRY   E.4                                                      3F0ER040
+E.1    PZE                                                              3F0ER050
+E.2    PZE                                                              3F0ER060
+E.3    PZE                                                              3F0ER070
+E.4    PZE                                                              3F0ER080
+       END                                                              3F0ER090

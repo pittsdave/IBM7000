@@ -1,0 +1,108 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F8F0000
+$IBMAP FCSQ    150                                                      3F8F0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F8F0015
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90,             3F8F0020
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94.            3F8F0030
+       REM       (OR TO ANY VALUE NOT EQUAL TO 90)                      3F8F0040
+M9094  SET     90                                                       3F8F0050
+       PCC     ON                                                       3F8F0060
+       IFF     M9094=90                                                 3F8F0070
+       GOTO    BEG94                                                    3F8F0080
+       PCC     OFF                                                      3F8F0090
+       ENTRY   CSQRT                                                    3F8F0100
+       SPACE   3                                                        3F8F0110
+       REM     COMPLEX SQUARE ROOT SUBROUTINE                           3F8F0120
+       SPACE   3                                                        3F8F0130
+ CSQRT SXA     SYSLOC,4                                                 3F8F0140
+       SXA     LINK,4                                                   3F8F0150
+       CAL     3,4           OBTAIN ARGUMENT POINTERS                   3F8F0160
+       STO     ARG1                                                     3F8F0170
+       ADD     K1A                                                      3F8F0180
+       STO     ARG2                                                     3F8F0190
+       TSX     CABS,4        FIND THE ABSOLUTE VALUE OF THE ARGUMENT    3F8F0200
+       TXI     *+3,,1                                                   3F8F0210
+       PZE     10,,LINK                                                 3F8F0220
+  ARG1 PZE                                                              3F8F0230
+       FAM*    ARG1                                                     3F8F0240
+       FRN                   /X/+/X+IY/                                 3F8F0250
+       SUB     K1            DIVISION BY 2 HERE                         3F8F0260
+       TPL     *+4           IF UNDERFLOW OCCURS, GIVE (0,0) AS THE     3F8F0270
+       ZAC                   ANSWER                                     3F8F0280
+       LRS     35                                                       3F8F0290
+       TRA     RET                                                      3F8F0300
+       STO     BUFF                                                     3F8F0310
+       CALL    SQRT(BUFF)                                               3F8F0320
+       STO     BUFF          S = SQRT((/X/+/X+IY/)/2)                   3F8F0330
+       ADD     K1            MULTIPLY SAME BY 2 FOR DIVISION LATER      3F8F0340
+       STO     BUFF+1                                                   3F8F0350
+       CLA*    ARG2                                                     3F8F0360
+       FDP     BUFF+1        Y/2S                                       3F8F0370
+  K1A  OCT     013100000001     XCA AS OPERATION,   K1A AS CONSTANT     3F8F0380
+       FRN                                                              3F8F0390
+       LDQ*    ARG1                                                     3F8F0400
+       TQP     XPOS          IF X IS POSITIVE THIS IS ANSWER            3F8F0410
+       LDQ     BUFF          IF X IS NEGATIVE, ANS IS                   3F8F0420
+       LRS     0               /Y//(2S) + I (SGN Y)*S                   3F8F0430
+       SSP                                                              3F8F0440
+       TRA     RET                                                      3F8F0450
+  XPOS XCA                                                              3F8F0460
+       CLA     BUFF                                                     3F8F0470
+   RET LXA     LINK,4                                                   3F8F0480
+       TRA     1,4                                                      3F8F0490
+       SPACE                                                            3F8F0500
+  K1   OCT     1000000000                                               3F8F0510
+  BUFF BSS     2                                                        3F8F0520
+  ARG2 BSS     1                                                        3F8F0530
+       SPACE                                                            3F8F0540
+  LINK LDIR                                                             3F8F0550
+BEG94  NULL                                                             3F8F0560
+       PCC     ON                                                       3F8F0570
+       IFT     M9094=90                                                 3F8F0580
+       GOTO    END94                                                    3F8F0590
+       PCC     OFF                                                      3F8F0600
+       EJECT                                                            3F8F0610
+       ENTRY   CSQRT                                                    3F8F0620
+       SPACE   3                                                        3F8F0630
+       REM     COMPLEX SQUARE ROOT SUBROUTINE                           3F8F0640
+       SPACE   3                                                        3F8F0650
+ CSQRT SXA     SYSLOC,4                                                 3F8F0660
+       SXA     LINK,4                                                   3F8F0670
+       DLD*    3,4           PICK UP CARG,T                             3F8F0680
+       DST     ARG1          REAL ARG TO ARG1,  IMAG ARG TO ARG2        3F8F0690
+       CALL    CABS(ARG1)    FIND THE ABSOLUTE VALUE OF THE ARGUMENT    3F8F0700
+       FAM     ARG1                                                     3F8F0710
+       FRN                   /X/+/X+IY/                                 3F8F0720
+       SUB     K1            DIVISION BY 2 HERE                         3F8F0730
+       TPL     *+4           IF UNDERFLOW OCCURS, GIVE (0,0) AS THE     3F8F0740
+       ZAC                   ANSWER                                     3F8F0750
+       LRS     35                                                       3F8F0760
+       TRA     RET                                                      3F8F0770
+       STO     BUFF                                                     3F8F0780
+       CALL    SQRT(BUFF)                                               3F8F0790
+       STO     BUFF          S = SQRT((/X/+/X+IY/)/2)                   3F8F0800
+       ADD     K1            MULTIPLY SAME BY 2 FOR DIVISION LATER      3F8F0810
+       STO     BUFF+1                                                   3F8F0820
+       CLA     ARG2                                                     3F8F0830
+       FDP     BUFF+1        Y/2S                                       3F8F0840
+       XCA                                                              3F8F0850
+       FRN                                                              3F8F0860
+       LDQ     ARG1                                                     3F8F0870
+       TQP     XPOS          IF X IS POSITIVE THIS IS ANSWER            3F8F0880
+       LDQ     BUFF          IF X IS NEGATIVE, ANS IS                   3F8F0890
+       LRS     0               /Y//(2S) + I (SGN Y)*S                   3F8F0900
+       SSP                                                              3F8F0910
+       TRA     RET                                                      3F8F0920
+  XPOS XCA                                                              3F8F0930
+       CLA     BUFF                                                     3F8F0940
+   RET LXA     LINK,4                                                   3F8F0950
+       TRA     1,4                                                      3F8F0960
+       SPACE                                                            3F8F0970
+       EVEN                                                             3F8F0980
+  BUFF BSS     2                                                        3F8F0990
+  ARG1 BSS     1                                                        3F8F1000
+  ARG2 BSS     1                                                        3F8F1010
+    K1 OCT     1000000000                                               3F8F1020
+       SPACE                                                            3F8F1030
+  LINK LDIR                                                             3F8F1040
+END94  NULL                                                             3F8F1050
+       END                                                              3F8F1060

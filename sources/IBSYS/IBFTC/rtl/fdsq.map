@@ -1,0 +1,138 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F9E0000
+$IBMAP FDSQ    150                                                      3F9E0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F9E0015
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90,             3F9E0020
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94.            3F9E0030
+       REM       (OR TO ANY VALUE NOT EQUAL TO 90)                      3F9E0040
+M9094  SET     90                                                       3F9E0050
+       PCC     ON                                                       3F9E0060
+       IFF     M9094=90                                                 3F9E0070
+       GOTO    BEG94                                                    3F9E0080
+       PCC     OFF                                                      3F9E0090
+       ENTRY   DSQRT                                                    3F9E0100
+       SPACE   3                                                        3F9E0110
+       REM     DOUBLE PRECISION SQUARE ROOT SUBROUTINE                  3F9E0120
+       SPACE   3                                                        3F9E0130
+ DSQRT SXA     SYSLOC,4                                                 3F9E0140
+       SXA     LINK,4                                                   3F9E0150
+       CAL     3,4           OBTAIN ARGUMENT                            3F9E0160
+       ADD     K1A                                                      3F9E0170
+       STO     ARG                                                      3F9E0180
+       LDQ*    ARG                                                      3F9E0190
+       CLA*    3,4                                                      3F9E0200
+       TZE     1,4           IF ARG = 0, ANS = 0                        3F9E0210
+       TPL     A             IF ARG NEGATIVE, ERROR                     3F9E0220
+       SPACE                                                            3F9E0230
+       CALL    .FXEM.(EDSQRT)                                           3F9E0240
+       SSP                                                              3F9E0250
+       LRS     0                                                        3F9E0260
+       SPACE                                                            3F9E0270
+   A   STO     ARG                                                      3F9E0280
+       STQ     ARG+1                                                    3F9E0290
+       ANA     K1            1ST APPROXIMATION IS MADE AS FOLLOWS       3F9E0300
+       ARS     1               BETWEEN 1/2 AND 1, BY LINE PASSING THRU  3F9E0310
+       ADD     ARG               3/4 AND 1                              3F9E0320
+       ARS     1               BETWEEN 1/4 AND 1/2 BY LINE PASSING THRU 3F9E0330
+       ADD     K2                1/2 AND 3/4                            3F9E0340
+       SPACE                                                            3F9E0350
+       AXT     3,4                                                      3F9E0360
+ LOOP  STO     BUFF          THREE PASSES OF NEWTON RAPHSON LOOP IN     3F9E0370
+       CLA     ARG             SINGLE PRECISION                         3F9E0380
+       FDP     BUFF                                                     3F9E0390
+  K1A  OCT     013100000001     XCA AS OPERATION, K1A AS CONSTANT       3F9E0400
+       FAD     BUFF                                                     3F9E0410
+       SUB     K1                                                       3F9E0420
+       TIX     LOOP,4,1                                                 3F9E0430
+       SPACE                                                            3F9E0440
+       STO     BUFF          ONE MORE PASS OF NEWTON RAPHSON LOOP,      3F9E0450
+       CLA     ARG             THIS TIME IN SIMULATED DOUBLE PRECISION  3F9E0460
+       FDP     BUFF          A/C = Q1 + R1        (ARGUMENT X = A + B)  3F9E0470
+       STQ     ARG           STORE Q1        (THREE PASS APPROX Y = C)  3F9E0480
+       FAD     ARG+1                                                    3F9E0490
+       FDP     BUFF          (R1 + B)/C = Q2 + R2   (DISCARD R2)        3F9E0500
+       STQ     ARG+1         STORE Q2                                   3F9E0510
+       CLA     BUFF                                                     3F9E0520
+       FAD     ARG           C + Q1 = D1 + D2                           3F9E0530
+       SUB     K1                                                       3F9E0540
+       STO     ARG           STORE D1/2                                 3F9E0550
+       XCA                                                              3F9E0560
+       FAD     ARG+1         D2 + Q2                                    3F9E0570
+       SUB     K1                                                       3F9E0580
+       FAD     ARG           DOUBLE PRECISION ANSWER IS NOW IN PLACE    3F9E0590
+       SPACE                                                            3F9E0600
+       LXA     LINK,4                                                   3F9E0610
+       TRA     1,4                                                      3F9E0620
+       SPACE                                                            3F9E0630
+  K1   OCT     1000000000                                               3F9E0640
+  K2   OCT     100400000000                                             3F9E0650
+  ARG  BSS     2                                                        3F9E0660
+ BUFF  BSS     1                                                        3F9E0670
+EDSQRT DEC     22                                                       3F9E0680
+       PZE     E22MES,,4                                                3F9E0690
+       PZE     E22OMS,,3                                                3F9E0700
+E22MES BCI     4,0DSQRT(-X) NOT ALLOWED                                 3F9E0710
+E22OMS BCI     3,0EVALUATE FOR +X                                       3F9E0720
+       SPACE                                                            3F9E0730
+  LINK LDIR                                                             3F9E0740
+BEG94  NULL                                                             3F9E0750
+       PCC     ON                                                       3F9E0760
+       IFT     M9094=90                                                 3F9E0770
+       GOTO    END94                                                    3F9E0780
+       PCC     OFF                                                      3F9E0790
+       EJECT                                                            3F9E0800
+       ENTRY   DSQRT                                                    3F9E0810
+       SPACE   3                                                        3F9E0820
+       REM     DOUBLE PRECISION SQUARE ROOT SUBROUTINE                  3F9E0830
+       SPACE   3                                                        3F9E0840
+ DSQRT SXA     SYSLOC,4                                                 3F9E0850
+       SXA     LINK,4                                                   3F9E0860
+       DLD*    3,4           PICK UP DARG,T                             3F9E0870
+       TZE     1,4                                                      3F9E0880
+       STI     SVIND                                                    3F9E0890
+       TPL     A                                                        3F9E0900
+       SPACE                                                            3F9E0910
+       CALL    .FXEM.(EDSQRT)                                           3F9E0920
+       SSP                                                              3F9E0930
+       SPACE                                                            3F9E0940
+   A   DST     ARG                                                      3F9E0950
+       ANA     K1            1ST APPROXIMATION IS MADE AS FOLLOWS       3F9E0960
+       ARS     1               BETWEEN 1/2 AND 1, BY LINE PASSING THRU  3F9E0970
+       ADD     ARG               3/4 AND 1                              3F9E0980
+       ARS     1               BETWEEN 1/4 AND 1/2 BY LINE PASSING THRU 3F9E0990
+       ADD     K2                1/2 AND 3/4                            3F9E1000
+       SPACE                                                            3F9E1010
+       AXT     3,4                                                      3F9E1020
+ LOOP  STO     BUFF          THREE PASSES OF NEWTON RAPHSON LOOP IN     3F9E1030
+       CLA     ARG             SINGLE PRECISION                         3F9E1040
+       FDP     BUFF                                                     3F9E1050
+       XCA                                                              3F9E1060
+       FAD     BUFF                                                     3F9E1070
+       SUB     K1                                                       3F9E1080
+       TIX     LOOP,4,1                                                 3F9E1090
+       DST     BUFF          ONE MORE PASS OF NEWTON RAPHSON LOOP,      3F9E1100
+       DLD     ARG             THIS TIME IN DOUBLE PRECISION            3F9E1110
+       DFDP    BUFF                                                     3F9E1120
+       DFAD    BUFF                                                     3F9E1130
+       SUB     K1                                                       3F9E1140
+       XCA                                                              3F9E1150
+       SUB     K1                                                       3F9E1160
+       XCA                                                              3F9E1170
+  RET  LXA     LINK,4                                                   3F9E1180
+       LDI     SVIND                                                    3F9E1190
+       TRA     1,4                                                      3F9E1200
+       SPACE                                                            3F9E1210
+  K1   OCT     1000000000                                               3F9E1220
+  K2   OCT     100400000000                                             3F9E1230
+       EVEN                                                             3F9E1240
+  ARG  BSS     2                                                        3F9E1250
+ BUFF  BSS     2                                                        3F9E1260
+ SVIND BSS     1                                                        3F9E1270
+EDSQRT DEC     22                                                       3F9E1280
+       PZE     E22MES,,4                                                3F9E1290
+       PZE     E22OMS,,3                                                3F9E1300
+E22MES BCI     4,0DSQRT(-X) NOT ALLOWED                                 3F9E1310
+E22OMS BCI     3,0EVALUATE FOR +X                                       3F9E1320
+       SPACE                                                            3F9E1330
+  LINK LDIR                                                             3F9E1340
+END94  NULL                                                             3F9E1350
+       END                                                              3F9E1360

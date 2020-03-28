@@ -1,0 +1,40 @@
+$IBMAP FVIO.   30                                                    $5$3F4Y0000
+       TTL     ALTERNATE I/O VARIABLE UNIT SPECIFICATION            (13)3F4Y0010
+       LBL     .VIO,BEGIN     FVIO.                                  (7)3F4Y0013
+       ENTRY   ..FVIO                                                $5$3F4Y0020
+..FVIO SXA     LK.DR,4             SAVE X4 IN LINKAGE DIRECTOR       $5$3F4Y0030
+       CAL*    3,4                 GET LOGICAL UNIT NUMBER           $5$3F4Y0040
+       TZE     ERROR                TEST                             $5$3F4Y0050
+       ADM     TBLORG               FOR                              $5$3F4Y0060
+       STA     ENT                  RANGE                            $5$3F4Y0070
+       SUB     TBLEND               ERROR                            $5$3F4Y0080
+       TPL     ERROR                *                                $5$3F4Y0090
+ ENT   CLA*    **                  PLACE LOCATION OF FCB             $5$3F4Y0100
+       STO*    4,4                  IN CALLING PARAMETER             $5$3F4Y0110
+       TRA     1,4                 EXIT                              $5$3F4Y0120
+       SPACE                                                         $5$3F4Y0130
+ERROR  CLA*    3,4                 CONVERT LOGICAL UNIT NUMBER       $5$3F4Y0140
+       TSX     .DECVA,4             AND LEAVE IN MQ                  $5$3F4Y0150
+       STQ     E47MES+6                                              $5$3F4Y0160
+       CALL    .FXEM.(CODE)                                          $5$3F4Y0170
+       TRA     .LXERR              NO OPTIONAL EXIT                  $5$3F4Y0180
+       SPACE                                                         $5$3F4Y0190
+TBLORG PZE     *                   TABLE ORGIN - 1                   $5$3F4Y0200
+       PZE     .UN01.               **                               $5$3F4Y0210
+       PZE     .UN02.               * *                              $5$3F4Y0220
+       PZE     .UN03.               *  *                             $5$3F4Y0230
+       PZE     .UN04.               *   * UNIT REFERENCES            $5$3F4Y0240
+       PZE     .UN05.               *  *                             $5$3F4Y0250
+       PZE     ..UN06               * *                              $5$3F4Y0260
+       PZE     .UN07.               **                               $5$3F4Y0270
+       PZE     .UN08.               *                                $5$3F4Y0280
+*                    ADDITIONAL UNITS GO BETWEEN  TBLORG AND TBLEND  $5$3F4Y0290
+TBLEND PZE     *                   TABLE END + 1                     $5$3F4Y0300
+       SPACE                                                         $5$3F4Y0310
+ CODE  PZE     47                                                    $5$3F4Y0320
+ER47MS PZE     E47MES,,7                                             $5$3F4Y0330
+ER47OP PZE     NOOPXT,,7                                             $5$3F4Y0340
+E47MES BCI     7,0LOGICAL UNIT NOT DEFINED FOR VALUE                 $5$3F4Y0350
+NOOPXT BCI     7,0NO OPTIONAL EXIT - EXECUTION TERMINATED            $5$3F4Y0360
+ LK.DR LDIR                        LINKAGE DIRECTOR                  $5$3F4Y0370
+       END                                                           $5$3F4Y0380

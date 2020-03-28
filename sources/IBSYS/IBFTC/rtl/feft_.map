@@ -1,0 +1,22 @@
+$IBMAP FEFT.   15                                                       3F4V0000
+       TTL  ALTERNATE FORTRAN I/O END FILE ROUTINE                      3F4V0010
+       LBL     .EFT,BEGIN     FEFT.                                  (7)3F4V0013
+*              CALLING SEQUENCE FOR -- END FILE N --                    3F4V0020
+*                   CALL ..FEFT(ARG)                                    3F4V0030
+*                    WHERE ARG = LOCATION OF PZE UNITXX, XX IS          3F4V0040
+*                                LOCATION OF LOGICAL UNIT N             3F4V0050
+       ENTRY   ..FEFT                                                   3F4V0060
+..FEFT SXA     LK.DR,4             SAVE RETURN                          3F4V0070
+       CAL*    3,4                 GET CONTENTS OF .UNIT. CELL          3F4V0080
+       STA     WEOF                SET UP IOEX COMMAND                  3F4V0090
+       CALL    ..FCHK(NOTE,ACTION) CHECK VALIDITY OF REQUEST            3F4V0100
+       ORG     *-2                                                      3F4V0110
+ NOTE  BCI     1, EOF               MESSAGE                             3F4V0120
+ACTION PZE     IGNORE,,7            ACTION, 7 = IN1,OU1, AND PP1 TESTED 3F4V0130
+       TSX     .NDSEL,4            EOF                                  3F4V0140
+ WEOF  PZE     **,,7                VIA                                 3F4V0150
+       NOP                           IOEX                               3F4V0160
+IGNORE LXA     LK.DR,4             RESTORE X4                           3F4V0170
+       TRA     1,4                 RETURN                               3F4V0180
+ LK.DR LDIR                                                             3F4V0190
+       END                                                              3F4V0200

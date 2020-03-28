@@ -1,0 +1,29 @@
+$*             LIBRARY ROUTINE TO MODIFY ACCURACY OF IBLIB TANGENT      3F9K0000
+$IBMAP FMTN    150                                                      3F9K0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F9K0015
+       ENTRY   MTAN                                                     3F9K0020
+       SPACE   3                                                        3F9K0030
+*      ROUTINE TO MODIFY ACCURACY TEST OF IBLIB TANGENT                 3F9K0040
+*           1. CALLING SEQUENCE IN FORTRAN     CALL  MTAN(K)            3F9K0050
+*              THIS PROGRAM IS NOT DESIGNED FOR MAP USERS.              3F9K0060
+*           2. STANDARD MINIMUM ACCURACY GUARANTEE OF TAN IS 1/3.       3F9K0070
+*              WITH EXECUTION OF ABOVE CALLING SEQUENCE WITH K=0,1,2,3, 3F9K0080
+*                4 OR 5, TAN CIRCUIT IS MODIFIED TO GIVE MINIMUM        3F9K0090
+*                ACCURACY GUARANTEE OF 1/(2**(K+2)-1)                   3F9K0100
+*              WITH EXECUTION OF ABOVE CALLING SEQUENCE WITH K GREATER  3F9K0110
+*                THAN 5, TAN CIRCUIT IS MODIFIED TO SUSPEND ABOVE       3F9K0120
+*                ACCURACY GUARANTEE FEATURE COMPLETELY SO THAT ANY ARG  3F9K0130
+*                LESS THAN 2**20 IN ABSOLUTE VALUE WILL BE ACCEPTED.    3F9K0140
+       SPACE   3                                                        3F9K0150
+ MTAN  CAL*    3,4           PICK UP ARG,T                              3F9K0160
+       CAS     K1            IF K=0,1,2,3,4,5, THIS IS SHIFT NUMBER     3F9K0170
+       CLA     *+1           IF K BIGGER, GIVE SHIFT TO CLEAR AC        3F9K0180
+       AXT     37,0                                                     3F9K0190
+       STA     *+2                                                      3F9K0200
+       CLA     K3            TEST BIT                                   3F9K0210
+       ALS     **            SHIFT                                      3F9K0220
+       STO     CRIT          SET INTO TNCT ROUTINE                      3F9K0230
+       TRA     1,4           RETURN                                     3F9K0240
+  K1   OCT     5                                                        3F9K0250
+  K3   OCT     1                                                        3F9K0260
+       END                                                              3F9K0270

@@ -1,0 +1,364 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .LXCON                          3AD00000
+$IBMAP .LXCON  350                                                   $5$3AD00010
+       TTL     .LXCON - POST EXECUTION SUBROUTINE                   (13)3AD00015
+* POST EXECUTION SUBROUTINE FOR ALL IBJOB EXECUTIONS                    3AD00020
+*                                                                       3AD00040
+*  IS ENTERED FROM OBJ. PROG ,PREEX , OR MONITOR                        3AD00050
+*   IN ONE OF THREE WAYS                                                3AD00060
+*                                                                       3AD00070
+*      1. STR EXECUTED BY SOME-BODY                                     3AD00080
+*      2. SYSTEM STOP CONDITION BLOCKED                                 3AD00090
+*      3. NORMAL ENTRY AT TERMINATION OF EXECUTION                      3AD00100
+*                                                                       3AD00110
+*  FOR STR OR SYSTEM STOP                                               3AD00120
+*    1. STR LOC (WHEN APPLICABLE) IS PRINTED BOTH ON AND OFF LINE.      3AD00130
+*       IRS ARE PRINTED OFF LINE ONLY.                                  3AD00140
+*    2. IF STR SYSDMP WILL BE USED TO TAKE A DUMP (FULL CORE) ON        3AD00150
+*        THE WAY BACK TO THE IBJOB MONITOR                              3AD00160
+*                                                                       3AD00170
+*                                                                       3AD00180
+*  IN ANY ENTRY , IF THE OBJECT PROG HAS FILES (.LFBLK CELL IN IOCS)    3AD00190
+*   THEY WILL BE CLOSED WITH                                            3AD00200
+*                                                                       3AD00210
+*    1.REW  IF SCRATCH                                                  3AD00220
+*    2.NOREW IF MONCON  (I.E. OU,IN,PP)                                 3AD00230
+*    3.RUN  AND  'PRINT','PUNCH'OR'HOLD' ON ALL OTHERS                  3AD00240
+*  FOR FILES USING NON- SYSTEM UNITS , THOSE UNITS WILL BE              3AD00250
+*    RE-ESTABLISHED IN THE APPROPRIATE CHANNEL AVAILABILITY CHAINS      3AD00260
+*     EXCEPT AS FOLLOWS  ------                                         3AD00270
+*      IF EXECUTION TERMINATED IN A NORMAL WAY ( .LXRTN ENTRY TO THIS   3AD00280
+*         ROUTINE),  NON-SYSTEM UCW'S OF THE RESERVE TYPE WILL NOT      3AD00290
+*         BE PLACED IN THE AVAILIBILITY CHAINS AND THE RESERVE UNIT BIT 3AD00300
+*         WILL BE TURNED 'ON' AND THE RESERVE UNIT CHARACTERS WILL      3AD00310
+*         BE STORED IN THE FIRST WORD OF THE UCB IN THE RIGHT SIDE OF   3AD00320
+*         THE ADDRESS                                                   3AD00330
+*                                                                       3AD00340
+       ENTRY   .LXCAL              FORTRAN ALTERNATE I/O LINK        $5$3AD00345
+.LXRTN ENTRY   EXRE2               NORMAL ENTRY POINT               (10)3AD00350
+.LXSTR ENTRY   EXSTR               STR ENTRY POINT                      3AD00360
+.LXSTP ENTRY   EXSTP               SYSTEM STOP ENTRY POINT              3AD00370
+.LXERR ENTRY   EXERR               EXECUTION ERROR ENTRY POINT      (10)3AD00380
+IBEXIT ENTRY   EXRE2                                                (10)3AD00385
+       ENTRY   .LXARG                                                   3AD00390
+       ENTRY   .LXOUT                                                   3AD00400
+       ENTRY   .CLSE                                                    3AD00410
+       ENTRY   .LFBL                                                    3AD00420
+       ENTRY   .LUNB                                                    3AD00430
+       ENTRY   .L0                                                      3AD00440
+       ENTRY   .DBCLS              FOR DEBUG ROUTINE TO INSERT CLOSE    3AD00450
+       ENTRY   .DFOUT              EXECUTED BY FDMP BEFORE DUMP      $5$3AD00451
+       EJECT                                                            3AD00460
+ EXSTR ZET     STR                 ONLY ALLOW ONE STR                $5$3AD00470
+       STL     STR2                STR WHILE PROCESSING STR          $5$3AD00472
+       STL     STR                 SET STR                           $5$3AD00474
+ EXSTP STI     SI                                                       3AD00480
+       SXD     X1,1                SAVE IRS                             3AD00490
+       SXD     X2,2                                                     3AD00500
+       SXD     X4,4                                                     3AD00510
+       SXD     X3,3                                                     3AD00520
+       SXD     X5,5                                                     3AD00530
+       SXD     X6,6                                                     3AD00540
+       SXD     X7,7                                                     3AD00550
+       STQ     MQ                  MQ                                   3AD00560
+       LGR     2                   AC                                   3AD00570
+       STO     AC1                  P AND Q                             3AD00580
+       STQ     AC2                                                      3AD00590
+       AXT     14,1                CONVERT INDEX REGISTERS              3AD00600
+       AXT     7,2                                                      3AD00610
+ EX1   LDQ     X7+1,2                                                   3AD00620
+       TSX     .BCD5R,4                                                 3AD00630
+       SLW     XMS9+1,1                                                 3AD00640
+       TXI     *+1,1,-2                                                 3AD00650
+       TIX     EX1,2,1                                                  3AD00660
+       NZT     STR                 STR OR SYSTEM STOP                   3AD00670
+       TRA     EX7                   STOP                               3AD00680
+       LXA     0,4                 CONVERT                              3AD00690
+       TXI     *+1,4,-1             STR                                 3AD00700
+       PXD     0,4                  LOCATION                            3AD00710
+       XCA                                                              3AD00720
+       TSX     .BCD5R,4                                                 3AD00730
+       TRA     EX8                                                      3AD00740
+ EX7   CAL     XMS9                                                     3AD00750
+       SLW     XMS1+1                                                   3AD00760
+       CAL     XMS9+1                                                   3AD00770
+ EX8   SLW     XMS1+2                                                   3AD00780
+       TSX     .MWR,4              PRINT ON LINE                        3AD00790
+       PZE     1                                                        3AD00800
+       PZE     XMS1,,3                                                  3AD00810
+* OFF-LINE PRINT                                                        3AD00820
+       NZT     .JTYPE                                                   3AD00830
+       TRA     .LXOUT                7090 - 3 IRS                       3AD00840
+       AXT     17,4                  7094 - 7 IRS                       3AD00850
+       SXD     .LXARG,4                                                 3AD00860
+.LXOUT CALL    .LXSL1(SLCMD1)                                       (10)3AD00870
+       ZET     STR2                                                  $5$3AD00872
+       TRA     EXXT2+2                                               $5$3AD00874
+       STL     SWCH                INDICATE NON NORMAL ENTRY.           3AD00880
+EXERR  LDI     SYSJOB              SET SYSTEM NOGO BIT ON           (10)3AD00890
+       SIL     1                                                     $5$3AD00891
+       STI     SYSJOB                                               (10)3AD00892
+       EJECT                                                            3AD00900
+* NORMAL RETURN ENTRY POINT                                             3AD00910
+* OVERLAY POINT FOR FORTRAN ALTERNATE I/O                            $5$3AD00950
+*      TSX     ..FREQ,2            CHECK LAST I/O                    $5$3AD00951
+.LXCAL NULL       WHENEVER ALTERNATE I/O GAINS CONTROL               $5$3AD00952
+ EXRE2 NOP                         SWITCH FOR ALTERNATE I/O SYSTEM   $5$3AD00953
+* SKIP CLOSING FILES IF NO IOCS                                      $5$3AD00954
+       LDI     .CLSE                                                 $5$3AD00955
+       LNT     500000              IF STR, NO IOCS                   $5$3AD00956
+       TRA     *+2                                                   $5$3AD00957
+       TRA     EXXIT                                                 $5$3AD00958
+       CAL     .LFBL                                                 $5$3AD00959
+       PDX     0,1                                                      3AD00960
+       TXL     EXXIT,1,0           NO FILES - EXIT                      3AD00970
+* CLOSE ALL FILES                                                       3AD00980
+       PAC     0,2                                                      3AD00990
+ EXNX  STA     FLIST                                                    3AD01000
+       LDI     0,2                 CLOSE THIS FILE IF                $5$3AD01001
+       ZET     0,2                 IT HAS A UNIT ASSIGNMENT          $5$3AD01002
+       RNT     400000              AND A REEL HAS BEEN MOUNTED       $5$3AD01003
+       TRA     NEXT                                                  $5$3AD01004
+       LDI     2,2                                                      3AD01010
+       LFT     200000              TEST FOR MONITOR CONTROL             3AD01020
+       TRA     MNCLS               YES- CLOSE IT                        3AD01030
+       LDI     4,2                                                      3AD01040
+       LFT     300000                                                   3AD01050
+       TRA     LXDMNT                                                   3AD01060
+* SCRATCH TYPE FILE                                                     3AD01070
+       LDI     1,2                 IS FILE                           $5$3AD01071
+       LNT     040000              OPEN                              $5$3AD01072
+       TRA     NEXT                NO                                $5$3AD01073
+       LNT     003000              IS FILE                           $5$3AD01074
+       TRA     *+2                 CHECKPOINT                        $5$3AD01075
+       TRA     MNCLS               YES                               $5$3AD01076
+       LDI     3,2                 IS FILE                           $5$3AD01077
+       LFT     400000              INTERNAL                          $5$3AD01078
+       TRA     NEXT                YES                               $5$3AD01079
+       STA     *+2                                                      3AD01080
+       TSX     .CLSE,4                                                  3AD01090
+       PTW     **                                                       3AD01100
+* TO NEXT FILE                                                          3AD01110
+ NEXT  CAL     FLIST                                                    3AD01120
+       ACL     L12                                                      3AD01130
+       TXI     *+1,2,-12           COUNT THRU ALL                       3AD01140
+       TIX     EXNX,1,12            FILE BLOCKS                         3AD01150
+*                                                                       3AD01160
+       CAL     .LFBL                                                    3AD01170
+       PAC     0,2                 PICKUP FILE BLOCK ORG                3AD01180
+       PDX     0,1                 PICKUP FILE BLOCK LENGTH             3AD01190
+MUNP   SXA     MNXT,1                                                   3AD01200
+       STL     MTMP1               SET PRIMARY UNIT SWITCH              3AD01210
+       AXT     0,4                                                      3AD01220
+       CLA     3,2                                                      3AD01230
+       TMI     MNXT                IGNORE INTERNAL FILE                 3AD01240
+       NZT     0,2                                                      3AD01250
+       TRA     MNXT                IGNORE FILE WITH NO UNIT             3AD01260
+       CLA     5,2                                                   $5$3AD01261
+       TMI     MNXT                                                  $5$3AD01262
+       LDI*    0,2                                                      3AD01270
+       LNT     020100                                                   3AD01280
+       TRA     *+2                                                      3AD01290
+       TRA     MNXT                IGNORE DISK                          3AD01300
+       LFT     000100                                                   3AD01310
+       TRA     MNXT                IGNORE CARD  UNIT                    3AD01320
+*                                                                       3AD01330
+MUNS   CAL     0,2                                                      3AD01340
+       NZT     MTMP1               IS THIS UNIT1                        3AD01350
+       ARS     18                                                       3AD01360
+       STA     MTMP                STORE L(UCB)                         3AD01370
+*   SCAN SYSUNI TABLE FOR L(UCB)                                        3AD01380
+       LAC     SYSUNI,4                                                 3AD01390
+       LXD     SYSUNI,1                                                 3AD01400
+MUNI   CAL     0,4                                                      3AD01410
+       ANA     SMAD                                                     3AD01420
+       ERA     MTMP                                                     3AD01430
+       TZE     MNXT1               IGNORE SYSUNI                        3AD01440
+       TXI     *+1,4,-1                                                 3AD01450
+       TIX     MUNI,1,1                                                 3AD01460
+*     IF NORMAL ENTRY TO .LXCON, SCAN RUTBL FOR L(UCB)                  3AD01470
+       ZET     SWCH                                                     3AD01480
+       TRA     MUV                                                      3AD01490
+       CAL*    .LUNB                                                    3AD01500
+       PDX     0,1                                                      3AD01510
+       TXL     MUV,1,0             SKIP IF NO RUTBL                     3AD01520
+       PAC     0,4                                                      3AD01530
+MRE1   CAL     0,4                                                      3AD01540
+       ARS     18                                                       3AD01550
+       ERA     MTMP                                                     3AD01560
+       TZE     MRES                RESERVE UNIT                         3AD01570
+       TXI     *+1,4,-1                                                 3AD01580
+       TIX     MRE1,1,1                                                 3AD01590
+*    RETURN UNIT TO SYSUAV                                              3AD01600
+MUV    CAL*    MTMP                PICKUP UCW                           3AD01610
+       ANA     MDMK                                                     3AD01620
+       ARS     9                                                        3AD01630
+       PDC     0,4                                                      3AD01640
+       TXI     *+1,4,1             CHANNEL INDEX TO IR4                 3AD01650
+       SXD     *+2,4                                                    3AD01660
+       LAC     SYSUAV,4                                                 3AD01670
+       TXI     *+1,4,**            L(SYSUAV) TO IR4                     3AD01680
+MUV1   CAL     0,4                 PICKUP SYSUAV ENTRY                  3AD01690
+       ANA     SMAD                                                     3AD01700
+       TZE     MUV2                                                     3AD01710
+       PAC     0,4                                                      3AD01720
+       ERA     MTMP                                                     3AD01730
+       TZE     MNXT1                                                    3AD01740
+       TRA     MUV1                                                     3AD01750
+MUV2   CAL     MTMP                                                     3AD01760
+       STA     0,4                                                      3AD01770
+       LDI*    MTMP                                                     3AD01780
+       SIL     400000                                                   3AD01790
+       RIL     200000                                                   3AD01800
+       RIR     077777                                                   3AD01810
+       STI*    MTMP                                                     3AD01820
+ MNXT1 NZT     MTMP1               IS THIS UNIT1                        3AD01830
+       TRA     MNXT                                                     3AD01840
+       CAL     0,2                                                      3AD01850
+       ARS     18                                                       3AD01860
+       ANA     SMAD                                                     3AD01870
+       ERA     MTMP                                                     3AD01880
+       TZE     MNXT                UNIT2 = UNIT1, GET NEXT FILE         3AD01890
+       STZ     MTMP1               OTHERWISE,                           3AD01900
+       TRA     MUNS                GO PROCESS UNIT2                     3AD01910
+*                                                                       3AD01920
+MNXT   AXT     **,1                                                     3AD01930
+       TXI     *+1,2,-12                                                3AD01940
+       TIX     MUNP,1,12                                                3AD01950
+*  BACK TO MONITOR                                                      3AD02060
+ EXXIT TSX     SYSIDR,4            SIGN OFF EXECUTION                   3AD02070
+       PTW     0,4,0                                                    3AD02080
+.DBCLS TRA     *+2                 OVERLAID BY 'CLOSE' OF DEBUG FILE    3AD02090
+       TRA     EXXT2                                                    3AD02100
+       NZT     .JLIN                                                    3AD02110
+       TRA     EXXT2                                                    3AD02120
+       LDQ     .JLIN                                                    3AD02130
+       AXT     36,4                                                     3AD02140
+       STZ     MTMP1                                                    3AD02150
+ CVR1  PXD     0,0                 CONVERT JLINE TO DECIMAL             3AD02160
+       DVP     BTEN                                                     3AD02170
+       TZE     CVR5                                                     3AD02180
+       ALS     36,4                                                     3AD02190
+       ORS     MTMP1                                                    3AD02200
+ CVR2  TXI     *+1,4,-6                                                 3AD02210
+       TXH     CVR1,4,0                                                 3AD02220
+ CVR3  CAL     BLNKS                                                    3AD02230
+       ALS     36,4                                                     3AD02240
+       ORA     MTMP1                                                    3AD02250
+       SLW     LNMS+1                                                   3AD02260
+       CALL    .LXSEL(SLCMD2)                                           3AD02270
+       TSX     .MWR,4                                                   3AD02280
+       PZE     1                                                        3AD02290
+       PZE     LNMS+1,,4                                                3AD02300
+EXXT2  CLA     TTR                 REINITIALIZE STR                  $5$3AD02310
+       STO     2                   RETURN TO SYSDMP.                 $5$3AD02312
+       NZT     STR                 IF NO STR, RETURN TO SYSRET       $5$3AD02320
+       TRA     SYSRET                                                   3AD02330
+       LDI     SYSJOB                                                $5$3AD02331
+       LFT     000002       IS DEBUG POST-PROCESSING NEEDED          $5$3AD02332
+       STZ     STR           YES SET STR = 0                         $5$3AD02333
+       LXD     X4,4                                                     3AD02380
+       LXD     X2,2                                                     3AD02390
+       LXD     X1,1                                                     3AD02400
+       LDI     SI                   DUMP                                3AD02410
+       CLA     AC1                                                      3AD02420
+       LDQ     AC2                                                      3AD02430
+       LGL     2                                                        3AD02440
+       LDQ     MQ                                                       3AD02450
+       ZET     STR          IS DEBUG POST-PROCESSING NEEDED          $5$3AD02451
+TTR    TTR     SYSDMP              DUMP WITH IBSYS DUMP              $5$3AD02460
+       TSX     SYSDMP,4      YES, SNAP DUMP WITH IBSYS               $5$3AD02461
+       PZE     0                    ASSEMBLY OPTION FULL CORE DUMP   $5$3AD02462
+       TRA     SYSRET                                                $5$3AD02463
+ CVR5  STQ     MTMP                                                     3AD02470
+       ZET     MTMP                                                     3AD02480
+       TRA     CVR2                                                     3AD02490
+       TRA     CVR3                                                     3AD02500
+*    RESERVE UCB FOR NEXT JOB                                           3AD02510
+MRES   CAL     0,4                                                      3AD02520
+       STA*    MTMP                                                     3AD02530
+       LDI*    MTMP                                                     3AD02540
+       SIL     040000                                                   3AD02550
+       STI*    MTMP                                                     3AD02560
+       TRA     MNXT1                                                    3AD02570
+*  SPECIAL CLOSE W/OPERATOR TAPE DISPOSAL MESSAGE                       3AD02580
+LXDMNT TSX     .CLSE,4             CLOSE                                3AD02590
+ FLIST PZE     **                   W/REW-UNLOAD                        3AD02600
+       CAL     PRINT                                                    3AD02610
+       LNT     200000              PRINT                                3AD02620
+       TRA     DISMT                PUNCH OR HOLD                       3AD02630
+       CAL     PUNCH                                                    3AD02640
+       LFT     100000                                                   3AD02650
+       CAL     HOLD                                                     3AD02660
+* PRINT                                                                 3AD02670
+ DISMT SLW     TYPE                                                     3AD02680
+       TSX     .MWR,4              PRINT                                3AD02690
+       PZE     2                    'PRINT FILENAME' -OR                3AD02700
+       MZE     TYPE,,1              'PUNCH FILENAME' -OR                3AD02710
+       PZE     9,2,3                'HOLD  FILENAME'                    3AD02720
+       TRA     NEXT                                                     3AD02730
+       SPACE   1                                                        3AD02740
+*      SYSTEM FILE WITH MONITOR-CONTROLLED CLOSE                        3AD02750
+*      OR CHECKPOINT FILE                                            $5$3AD02751
+ MNCLS STA     *+2                                                      3AD02760
+       TSX     .CLSE,4             CLOSE WITH NO REW,                   3AD02770
+       MON     **                   NO EOF                              3AD02780
+       TRA     NEXT                                                     3AD02790
+*                                  ** ERROR MESSAGES AND SELECT WORDS   3AD02800
+ XMS1  BCI     3,      STR AT *****                                     3AD02810
+       BCI     2,  XR1= *****                                           3AD02820
+       BCI     2,  XR2= *****                                           3AD02830
+       BCI     2,  XR4= *****                                           3AD02840
+       BCI     2,  XR3= *****                                           3AD02850
+       BCI     2,  XR5= *****                                           3AD02860
+       BCI     2,  XR6= *****                                           3AD02870
+       BCI     2,  XR7= *****                                           3AD02880
+ XMS9  BCI     2,SYSTEM STOP                                            3AD02890
+ TYPE  BCI     1,ARG                                                    3AD02900
+ PRINT BCI     1,PRINT                                                  3AD02910
+ PUNCH BCI     1,PUNCH                                                  3AD02920
+ HOLD  BCI     1,HOLD                                                   3AD02930
+ LNMS  BCI     5,1            LINES OUTPUT.                             3AD02940
+SLCMD1 PTW     SYSOU1,,.LXARG                                           3AD02950
+SLCMD2 PTW     SYSOU1,,IOLIN                                            3AD02960
+.LXARG IORP    XMS1,,9                                                  3AD02970
+       TCH     .LTCH                                                    3AD02980
+ IOLIN IORT    LNMS,,5                                                  3AD02990
+       TCH     .LTCH                                                    3AD03000
+*                                  ** STORAGES                          3AD03010
+ X1    PZE     0,,**                                                    3AD03020
+ X2    PZE     0,,**                                                    3AD03030
+ X4    PZE     0,,**                                                    3AD03040
+ X3    PZE     0,,**                                                    3AD03050
+ X5    PZE     0,,**                                                    3AD03060
+ X6    PZE     0,,**                                                    3AD03070
+ X7    PZE     0,,**                                                    3AD03080
+ SI    PZE     **                                                       3AD03090
+ MQ    PZE     **                                                       3AD03100
+ AC1   PZE     **                                                       3AD03110
+ AC2   PZE     **                                                       3AD03120
+*                                  ** CONSTANTS AND MASKS               3AD03130
+ BLNKS BCI     1,                                                       3AD03140
+ SMAD  PZE     -1                                                       3AD03150
+ L12   PZE     12                                                       3AD03160
+ BTEN  PZE     10                                                       3AD03170
+.L0    PZE     0                                                        3AD03180
+*                                  ** SWITCHES AND TEMPS                3AD03190
+STR    PZE     0                   SET NEQ 0 IF STR EXECUTED            3AD03200
+SWCH   PZE     **                  0 IF NORMAL ENTRY                    3AD03210
+MTMP   PZE                         TEMP                                 3AD03220
+MTMP1  PZE                                                              3AD03230
+MDMK   OCT     017777077777        MASK                                 3AD03240
+       EJECT                                                            3AD03250
+.CLSE  STR                                                           $5$3AD03260
+.LFBL  BSS     1                                                        3AD03270
+.LUNB  BSS     1                                                        3AD03280
+.DFOUT NOP                         OVERLAYED BY FOUT (TSX  DMPUNB,2) $5$3AD03281
+STR2   PZE     **                  NONZERO, STR WHILE PROCESSING STR $5$3AD03282
+*  LOAD  COMMUNICATION CELL ENTRIES TO THIS  PROGRAM                    3AD03290
+       USE     A                                                        3AD03300
+       ORG     .STOPD              LOAD                                 3AD03310
+       TTR     EXSTP                DEAD STOP ENTRY MECHANISM           3AD03320
+       ORG     2                   LOAD                                 3AD03330
+       TTR     EXSTR                'STR' MECHANISM IN CELL 2        $5$3AD03340
+       USE                                                              3AD03350
+       END                                                              3AD03360

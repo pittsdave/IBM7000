@@ -1,0 +1,675 @@
+$*     7090/7094 NAMELIST PROCESSOR FOR FORMATTLESS WRITE               3F4M0000
+$IBMAP FWRO    ()OK                                                     3F4M0010
+CHLIMT EQU     133                                                  (11)3F4M0011
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90 ,         $5$3F4M0012
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94 .        $5$3F4M0013
+*                   (OR TO ANY VALUE NOT EQUAL TO 90.)               $5$3F4M0014
+M9094  SET     90                                                    $5$3F4M0015
+       PCC     ON                                                    $5$3F4M0016
+       IFF     M9094=90                                              $5$3F4M0017
+       GOTO    BEG94                                                 $5$3F4M0018
+       PCC     OFF                                                   $5$3F4M0019
+       TTL     NAMELIST PROCESSOR                                   (14)3F4M0020
+*              NAMELIST PROCESSOR                                       3F4M0030
+*              ENTRY POINT FOR CALL FWRO(ARG), WHERE                    3F4M0040
+*              ARG IS LOCATION OF I/O ROUTINE.                          3F4M0050
+       ENTRY   .FWRO.                                                   3F4M0060
+       ENTRY   .FREST                                                   3F4M0070
+NMLIMT EQU     CHLIMT-12             ALLOW FOR NAMELIST NAME        (11)3F4M0071
+ICLIMT EQU     NMLIMT/16             INTEGER FIELDS PER LINE        (11)3F4M0072
+ECLIMT EQU     NMLIMT/22             REAL F. P. FIELDS PER LINE     (11)3F4M0073
+LCLIMT EQU     NMLIMT/7              LOGICAL FIELDS PER LINE        (11)3F4M0074
+DBLIMT EQU     NMLIMT/29             D. P. FIELDS PER LINE          (11)3F4M0075
+CMLIMT EQU     NMLIMT/44*2           2(COMPLEX FIELDS PER LINE)     (11)3F4M0076
+CHAR   EQU     .CHAR                                                    3F4M0080
+CNVSW  EQU     .CNVSW                                                   3F4M0090
+COUNT  EQU     .KOUNT                                                   3F4M0100
+DDDFLG EQU     .DDDFL                                                   3F4M0110
+DDFLAG EQU     .DDFLG                                                   3F4M0120
+DFLT   EQU     .DFLT                                                    3F4M0130
+DIG    EQU     .DIG                                                     3F4M0140
+DONE   EQU     .DONE                                                    3F4M0150
+FLT    EQU     .FLT                                                     3F4M0160
+FXFL1  EQU     .FXFL1                                                   3F4M0170
+FXFL2  EQU     .FXFL2                                                   3F4M0180
+FXFL3  EQU     .FXFL3                                                   3F4M0190
+INTG   EQU     .INTG                                                    3F4M0200
+LOUT   EQU     .LOUT                                                    3F4M0210
+OUTBUF EQU     .OUTBF                                                   3F4M0220
+TEST   EQU     .TEST                                                    3F4M0230
+WIDTH  EQU     .WIDTH                                                   3F4M0240
+.FWRO. SXA     SYSLOC,4                                                 3F4M0250
+       SXA     LNKG,4                                                   3F4M0260
+       SXA     SV1,1                 SAVE REGISTERS FOR                 3F4M0270
+       SXA     SV2,2                 MAIN PROGRAM.                      3F4M0280
+       CLA     4,4                                                      3F4M0290
+       STA     .FOJP                                                    3F4M0300
+       CLA     3,4                   GET ARG                            3F4M0310
+       STA     INOUT                 STORE ADDRESS OF I/O ROUTINE.      3F4M0320
+*      INITIALIZE BASIC FCNV ROUTINE.                                   3F4M0330
+       AXT     0,2                                                      3F4M0340
+       AXT     0,1                                                      3F4M0350
+       CALL    .FCON.(ARG1,ARG2)                                        3F4M0360
+       ORG     *-2                                                      3F4M0370
+ARG1   PZE     0,,0                                                     3F4M0380
+ARG2   PZE     0,,**                                                    3F4M0390
+       TSX     .FREST,4              RESET BUFFER                       3F4M0400
+       LXA     .FOJP,4               LOCATE CALL .FWRU.                 3F4M0410
+       CLA     4,4                   GET NAMELIST ARGUMENT              3F4M0420
+       PAC     ,2                    STORE TABLE ADDRESS                3F4M0430
+       SXA     LOCW,2                                                   3F4M0440
+       CAL*    4,4                   GET BCI TABLE NAME                 3F4M0450
+       LDQ     BLANKS                                                   3F4M0460
+       LGR     12                    MAKE ROOM FOR 1$                   3F4M0470
+       ORA     H1                    INSERT 1$                          3F4M0480
+       DST     OUTBUF                PUT 1$NAME IN OUTPUT BUFFER.       3F4M0490
+       TSX     EMPTY,2               WRITE TABLE NAME.                  3F4M0500
+       AXC     ENDLIN-1,4            END OF LINE EXIT FROM FCNV         3F4M0510
+       SXA     DONE,4                WHEN COUNT IS EXHAUSTED.           3F4M0520
+       AXT     77,4                                                     3F4M0530
+       SXA     TEST,4                                                   3F4M0540
+*      EXTRACT WORD FROM TABLE                                          3F4M0550
+*      BEGIN AND RETURN HERE TO PROCESS NEW ARRAY.                      3F4M0560
+LOCW   AXT     **,2                  LOCATE TABLE WORD.                 3F4M0570
+       CAL     1,2                                                      3F4M0580
+       TXI     *+1,2,-1              BUMP POINTER TO NEXT               3F4M0590
+       SXA     LOCW,2                WORD OF TABLE.                     3F4M0600
+       TZE     END                   END OF TABLE-WRITE $END,           3F4M0610
+*                                    RETURN TO MAIN PROGRAM.            3F4M0620
+       ZET     FSW                   IS THIS FIRST LINE OF ARRAY        3F4M0630
+       TRA     BLK                   NO-SKIP TWO WORDS OF OUTBUF.       3F4M0640
+       LDQ     EQL                   YES-INSERT ARRAY NAME AND =.       3F4M0650
+       LGR     6                     SHIFT FOR CARRIAGE CONTROL         3F4M0660
+       STL     FSW                   SET FIRST LINE SWITCH.             3F4M0670
+       DST     OUTBUF                                                   3F4M0680
+       TRA     LOCW                  GET WORD OF ARRAY INFO.            3F4M0690
+BLK    LXA     .FPACK,1              ADD TWO TO ADDRESS OF              3F4M0700
+       TXI     *+1,1,2               STORE INSTRUCTION.                 3F4M0710
+       SXA     .FPACK,1                                                 3F4M0720
+ BLK1  PBT                                                           $5$3F4M0730
+       TRA     BLK2                                                  $5$3F4M0740
+       TXI     *+1,2,-1                                              $5$3F4M0750
+       STO     TPBT                                                  $5$3F4M0760
+       CAL     0,2                                                   $5$3F4M0761
+       PBT                                                           $5$3F4M0762
+       TRA     *+2                                                   $5$3F4M0763
+       TXI     *-3,2,-1                                              $5$3F4M0764
+       SXA     LOCW,2                                                $5$3F4M0765
+       CAL     TPBT                                                  $5$3F4M0766
+ BLK2  STA     ARYLOC                                                $5$3F4M0770
+       STD     ARYSIZ                STORE SIZE OF ARRAY.               3F4M0780
+       ARS     15                    BLANK OUT ALL                      3F4M0790
+       ANA     MSK                   BUT TYPE NUMBER.                   3F4M0800
+       PAC     ,2                                                       3F4M0810
+       XEC     TYPTBL,2                                                 3F4M0820
+TYPTBL TRA     INTGR                 TYPE 0 - INTEGER                   3F4M0830
+       TRA     REAL                       1 - REAL                      3F4M0840
+       TRA     LOGIC                      2 - LOGICAL                   3F4M0850
+       TRA     DBLPR                      3 - DOUBLE PRECISION          3F4M0860
+       TRA     COMPLX                     4 - COMPLEX                   3F4M0870
+*      INITIALIZE FCNV FOR INTEGER OUTPUT.                              3F4M0880
+INTGR  AXT     INTG,4                PUT 'INTG' LOC IN                  3F4M0890
+       SXA     CNVSW,4               CNVSW                              3F4M0900
+       AXT     ICLIMT,4              FIELD COUNT PER LINE           (11)3F4M0910
+       SXA     KOUNT,4                                                  3F4M0920
+       AXT     14,2                  WIDTH OF INTEGERS.                 3F4M0930
+       AXT     1,1                   SPACES BEFORE LINE.            (11)3F4M0940
+       CLA     TWO                   SPACES BETWEEN WORDS               3F4M0950
+       TRA     INITL                                                    3F4M0960
+*      INITIALIZE FCNV FOR REAL FLOATING POINT NUMBERS                  3F4M0970
+REAL   AXT     FLT,4                 SET CONVERSION SWITCH              3F4M0980
+       SXA     CNVSW,4               FOR REAL FLOATING OUTPUT           3F4M0990
+       AXT     CHAR-4,4                                                 3F4M1000
+       SXA     FXFL1,4               SET FXFL1,2,3                      3F4M1010
+       AXT     5,4                                                      3F4M1020
+       SXD     FXFL2,4               IN CONVERSION ROUTINE FOR          3F4M1030
+       SXD     FXFL3,4               FIXED POINT                        3F4M1040
+       AXT     8,4                                                      3F4M1050
+       SXA     DIG,4                 SET DECIMAL SCALE.                 3F4M1060
+       AXT     ECLIMT,4              FIELD COUNT PER LINE           (11)3F4M1070
+       SXA     KOUNT,4               SET WORD COUNT PER LINE.           3F4M1080
+       AXT     19,2                  WIDTH IN CHARACTERS                3F4M1090
+       AXT     2,1                   BLANKS TO INSERT               (11)3F4M1100
+       CLA     THREE                 BLANKS BETWEEN WORDS           (11)3F4M1110
+       TRA     INITL                                                    3F4M1120
+*      INITIALIZE FCNV FOR LOGICAL OUTPUT                               3F4M1130
+LOGIC  AXT     LOUT,4                SET CONVERSION SWITCH              3F4M1140
+       SXA     CNVSW,4               FOR LOGICAL OUTPUT                 3F4M1150
+       AXT     LCLIMT,4              FIELD COUNT PER LINE           (11)3F4M1160
+       SXA     KOUNT,4                                                  3F4M1170
+       AXT     5,2                   WORD WIDTH                         3F4M1180
+       AXT     1,1                   SPACES BEFORE LINE             (11)3F4M1190
+       CLA     TWO                   SPACES BETWEEN WORDS               3F4M1200
+       TRA     INITL                                                    3F4M1210
+*      INITIALIZE FCNV FOR DOUBLE PRECISION REAL OUTPUT                 3F4M1220
+DBLPR  STL     DBLSW                 D.P. SWITCH FOR FWRO               3F4M1230
+       AXT     DFLT,4                SET CONVERSION                     3F4M1240
+       SXA     CNVSW,4               SWITCH FOR D.P.                    3F4M1250
+       STL     DDDFLG                DOUBLE PRECISION SWITCHES FOR      3F4M1260
+       STL     DDFLAG                FIOH COMPATIBILITY                 3F4M1270
+       AXT     5,4                   SET FXFL2,3 FOR FIXED POINT        3F4M1280
+       SXD     FXFL2,4                                                  3F4M1290
+       SXD     FXFL3,4                                                  3F4M1300
+       AXT     DBLIMT,4              FIELD COUNT PER LINE           (11)3F4M1310
+       SXA     KOUNT,4               LINE                               3F4M1320
+       AXT     16,4                  SET DECIMAL                        3F4M1330
+       SXA     DIG,4                 SCALE                              3F4M1340
+       AXT     27,2                  CHARACTER WIDTH PER WORD           3F4M1350
+       AXT     1,1                   BLANKS BEFORE LINE             (11)3F4M1360
+       CLA     TWO                   BLANKS BETWEEN WORDS               3F4M1370
+       TRA     INITL                                                    3F4M1380
+*      INITIALIZE FCNV FOR COMPLEX AND PROCESS                          3F4M1390
+*      AS REAL FLOATING NUMBERS                                         3F4M1400
+COMPLX STL     CMPLX                                                    3F4M1410
+       AXT     FLT,4                                                    3F4M1420
+       SXA     CNVSW,4                                                  3F4M1430
+       AXT     CHAR-4,4                                                 3F4M1440
+       SXA     FXFL1,4                                                  3F4M1450
+       AXT     5,4                                                      3F4M1460
+       SXD     FXFL2,4                                                  3F4M1470
+       SXD     FXFL3,4                                                  3F4M1480
+       AXT     8,4                                                      3F4M1490
+       SXA     DIG,4                                                    3F4M1500
+       AXT     CMLIMT,4              2(FIELD COUNT PER LINE)        (11)3F4M1510
+       SXA     KOUNT,4                                                  3F4M1520
+       AXT     19,2                                                     3F4M1530
+       AXT     2,1                   SPACING BEFORE LINE.           (11)3F4M1540
+       CLA     THREE                 BLANKS BETWEEN WORDS           (11)3F4M1550
+       TRA     INITL                                                    3F4M1560
+INITL  LXA     KOUNT,4               STORE COUNT PER LINE               3F4M1570
+       SXA     COUNT,4                                                  3F4M1580
+       SXA     WIDTH,2                     WIDTH OF WORD                3F4M1590
+       SXA     SPACBF,1                    SPACE BEFORE LINE            3F4M1600
+       STA     SPACBT                      SPACE BETWEEN WORDS          3F4M1610
+*      BEGIN AND RETURN HERE FOR NEW LINE OF ARRAY.                     3F4M1620
+SPACBF AXT     **,1                                                     3F4M1630
+       TSX     BLNK,4                SKIP NECESSARY SPACES.             3F4M1640
+CMPLP  NZT     CMPLX                 IS IT COMPLEX                      3F4M1650
+       TRA     *+3                   NO - BEGIN PROCESSING.             3F4M1660
+       AXT     1,1                   YES                                3F4M1670
+       TSX     LPAR,4                INSERT LEFT PARENTHESIS.           3F4M1680
+*      COME HERE TO GET NEXT BINARY WORD.                               3F4M1690
+ARYPNT AXT     0,1                   ARRAY POINTER                      3F4M1700
+       ZET     DBLSW                                                 $5$3F4M1710
+       TRA     *+3                                                   $5$3F4M1720
+       CLA*    ARYLOC                                                $5$3F4M1730
+       TXI     SAVE1,1,-1                                            $5$3F4M1740
+ARYLOC DLD     **,1                                                  $5$3F4M1741
+       TXI     *+1,1,-2                                              $5$3F4M1742
+SAVE1  SXA     ARYPNT,1            SAVE UPDATED ARRAY POINTER        $5$3F4M1750
+       TSX     .FCNV.,4              CONVERT NUMBER, INTO OUT BUF       3F4M1760
+SPACBT AXT     **,1                                                     3F4M1770
+       NZT     CMPLX                 IS IT COMPLEX                      3F4M1780
+       TRA     INCMA                 NO - INSERT COMMA.                 3F4M1790
+       NZT     FSWD                  YES-IS IT FIRST WORD               3F4M1800
+       TRA     SEC                   YES                                3F4M1810
+       STZ     FSWD                  NO-RESET FSWD                      3F4M1820
+       AXT     1,1                                                      3F4M1830
+       TSX     RPAR,4                INSERT RIGHT PAREN.                3F4M1840
+       AXT     3,1                   SET COUNTER FOR COMMA+2 BLANKS     3F4M1850
+       TRA     INCMA                                                    3F4M1860
+SEC    STL     FSWD                  SET FIRST WORD SWITCH.             3F4M1870
+       AXT     1,1                                                      3F4M1880
+INCMA  TSX     COMMA,4               INSERT COMMA AND BLANKS.           3F4M1890
+*      CURRENT WORD IS STORED, TEST FOR COMPLETION                      3F4M1900
+       LXD     ARYSIZ,4              GET ARRAY WORDS LEFT               3F4M1910
+       TXL     EMTY,4,0              QUIT IF ONE WORD ARRAY             3F4M1920
+       NZT     FSWD                  TIMES 2 FOR COMPLEX                3F4M1930
+BUMP   TXI     *+1,4,-1              BUMP ARRAY COUNTER                 3F4M1940
+       SXD     ARYSIZ,4              SAVE REMAINDER.                    3F4M1950
+       TXL     EMTY-1,4,0            TRANSFER IF ARRAY DONE             3F4M1960
+       ZET     LINFUL                IS LINE FULL                       3F4M1970
+       TRA     EMTY                  YES-WRITE IT AND CONTINUE          3F4M1980
+       ZET     FSWD                  NO - FIRST WORD OF COMPLEX         3F4M1990
+       TRA     ARYPNT                GET NEXT WORD                      3F4M2000
+       TRA     CMPLP                 INSERT LEFT PAREN IF COMPLEX       3F4M2010
+       STZ     LINFUL                                                   3F4M2020
+EMTY   ZET     FSWD                                                     3F4M2030
+       TRA     BUMP+3                                                   3F4M2040
+       TSX     EMPTY,2                                                  3F4M2050
+       STZ     FSW                   RESET FIRST LINE SWITCH            3F4M2060
+       NZT     LINFUL                WAS LINE FULL                      3F4M2070
+       TRA     LOCW1                 NO-ARRAY DONE                      3F4M2080
+       STZ     LINFUL                YES - ONLY LINE DONE               3F4M2090
+       LXA     KOUNT,4                                                  3F4M2100
+       SXA     COUNT,4               RESTORE LINE COUNT                 3F4M2110
+       LXA     .FPACK,4              SKIP TWO WORDS OF                  3F4M2120
+       TXI     *+1,4,2               BLANKS TO EVEN OFF                 3F4M2130
+       SXA     .FPACK,4              COLUMNS                            3F4M2140
+       TRA     SPACBF                BEGIN NEW LINE.                    3F4M2150
+LOCW1  SXA     ARYPNT,0              RESET ARRAY POINTER                3F4M2160
+       STZ     DDDFLG                                                   3F4M2170
+       STZ     DDFLAG                                                   3F4M2180
+       STZ     DBLSW                                                    3F4M2190
+       STZ     CMPLX                                                    3F4M2200
+       TRA     LOCW                                                     3F4M2210
+EMPTY  SXA     RET,2                                                    3F4M2220
+       LXA     .FPACK,2                                                 3F4M2230
+       CAL     .WORD                 FILL                               3F4M2240
+       SUB     L(1)                  PARTIAL                            3F4M2250
+       TZE     FILL2                 WORD                               3F4M2260
+       CAL     .WORD                 WITH                               3F4M2270
+       TOV     *+1                   BLANKS                             3F4M2280
+       LDQ     BLANKS                AND                                3F4M2290
+       LGL     6                     STORE                              3F4M2300
+       TNO     *-1                   IN                                 3F4M2310
+       XEC     .FPACK                OUTPUT BUFFER                      3F4M2320
+       TXI     *+1,2,1                                                  3F4M2330
+FILL2  TNX     *+2,2,OUTBUF          CALCULATE WORD COUNT               3F4M2340
+       TXH     *+2,2,2               IF LESS THAN 3 - SET AT 3.         3F4M2350
+       AXT     3,2                                                      3F4M2360
+INOUT  TSX     **,4                  WRITE A LINE                       3F4M2370
+       TSX     .FREST,4                                                 3F4M2380
+RET    AXT     **,2                                                     3F4M2390
+       TRA     1,2                                                      3F4M2400
+.FREST SXA     RETT,4                                                   3F4M2410
+       AXT     OUTBUF,4                                                 3F4M2420
+       SXA     .FPACK,4              RESTORE STORE ADDRESS              3F4M2430
+       CAL     L(1)                                                     3F4M2440
+       SLW     .WORD                 RESET WORD                         3F4M2450
+       CAL     BLANKS                CLEAR                              3F4M2460
+       SLW     OUTBUF                BUFFER                             3F4M2470
+       SLW     OUTBUF+1              WITH                               3F4M2480
+       SLW     OUTBUF+2              BLANKS                             3F4M2490
+RETT   AXT     **,4                                                     3F4M2500
+       TRA     1,4                                                      3F4M2510
+*      COMMA,BLANK,LEFT AND RIGHT PARENTHESIS INSERTION                 3F4M2520
+*                                                                       3F4M2530
+*      ENTER HERE FOR COMMA INSERTION.                                  3F4M2540
+COMMA  LDQ     CMA                                                      3F4M2550
+       TRA     SKPSPC                                                   3F4M2560
+*      ENTER HERE FOR LEFT PAREN.                                       3F4M2570
+LPAR   LDQ     LPR                                                      3F4M2580
+       TRA     SKPSPC                                                   3F4M2590
+*      ENTER HERE FOR RIGHT PAREN                                       3F4M2600
+RPAR   LDQ     RPR                                                      3F4M2610
+       TRA     SKPSPC                                                   3F4M2620
+*      ENTER HERE FOR BLANKS.                                           3F4M2630
+BLNK   LDQ     BLANKS                                                   3F4M2640
+       TRA     SKPSPC                                                   3F4M2650
+RPR    BCI     1,)                                                      3F4M2660
+LPR    BCI     1,(                                                      3F4M2670
+CMA    BCI     1,,                                                      3F4M2680
+*      BLANK INSERTION ROUTINE                                          3F4M2690
+SKPSPC CAL     .WORD                                                    3F4M2700
+       LXA     .FPACK,2                                                 3F4M2710
+       TNO     *+1                                                      3F4M2720
+       LGL     6                                                        3F4M2730
+       TRA     SHFT+2                                                   3F4M2740
+SHFT   ALS     6                                                        3F4M2750
+       ADM     BLANK                 INSERT BLANK                       3F4M2760
+       TNO     NXTCHR                                                   3F4M2770
+       XEC     .FPACK                SLW IN OUTBUF                      3F4M2780
+       TXI     *+1,2,1               BUMP STORE ADDRESS                 3F4M2790
+       SXA     .FPACK,2              TO OUTBUF                          3F4M2800
+       CAL     L(1)                  CONTINUE IF MORE BLANKS TO INSERT  3F4M2810
+NXTCHR TIX     SHFT,1,1                                                 3F4M2820
+       SLW     .WORD                 SAVE PARTIAL WORD                  3F4M2830
+       TRA     1,4                                                      3F4M2840
+BLANK  OCT     000000000060                                             3F4M2850
+*      WRITE $END, RETURN TO MAIN PROGRAM-TABLE DONE.                   3F4M2860
+END    CLA     ENDT                  PUT 0$END IN OUTBUF                3F4M2870
+       STO     OUTBUF                AND WRITE IT.                      3F4M2880
+       TSX     EMPTY,2                                                  3F4M2890
+.FOJP  AXT     **,4                  RESTORE INDICES AND                3F4M2900
+SV1    AXT     **,1                  RETURN TO MAIN                     3F4M2910
+SV2    AXT     **,2                  OBJECT                             3F4M2920
+       TRA     1,4                   PROGRAM.                           3F4M2930
+*      END OF LINE REACHED, COUNT IS DONE - WRITE A LINE                3F4M2940
+ENDLIN STL     LINFUL                FORCE LINE FULL EXIT               3F4M2950
+       TRA     SPACBT                                                   3F4M2960
+*      CONSTANTS                                                        3F4M2970
+BLANKS BCI     1,                                                       3F4M2980
+H1     BCI     1,1$0000                                                 3F4M2990
+ENDT   BCI     1,0$ END                                                 3F4M3000
+EQL    BCI     1, =                                                     3F4M3010
+MSK    OCT     000000000007                                             3F4M3020
+FSW    PZE                           FIRST LINE SWITCH.                 3F4M3030
+CMPLX  PZE                           COMPLEX NUMBER SWITCH.             3F4M3040
+DBLSW  PZE                           DOUBLE PRECISION SWITCH.           3F4M3050
+FSWD   PZE                           FIRST WORD OF COMPLEX SWITCH.      3F4M3060
+ARYSIZ PZE                                                              3F4M3070
+L(1)   PZE     1                                                        3F4M3080
+LINFUL PZE                           LINE FULL SWITCH                   3F4M3090
+THREE  PZE     3                                                    (11)3F4M3100
+TWO    PZE     2                                                        3F4M3110
+ TPBT  PZE                                                           $5$3F4M3111
+LNKG   LDIR                                                             3F4M3120
+KOUNT  PZE                                                              3F4M3130
+BEG94  NULL                                                          $5$3F4M3140
+*                                                                    $5$3F4M3150
+*                                                                    $5$3F4M3160
+       PCC     ON                                                    $5$3F4M5000
+       IFT     M9094=90                                              $5$3F4M5010
+       GOTO    END94                                                 $5$3F4M5020
+       PCC     OFF                                                   $5$3F4M5030
+       TTL     NAMELIST PROCESSOR                                   (14)3F4M5040
+*              NAMELIST PROCESSOR                                       3F4M5050
+*              ENTRY POINT FOR CALL FWRO(ARG), WHERE                    3F4M5060
+*              ARG IS LOCATION OF I/O ROUTINE.                          3F4M5070
+       ENTRY   .FWRO.                                                   3F4M5080
+       ENTRY   .FREST                                                   3F4M5090
+NMLIMT EQU     CHLIMT-12             ALLOW FOR NAMELIST NAME        (11)3F4M5091
+ICLIMT EQU     NMLIMT/16             INTEGER FIELDS PER LINE        (11)3F4M5092
+ECLIMT EQU     NMLIMT/22             REAL F. P. FIELDS PER LINE     (11)3F4M5093
+LCLIMT EQU     NMLIMT/7              LOGICAL FIELDS PER LINE        (11)3F4M5094
+DBLIMT EQU     NMLIMT/29             D. P. FIELDS PER LINE          (11)3F4M5095
+CMLIMT EQU     NMLIMT/44*2           2(COMPLEX FIELDS PER LINE)     (11)3F4M5096
+LIMIT5 EQU     CHLIMT                                               (14)3F4M5097
+LIMIT  EQU     LIMIT5/6+1                                           (11)3F4M5100
+CNVSW  EQU     .CNVSW                                                   3F4M5110
+COUNT  EQU     .KOUNT                                                   3F4M5120
+DDDFLG EQU     .DDDFL                                                   3F4M5130
+DDFLAG EQU     .DDFLG                                                   3F4M5140
+DC     EQU     .DFLT                                                 $5$3F4M5150
+DIG    EQU     .DIG                                                     3F4M5160
+DONE   EQU     .DONE                                                    3F4M5170
+EC     EQU     .FLT                                                  $5$3F4M5180
+GAIN   EQU     .GAIN                                                 $5$3F4M5190
+GAIN1  EQU     .GAIN1                                                $5$3F4M5200
+QSTO   EQU     .QSTO                                                 $5$3F4M5210
+BUF    EQU     .BUF                                                  $5$3F4M5220
+IC     EQU     .INTG                                                 $5$3F4M5230
+LC     EQU     .LOUT                                                 $5$3F4M5240
+OUTBUF EQU     .OUTBF                                                   3F4M5250
+TEST   EQU     .TEST                                                    3F4M5260
+WIDTH  EQU     .WIDTH                                                   3F4M5270
+.FWRO. SXA     SYSLOC,4                                                 3F4M5280
+       SXA     LNKG,4                                                   3F4M5290
+       SXA     SV1,1                 SAVE REGISTERS FOR                 3F4M5300
+       SXA     SV2,2                 MAIN PROGRAM.                      3F4M5310
+       CLA     4,4                                                      3F4M5320
+       STA     .FOJP                                                    3F4M5330
+       CLA     3,4                   GET ARG                            3F4M5340
+       STA     INOUT                 STORE ADDRESS OF I/O ROUTINE.      3F4M5350
+       LMTM                                                         (11)3F4M5353
+       SXA     SV3,3                                                (11)3F4M5354
+       SXA     SV5,5                                                (11)3F4M5355
+       SXA     SV6,6                                                (11)3F4M5356
+       SXA     SV7,7                                                (11)3F4M5357
+*      INITIALIZE BASIC FCNV ROUTINE.                                   3F4M5360
+       AXT     77,2                                                  $5$3F4M5370
+       AXT     0,1                                                      3F4M5380
+       CALL    .FCON.(ARG1,ARG2,ARG3)                                $5$3F4M5390
+       ORG     *-3                                                   $5$3F4M5400
+ARG1   PZE     0,,0                                                     3F4M5410
+ARG2   PZE     0,,**                                                    3F4M5420
+ARG3   PZE     1                                                     $5$3F4M5430
+       TSX     .FREST,4              RESET BUFFER                       3F4M5440
+       LXA     .FOJP,4               LOCATE CALL .FWRU.                 3F4M5450
+       CLA     4,4                   GET NAMELIST ARGUMENT              3F4M5460
+       PAC     ,2                    STORE TABLE ADDRESS                3F4M5470
+       SXA     LOCW,2                                                   3F4M5480
+       CAL*    4,4                   GET BCI TABLE NAME                 3F4M5490
+       LDQ     BLANKS                                                   3F4M5500
+       LGR     12                    MAKE ROOM FOR 1$                   3F4M5510
+       ORA     H1                    INSERT 1$                          3F4M5520
+       DST     OUTBUF                PUT 1$NAME IN OUTPUT BUFFER.       3F4M5530
+       TSX     EMPTY,2               WRITE TABLE NAME.                  3F4M5540
+       AXC     ENDLIN-1,4            END OF LINE EXIT FROM FCNV         3F4M5550
+       SXA     DONE,4                WHEN COUNT IS EXHAUSTED.           3F4M5560
+*      EXTRACT WORD FROM TABLE                                          3F4M5570
+*      BEGIN AND RETURN HERE TO PROCESS NEW ARRAY.                      3F4M5580
+LOCW   AXT     **,2                  LOCATE TABLE WORD.                 3F4M5590
+       CAL     1,2                                                      3F4M5600
+       TXI     *+1,2,-1              BUMP POINTER TO NEXT               3F4M5610
+       SXA     LOCW,2                WORD OF TABLE.                     3F4M5620
+       TZE     END                   END OF TABLE-WRITE $END,           3F4M5630
+*                                    RETURN TO MAIN PROGRAM.            3F4M5640
+       ZET     FSW                   IS THIS FIRST LINE OF ARRAY        3F4M5650
+       TRA     BLK                   NO-SKIP TWO WORDS OF OUTBUF.       3F4M5660
+       LDQ     EQL                   YES-INSERT ARRAY NAME AND =.       3F4M5670
+       LGR     6                     SHIFT FOR CARRIAGE CONTROL         3F4M5680
+       STL     FSW                   SET FIRST LINE SWITCH.             3F4M5690
+       DST     OUTBUF                                                   3F4M5700
+       TRA     LOCW                  GET WORD OF ARRAY INFO.            3F4M5710
+BLK    LXA     GAIN1,1       LOAD XR1 WITH OUTBUF LOCATION COUNT     $5$3F4M5720
+       TXI     *+1,1,-2                                              $5$3F4M5730
+       SXA     GAIN1,1                                               $5$3F4M5740
+ BLK1  PBT                                                           $5$3F4M5750
+       TRA     BLK2                                                  $5$3F4M5760
+       TXI     *+1,2,-1                                              $5$3F4M5770
+       STO     TPBT                                                  $5$3F4M5780
+       CAL     0,2                                                   $5$3F4M5790
+       PBT                                                           $5$3F4M5800
+       TRA     *+2                                                   $5$3F4M5810
+       TXI     *-3,2,-1                                              $5$3F4M5820
+       SXA     LOCW,2                                                $5$3F4M5830
+       CAL     TPBT                                                  $5$3F4M5840
+ BLK2  STA     ARYLOC                                                $5$3F4M5850
+       STD     ARYSIZ                STORE SIZE OF ARRAY.               3F4M5860
+       ARS     15                    BLANK OUT ALL                      3F4M5870
+       ANA     MSK                   BUT TYPE NUMBER.                   3F4M5880
+       PAC     ,2                                                       3F4M5890
+       XEC     TYPTBL,2                                                 3F4M5900
+TYPTBL TRA     INTGR                 TYPE 0 - INTEGER                   3F4M5910
+       TRA     REAL                       1 - REAL                      3F4M5920
+       TRA     LOGIC                      2 - LOGICAL                   3F4M5930
+       TRA     DBLPR                      3 - DOUBLE PRECISION          3F4M5940
+       TRA     COMPLX                     4 - COMPLEX                   3F4M5950
+*      INITIALIZE FCNV FOR INTEGER OUTPUT.                              3F4M5960
+INTGR  AXT     IC,4          PUT 'IC' LOC IN CNSW                    $5$3F4M5970
+       SXA     CNVSW,4               CNVSW                              3F4M5980
+       AXT     ICLIMT,4              FIELD COUNT PER LINE           (11)3F4M5990
+       SXA     KOUNT,4                                                  3F4M6000
+       AXT     15,2          WIDTH OF INTEGERS                       $5$3F4M6010
+       AXT     1,1           SPACE FOR COMMA                         $5$3F4M6020
+       TRA     INITL                                                    3F4M6030
+*      INITIALIZE FCNV FOR REAL FLOATING POINT NUMBERS                  3F4M6040
+REAL   AXT     EC,4         SET CONVERSION EWITCH                    $5$3F4M6050
+       SXA     CNVSW,4               FOR REAL FLOATING OUTPUT           3F4M6060
+       AXT     8,4                                                      3F4M6070
+       SXA     DIG,4                 SET DECIMAL SCALE.                 3F4M6080
+       AXT     ECLIMT,4              FIELD COUNT PER LINE           (11)3F4M6090
+       SXA     KOUNT,4               SET WORD COUNT PER LINE.           3F4M6100
+       AXT     21,2          WIDTH IN CHARACTERS                     $5$3F4M6110
+       AXT     1,1           SPACE FOR COMMA                         $5$3F4M6120
+       TRA     INITL                                                    3F4M6130
+*      INITIALIZE FCNV FOR LOGICAL OUTPUT                               3F4M6140
+LOGIC  AXT     LC,4         SET CONVERSION EWITCH                    $5$3F4M6150
+       SXA     CNVSW,4               FOR LOGICAL OUTPUT                 3F4M6160
+       AXT     LCLIMT,4              FIELD COUNT PER LINE           (11)3F4M6170
+       SXA     KOUNT,4                                                  3F4M6180
+       AXT     6,2           WORD WIDTH                              $5$3F4M6190
+       AXT     1,1           SPACE FOR COMMA                         $5$3F4M6200
+       TRA     INITL                                                    3F4M6210
+*      INITIALIZE FCNV FOR DOUBLE PRECISION REAL OUTPUT                 3F4M6220
+DBLPR  STL     DBLSW                 D.P. SWITCH FOR FWRO               3F4M6230
+       AXT     DC,4         SET CONVERSION                           $5$3F4M6240
+       SXA     CNVSW,4               SWITCH FOR D.P.                    3F4M6250
+       STL     DDDFLG                DOUBLE PRECISION SWITCHES FOR      3F4M6260
+       STL     DDFLAG                FIOH COMPATIBILITY                 3F4M6270
+       AXT     DBLIMT,4              FIELD COUNT PER LINE           (11)3F4M6280
+       SXA     KOUNT,4               LINE                               3F4M6290
+       AXT     16,4                  SET DECIMAL                        3F4M6300
+       SXA     DIG,4                 SCALE                              3F4M6310
+       AXT     28,2          WIDTH PER WORD                          $5$3F4M6320
+       AXT     1,1           SPACE FOR COMMA                         $5$3F4M6330
+       CLA     TWO                   BLANKS BETWEEN WORDS               3F4M6340
+       TRA     INITL                                                    3F4M6350
+*      INITIALIZE FCNV FOR COMPLEX AND PROCESS                          3F4M6360
+*      AS REAL FLOATING NUMBERS                                         3F4M6370
+COMPLX STL     CMPLX                                                    3F4M6380
+       AXT     EC,4                                                  $5$3F4M6390
+       SXA     CNVSW,4                                                  3F4M6400
+       AXT     8,4                                                      3F4M6410
+       SXA     DIG,4                                                    3F4M6420
+       AXT     CMLIMT,4              2(FIELD COUNT PER LINE)        (11)3F4M6430
+       SXA     KOUNT,4                                                  3F4M6440
+       AXT     2,1                   SKIP TWO SPACES BEFORE LINE    (11)3F4M6443
+       TSX     BLNK,4                                               (11)3F4M6446
+       AXT     19,2                  WORD WIDTH IN CHARACTERS       (11)3F4M6450
+       AXT     4,1                                                   $5$3F4M6460
+       CLA     FOUR                                                     3F4M6470
+       TRA     INITL                                                    3F4M6480
+INITL  LXA     KOUNT,4               STORE COUNT PER LINE               3F4M6490
+       SXA     COUNT,4                                                  3F4M6500
+       SXA     WIDTH,2                     WIDTH OF WORD                3F4M6510
+       SXA     SPACBT,1                                              $5$3F4M6520
+*      BEGIN AND RETURN HERE FOR NEW LINE OF ARRAY.                     3F4M6530
+CMPLP  NZT     CMPLX                 IS IT COMPLEX                      3F4M6540
+       TRA     *+3                   NO - BEGIN PROCESSING.             3F4M6550
+       AXT     1,1                   YES                                3F4M6560
+       TSX     LPAR,4                INSERT LEFT PARENTHESIS.           3F4M6570
+*      COME HERE TO GET NEXT BINARY WORD.                               3F4M6580
+ARYPNT AXT     0,1                   ARRAY POINTER                      3F4M6590
+ARYLOC CLA     **,1               ARRAY POINTER                      $5$3F4M6600
+       ZET     DBLSW               IS IT DOUBLE PRECISION            $5$3F4M6610
+       TXI     *+1,1,-1                                              $5$3F4M6620
+       LDQ*    *-3                                                   $5$3F4M6630
+       TXI     *+1,1,-1            NO - BUMP ONE WORD                $5$3F4M6640
+       SXA     ARYPNT,1            SAVE UPDATED ARRAY POINTER        $5$3F4M6650
+       TSX     .FCNV.,4              CONVERT NUMBER, INTO OUT BUF       3F4M6660
+SPACBT AXT     **,1                                                     3F4M6670
+       NZT     CMPLX                 IS IT COMPLEX                      3F4M6680
+       TRA     INCMA                 NO - INSERT COMMA.                 3F4M6690
+       NZT     FSWD                  YES-IS IT FIRST WORD               3F4M6700
+       TRA     SEC                   YES                                3F4M6710
+       STZ     FSWD                  NO-RESET FSWD                      3F4M6720
+       AXT     1,1                                                      3F4M6730
+       TSX     RPAR,4                INSERT RIGHT PAREN.                3F4M6740
+       TSX     COMMA,4                                               $5$3F4M6750
+       AXT     3,1                   SET COUNTER FOR COMMA+2 BLANKS     3F4M6760
+       LDQ     BLANKS                                                $5$3F4M6770
+       AXT     2,1                                                   $5$3F4M6780
+       TSX     SKPSPC,4                                              $5$3F4M6790
+       TRA     INCMA+1                                               $5$3F4M6800
+       TRA     INCMA                                                    3F4M6810
+SEC    STL     FSWD                  SET FIRST WORD SWITCH.             3F4M6820
+       AXT     1,1                                                      3F4M6830
+INCMA  TSX     COMMA,4               INSERT COMMA AND BLANKS.           3F4M6840
+*      CURRENT WORD IS STORED, TEST FOR COMPLETION                      3F4M6850
+       LXD     ARYSIZ,4              GET ARRAY WORDS LEFT               3F4M6860
+       TXL     EMTY,4,0              QUIT IF ONE WORD ARRAY             3F4M6870
+       NZT     FSWD                  TIMES 2 FOR COMPLEX                3F4M6880
+BUMP   TXI     *+1,4,-1              BUMP ARRAY COUNTER                 3F4M6890
+       SXD     ARYSIZ,4              SAVE REMAINDER.                    3F4M6900
+       TXL     EMTY-1,4,0            TRANSFER IF ARRAY DONE             3F4M6910
+       ZET     LINFUL                IS LINE FULL                       3F4M6920
+       TRA     EMTY                  YES-WRITE IT AND CONTINUE          3F4M6930
+       ZET     FSWD                  NO - FIRST WORD OF COMPLEX         3F4M6940
+       TRA     ARYPNT                GET NEXT WORD                      3F4M6950
+       TRA     CMPLP                 INSERT LEFT PAREN IF COMPLEX       3F4M6960
+       STZ     LINFUL                                                   3F4M6970
+EMTY   ZET     FSWD                                                     3F4M6980
+       TRA     BUMP+3                                                   3F4M6990
+       TSX     EMPTY,2                                                  3F4M7000
+       STZ     FSW                   RESET FIRST LINE SWITCH            3F4M7010
+       NZT     LINFUL                WAS LINE FULL                      3F4M7020
+       TRA     LOCW1                 NO-ARRAY DONE                      3F4M7030
+       STZ     LINFUL                YES - ONLY LINE DONE               3F4M7040
+       LXA     KOUNT,4                                                  3F4M7050
+       SXA     COUNT,4               RESTORE LINE COUNT                 3F4M7060
+       LXA     GAIN1,4       OUTBUF LOCATION COUNT TO XR4            $5$3F4M7070
+       TXI     *+1,4,-2      SKIP TWO WORDS OF OUTBUF                $5$3F4M7080
+       SXA     GAIN1,4       SAVE OUTBUF LOCATION COUNT              $5$3F4M7090
+       NZT     CMPLX         IS THE NEW LINE COMPLEX                (11)3F4M7092
+       TRA     CMPLP         NO. BEGIN NEW LINE                     (11)3F4M7094
+       AXT     2,1           YES                                    (11)3F4M7096
+       TSX     BLNK,4        SKIP TWO SPACES AND                    (11)3F4M7098
+       TRA     CMPLP        BEGIN NEW LINE                           $5$3F4M7100
+LOCW1  SXA     ARYPNT,0              RESET ARRAY POINTER                3F4M7110
+       STZ     DDDFLG                                                   3F4M7120
+       STZ     DDFLAG                                                   3F4M7130
+       STZ     DBLSW                                                    3F4M7140
+       STZ     CMPLX                                                    3F4M7150
+       TRA     LOCW                                                     3F4M7160
+EMPTY  SXA     RET,2                                                    3F4M7170
+       XEC     GAIN1         RESET XR2 WITH OUTBUF LOCATION COUNT    $5$3F4M7180
+       XEC     GAIN          RESET XR1 WITH OUTBUF CHARACTER COUNT   $5$3F4M7190
+       TXH     FILL2,1,5     XR1=6                                   $5$3F4M7200
+       LDQ     QSTO                                                  $5$3F4M7210
+       RQL     6             LEFT-JUSTIFY BCD CHARACTERS IN MQ       $5$3F4M7220
+       TIX     *-1,1,1                                               $5$3F4M7230
+       STQ*    BUF           STORE WORD INTO OUTPUT BUFFER           $5$3F4M7240
+       TIX     *+1,2,1                                               $5$3F4M7250
+FILL2  TXI     *+1,2,-LIMIT  CALCULATE WORD COUNT                    $5$3F4M7260
+       PCA     ,2                                                    $5$3F4M7270
+       PAX     ,2                                                    $5$3F4M7280
+       TXH     *+2,2,2               IF LESS THAN 3 - SET AT 3.         3F4M7290
+       AXT     3,2                                                      3F4M7300
+INOUT  TSX     **,4                  WRITE A LINE                       3F4M7310
+       TSX     .FREST,4                                                 3F4M7320
+RET    AXT     **,2                                                     3F4M7330
+       TRA     1,2                                                      3F4M7340
+.FREST SXA     RETT,4                                                   3F4M7350
+       AXT     LIMIT,2       INITIALIZE XR2 TOO POINT TO FIRST LOC.  $5$3F4M7360
+       SXA     GAIN1,2       OF OUTPUT BUFFER                        $5$3F4M7370
+       AXT     6,1           INITIALIZE XR1 FOR BCD CHARACTER COUNT  $5$3F4M7380
+       SXA     GAIN,1                                                $5$3F4M7390
+       LDQ     BLANKS        INITIALIZE QSTO WITH BLANKS             $5$3F4M7400
+       STQ     QSTO                                                  $5$3F4M7410
+       CAL     BLANKS                CLEAR                              3F4M7420
+       SLW     OUTBUF                BUFFER                             3F4M7430
+       SLW     OUTBUF+1              WITH                               3F4M7440
+       SLW     OUTBUF+2              BLANKS                             3F4M7450
+RETT   AXT     **,4                                                     3F4M7460
+       TRA     1,4                                                      3F4M7470
+*      COMMA,BLANK,LEFT AND RIGHT PARENTHESIS INSERTION                 3F4M7480
+*                                                                       3F4M7490
+*      ENTER HERE FOR COMMA INSERTION.                                  3F4M7500
+COMMA  LDQ     CMA                                                      3F4M7510
+       TRA     SKPSPC                                                   3F4M7520
+*      ENTER HERE FOR LEFT PAREN.                                       3F4M7530
+LPAR   LDQ     LPR                                                      3F4M7540
+       TRA     SKPSPC                                                   3F4M7550
+*      ENTER HERE FOR RIGHT PAREN                                       3F4M7560
+RPAR   LDQ     RPR                                                      3F4M7570
+       TRA     SKPSPC                                                   3F4M7580
+*      ENTER HERE FOR BLANKS.                                           3F4M7590
+BLNK   LDQ     BLANKS                                                   3F4M7600
+       TRA     SKPSPC                                                   3F4M7610
+RPR    BCI     1,)                                                      3F4M7620
+LPR    BCI     1,(                                                      3F4M7630
+CMA    BCI     1,,                                                      3F4M7640
+*      BLANK INSERTION ROUTINE                                          3F4M7650
+SKPSPC CAL     QSTO          BCD CHARACTERS                          $5$3F4M7660
+       LXA     GAIN,2          SET XR2 WITH OUTBUF CHARACTER COUNT   $5$3F4M7670
+SHFT   LGL     6                                                     $5$3F4M7680
+       TIX     NXTCHR,2,1                                            $5$3F4M7690
+       XEC     GAIN1         RESET XR2 WITH OUBUF LOCATION COUNT     $5$3F4M7700
+       SLW*    BUF           STORE WORD                              $5$3F4M7710
+       TXI     *+1,2,-1      ADVANCE OUTPUT BUFFER ADDRESS           $5$3F4M7720
+       SXA     GAIN1,2       SAVE OUTBUF LOCATION COUNT              $5$3F4M7730
+       AXT     6,2           RESET OUTBUF CHARACTER COUNT WITH 6     $5$3F4M7740
+       CAL     BLANKS                                                $5$3F4M7750
+NXTCHR TIX     SHFT,1,1                                              $5$3F4M7760
+       SLW     QSTO                                                  $5$3F4M7770
+       SXA     GAIN,2        SAVE OUTBUF CHARACTER COUNT             $5$3F4M7780
+       TRA     1,4                                                      3F4M7790
+BLANK  OCT     000000000060                                             3F4M7800
+*      WRITE $END, RETURN TO MAIN PROGRAM-TABLE DONE.                   3F4M7810
+END    CLA     ENDT                  PUT 0$END IN OUTBUF                3F4M7820
+       STO     OUTBUF                AND WRITE IT.                      3F4M7830
+       TSX     EMPTY,2                                                  3F4M7840
+SV3    AXT     **,3                                                 (11)3F4M7842
+SV5    AXT     **,5                                                 (11)3F4M7844
+SV6    AXT     **,6                                                 (11)3F4M7846
+SV7    AXT     **,7                                                 (11)3F4M7848
+.FOJP  AXT     **,4                  RESTORE INDICES AND                3F4M7850
+SV1    AXT     **,1                  RETURN TO MAIN                     3F4M7860
+SV2    AXT     **,2                  OBJECT                             3F4M7870
+       TRA     1,4                   PROGRAM.                           3F4M7880
+*      END OF LINE REACHED, COUNT IS DONE - WRITE A LINE                3F4M7890
+ENDLIN STL     LINFUL                FORCE LINE FULL EXIT               3F4M7900
+       TRA     SPACBT                                                   3F4M7910
+*      CONSTANTS                                                        3F4M7920
+BLANKS BCI     1,                                                       3F4M7930
+H1     BCI     1,1$0000                                                 3F4M7940
+ENDT   BCI     1,0$ END                                                 3F4M7950
+EQL    BCI     1, =                                                     3F4M7960
+MSK    OCT     000000000007                                             3F4M7970
+FSW    PZE                           FIRST LINE SWITCH.                 3F4M7980
+CMPLX  PZE                           COMPLEX NUMBER SWITCH.             3F4M7990
+DBLSW  PZE                           DOUBLE PRECISION SWITCH.           3F4M8000
+FSWD   PZE                           FIRST WORD OF COMPLEX SWITCH.      3F4M8010
+ARYSIZ PZE                                                              3F4M8020
+L(1)   PZE     1                                                        3F4M8030
+LINFUL PZE                           LINE FULL SWITCH                   3F4M8040
+FOUR   PZE     4                                                        3F4M8050
+TWO    PZE     2                                                        3F4M8060
+ TPBT  PZE                                                           $5$3F4M8070
+LNKG   LDIR                                                             3F4M8080
+KOUNT  PZE                                                              3F4M8090
+END94  NULL                                                          $5$3F4M8100
+       END                                                           $5$3F4M8110

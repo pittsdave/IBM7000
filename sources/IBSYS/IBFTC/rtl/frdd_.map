@@ -1,0 +1,32 @@
+$IBMAP FRDD.   22                                                       3F4P0000
+       TTL  ALTERNATE I/O  READ DECIMAL INTERFACE ROUTINE               3F4P0010
+       LBL     .RDD,BEGIN     FRDD.                                  (7)3F4P0013
+*              CALLING SEQUENCE FOR -- READ (N,F) LIST --               3F4P0020
+*                   CALL ..FRDD(ARG,LF)                                 3F4P0030
+*                    WHERE  ARG = LOCATION OF  PZE UNITXX, XX IS        3F4P0040
+*                                 LOCATION OF LOGICAL UNIT N            3F4P0050
+*                            LF = LOCATION OF FORMAT STATEMENT F        3F4P0060
+       ENTRY   ..FRDD                                                   3F4P0070
+..FRDD SXA     SYSLOC,4            SAVE FORTRAN CALL LOCATION IN SYSLOC 3F4P0080
+       SXA     LK.DR,4             SAVE X4 IN LINKAGE DIRECTOR          3F4P0090
+       SXA     ARG,4               SAVE ORIGINAL FORTRAN CALL           3F4P0100
+       CALL    ..FBCD              READ ENTRY TO FBCD.                  3F4P0110
+*                                   SETS UP .LXSL COMMAND AND           3F4P0120
+*                                   GENERATES CALL TO FIOS.             3F4P0130
+       CALL    .FIOH.(ENT,ARG)     CALL HOLLERITH COORDINATOR           3F4P0140
+       ORG     *-2                                                      3F4P0150
+ ENT   NOP     READ                 AND RELINQUISH                      3F4P0160
+ ARG   PZE     0,,0                  CONTROL TO IT                      3F4P0170
+*                                                                       3F4P0180
+*                     PROCESS FIOH READ REQUEST                         3F4P0190
+*                                                                       3F4P0200
+ READ  TSX     ..FIOC,4            REQUEST SINGLE RECORD VIA ..FIOC     3F4P0210
+       TSX     ..FTCK,4            CHECK CURRENT READ TRANSMISSION      3F4P0220
+       AXT     ..FBCB,4            PLACE THE LOCATION                   3F4P0230
+       SXA     .FBDBF,4             OF THE READ BUFFER IN FIOH          3F4P0240
+       AXT     1,4                 RESET                                3F4P0250
+       SXA     .FDX1,4              POINTERS                            3F4P0260
+       SXA     .FDX2,4               IN FIOH                            3F4P0270
+       TRA     1,2                 RETURN TO FIOH                       3F4P0280
+ LK.DR LDIR                                                             3F4P0290
+       END                                                              3F4P0300

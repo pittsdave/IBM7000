@@ -1,0 +1,60 @@
+$*     7090/7094 IBLIB ERROR RETURN VALIDATION SUBROUTINE - FRET    (14)3F7K0000
+$IBMAP FRET    ()OK                                                 (14)3F7K0010
+       TTL     FRET - OPTIONAL ERROR RETURN VALIDATION ROUTINE      (14)3F7K0020
+* PURPOSE -                                                         (14)3F7K0030
+*    TO CHECK WHETHER A FORTRAN SUBROUTINE ATTEMPTED TO TAKE        (14)3F7K0040
+*    AN OPTIONAL RETURN NOT SPECIFIED IN THE CALL TO THE SUBROUTINE (14)3F7K0050
+*    IF IT DID AN ERROR MESSAGE WILL BE PRINTED                     (14)3F7K0060
+*                                                                   (14)3F7K0070
+* ENTRY -                                                           (14)3F7K0080
+*    TSX   .FRET.                                                   (14)3F7K0090
+*    AXT   N,4                                                      (14)3F7K0100
+*   (LXA)                                                           (14)3F7K0110
+*    TXI   SAVE+1,,LK.DR                                            (14)3F7K0120
+* INPUT -                                                           (14)3F7K0130
+*    1) N = RETURN NUMBER OR LOCATION WHERE RETURN NUMBER IS GIVEN  (14)3F7K0140
+*    2) SAVE+1 = LOC OF EXIT OF SUBROUTINE                          (14)3F7K0150
+*    3) LK.DR = LOC OF LINKAGE DIRECTOR OF SUBROUTINE               (14)3F7K0160
+*                                                                   (14)3F7K0165
+       ENTRY   .FRET.                                               (14)3F7K0170
+.FRET. SXA     SAVE4,4             SAVE XR4 AND                     (14)3F7K0180
+       STO     ACCUM               THE AC                           (14)3F7K0190
+       XEC     1,4                 PLACE RETURN NO IN XR4           (14)3F7K0200
+       SXD     RETRN,4             STORE RETURN NO                  (14)3F7K0210
+       LAC     SYSLOC,4            PICK UP LOCATION OF CALL         (14)3F7K0240
+       SXD     NEXT,4              STORE LOCATION OF CALL           (14)3F7K0250
+       LXA     SYSLOC,4        PICK UP LOCATION OF CALL COMPLEMENTED(14)3F7K0260
+       CLA     1,4                 PLACE TXI IN AC                  (14)3F7K0270
+       PAX     0,4                 PLACE *+2+M+N IN XR4             (14)3F7K0280
+RETRN  TNX     ERR,4,**            DECREMENT BY RETURN NO           (14)3F7K0290
+       SXD     TEST,4              STORE XR4                        (14)3F7K0300
+       PDX     0,4                 PLACE N = NO OF PARAMETERS IN XR4(14)3F7K0310
+       TXI     *+1,4,3             MAKE XR4 = N +3                  (14)3F7K0320
+NEXT   TXI     *+1,4,**            MAKE XR4 = *+N+2                 (14)3F7K0330
+TEST   TIX     ERR,4,**            TEST IF INVALID RETURN           (14)3F7K0340
+SAVE4  AXT     **,4                RESTORE XR4                      (14)3F7K0350
+       CLA     2,4                 FIND LOCATION OF                 (14)3F7K0360
+       SUB     L(1)                'SAVE'                           (14)3F7K0370
+       STA     *+2                                                  (14)3F7K0380
+       CLA     RETRN               PICK UP RETURN NO                (14)3F7K0390
+       STD     **                  AND PLACE IN DECREMENT OF SAVE   (14)3F7K0400
+       CLA     ACCUM               RESTORE AC                       (14)3F7K0410
+       TRA     2,4                 AND EXIT                         (14)3F7K0420
+ERR    LXA     SAVE4,4             RESTORE XR4                      (14)3F7K0430
+       CLA     2,4                 FIND DECK NAME OF                (14)3F7K0440
+       PDC     0,4                 SUBROUTINE                       (14)3F7K0450
+       CLA     1,4                 AND STORE IT IN                  (14)3F7K0460
+       STO     E72MES+2            ERROR MESSAGE                    (14)3F7K0470
+       SXD     RETRN,0             SET RETURN NO = 0                (14)3F7K0480
+       CALL    .FXEM.(CODE72)      PRINT ERROR MESSAGE              (14)3F7K0490
+       TRA     SAVE4               AND RETURN                       (14)3F7K0500
+CODE72 PZE     72                                                   (14)3F7K0510
+ER72MS PZE     E72MES,,17                                           (14)3F7K0520
+ER72OP PZE     E72OMS,,4                                            (14)3F7K0530
+E72MES BCI     3,0SUBROUTINE                                        (14)3F7K0540
+       BCI     8, ATTEMPTED TO TAKE A NONSTANDARD RETURN NOT SPEC   (14)3F7K0550
+       BCI     6,IFIED IN THE CALL TO THE SUBROUTINE.               (14)3F7K0560
+E72OMS BCI     4,0STANDARD RETURN TAKEN.                            (14)3F7K0570
+L(1)   PZE     1                                                    (14)3F7K0580
+ACCUM  PZE     0                                                    (14)3F7K0600
+       END                                                          (14)3F7K0610

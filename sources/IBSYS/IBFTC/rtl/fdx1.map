@@ -1,0 +1,126 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F9G0000
+$IBMAP FDX1    115                                                      3F9G0010
+       TTL     DOUBLE PRECISION AND COMPLEX EXPONENTIAL-DX1             3F9G0020
+       REM     DOUBLE PRECISION EXPONENTIAL-FLTG. BASE, FIXED EXPT.     3F9G0030
+       REM     COMPLEX EXPONENTIAL-COMPLEX BASE, FIXED EXPT.            3F9G0040
+       ENTRY   .DXP1.                                                   3F9G0050
+       ENTRY   .CXP1.                                                   3F9G0060
+.CXP1. STL     INDIC                                                    3F9G0070
+       TRA     *+2                                                      3F9G0080
+.DXP1. STZ     INDIC                                                    3F9G0090
+DEXP2  SAVEN   (4)                                                      3F9G0100
+       SXA     LNKG,4                                                   3F9G0110
+       CLA*    4,4                                                      3F9G0120
+       STO     EXPT                                                     3F9G0130
+       DLD*    3,4                                                      3F9G0140
+       DST     BASE                                                     3F9G0150
+       TNZ     DLOD           TEST BASE FOR PARTIAL ZERO                3F9G0160
+       XCA                    PARTIAL ZERO EXISTS                       3F9G0170
+       TNZ     DLOD           TEST BASE FOR COMPLETE ZERO               3F9G0180
+       CLA     EXPT                                                     3F9G0190
+       TZE     ERR                                                      3F9G0200
+       TMI     ERR1                                                     3F9G0210
+       ZAC                                                              3F9G0220
+       RETURN  DEXP2                                                    3F9G0230
+ DLOD  DLD     FLONE                                                    3F9G0240
+       DST     FACTR                                                    3F9G0250
+ CLA1  CLA     EXPT                                                     3F9G0260
+       LBT                    TEST EXPONENT FOR LOW ORDER BIT           3F9G0270
+       TRA     CLA2           NOT FOUND                                 3F9G0280
+       DLD     FACTR                                                    3F9G0290
+       ZET     INDIC                                                    3F9G0300
+       TSX     CMPLY,4                                                  3F9G0310
+       TSX     DFMP,4                                                   3F9G0320
+ STO   DST     FACTR                                                    3F9G0330
+ CLA2  CLA     EXPT           TEST EXPT FOR ZERO                        3F9G0340
+       ARS     1                                                        3F9G0350
+       STO     EXPT                                                     3F9G0360
+       TZE     EXIT           FINISHED IF EXPT NOW ZERO                 3F9G0370
+       DLD     BASE                                                     3F9G0380
+       ZET     INDIC                                                    3F9G0390
+       TSX     CMPLY,4                                                  3F9G0400
+       TSX     DFMP,4                                                   3F9G0410
+       DST     BASE                                                     3F9G0420
+       TRA     CLA1           START AGAIN                               3F9G0430
+ EXIT  CLA     EXPT                                                     3F9G0440
+       TMI     NEGXP    TRANSFER IF NEG EXPONENT                        3F9G0450
+       DLD     FACTR                                                    3F9G0460
+       RETURN  DEXP2                                                    3F9G0470
+       RETURN  DEXP2                                                    3F9G0480
+ ERR   CALL    .FXEM.(DXP1E1)                                           3F9G0490
+ COR   ZAC                                                              3F9G0500
+       LDQ     FLONE+1                                                  3F9G0510
+       RETURN  DEXP2                                                    3F9G0520
+ ERR1  CALL    .FXEM.(DXP1E2)                                           3F9G0530
+       TRA     COR                                                      3F9G0540
+ NEGXP ZET     INDIC                                                    3F9G0550
+       TRA     CAFDP                                                    3F9G0560
+       DLD     FLONE                                                    3F9G0570
+       DFDP    FACTR                                                    3F9G0580
+       RETURN  DEXP2                                                    3F9G0590
+ CAFDP DLD     FACTR   FIND RECIPROCAL OF COMPLEX NUMBER                3F9G0600
+       XCL                                                              3F9G0610
+       XCA                    ABS(A) IN AC - ABS(B) IN MQ               3F9G0620
+       TLQ     AGRB                                                     3F9G0630
+       CLS     FACTR            -A                                      3F9G0640
+ PROCD FDP     FACTR+1       -A/B                                       3F9G0650
+       STQ     E1                                                       3F9G0660
+       FMP     E1            (A/B)**2                                   3F9G0670
+       FAD     FLONE          (A/B)**2+1                                3F9G0680
+       XCA                                                              3F9G0690
+       FMP     FACTR+1       B((A/B)**2+1)                              3F9G0700
+       STO     E2                                                       3F9G0710
+       CLS     FLONE                                                    3F9G0720
+       FDP     E2            -1/(B(A/B)**2+1)                           3F9G0730
+       STQ     E2            STORE IMAG PART OF ANSWER                  3F9G0740
+       FMP     E1            (A/B)/(B(A/B)**2+1)                        3F9G0750
+       LDQ     E2                                                       3F9G0760
+       NZT     INDIC                                                    3F9G0770
+       XCA                    ARRANGE ANSWER                            3F9G0780
+       STL     INDIC          RESTORE INDICATOR                         3F9G0790
+       RETURN  DEXP2                                                    3F9G0800
+AGRB   CLS     FACTR          EXCHANGE A AND B                          3F9G0810
+       XCA                    WITH SIGNS REVERSED                       3F9G0820
+       CLA     FACTR+1                                                  3F9G0830
+       STQ     FACTR+1                                                  3F9G0840
+       STZ     INDIC          SET INDICATOR                             3F9G0850
+       TRA     PROCD                                                    3F9G0860
+ CMPLY DST     E3                                                       3F9G0870
+       FMP     BASE                                                     3F9G0880
+       STO     E1                                                       3F9G0890
+       LDQ     E3                                                       3F9G0900
+       FMP     BASE+1                                                   3F9G0910
+       FAD     E1                                                       3F9G0920
+       STO     E1                                                       3F9G0930
+       LDQ     E4                                                       3F9G0940
+       FMP     BASE+1                                                   3F9G0950
+       STO     E2                                                       3F9G0960
+       LDQ     E3                                                       3F9G0970
+       FMP     BASE                                                     3F9G0980
+       FSB     E2                                                       3F9G0990
+       LDQ     E1                                                       3F9G1000
+       TRA     2,4                                                      3F9G1010
+ DFMP  DFMP    BASE          CHANGE FACTOR ACCORDINGLY                  3F9G1020
+       TRA     1,4                                                      3F9G1030
+       EVEN                                                             3F9G1040
+ FLONE DEC     1.0,0.0                                                  3F9G1050
+ BASE  DEC     0,0                                                      3F9G1060
+ FACTR DEC     0,0                                                      3F9G1070
+ EXPT                                                                   3F9G1080
+ INDIC                                                                  3F9G1090
+E1                                                                      3F9G1100
+E2                                                                      3F9G1110
+E3                                                                      3F9G1120
+E4                                                                      3F9G1130
+*                                                                       3F9G1140
+DXP1E1 DEC     14             0**0                                      3F9G1150
+ER14MS PZE     E14MES,,5                                                3F9G1160
+ER14OP PZE     E14OMS,,3                                                3F9G1170
+E14MES BCI     5,0EXPONENTIATION ERROR 0**0                             3F9G1180
+E14OMS BCI     3,0SET RESULT = 0                                        3F9G1190
+DXP1E2 DEC     15             0**(-A)                                   3F9G1200
+ER15MS PZE     E15MES,,5                                                3F9G1210
+ER15OP PZE     E14OMS,,3                                                3F9G1220
+E15MES BCI     5,0EXPONENTIATION ERROR 0**(-J)                          3F9G1230
+LNKG   LDIR                                                             3F9G1240
+       END                                                              3F9G1250

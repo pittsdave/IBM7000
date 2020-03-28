@@ -1,0 +1,230 @@
+$*     7090/7094 IBLIB FORTRAN SYSTEM LIBRARY - FXEM                    3F200000
+$IBMAP FXEM    225,()OK                                              $5$3F200010
+       TTL     FXEM - FORTRAN EXECUTION ERROR MONITOR                (6)3F200020
+       REM                                                              3F200030
+       REM     CALLING SEQUENCE IS CALL .FXEM.(CODE)                    3F200040
+       REM     WHERE CODE CONTAINS IN THE ADDRESS THE                   3F200050
+       REM     NUMBER DESIGNATING THE PARTICULAR ERROR FOR              3F200060
+       REM     WHICH FXEM IS CALLED AND IS FOLLOWED BY THE              3F200070
+       REM     ERROR MESSAGE LIST FOR THIS ERROR.                       3F200080
+       REM                                                              3F200090
+       ENTRY   .FXEM.                                                   3F200100
+       ENTRY   .FXOUT                                                   3F200110
+       ENTRY   .FXARG                                                   3F200120
+.FXEM. STQ     SMQ            SAVE MQ AND ACCUMULATOR.                  3F200130
+       SLW     ACC1                                                     3F200140
+       ARS     2                                                        3F200150
+       STO     ACC2                                                     3F200160
+XEM    SAVEN   (1,2)I                                                   3F200170
+       SXA     LNKG,4                                                   3F200180
+       LXA     MAX,1                                                    3F200190
+       SXD     TSCST,1                                                  3F200200
+       AXT     100,1                                                    3F200210
+ERRTR  CLA     TRMESS         ERROR TRACE                               3F200220
+       TSX     OUT,2                                                    3F200230
+       CLA     IOCTS                                                    3F200240
+       TSX     OUT,2                                                    3F200250
+       CLA     IOCTT                                                    3F200260
+       TSX     OUT,2                                                    3F200270
+       LXA     LNKG,4                                                   3F200280
+       TRA     *+2                                                      3F200290
+BEGIN  LXA     **,4                                                     3F200300
+       PCA     0,4            ADDRESS OF CALL.                          3F200310
+       STA     B10                                                      3F200320
+       ADD     =2             ADDRESS OF  PZE  LINE NO.,,LK.DR          3F200330
+       STA     B11                                                      3F200340
+       CLA*    B11                                                      3F200350
+       ANA     ADMSK                                                    3F200360
+       TSX     CCNVT,4        CONVERT LINE NUMBER TO BCD.               3F200370
+       SLW     LINENO                                                   3F200380
+B10    AXT     **,4           CONVERT ADDRESS                           3F200390
+       PXA     0,4            OF CALL                                   3F200400
+       TSX     CVBCD,4        TO BCD.                                   3F200410
+       SLW     RELOC                                                    3F200420
+B11    CLA     **                                                       3F200430
+       TMI     NEXT           FLOW TRACE EXIT.                          3F200440
+       ARS     18                                                       3F200450
+       STA     BEGIN          LOCATION OF LINKAGE DIRECTOR.             3F200460
+       STA     *+1            HAS LK. DIR. BEEN INITIALIZED          (4)3F200461
+       NZT     **             FOR THIS SUBROUTINE                    (4)3F200462
+       AXT     0,1            NO, INHIBIT FURTHER TRACE              (4)3F200463
+       ADD     =1             LOCATION OF DECKNAME.                     3F200470
+       STA     *+1                                                      3F200480
+       CLA     **             DECKNAME                                  3F200490
+       STO     DECNM                                                    3F200500
+       CLA     IOCTET                                                   3F200510
+       TSX     OUT,2                                                    3F200520
+       TIX     BEGIN,1,1                                                3F200530
+       TRA     NEXT                                                     3F200540
+TRERR  BCI     7,0ERROR TRACE. CALLS IN REVERSE ORDER.                  3F200550
+TRMESS IOCP    TRERR,,7                                                 3F200560
+DECMES BCI     1,0                                                      3F200570
+DECNM  BCI     1,XXXXXX                                                 3F200580
+       BCI     2,                                                       3F200590
+LINENO BCI     1,XXXXX                                                  3F200600
+       BCI     2,                                                       3F200610
+RELOC  BCI     1,XXXXX                                                  3F200620
+IOCTET IOCP    DECMES,,8                                                3F200630
+HDLN   BCI     9,0   CALLING             IFN OR            ABSOLUTE     3F200640
+IOCTS  IOCP    HDLN,,9                                                  3F200650
+HDLN1  BCI     9,    ROUTINE             LINE NO.          LOCATION     3F200660
+IOCTT  IOCP    HDLN1,,9                                                 3F200670
+NEXT   LXA     LNKG,4                                                   3F200680
+       CLA*    3,4            ERROR CODE                                3F200690
+       PAX     0,1            IN INDEX REGISTER 1.                      3F200700
+       AXT     OPTWD1,2       DECIDE LOCATION OF OPTIONAL               3F200710
+       TXH     BB1,1,70                                              $5$3F200715
+       TXH     BB2,1,35       EXIT SWITCH.                              3F200720
+BB3    STA     SHFT                                                     3F200730
+       SXA     OPTDEC,2                                              (6)3F200735
+TSCST  TXH     CUSOPT,1,**    TEST FOR USERS CODE.                   (6)3F200740
+       TXH     WRMES,1,70     NO EXTRA OUTPUT FOR ERROR CODE 71      (6)3F200743
+       TXH     ERR32,1,59     EXTRA LINE FOR ERRORS 60 TO 70         (6)3F200746
+       TXH     WRMES,1,58     NO EXTRA OUTPUT FOR ERROR CODE 59.     (6)3F200749
+       TXH     ERR32,1,56     EXTRA LINE FOR ERROR CODES 57, 58      (6)3F200752
+       TXH     WRMES,1,55     TEST FOR ERROR CODE 55.                   3F200760
+       TXH     IO55,1,54      FXEM CONTAINS MESSAGE FOR ERROR CODE 55.  3F200770
+       TXH     WRMES,1,52     TEST FOR ERROR CODE 52, IT             (6)3F200774
+       TXH     ERR32,1,51     REQUIRES AN EXTRA LINE OF OUTPUT       (6)3F200778
+       TXH     WRMES,1,37     TEST FOR ERROR CODE 37.                   3F200780
+       TXH     ERR37,1,36     SPECIAL PROCESSING REQUIRED FOR ERROR 37. 3F200790
+       TXH     WRMES,1,33     TEST FOR ERROR CODES 32 AND 33.           3F200800
+       TXH     ERR32,1,31     THESE CODES REQUIRE EXTRA OUTPUT LINE.    3F200810
+WRMES  CLA     3,4                                                      3F200820
+       PAC     0,4                                                      3F200830
+       CLA     2,4            OPTIONAL EXIT MESSAGE.                    3F200840
+       SSM                    FIX FOR .LXSEL ARGUMENT.                  3F200850
+       STO     OPTMES                                                   3F200860
+       CLA     1,4            ERROR MESSAGE.                            3F200870
+       SSM                    FIX FOR .LXSEL ARGUMENT.                  3F200880
+M1     TSX     OUT,2          WRITE ERROR MESSAGE.                      3F200890
+M2     CLA     OPTMES         PREPARE TO WRITE OPTIONAL ERROR           3F200900
+       TSX     AAA,2          MESSAGE IF SWITCH ON.                     3F200910
+       LDQ     SMQ            IF OPTIONAL EXIT SWITCH ON,               3F200920
+       CLA     ACC2           RESTORE MQ AND AC                         3F200930
+       ALS     2              AND RESUME                                3F200940
+       ORA     ACC1           EXECUTION.                                3F200950
+       RETURN  XEM                                                      3F200960
+ERR32  ARS     18             STORE ADDRESS OF BUFFER CONTAINING        3F200970
+       PAX     0,2            ILLEGAL DATA.                             3F200980
+       TXI     *+1,2,14                                                 3F200990
+       SXA     MDATA,2                                                  3F201000
+       AXT     14,2                                                     3F201010
+MDATA  CLA     **,2                                                     3F201020
+       STO     DATA+14,2                                                3F201030
+       TIX     *-2,2,1                                                  3F201040
+       CLA     M2             SAVE INSTRUCTION USED IN                  3F201050
+       STO     SVINS          NORMAL FLOW.                              3F201060
+       CLA     *+3            SET TRANSFER INSTRUCTION.                 3F201070
+       STO     M2                                                       3F201080
+       TRA     WRMES          WRITE ERROR MESSAGE.                      3F201090
+       TRA     *+1                                                      3F201100
+       CLA     ER32MS         WRITE LINE OF ILLEGAL DATA.               3F201110
+       TSX     OUT,2                                                    3F201120
+       CLA     SVINS          RESTORE NORMAL INSTRUCTION.               3F201130
+       STO     M2                                                       3F201140
+       TRA     M2                                                       3F201150
+ER32MS IOCP    ODATA,,15                                                3F201160
+SVINS  PZE     **                                                       3F201170
+ERR37  PDC     0,1            CHECK TO SEE IF THIS OUTPUT               3F201180
+       LDI     2,1            TAPE IS SYSOU.                            3F201190
+       LNT     200000         IS THIS MONITOR CONTROLLED FILE.          3F201200
+       TRA     WRMES          NO. NOT SYSOU.                            3F201210
+       CLA     3,4            YES. CANNOT WRITE MESSAGE                 3F201220
+       PAC     0,4            ON SYSOU, SO                              3F201230
+       CLA     1,4            PRINT ON-LINE FOR                         3F201240
+       STO     BB             THIS CASE AND THEN                        3F201250
+       TSX     .MWR,4         TERMINATE EXECUTION.                      3F201260
+       PZE     2                                                        3F201270
+       PZE     0,,512*4                                                 3F201280
+BB     PZE     **                                                       3F201290
+       TRA     .LXERR                                                $5$3F201300
+*                                                                       3F201310
+BB1    SUB     =70                                                   $5$3F201311
+       TXI     BB3,2,2            DESIRED SWITCH IN THIRD WORD       $5$3F201312
+BB2    SUB     =35                                                      3F201320
+       TXI     BB3,2,1        DESIRED SWITCH IN SECOND WORD.            3F201330
+CUSOPT PXA     0,1            RESTORE USERS CODE                     (6)3F201335
+       TSX     CCNVT,4        CONVERT CODE TO BCD                    (6)3F201340
+       SLW     USERS+2                                                  3F201350
+       CLA     PZEA                                                     3F201360
+       TSX     OUT,2                                                    3F201370
+TERMES CLA     PZEB                                                     3F201380
+       TSX     OUT,2                                                    3F201390
+       TRA     .LXERR                                                   3F201400
+USERS  BCI     7,0ERROR CODE        NOT A STANDARD CODE              (6)3F201410
+PZEA   IOCP    USERS,,7                                                 3F201420
+E1     BCI     4,0EXECUTION TERMINATED.                                 3F201430
+PZEB   IOCP    E1,,4                                                    3F201440
+*                                                                       3F201450
+CVBCD  XCA                    CONVERT TO BCD                            3F201460
+       RQL     21                                                       3F201470
+       CLA     BLANKS                                                   3F201480
+       SXA     *+5,1                                                    3F201490
+       AXT     5,1            5 OCTAL CHARS                             3F201500
+ B1    ALS     3                                                        3F201510
+       LGL     3                                                        3F201520
+       TIX     B1,1,1                                                   3F201530
+       AXT     **,1                                                     3F201540
+       TRA     1,4                                                      3F201550
+*                                                                       3F201560
+CCNVT  SXA     SV1,1          BINARY TO DECIMAL CONVERSION.             3F201570
+       XCA                                                              3F201580
+       AXT     0,1                                                      3F201590
+       STZ     TEMP                                                     3F201600
+CNVT   PXA     0,0                                                      3F201610
+       DVP     L(10)                                                    3F201620
+       ALS     0,1                                                      3F201630
+       ORS     TEMP                                                     3F201640
+       CLA     =1                                                       3F201650
+       TLQ     *+2                                                      3F201660
+       TXI     CNVT,1,-6                                                3F201670
+       CAL     BLANKS                                                   3F201680
+       ALS     6,1                                                      3F201690
+       ORA     TEMP                                                     3F201700
+SV1    AXT     **,1                                                     3F201710
+       TRA     1,4                                                      3F201720
+*                                                                       3F201730
+AAA    STO     .FXARG                                                   3F201740
+OPTDEC CLA     **             TERMINATION DECISION                      3F201750
+ SHFT  ALS     **                                                       3F201760
+       PBT                                                              3F201770
+       TRA     TERMES         DIGIT = 0                                 3F201780
+       TRA     .FXOUT                                                   3F201790
+OUT    STO     .FXARG                                                   3F201800
+.FXOUT CALL    .LXSEL(ARG)                                              3F201810
+       TRA     1,2                                                      3F201820
+*                                                                       3F201830
+ARG    PTW     SYSOU1,,.FXARG                                           3F201840
+.FXARG IOCP    **,,**                                                   3F201850
+       TCH     .LTCH                                                    3F201860
+*                                                                       3F201870
+IO55   LXA     LNKG,4                                                   3F201880
+       TXI     *+1,4,-2                                                 3F201890
+       CLA     0,4                                                      3F201900
+       ANA     ADMSK                                                    3F201910
+       TSX     CCNVT,4                                                  3F201920
+       SLW     IOE55+7                                                  3F201930
+       CLA     PZE55                                                    3F201940
+       TSX     OUT,2                                                    3F201950
+       TRA     TERMES                                                   3F201960
+IOE55  BCI     8,0ILLEGAL VALUE FOR COMPUTED GO TO AT IFN               3F201970
+PZE55  IOCP    IOE55,,8                                                 3F201980
+*                                                                       3F201990
+ODATA  BCI     1,0                                                      3F202000
+DATA   BSS     14                                                       3F202010
+OPTMES PZE     **                                                       3F202020
+ADMSK  OCT     000000077777                                             3F202030
+BLANKS BCI     1,                                                       3F202040
+TEMP   PZE     **                                                       3F202050
+SMQ    PZE     **                                                       3F202060
+ACC1   PZE     **                                                       3F202070
+ACC2   PZE     **                                                       3F202080
+L(10)  DEC     10                                                       3F202090
+MAX    DEC     77            HIGHEST SYSTEM ASSIGNED CODE               3F202100
+.OPTW. CONTRL  OPTWD1,LNKG                                              3F202110
+OPTWD1 OCT     377777777740   SWITCHES 1 THRU 30 SET ON.                3F202120
+OPTWD2 DEC     0                  SWITCHES 36-70                     $5$3F202130
+OPTWD3 OCT     376000000000  SWITCHES 71-77 SET ON                      3F202135
+LNKG   LDIR                                                             3F202140
+       END                                                              3F202150

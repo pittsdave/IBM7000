@@ -1,0 +1,101 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - FBST              3F7A0000
+$IBMAP FBST    95                                                       3F7A0010
+       TTL     FBST/BACKSPACE RECORD ON DESIGNATED UNIT              (7)3F7A0020
+       REM                                                              3F7A0030
+       REM     CALLING SEQUENCE IS CALL .FBST. (ARG)                    3F7A0040
+       REM     COMPILED FOR SOURCE STATEMENT BACKSPACE N.               3F7A0050
+       REM     ARG IS LOCATION OF PZE UNITXX WHERE XX IS                3F7A0060
+       REM     LOGICAL UNIT NUMBER.                                     3F7A0070
+       REM                                                              3F7A0080
+.FBST. SAVE    (2,1)I                                                   3F7A0090
+       CLA*    3,4                   FILE CONTROL BLOCK LOCATION.       3F7A0100
+       STA     CLS                                                      3F7A0110
+       STA     CLS1                                                     3F7A0120
+       STA     OPN                                                      3F7A0130
+       STA     READ                                                     3F7A0140
+       STA     BKRCD+1                                                  3F7A0150
+       STA     BKRCD1                                                   3F7A0160
+       LAC     SYSUNI,4              TEST WHETHER UNIT IS SYSOU1.       3F7A0170
+       CLA     SYSOU1,4                                                 3F7A0180
+       TSX     CHK,2                                                    3F7A0190
+       TXL     IGNSOU,4,0            IF SYSOU1,IGNORE BACKSPACE REQUEST.3F7A0200
+       TSX     .CLOSE,4              INPUT FILE CLOSED. OUTPUT FILE     3F7A0210
+CLS    MZE     **                    CLOSED WITH EOF WRITTEN.           3F7A0220
+       LAC     CLS,4                                                    3F7A0230
+       LDI     1,4                                                      3F7A0240
+       SIL     001000                SET BITS IN FCB FOR OUTPUT         3F7A0250
+       RIL     002000                TO DEBUFFER ON OPENING FILE.       3F7A0260
+       STI     1,4                                                      3F7A0270
+       TSX     OPEN,2                OPEN FILE.                         3F7A0280
+       TSX     .BSR,4                BACKSPACE RECORD. IF POSITIONED    3F7A0290
+BKRCD1 PZE     **,,*-1               AFTER EOF, BSR POSITIONS IN FRONT  3F7A0300
+       TSX     .CLOSE,4              OF EOF AND BOF EXIT IS TO BACKSPACE3F7A0310
+CLS1   MON     **                    LAST RECORD.  CLOSE FILE AND       3F7A0320
+       LAC     CLS,4                 SET BITS IN FCB TO INPUT.          3F7A0330
+       LDI     1,4                                                      3F7A0340
+       RIL     003000                                                   3F7A0350
+       STI     1,4                                                      3F7A0360
+       LAC     SYSUNI,4              IS THIS SYSIN1.                    3F7A0370
+       CLA     SYSIN1,4                                                 3F7A0380
+       TSX     CHK,2                                                    3F7A0390
+       TXL     RTN,4,0               YES. EXIT TO CALLER.               3F7A0400
+       LNT     004000                IS THIS A BCD FILE.                3F7A0410
+RTN    RETURN  .FBST.                YES. EXIT TO CALLER.               3F7A0420
+       TSX     OPEN,2                                                   3F7A0430
+       AXT     1,1                 SET FOR ONE BACKSPACE IF EOF      (7)3F7A0431
+REED   TSX     .READ,4               BINARY FILE. READ IN               3F7A0440
+READ   PZE     **,,EOB               RECORD JUST BACKSPACED.            3F7A0450
+       PZE     BKRCD,,ERR          RECORD JUST BACKSPACED            (7)3F7A0460
+       IORTN*  BUFADD,,**                                               3F7A0470
+       CLA*    BUFADD                FROM INTERNAL LABEL, GET NUMBER    3F7A0480
+       PAX     0,1                   OF PHYSICAL RECORDS IN THIS LOGICAL3F7A0490
+BKRCD  TSX     .BSR,4                BINARY RECORD. BACKSPACE THIS      3F7A0500
+       PZE     **,,*+1               NUMBER OF RECORDS.                 3F7A0510
+       TIX     BKRCD,1,1                                                3F7A0520
+       RETURN  .FBST.                                                   3F7A0530
+OPEN   TSX     .OPEN,4                                                  3F7A0540
+OPN    MON     **                                                       3F7A0550
+       TRA     1,2                                                      3F7A0560
+CHK    PAX     0,4                                                      3F7A0570
+       SXD     CHECK,4                                                  3F7A0580
+       CLA*    CLS                                                      3F7A0590
+       PAC     0,4                                                      3F7A0600
+CHECK  TXI     *+1,4,**                                                 3F7A0610
+       TRA     1,2                                                      3F7A0620
+BUFADD PZE     **                                                       3F7A0630
+FLNM   LAC     CLS,4                 OBTAIN 10 CHARACTER FILE NAME      3F7A0640
+       CAL     10,4                  FROM FCB AND PLACE IN MESSAGE.     3F7A0650
+       ARS     12                                                       3F7A0660
+       LDQ     BLNKS                                                    3F7A0670
+       LGR     24                                                       3F7A0680
+       CLA     9,4                                                      3F7A0690
+       STO     MES1+5                                                   3F7A0700
+       STQ     MES1+6                                                   3F7A0710
+       TRA     1,2                                                      3F7A0720
+BLNKS  BCI     1,.                                                      3F7A0730
+IGNSOU TSX     FLNM,2                WRITE MESSAGE THAT BACKSPACE       3F7A0740
+       CALL    .FOUT.(7MES1)         REQUEST IGNORED FOR SYSOU1.        3F7A0750
+       RETURN  .FBST.                RETURN TO CALLER.                  3F7A0760
+MES1   BCI     7,0BACKSPACE REQUEST IGNORED ON                          3F7A0770
+ERR    TSX     FLNM,2                REDUNDANCY READING.                3F7A0780
+       STO     E48MES+5              EXECUTION ERROR.                   3F7A0790
+       STQ     E48MES+6                                                 3F7A0800
+RERRXT CALL    .FXEM.(CODE1)                                            3F7A0810
+       TRA     REED                  OPTIONAL EXIT. PROCESS RECORD.     3F7A0820
+EOB    TSX     FLNM,2                END-OF-BUFFER EXIT READING.        3F7A0830
+       STO     E49MES+5              EXECUTION ERROR.                   3F7A0840
+       STQ     E49MES+6                                                 3F7A0850
+REOBXT CALL    .FXEM.(CODE2)                                            3F7A0860
+       TRA     .LXERR                NO OPTIONAL EXIT.                  3F7A0870
+7MES1  PZE     MES1,,7                                                  3F7A0880
+CODE1  PZE     48                                                       3F7A0890
+ER48MS PZE     E48MES,,7                                                3F7A0900
+ER48OP PZE     E48OMS,,4                                                3F7A0910
+E48MES BCI     7,0PERMANENT READ REDUNDANCY                             3F7A0920
+E48OMS BCI     4,0RECORD USED AS READ.                                  3F7A0930
+CODE2  PZE     49                                                       3F7A0940
+ER49MS PZE     E49MES,,7                                                3F7A0950
+ER49OP PZE     NOOPXT,,7                                                3F7A0960
+E49MES BCI     7,0END-OF-BUFFER EXIT READING                            3F7A0970
+NOOPXT BCI     7,0NO OPTIONAL EXIT - EXECUTION TERMINATED.              3F7A0980
+       END                                                              3F7A0990

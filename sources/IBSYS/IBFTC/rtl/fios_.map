@@ -1,0 +1,305 @@
+$IBMAP FIOS.                                                         $5$3F4O0000
+       TTL     ALTERNATE I/O SUPERVISOR AND TRANSMISSION VERFIER    (14)3F4O0010
+       LBL     .IOS,BEGIN     FIOS.                                  (7)3F4O0015
+*              TRANSMISSION CHECK LOGIC VIA ..FTCK ENTRY             $5$3F4O0020
+*              SELECT SEQUENCE FOR .LXSL AT ..FSEL ENTRY             $5$3F4O0030
+*              TESTS FOR VALIDITIY OF UNIT VIA ..FCHK ENTRY          $5$3F4O0040
+*              I/O TRANSMISSION VIA ..FIOC ENTRY                     $5$3F4O0050
+*              CHECK TRANSMISSION FOR BACKSPACE ROUTINE AT ..FBCK    $5$3F4O0060
+       ENTRY   ..FIOC                                                $5$3F4O0070
+       ENTRY   ..FTCK                                                $5$3F4O0080
+       ENTRY   ..FIOS                                                $5$3F4O0090
+       ENTRY   ..FSEL                                                $5$3F4O0100
+       ENTRY   ..FCHK                                                $5$3F4O0110
+       ENTRY   ..FBCK                                                $5$3F4O0120
+       ENTRY   .LUNBL                                               (13)3F4O0124
+       ENTRY   .LFBLK                                               (13)3F4O0126
+       SPACE                                                         $5$3F4O0130
+*              ..FIOS ENTRY IS CALLED AS FOLLOWS                     $5$3F4O0140
+*                 ( FLAG IN PREFIX)          FLAG = 000  BCD-READ    $5$3F4O0150
+*                   CALL ..FIOS(SEL)                001  BIN-READ    $5$3F4O0160
+*                   ORG  *-1                        010  BCD-WRITE   $5$3F4O0170
+*              SEL  IORT BUFFER,,COUNT              011  BIN-WRITE   $5$3F4O0180
+*                                                                    $5$3F4O0190
+*              INITIAL ENTRY FROM INTERFACE RTNES VIA FBIN. OR FBCD. $5$3F4O0200
+..FIOS SXA     LK.DR,4             SAVE X4                           $5$3F4O0210
+       SLW     TEMP                STORE AC                         (12)3F4O0212
+       TSX     ..FTCK,4            CHECK PRIOR TRANSMISSION         (12)3F4O0214
+       CAL     TEMP                RESTORE AC                       (12)3F4O0216
+       STP     ..FSEL              SET UP MODE PREFIX                $5$3F4O0220
+       LGR     35                  TEST FOR REQUEST TYPE             $5$3F4O0230
+       STQ     RTYPE               SAVE REQUEST TYPE                 $5$3F4O0240
+       LXA     SYSLOC,4            GET ORIGINAL CALL TO I/O SYSTEM   $5$3F4O0270
+       CAL*    3,4                 GET .UNXX. CELL                   $5$3F4O0280
+       STA     B1                  SAVE LOCATION OF FCB              $5$3F4O0320
+       CLS     SYSUNI              COMPUTE                           $5$3F4O0330
+       ANA     MASK1                RELATIVE                         $5$3F4O0340
+       SSM                                                           $5$3F4O0350
+       ADM*    3,4                   SYSUNI                          $5$3F4O0360
+       STA     ..FSEL                                                $5$3F4O0370
+*              TEST FOR VALID READ AND WRITE REQUESTS                $5$3F4O0380
+       LAC     SYSUNI,4            ORIGIN OF SYSUNI TABLE            $5$3F4O0390
+ B1    CAL     **                  GET FIRST                         $5$3F4O0400
+       STA     *+1                  WORD OF                          $5$3F4O0401
+       CAL     **                    UCB                             $5$3F4O0402
+       TQP     B2                  IS IT A READ REQUEST              $5$3F4O0410
+       ERA*    SYSIN1,4            NO, WRITE REQUEST                 $5$3F4O0420
+       TRA     B3                                                    $5$3F4O0430
+ B2    ERA*    SYSOU1,4            READ REQUEST                      $5$3F4O0440
+ B3    ANA     MASK                TEST UNIT ONLY                    $5$3F4O0450
+       TNZ     OK                  I/O IS OK                         $5$3F4O0460
+       TQP     ER56                READ ERROR 56                     $5$3F4O0470
+ ER54  CALL    .FXEM.(CODE7)       WRITE ERROR                       $5$3F4O0480
+       TRA     .LXERR              NO OPTIONAL EXIT                  $5$3F4O0490
+ ER56  CALL    .FXEM.(CODE8)       READ ERROR                        $5$3F4O0500
+       TRA     .LXERR              NO OPTIONAL EXIT                  $5$3F4O0510
+*                                                                    $5$3F4O0520
+OK     LAC     B1,4                                                 (12)3F4O0530
+       LDI     1,4                 MOVE 2ND WORD OF FCB TO SENSE IND(13)3F4O0535
+       RIL     004001              TURN OFF OUTPUT AND MODE BITS    (14)3F4O0536
+       TQP     *+2                 TEST FOR WRITE, IF WRITE         (13)3F4O0537
+       SIL     001                 TURN ON OUTPUT BIT               (13)3F4O0538
+       LGL     1                   MOVE MODE BIT TO SIGN OF MQ      (14)3F4O0539
+       TQP     *+2                 TEST FOR BCD                     (14)3F4O053A
+       SIL     004000              SET BINARY MODE BIT              (14)3F4O053B
+       STI     1,4                 STORE SENSE IND IN 2ND WRD OF FCB(14)3F4O053C
+       LDI     IND                 RESTORE SENSE INDICATORS         (14)3F4O053D
+ RTN1  LXA     LK.DR,4             RESTORE X4                        $5$3F4O0540
+       CAL     3,4                 GET I/O COMMAND                  (10)3F4O0541
+       SLW     COMD                AND STORE IN .LXSL SEQUENCE      (10)3F4O0542
+       TRA     1,4                                                   $5$3F4O0550
+PON    PON                                                          (10)3F4O0551
+       SPACE                                                         $5$3F4O0560
+*              COMMON RETURN POINTS - PRIMARY CALLS ONLY             $5$3F4O0570
+ X2    AXT     **,2                RESTORE X2                        $5$3F4O0580
+ LDI   LDI     IND                 RESTORE SENSE INDICATORS          $5$3F4O0590
+ RTN   AXT     **,4                RESTORE X4                        $5$3F4O0600
+       TRA     1,4                 RETURN TO CALLER                  $5$3F4O0610
+       SPACE                                                         $5$3F4O0620
+*              .LXSEL COMMAND SEQUENCE LOGIC                         $5$3F4O0630
+..FIOC STL     FCTL                SET REQUESTOR FLAG FOR FORTRAN    $5$3F4O0640
+       SXA     OUT,4               SAVE X4                           $5$3F4O0650
+       LDQ     RTYPE               GET REQUEST TYPE                  $5$3F4O0660
+       CLA     SXA                 READ REQUEST                      $5$3F4O0670
+       TQP     *+3                                                  (10)3F4O0680
+       ZET*    SYSJOB+1            PREVENT WRITE OVERLAP IF DCS     (10)3F4O0681
+       CLA     TRA                 WRITE REQUEST                     $5$3F4O0690
+       STO     .LXOVL               PERMITS OVERLAP IF WRITE         $5$3F4O0700
+       TSX     SET,4               .LXSL AND .LXCON INITIALIZATION   $5$3F4O0710
+       CALL    .LXSEL(..FSEL)      REQUEST .LXSL TO PERFORM I/O      $5$3F4O0720
+ OUT   AXT     **,4                                                  $5$3F4O0730
+       STL     CKPG                CHECK PENDING SWITCH ON           $5$3F4O0740
+       TRA     1,4                 RETURN TO CALLER                  $5$3F4O0750
+..FSEL PZE     **,,COMD                                              $5$3F4O0760
+ COMD  IORT    **,,**                                                $5$3F4O0770
+       TCH     .LTCH                                                 $5$3F4O0780
+       SPACE                                                         $5$3F4O0790
+*      SET AND RESET INSTRUCTIONS FOR .LXSL AND .LXCON               $5$3F4O0800
+ SET   CAL     TSX1                                                  $5$3F4O0810
+       TRA     COM                                                   $5$3F4O0820
+ RESET CAL     NOP                                                   $5$3F4O0830
+       SLW     .LXOVL              .LXSL                             $5$3F4O0840
+ COM   SLW     .LXTST              .LXSL                             $5$3F4O0850
+       SLW     .LXCAL              .LXCON                            $5$3F4O0860
+       TRA     1,4                                                   $5$3F4O0870
+       SPACE                                                         $5$3F4O0880
+*              OVERLAY CONSTANTS FOR .LXSL AND .LXCON                $5$3F4O0890
+ TSX1  TSX     ..FREQ,2                                              $5$3F4O0900
+ TRA   TRA     SXA                                                   $5$3F4O0910
+ SXA   SXA     UCW,2               SAVE COMP OF CURRENT UCW          $5$3F4O0920
+       TRA     .LXOVL+3             PERMIT WRITE OVERLAP             $5$3F4O0930
+       EJECT                                                         $5$3F4O0940
+*              CHECK VALIDITY OF TRANSMISSSION                       $5$3F4O0950
+..FBCK STL     BSTFG               SET BACKSPACE CHECK REQUEST       $5$3F4O0960
+       TRA     *+2                                                   $5$3F4O0970
+..FTCK STZ     BSTFG               SET NORMAL CHECK REQUEST          $5$3F4O0980
+       SXA     RTN,4               SAVE X4                           $5$3F4O0990
+       SXA     X2,2                SAVE X2                           $5$3F4O1000
+       STI     IND                 SAVE SENSE INDICATORS             $5$3F4O1010
+       NZT     CKPG                TEST PENDING SWITCH               $5$3F4O1020
+       TRA     X2                   NONE WAITING                     $5$3F4O1030
+REPT   STZ     CKPG                SET PENDING SWITCH OFF           (12)3F4O1040
+       LAC     UCW,2               GET APPROPRIATE UCB LOCATION     (12)3F4O1050
+       SXA     UCW,2               COMP UCW IN SAVE CELL             $5$3F4O1060
+       LAC     UCW,2               GET COMP OF UCW                   $5$3F4O1070
+       ZET     1,2                 DELAY TILL DORMANT                $5$3F4O1080
+       TRA     *-1                  PRIOR ACTIVITY COMPLETE          $5$3F4O1090
+       LDI     .LXIND              POSTING ENTRY FROM IOEX           $5$3F4O1100
+ A7607 LFT     200000              EOF OR EOT                        $5$3F4O1110
+       TRA     COMEOF               YES                              $5$3F4O1120
+       ZET     TYPE                READ OR WRITE CHECKING            $5$3F4O1130
+ WOK   TRA     X2                  WRITE TRANSMISSION OK             $5$3F4O1140
+       LNT     400000                                               (10)3F4O1150
+       TRA     RDON                                                  $5$3F4O1175
+RDRD   LFT     100000              REDUNDANT...                     (10)3F4O1180
+       TRA     RDERR               YES                              (10)3F4O1181
+       NZT     BSTFG               BACKSPACING...                   (10)3F4O1182
+ACCPT  TRA     X2                                                    $5$3F4O1190
+       LDI     .LXMOD              YES                              (10)3F4O1191
+       STZ     .LXMOD              ZERO MODE SWITCH INDICATOR       (10)3F4O1192
+       RNT     000020              AND TEST MODE                    (10)3F4O1193
+       TRA     3,4                 BCD...                           (10)3F4O1194
+       TRA     1,4                 BINARY...                        (10)3F4O1195
+*      PROCESS READ ERROR                                            $5$3F4O1200
+RDERR  AXT     42,4                                                  $5$3F4O1210
+       NZT     MODE                                                  $5$3F4O1220
+       AXT     35,4                BCD ERROR CODE                    $5$3F4O1230
+       ZET     BSTFG                                                (10)3F4O1231
+       AXT     48,4                FBST. ERROR CODE                 (10)3F4O1232
+       SXA     CODE4,4                                               $5$3F4O1240
+       LDQ*    UCW                 DEVELOP UNIT                      $5$3F4O1250
+       TSX     .SYMUN,4             ADDRESS VIA IOEX                 $5$3F4O1260
+       SLW     E42MES+6               AND PLACE IN MESSAGE           (7)3F4O1270
+       CALL    .FXEM.(CODE4)                                         $5$3F4O1280
+       NZT     BSTFG               BACKSPACING...                   (10)3F4O1281
+       TRA     ACCPT                                                 $5$3F4O1290
+       STZ     .LXMOD              RESET MODE SWITCH INDICATOR      (10)3F4O1291
+       XEC     RTN                 RESTORE XR4                      (10)3F4O1292
+       NZT     MODE                ASSUME MODE ACCORDING            (10)3F4O1293
+       TRA     3,4                 TO MODE OF PRIOR TRANSMISSION    (10)3F4O1294
+       TRA     1,4                 (I.E.,MODE OF FIRST READ ATTEMPT)(10)3F4O1295
+       SPACE                                                         $5$3F4O1300
+*              READ NEXT RECORD OPTION                               $5$3F4O1310
+ RDON  TSX     ..FIOC,4            READ NEXT RECORD                  $5$3F4O1320
+       TRA     REPT                 CHECK TRANSMISSION               $5$3F4O1330
+       SPACE                                                         $5$3F4O1340
+*              PROCESS EOF OR EOT                                    $5$3F4O1350
+COMEOF ZET     BSTFG                                                 $5$3F4O1360
+       TRA     2,4                 BST EOF                           $5$3F4O1361
+       ZET     TYPE                READ OR WRITE CHECKING            $5$3F4O1362
+       TRA     EOT                 WRITE EOT                         $5$3F4O1370
+       ZET     MODE                                                  $5$3F4O1380
+       TRA     BIN                                                   $5$3F4O1390
+ BCD   LAC     SYSUNI,4            CHECK FOR SYSIN1                  $5$3F4O1400
+       CAL*    SYSIN1,4             EOF CONDITION                    $5$3F4O1410
+       ERA*    UCW                                                   $5$3F4O1420
+       ANA     MASK                                                  $5$3F4O1430
+       TZE     .LXRTN              TERMINATE JOB IF SYSIN1           $5$3F4O1440
+       AXT     34,4                BCD ERROR CODE                    $5$3F4O1450
+       TRA     *+2                                                   $5$3F4O1460
+ BIN   AXT     41,4                BINARY ERROR CODE                 $5$3F4O1470
+       SXA     CODE3,4                                               $5$3F4O1480
+       LDQ*    UCW                 DEVELOP UNIT                      $5$3F4O1490
+       TSX     .SYMUN,4             ADDRESS VIA IOEX                 $5$3F4O1500
+       SLW     E41MES+6               AND PLACE IN MESSAGE           (7)3F4O1510
+       CALL    .FXEM.(CODE3)                                         $5$3F4O1520
+       TRA     RDON                                                  $5$3F4O1530
+       SPACE                                                         $5$3F4O1540
+*              PROCESS EOT - PERFORM REEL SWITCH                     $5$3F4O1550
+ EOT   TSX     .NDSEL,4            WRITE                             $5$3F4O1560
+       PZE     UCW,,7               END OF                           $5$3F4O1570
+ NOP   NOP                           FILE   (USED AS NOP CONSTANT)   $5$3F4O1580
+       TSX     .NDSEL,4            REWIND                            $5$3F4O1590
+       PZE     UCW,,4               UNLOAD                           $5$3F4O1600
+       LDQ*    UCW                 PRINT  UNIT XXXXXX AND            $5$3F4O1610
+       TSX     .CVPRT,4             APPEND MESSAGE                   $5$3F4O1620
+       PZE     MESOL,,6+512*2                                        $5$3F4O1640
+       TSX     .PAUSE,4            PAUSE FOR OPERATOR ACTION         $5$3F4O1650
+       TRA     WOK                 CONTINUE PROCESSING               $5$3F4O1660
+       EJECT                                                         $5$3F4O1670
+*              ..FCHK ENTRY TO CHECK VALIDITY OF UNITS               $5$3F4O1680
+*                 ( LOCATION OF UCB IN ACC )                         $5$3F4O1690
+*                   CALL ..FCHK(NOTE,ACTION)                         $5$3F4O1700
+*                   ORG  *-2                                         $5$3F4O1710
+*              NOTE BCI  1,FUNCTIONAL-NAME AS BST, RWD               $5$3F4O1720
+*            ACTION PZE  FOUND,,N      N= 1 THRU 7 INDICATES WHICH   $5$3F4O1730
+*                         SYSUNI IS REQ   1 = PP1, 2 = OU1 , 4 = IN1 $5$3F4O1740
+*                      IF FOUND, IGNORE MESSAGE IS PRINTED AND       $5$3F4O1750
+*                        RETURN IS MADE TO CALLER VIA FOUND ADDRESS  $5$3F4O1760
+       SPACE                                                         $5$3F4O1770
+..FCHK SXA     FX4,4               SAVE X4                           $5$3F4O1780
+       SXA     FX2,2                                                 $5$3F4O1790
+       STI     FIND                SAVE INDICATORS                   $5$3F4O1800
+       LDI     4,4                 ACTION WORD TO INDICATORS         $5$3F4O1810
+       STA     UNIT                SET UP UCB ADDRESS                $5$3F4O1820
+       CLA     3,4                 PLACE FUNCTIONAL                  $5$3F4O1830
+       STO     MESSG                NAME IN MESSAGE                  $5$3F4O1840
+       TSX     ..FTCK,4            CHECK PRIOR TRANSMISSION          $5$3F4O1850
+       AXT     3,2                 TEST RANGE = THREE UNITS          $5$3F4O1860
+       LDQ     DECFOR              1 IN DECREMENT OF MQ              $5$3F4O1870
+       LAC     SYSUNI,4            GET BASE OF SYSUNI TABLE          $5$3F4O1880
+ UNIT  CAL     **                  GET FIRST WORD                    $5$3F4O1890
+       STA     *+1                  OF UCB                           $5$3F4O1891
+       CAL     **                  LOOP                              $5$3F4O1892
+       XEC     LIST+3,2              FOR                             $5$3F4O1900
+       ANA     MASK                   SYSUNI                         $5$3F4O1910
+       TZE     FND                                                   $5$3F4O1920
+       RQL     1                   ROTATE INDICATOR BIT ONE POSITION $5$3F4O1930
+       TIX     UNIT,2,1                                              $5$3F4O1940
+       TRA     FGD                 NOT FOUND                         $5$3F4O1950
+ FND   XCL                                                           $5$3F4O1960
+       TIF     FGD                 UNIT OK                           $5$3F4O1970
+       CALL    .LXSEL(L)           PRINT IGNORE MESSAGE ON SYSOU1    $5$3F4O1980
+       LDI     FIND                RESTORE SENSE INDICATORS          $5$3F4O1990
+ FX2   AXT     **,2                RESET X2                          $5$3F4O2000
+ FX4   AXT     **,4                RESET X4                          $5$3F4O2010
+       TRA*    4,4                 TRA TO OPTIONAL EXIT - FOUND ADD  $5$3F4O2020
+ FGD   XEC     FX2                 RESTORE X2                        $5$3F4O2030
+       XEC     FX4                 RESTORE X4                        $5$3F4O2040
+       LDI     FIND                RESTORE INDICATORS                $5$3F4O2050
+       TRA     1,4                 OK RETURN                         $5$3F4O2060
+ FIND  PZE     0,,0                INDICATOR SAVE AREA               $5$3F4O2070
+ L     PTW     SYSOU1,,LCD                                           $5$3F4O2080
+ LCD   IORT    MESSG,,6                                              $5$3F4O2090
+ MESSG BCI     6,       IGNORED ON OU1, PP1, OR IN1                  $5$3F4O2100
+ LIST  ERA*    SYSPP1,4            001                               $5$3F4O2110
+       ERA*    SYSOU1,4            010                               $5$3F4O2120
+       ERA*    SYSIN1,4            100                               $5$3F4O2130
+       EJECT                                                         $5$3F4O2140
+*              TEST USER OF .LXSL, IF FORTRAN RESET FCTL FLAG AND    $5$3F4O2150
+*               RETURN.  IF OTHER THAN FORTRAN, CHECK TRANSMISSION   $5$3F4O2160
+*               RESET .LXCON AND .LXSL AND RETURN TO .LXSL OR .LXCON $5$3F4O2170
+..FREQ NZT     FCTL                REQUESTOR FLAG                    $5$3F4O2180
+       TRA     CLOSE               NOT FORTRAN                       $5$3F4O2190
+       STZ     FCTL                RESET REQUESTOR FLAG              $5$3F4O2200
+       TRA     1,2                 RETURN TO .LXSL                   $5$3F4O2210
+ CLOSE SXA     RS4,4               SAVE X4                           $5$3F4O2220
+       ZET     CKPG                                                  $5$3F4O2230
+       TSX     ..FTCK,4            CHECK TRANSMISSION                $5$3F4O2240
+       TSX     RESET,4             RESET .LXCON AND .LXSL            $5$3F4O2250
+ RS4   AXT     **,4                RESET X4                          $5$3F4O2260
+ ZAC   ZAC                         ZERO ACC  (ALSO USED AS CONSTANT) $5$3F4O2270
+       TRA     1,2                                                   $5$3F4O2280
+       EJECT                                                         $5$3F4O2290
+*              CONSTANTS AND FLAGS                                   $5$3F4O2300
+ CODE3 PZE     **                                                    $5$3F4O2310
+ER41MS PZE     E41MES,,7                                             $5$3F4O2320
+ER41OP PZE     E41OMS,,3                                             $5$3F4O2330
+E41MES BCI     7,0END OF FILE READING                                $5$3F4O2340
+E41OMS BCI     3,0READ NEXT FILE                                     $5$3F4O2350
+ CODE4 PZE     **                                                    $5$3F4O2360
+ER42MS PZE     E42MES,,7                                             $5$3F4O2370
+ER42OP PZE     E42OMS,,6                                             $5$3F4O2380
+E42MES BCI     7,0PERMANENT READ REDUNDANCY                          $5$3F4O2390
+E42OMS BCI     6,0RECORD USED AS READ THE 100TH TIME                 $5$3F4O2400
+ CODE7 PZE     54                                                    $5$3F4O2410
+ER54MS PZE     E54MES,,8                                             $5$3F4O2420
+ER54OP PZE     NOOPXT,,7                                             $5$3F4O2430
+E54MES BCI     8,0WRITE REQUEST ON UNIT DEFINED AS SYSIN1 ILLEGAL    $5$3F4O2440
+ CODE8 PZE     56                                                    $5$3F4O2450
+ER56MS PZE     E56MES,,8                                             $5$3F4O2460
+ER56OP PZE     NOOPXT,,7                                             $5$3F4O2470
+E56MES BCI     8,0READ REQUEST ON UNIT DEFINED AS SYSOU1 ILLEGAL     $5$3F4O2480
+NOOPXT BCI     7,0NO OPTIONAL EXIT - EXECUTION TERMINATED            $5$3F4O2490
+       SPACE                                                         $5$3F4O2500
+ TYPE  EQU     .LXIND+1            READ = 0  WRITE = NON ZERO        $5$3F4O2510
+ MODE  EQU     .LXIND-1            BCD = 0   BINARY = NON ZERO       $5$3F4O2520
+ IND   PZE     0,,0                INDICATOR STORAGE                 $5$3F4O2530
+ MASK  OCT     017777000000                                          $5$3F4O2540
+ MASK1 OCT     000000077777                                          $5$3F4O2550
+ TEMP  PZE     0,,0                                                  $5$3F4O2560
+ MESOL BCI     6, CHANGE TAPES ON UNIT SPECIFIED                     $5$3F4O2570
+ UCW   PZE     **                  LOCATION OF UCB                   $5$3F4O2580
+ BSTFG PZE     0,,0                BACKSPACE CHECK REQUEST           $5$3F4O2590
+ FCTL  PZE     0,,0                REQUESTOR FLAG                    $5$3F4O2600
+DECFOR PZE     0,,1                DECREMENT=1                       $5$3F4O2610
+ CKPG  PZE     0,,0                = 0 NO CHECK   = NON 0  CHECK REQ $5$3F4O2620
+ RTYPE PZE     0,,0                                                  $5$3F4O2630
+.LUNBL BSS     1                   LOC AND LENGTH RESERVE UNIT BLOCK(13)3F4O2632
+.LFBLK BSS     1                   L(FILE BLOCK),,SIZE              (13)3F4O2634
+ LK.DR LDIR                                                          $5$3F4O2640
+       ORG     .LUNB                                                (13)3F4O2642
+       PZE     .LUNBL                                               (13)3F4O2644
+       ORG     .CLSE                                                (13)3F4O2646
+       TRA     2,4                 DUMMY CLOSE FOR .LXCON           (13)3F4O2648
+       END                                                           $5$3F4O2650

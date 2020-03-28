@@ -1,0 +1,1101 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - FIOU                            3F600000
+$IBMAP FIOU    1500,()OK                                                3F600010
+       TTL     FIOU - UNFORMATTED INPUT/OUTPUT SCANNING ROUTINE     (11)3F600020
+       REM     UNFORMATTED I/O SCANNING ROUTINE - BCD                   3F600040
+       REM                                                              3F600050
+       REM     CALLING SEQUENCE IS                                      3F600060
+       REM     CALL  .FIOU.(ARG1,ARG2)                                  3F600070
+       REM     ARG1 = LOCATION OF I/O CALLING SEQUENCE.                 3F600080
+       REM     ARG2 = LOCATION OF RETURN TO MAIN PROGRAM.               3F600090
+       REM                                                              3F600100
+       ENTRY   .FIOU.                                                   3F600110
+       ENTRY   .CTUIO                                                   3F600120
+       ENTRY   .NMLST                                                   3F600130
+       ENTRY   .NAME.                                                $5$3F600140
+       ENTRY   .INTAP                                                (7)3F600141
+       REM                                                              3F600150
+CNVSW  EQU     .CNVSW                                                   3F600160
+COUNT  EQU     .KOUNT                                                   3F600170
+D1     EQU     .D1                                                      3F600180
+D2     EQU     .D2                                                      3F600190
+DBC10  EQU     .DBC10                                                   3F600200
+DBC20  EQU     .DBC20                                                   3F600210
+DBC    EQU     .DBC                                                     3F600220
+DDBC   EQU     .DDBC                                                    3F600230
+DDDFLG EQU     .DDDFL                                                   3F600240
+DDFIX  EQU     .DDFIX                                                   3F600250
+DDRST2 EQU     .DDRS2                                                   3F600260
+DDSW   EQU     .DDSW                                                    3F600270
+DEXPON EQU     .DEXPN                                                   3F600280
+DIG    EQU     .DIG                                                     3F600290
+FIXSW  EQU     .FIXSW                                                   3F600300
+MQD    EQU     .MQD                                                     3F600310
+WIDTH  EQU     .WIDTH                                                   3F600320
+DECRS  MACRO                                                            3F600330
+       TXI     *+1,1,-1      DECREASE CHARACTER COUNT BY ONE.           3F600340
+       TXH     *+4,1,0         TEST IF THIS WORD WAS THE LAST OF THE    3F600350
+       SXA     *+2,4         RECORD.  IF NOT, AND IF XR1 = 0, THE MQ IS 3F600360
+       TSX     CTREC,4         RELOADED WITH A NEW WORD.                3F600370
+       AXT     **,4                                                     3F600380
+       ENDM    DECRS                                                    3F600390
+.FIOU. SXA     LNKG,4                                                   3F600400
+       SXA     SYSLOC,4                                                 3F600410
+       SXA     SV1,1         SAVE XR1 AND XR2.                          3F600420
+       SXA     SV2,2                                                    3F600430
+       CLA     4,4           STORE LOCATION OF RETURN TO MAIN PROGRAM.  3F600440
+       STA     LIST                                                     3F600450
+       CLA     3,4           SET INPUT/OUTPUT SWITCHES,                 3F600460
+       STA     RDREC                                                    3F600470
+       STA     NXTREC+1                                             (11)3F600480
+       AXT     5,4                                                      3F600490
+       STZ     VFLAG,4                                                  3F600500
+       TIX     *-1,4,1                                                  3F600510
+       STZ     VFLAG                                                    3F600520
+       STZ     DOLSW                                                    3F600530
+       STZ     SWAST                                                    3F600540
+       STZ     VARNAM                                                   3F600550
+       STZ     LPARSW                                                   3F600560
+       STZ     NUMSW                                                    3F600570
+       STZ     SWCMA                                                    3F600580
+       STZ     SWDIM                                                    3F600590
+       STZ     SWEQ                                                     3F600600
+       AXT     0,1                                                   $5$3F600610
+       STD     .ENDFS    RESET SWITCH IN CONVERT ROUTINE             $5$3F600620
+       AXT     0,2                                                   $5$3F600630
+       CALL    .FCON.(ARG1,ARG2)                                     $5$3F600640
+       ORG     *-2                                                   $5$3F600650
+ARG1   PZE     0,,0                                                  $5$3F600660
+ARG2   PZE     0,,0                                                  $5$3F600670
+RDREC  TSX     **,2         *READ FIRST RECORD                          3F600680
+       TXL     CONTI-1,4,13   IS NO. OF WORDS EQUAL TO 14            (7)3F600681
+       TXH     CONTI-1,4,14                                          (7)3F600682
+       NZT     .INTAP         YES. READING FROM SYSIN UNIT           (7)3F600683
+       STZ     .INTAP         NO.  THERE IS NO PROBLEM               (7)3F600684
+CONTI  STZ     EOR            YES. CONTINUE                          (7)3F600690
+       STZ     DOLNAM                                                   3F600700
+       AXT     0,2                                                      3F600710
+       LDQ*    .FBDBF                                                   3F600720
+       LGL     6             IGNORE COLUMN 1.                           3F600730
+       ZAC                   IS THE CHARACTER IN COLUMN TWO A $ .       3F600740
+       LGL     6               IF NOT, CONTINUE READING.                3F600750
+       ERA     DOLSGN    IF IT IS, PROCEED TO SCAN FOR               $5$3F600760
+       TNZ     RDREC      NAMELIST NAME.                             $5$3F600770
+       AXT     4,1           INITIALIZE COUNTERS.                       3F600780
+       AXT     6,4                                                      3F600790
+NSCAN1 ZAC                   LEFT-ADJUST NAMELIST NAME.                 3F600800
+       LGL     6                                                        3F600810
+       DECRS                                                            3F600820
+       LAS     BLANK                                                    3F600830
+       TRA     *+2                                                      3F600840
+       TRA     NSCAN4                                                   3F600850
+       TXI     *+1,4,-1                                                 3F600860
+       TXL     NSCAN3,4,0                                            $5$3F600870
+       ORA     DOLNAM                                                   3F600880
+       ALS     6                                                        3F600890
+       SLW     DOLNAM                                                   3F600900
+       TRA     NSCAN1                                                   3F600910
+NSCAN3 ORA     DOLNAM                                                   3F600920
+       TRA     NSCAN5                                                   3F600930
+NSCAN4 STQ     MQD        INSERT BLANKS AT RIGHT IF NAME IS LESS        3F600940
+       CAL     DOLNAM           THAN SIX CHARACTERS.                    3F600950
+       LDQ     BLANKS                                                   3F600960
+       TXL     *+4,4,0                                                  3F600970
+       ARS     6                                                        3F600980
+       LGL     6                                                        3F600990
+       TIX     *-1,4,1                                                  3F601000
+       LDQ     MQD                                                      3F601010
+NSCAN5 SLW     DOLNAM        COMPARE DATA NAMELIST NAME  TO THAT        3F601020
+       ERA     .NAME.       OF READ REQUEST                          $5$3F601030
+       TNZ     RDREC     IF THEY ARE NOT SAME,CONTINUE READING       $5$3F601040
+       AXT     6,4                                                      3F601050
+       TRA     SCAN2                                                    3F601060
+NXTREC STZ     EOR                                                      3F601070
+       TSX     **,2         *READ ONE RECORD.                           3F601080
+       AXT     0,2                                                      3F601090
+       LDQ*    .FBDBF                                                   3F601100
+       LGL     6             IGNORE COLUMN 1 OF NEW RECORD.             3F601110
+       ZAC                                                              3F601120
+       LGL     6                                                        3F601130
+       ERA     DOLSGN                                                $5$3F601140
+       TZE     DOLEXT    EXIT IF THIS IS LAST RECORD OF DATA GROUP   $5$3F601150
+SCAN1  LDQ*    .FBDBF        BEGIN CHARACTER SCAN.                      3F601160
+       AXT     5,1                                                      3F601170
+       AXT     6,4           CHARACTER COUNT(NON-BLANK)                 3F601180
+       LGL     6                                                        3F601190
+SCAN2  ZAC                                                              3F601200
+       LGL     6                                                        3F601210
+       CAS     NINE          DIGIT.                                     3F601220
+       TRA     *+3                                                      3F601230
+       TRA     VARFL         YES.                                       3F601240
+       TRA     VARFL         YES.                                       3F601250
+       CAS     PLUS                                                     3F601260
+       TRA     *+2                                                      3F601270
+       TRA     VARFL         +                                          3F601280
+       CAS     MINUS                                                    3F601290
+       TRA     *+2                                                      3F601300
+       TRA     VARFL         -                                          3F601310
+       CAS     PER                                                      3F601320
+       TRA     *+2                                                      3F601330
+       TRA     LOGSW         .                                          3F601340
+       DECRS                                                            3F601350
+       CAS     BLANK         NO.                                        3F601360
+       TRA     *+2                                                      3F601370
+       TRA     SCBLK                                                    3F601380
+       CAS     LPAR                                                     3F601390
+       TRA     *+2                                                      3F601400
+       TRA     VARC          (                                          3F601410
+       NZT     NUMSW          IS A CONSTANT EXPECTED.               (11)3F601412
+       TRA     *+3            NO. OK CONTINUE.                      (11)3F601414
+       NZT     VARLOG         YES. SHOULD IT BE A LOGICAL CONSTANT  (11)3F601416
+       TRA     ERR4           NO. ERROR....                         (11)3F601418
+       CAS     DOLSGN    IS THIS THE END OF A RECORD                 $5$3F601420
+       TRA     *+2        NO, CONTINUE                               $5$3F601430
+       TRA     DOLLAR     YES, TRA DOLLAR                            $5$3F601440
+       TXH     SCAN5,4,5 IF THIS IS ONLY CHAR,SCAN THE NEXT ONE      $5$3F601450
+       CAS     EQSGN                                                    3F601460
+       TRA     *+2                                                      3F601470
+       TRA     EQ1                                                      3F601480
+       CAS     COMMA                                                    3F601490
+       TRA     *+2                                                      3F601500
+       TRA     COMSGM                                                   3F601510
+       TRA     SCAN5     GO SCAN THE NEXT CHARACTER                  $5$3F601520
+DOLLAR STL     DOLSW     SET DOLLAR SIGN SWITCH                      $5$3F601530
+       TXH     DOLEXT,4,5 EXIT IF THIS IS THE ONLY CHAR. SCANNED     $5$3F601540
+       TRA     COMSGM                                                   3F601550
+SCAN5  TXI     *+1,4,-1      ADJUST CHARACTER COUNT.                    3F601560
+       TXL     EQ,4,0    HAVE SIX CHARACTERS BEEN SCANNED            $5$3F601570
+SCAN6  NZT     EOR                                                      3F601580
+       TRA     CHSAV         NO.                                        3F601590
+       TXL     ERR5,4,4                                                 3F601600
+       SLW     VARNAM        BUILD VARIABLE NAME.                       3F601610
+       TRA     COMSGN                                                   3F601620
+EQ     ZET     EOR                                                      3F601630
+       TRA     ERR5                                                     3F601640
+       ORA     VARNAM                                                   3F601650
+       SLW     VARNAM                                                   3F601660
+SCAN7  STO     PREVCH                                               (10)3F601665
+       PXD     0,0                                                  (10)3F601670
+       LGL     6                                                        3F601680
+       DECRS                                                            3F601690
+       CAS     EQSGN                                                    3F601700
+       TRA     *+2                                                      3F601710
+       TRA     EQ1           VARIABLE NAME FOLLOWED BY =. OBTAIN LITERAL3F601720
+       CAS     LPAR                                                     3F601730
+       TRA     *+2                                                      3F601740
+       TRA     VARC          VARIABLE NAME FOLLOWED BY (. DIMENSION.    3F601750
+       CAS     BLANK                                                    3F601760
+       TRA     *+2           NEXT CHARACTER NOT = OR ( OR BLANK.    (10)3F601770
+       ZET     EOR                                                      3F601780
+       TRA     ERTST         ERROR.  FIND TYPE.                     (10)3F601790
+       TRA     SCAN7                                                    3F601800
+ERTST  CAS     DOLSGN                                               (10)3F601802
+       TRA     *+2                                                  (10)3F601803
+       TRA     ERR5                                                 (10)3F601804
+       CAS     BLANK                                                (10)3F601807
+       TRA     *+2                                                  (10)3F601808
+       TRA     ERR5                                                 (10)3F601809
+       CAS     COMMA                                                (10)3F60180E
+       TRA     *+2                                                  (10)3F60180F
+       TRA     ERR4                                                 (10)3F60180G
+       CLA     PREVCH                                               (10)3F60180K
+       CAS     BLANK                                                (10)3F60180L
+       TRA     ERR6                                                 (10)3F60180M
+       TRA     ERR4                                                 (10)3F60180N
+       TRA     ERR6                                                 (10)3F60180P
+EQN    LDQ     BLANKS                                                   3F601810
+       TXL     *+4,4,0                                                  3F601820
+       ARS     6                                                        3F601830
+       LGL     6                                                        3F601840
+       TIX     *-1,4,1                                                  3F601850
+       TRA     EQM                                                      3F601860
+SCBLK  NZT     EOR                                                      3F601870
+       TRA     SCAN2                                                    3F601880
+       TXL     ERR5,4,4                                                 3F601890
+       TXH     NXTREC,4,5                                               3F601900
+       TRA     COMSGM                                                   3F601910
+       REM                                                              3F601920
+EQ1    STL     SWEQ                                                     3F601930
+       ZET     NUMSW                                                    3F601940
+       TRA     ERR4                                                     3F601950
+       STQ     MQD                                                      3F601960
+       CAL     VARNAM                                                   3F601970
+       TRA     EQN                                                      3F601980
+EQM    SLW     VARNAM                                                   3F601990
+       TSX     NMLST,4                                                  3F602000
+FFFIN  TRA     NMOK                                                     3F602010
+COMSGM CAL     VARNAM                                                   3F602020
+       ARS     6                                                        3F602030
+COMSGN NZT     VARLOG                                                   3F602040
+       TRA     ERR12                                                    3F602050
+       STZ     VARNAM                                                   3F602060
+       LAS     T                                                        3F602070
+       TRA     *+2                                                      3F602080
+       TRA     LOGTFA                                                   3F602090
+       LAS     F                                                        3F602100
+       TRA     *+2                                                      3F602110
+       TRA     LOGF                                                     3F602120
+       TRA     ERR11                                                    3F602130
+VARC   TXH     *+3,4,5                                                  3F602140
+       STL     SWDIM                                                    3F602150
+       TRA     EQ1+1                                                    3F602160
+       NZT     VARCOM                                                   3F602170
+       TRA     ERR12        *ERROR.  VARIABLE NOT DEFINED AS COMPLEX.   3F602180
+       ZET     SWCMA                                                    3F602190
+       TRA     ERR10                                                    3F602200
+LPDIB  ZET     EOR                                                      3F602210
+       TRA     ERR5                                                     3F602220
+       ZAC                                                              3F602230
+       LGL     6                                                        3F602240
+       LAS     BLANK                                                    3F602250
+       TRA     *+2                                                      3F602260
+       TRA     LPBLK                                                    3F602270
+       LGR     6                                                        3F602280
+       STL     LPARSW                                                   3F602290
+       STZ     NUMSW                                                    3F602300
+       TRA     LITRAL                                                   3F602310
+LPBLK  DECRS                                                            3F602320
+       TRA     LPDIB                                                    3F602330
+VARFL  TXL     SCAN8,4,5                                                3F602340
+       NZT     VFLAG                                                    3F602350
+       TRA     ERR9         *ERROR. LITERAL NOT PRECEDED BY VAR. NAME.  3F602360
+VARTRA STZ     NUMSW                                                    3F602370
+       LGR     6                                                        3F602380
+       TRA     LITRAL                                                   3F602390
+SCAN8  DECRS                                                            3F602400
+       TRA     SCAN5                                                    3F602410
+       SPACE   3                                                        3F602420
+       REM     LOGSW - ROUTINE CHECK FOR .TRUE., OR .FALSE.,            3F602430
+       SPACE   1                                                        3F602440
+LOGSW  TXL     ERR13,4,5     IF THE POINT THE FIRST CHARACTER.  NO      3F602450
+       NZT     VARLOG        YES, IS A LOGICAL CONSTANT EXPECTED9       3F602460
+       TRA     VARFL         NO, GO TO SCAN LITERAL                     3F602470
+       DECRS                                                            3F602480
+LOGDIB TXI     *+1,4,-1                                                 3F602490
+       TXH     LOGSCN,4,0                                               3F602500
+       TRA     LOGTF                                                    3F602510
+LOGSCN ZET     EOR                                                      3F602520
+       TRA     ERR11                                                    3F602530
+LOGSCC LGL     6                                                        3F602540
+       DECRS                                                            3F602550
+       TRA     LOGDIB                                                   3F602560
+LOGTF  LAS     TRUE                                                     3F602570
+       TRA     ERR11                                                    3F602580
+       TRA     LOGT1                                                    3F602590
+       LAS     FALSE                                                    3F602600
+       TRA     ERR11                                                    3F602610
+       ZET     EOR                                                   $5$3F602620
+       TRA     ERR11                                                    3F602630
+LGAA   ZAC                                                              3F602640
+       LGL     6                                                        3F602650
+       DECRS                                                            3F602660
+       LAS     PER                                                      3F602670
+       TRA     ERR11                                                    3F602680
+       TRA     LOGF1                                                    3F602690
+       TRA     ERR11                                                    3F602700
+LOGTT  SXA     LOGTX,4                                                  3F602710
+LOGTS  ZET     EOR                                                      3F602720
+       TRA     LOGTX                                                    3F602730
+LOGTI  ZAC                                                              3F602740
+       LGL     6                                                        3F602750
+       DECRS                                                            3F602760
+       LAS     COMMA                                                    3F602770
+       TRA     ERR11                                                    3F602780
+       TRA     LOGTX                                                    3F602790
+       LAS     BLANK                                                    3F602800
+       TRA     ERR11                                                    3F602810
+       TRA     LOGTS                                                    3F602820
+       LAS     DOLSGN                                                   3F602830
+       TRA     ERR11                                                    3F602840
+       TRA     LOGDOL                                                   3F602850
+       TRA     ERR11                                                    3F602860
+LOGDOL STL     DOLSW                                                    3F602870
+       TRA     LOGTX                                                    3F602880
+LOGTX  AXT     **,4                                                     3F602890
+       TRA     1,4                                                      3F602900
+LOGT1  TSX     LOGTT,4                                                  3F602910
+       TRA     LOGTFA                                                   3F602920
+LOGF1  TSX     LOGTT,4                                                  3F602930
+       TRA     LOGF                                                     3F602940
+LOGTFA CLA     =1                                                       3F602950
+       TRA     *+2                                                      3F602960
+LOGF   CLA     =0                                                       3F602970
+       STZ     NUMSW                                                    3F602980
+       STQ     MQSV                                                     3F602990
+       TRA     LITSTR                                               *** 3F603000
+CTREC  SXA     CTRET,4       IS THIS THE END OF RECORD.                 3F603010
+.CTUIO AXT     **,4                                                     3F603020
+       TNX     ENDREC,4,1    YES.                                       3F603030
+       SXA     *-2,4         NO. RESET COUNT AND RETURN.                3F603040
+       AXT     6,1                                                      3F603050
+       TXH     CTRET-1,4,1    TRANSFER IF THIS IS NOT THE LAST WORD  (7)3F603051
+       ZET     .INTAP         IS THIS SYSIN1/2                       (7)3F603052
+       AXT     2,1            YES. USE ONLY CHARS 79 AND 80          (7)3F603053
+       TXI     *+1,2,-1                                                 3F603060
+CTRET  AXT     **,4                                                     3F603070
+       LDQ*    .FBDBF                                                   3F603080
+       TRA     1,4                                                      3F603090
+ENDREC STL     EOR                                                      3F603100
+       TRA     CTRET                                                    3F603110
+CHSAV  ORA     VARNAM                                                   3F603120
+       ALS     6                                                        3F603130
+       SLW     VARNAM                                                   3F603140
+       TRA     SCAN2                                                    3F603150
+       REM                                                              3F603160
+NMLST  SXA     NMRET1,4                                                 3F603170
+       STZ     VFLAG                                                    3F603180
+.NMLST AXT     **,4          USE NAMELIST NAME TO LOCATE                3F603190
+       TRA     NMPLUS                                                $5$3F603200
+NMMIN  TXI     *+2,4,2                                                  3F603210
+NMPLUS TXI     *+1,4,1                                                  3F603220
+       SXA     *+1,4                                                    3F603230
+       CLA     **                                                       3F603240
+       TZE     ERR6                                                     3F603250
+NM1    CAS     VARNAM        COMPARE AGAINST DATA VARIABLE NAME.        3F603260
+       TRA     *+2                                                      3F603270
+       TRA     NMRET                                                    3F603280
+       TXI     *+1,4,1       IF NOT EQUAL, CONTINUE SEARCH.             3F603290
+       SXA     *+1,4                                                    3F603300
+       CLA     **                                                       3F603310
+       TPL     NMPLUS                                                   3F603320
+       TRA     *-4                                                   $5$3F603330
+NMRET  TXI     *+1,4,1                                                  3F603340
+       SXA     NMPRES,4                                                 3F603350
+NMRET1 AXT     **,4                                                     3F603360
+       SLW     FXNAM                                                    3F603370
+       STZ     VARNAM                                                   3F603380
+       TRA     1,4                                                      3F603390
+NMPRES PZE     **            ADDRESS OF FLAG FOR VARIABLE NAME IN N LIST3F603400
+       SPACE   2                                                        3F603410
+       REM          NMOCK  -   INITIALIZES THE STORE ROUTINE AND GIVE   3F603420
+       REM                     CONTROL TO THE PICK-UP DIMENSION ROUTINE 3F603430
+       REM                     IF NEEDED                                3F603440
+       SPACE   2                                                        3F603450
+NMOK   LAC     NMPRES,4        XR4  HAS ADDRESS OF THE ARRAY            3F603460
+       CLA     0,4             X                                        3F603470
+       STA     STOPE           X INITIALIZES STORE ROUTINE              3F603480
+       STA     VADDR                                                    3F603490
+       PDX     ,4              XR4 HAS SIZE OF ARRAY                    3F603500
+       ZET     SWDIM                                                    3F603510
+       TXL     ERR7,4,0                                                 3F603520
+       TXH     *+2,4,0                                               $5$3F603530
+       TXI     *+1,4,1                                                  3F603540
+       SXA     VSIZ,4          X                                        3F603550
+       STT     VTYPE           PICK-UP VARIABLE TYPE                    3F603560
+       STL     NUMSW                                                    3F603570
+       STL     VFLAG                                                    3F603580
+       AXT     5,4             RESET  FLAGS                             3F603590
+       STZ     VFLAG,4                                                  3F603600
+       TIX     *-1,4,1         X                                        3F603610
+       CLA     VTYPE           SET NEW FLAG                             3F603620
+       ALS     3              X                                         3F603630
+       PDX     0,4            X                                         3F603640
+       STL     VFLAG-1,4      X                                         3F603650
+       NZT     VARDP     INITIALIZE ACCORDING TO TYPE OF VARIABLE    $5$3F603660
+       ZET     VARCOM         X                                         3F603670
+       TRA     NMIDPC         X                                         3F603680
+       CAL     NOP            REPLACE  STQ  BY  NOP  IN STORE  ROUTINE. 3F603690
+       STD     STOPE1                                                   3F603700
+       STP     STOPE1                                                   3F603710
+       LAC     VSIZ,4         INITIALIZE  TEST IN STORE.                3F603720
+       SXD     STORSZ,4       X                                         3F603730
+       AXC     1,4            INITIALIZE INCREMENT OF THE LOOP IN STORE.3F603740
+       SXD     STO1O2,4                                                 3F603750
+       TRA     NMJ                                                      3F603760
+NMIDPC CAL     STQ                                                      3F603770
+       STD     STOPE1         X                                         3F603780
+       STP     STOPE1         X                                         3F603790
+       CLA     VADDR          X                                         3F603800
+       ADD     =1                                                       3F603810
+       STA     STOPE1         X                                         3F603820
+       CLA     VSIZ           X                                         3F603830
+       ADD     VSIZ           X                                         3F603840
+       PAC     ,4             X                                         3F603850
+       SXD     STORSZ,4       X                                         3F603860
+       AXC     2,4            X                                         3F603870
+       SXD     STO1O2,4       X                                         3F603880
+NMJ    ZET     SWDIM                                                    3F603890
+       TRA     DIM            GO PICK-UP DIMENSIONS.                    3F603900
+       LDQ     MQD                                                      3F603910
+       AXT     0,4            NO LPAR  ON THE INPUT CARD - INITIALIZE   3F603920
+       SXA     STOR1,4        STORE ROUTINE FOR THIS CASE.              3F603930
+NMJR   ZET     DOLSW                                                    3F603940
+       TRA     DOLEXT                                                   3F603950
+       ZET     EOR                                                      3F603960
+       TRA     NXTREC         X                                         3F603970
+       AXT     6,4            X                                         3F603980
+       TRA     SCAN2                                                    3F603990
+DOLEXT NZT     SWAST                                                 $5$3F604000
+       ZET     SWCMA                                                 $5$3F604010
+       TRA     ERR5                                                     3F604020
+       ZET     NUMSW                                                    3F604030
+       TRA     ERR5                                                     3F604040
+       TRA     SV1                                                      3F604050
+       SPACE   2                     SUBSCRIPT                          3F604060
+       REM          DIM  - PICKS-UP  SUBSCRIPT - A(I,J,K)               3F604070
+       REM               -COMPUTES THE  VALEE  OF THE ADDEND            3F604080
+       REM                     (I-1) +(J-1) D1 + (K-1) D1 D2 FOR        3F604090
+       REM                 THE  STORE  ROUTINE                          3F604100
+       SPACE   2                                                        3F604110
+DIM    STZ     VDIM1          .RESET TO ZERO CELLS CONTAINING VALUE OF  3F604120
+       STZ     VDIM2          DIMENSIONS OF THE ARRAY                   3F604130
+       STZ     VDIM3          X                                         3F604140
+       STZ     VDIM4                                                 $5$3F604150
+       STZ     VDIM5                                                 $5$3F604160
+       STZ     VDIM6                                                 $5$3F604170
+       STZ     VDIM7                                                 $5$3F604180
+       STZ     DIMADD                                                   3F604190
+       LAC     NMPRES,4                                                 3F604200
+       CLA     0,4            AC HAS  PZE  ADDR,TYPE,SIZE               3F604210
+       REM                        OR  MZE  ADDR,TYPE,SIZE               3F604220
+       LDQ     VSIZ                                                     3F604230
+       TPL     DIMB           ONLY ONE DIMENSION.                       3F604240
+       CLA     1,4            AC  HAS   PZE  DIM1,,DIM2  IF THREE DIM.  3F604250
+       REM                    X    OR   PZE  DIM1,, 0    IF TWO   DIM.  3F604260
+       STA     VDIM1          SAVE  D1                                  3F604270
+       TPL     *+2                                                   $5$3F604280
+       TRA     DIM45                                                 $5$3F604290
+       PDX     ,4                                                       3F604300
+       ZAC                                                              3F604310
+       TXL     DIMA,4,0       X                                         3F604320
+       SXA     VDIM2,4        THREE DIMENSIONS - SAVE D2                3F604330
+       DVP     VDIM1                                                    3F604340
+       DVP     VDIM2                                                    3F604350
+       STQ     VDIM3          X                                         3F604360
+       AXT     3,4                                                      3F604370
+       TRA     DIMRST         GO,PICK UP SUBSCRIPTS.                    3F604380
+DIM45  PDX     ,4                                                    $5$3F604390
+       SXA     VDIM2,4                                               $5$3F604400
+       LAC     NMPRES,4                                              $5$3F604410
+       CLA     2,4                                                   $5$3F604420
+       STA     VDIM3                                                 $5$3F604430
+       TPL     *+2                                                   $5$3F604440
+       TRA     DIM67                                                 $5$3F604450
+       PDX     ,4                                                    $5$3F604460
+       ZAC                                                           $5$3F604470
+       TXL     DIM4,4,0                                              $5$3F604480
+       SXA     VDIM4,4     FIVE DIMENSIONS - SAVE D4                 $5$3F604490
+       DVP     VDIM1                                                 $5$3F604500
+       DVP     VDIM2                                                 $5$3F604510
+       DVP     VDIM3                                                 $5$3F604520
+       DVP     VDIM4                                                 $5$3F604530
+       STQ     VDIM5                                                 $5$3F604540
+       AXT     5,4                                                   $5$3F604550
+       TRA     DIMRST                                                $5$3F604560
+DIM4   DVP     VDIM1       FOUR DIMENSIONS.                          $5$3F604570
+       DVP     VDIM2                                                 $5$3F604580
+       DVP     VDIM3                                                 $5$3F604590
+       STQ     VDIM4                                                 $5$3F604600
+       AXT     4,4                                                   $5$3F604610
+       TRA     DIMRST                                                $5$3F604620
+DIM67  PDX     ,4                                                    $5$3F604630
+       SXA     VDIM4,4                                               $5$3F604640
+       LAC     NMPRES,4                                              $5$3F604650
+       CLA     3,4                                                   $5$3F604660
+       STA     VDIM5                                                 $5$3F604670
+       PDX     ,4                                                    $5$3F604680
+       ZAC                                                           $5$3F604690
+       TXL     DIM6,4,0                                              $5$3F604700
+       SXA     VDIM6,4     SEVEN DIMENSIONS                          $5$3F604710
+       DVP     VDIM1                                                 $5$3F604720
+       DVP     VDIM2                                                 $5$3F604730
+       DVP     VDIM3                                                 $5$3F604740
+       DVP     VDIM4                                                 $5$3F604750
+       DVP     VDIM5                                                 $5$3F604760
+       DVP     VDIM6                                                 $5$3F604770
+       STQ     VDIM7                                                 $5$3F604780
+       AXT     7,4                                                   $5$3F604790
+       TRA     DIMRST                                                $5$3F604800
+DIM6   DVP     VDIM1       SIX DIMENSIONS                            $5$3F604810
+       DVP     VDIM2                                                 $5$3F604820
+       DVP     VDIM3                                                 $5$3F604830
+       DVP     VDIM4                                                 $5$3F604840
+       DVP     VDIM5                                                 $5$3F604850
+       STQ     VDIM6                                                 $5$3F604860
+       AXT     6,4                                                   $5$3F604870
+       TRA     DIMRST                                                $5$3F604880
+DIMA   DVP     VDIM1                                                    3F604890
+       STQ     VDIM2          X                                         3F604900
+       AXT     2,4                                                      3F604910
+       TRA     DIMRST                                                   3F604920
+DIMB   STQ     VDIM1                                                    3F604930
+       AXT     1,4                                                      3F604940
+       SPACE   2                                                        3F604950
+       REM           PICK-UP  SUBSCRIPTS.                               3F604960
+       SPACE   2                                                        3F604970
+DIMRST SXD     DIM222,4                                                 3F604980
+       LDQ     MQD                                                      3F604990
+       AXT     0,4            XR4 WILL HAVE NUMBER OF SUBSCRIPTS.       3F605000
+DIMSC1 STZ     DTEMP          RESTORE TEMPORARY CELL FOR SUBSCRIT.      3F605010
+DIMSCN ZAC                                                              3F605020
+       LGL     6                                                        3F605030
+       DECRS                  ADJUST XR1.                               3F605040
+       CAS     NINE                                                     3F605050
+       TRA     *+3                                                      3F605060
+       TRA     DHOLD          CONVERT SUBSCRIPT.                        3F605070
+       TRA     DHOLD                                                    3F605080
+       LAS     BLANK                                                    3F605090
+       TRA     *+2                                                      3F605100
+       TRA     DBLK           IGNORE BLANK.                             3F605110
+       LAS     COMMA                                                    3F605120
+       TRA     *+2                                                      3F605130
+       TRA     DIMCOM         ,                                         3F605140
+       LAS     RPAR                                                     3F605150
+       TRA     ERR14         PUNCTUATION ERROR                          3F605160
+       TRA     DIMPAR                                                   3F605170
+       TRA     ERR14                                                    3F605180
+DIMDIG PZE     0                                                        3F605190
+DHOLD  STO     DIMDIG         CONVERT THIS DIGIT AND SAVE IT.           3F605200
+       CLA     DTEMP          X                                         3F605210
+       ALS     2              X                                         3F605220
+       ADD     DTEMP          X                                         3F605230
+       ALS     1              X                                         3F605240
+       ADD     DIMDIG         X                                         3F605250
+       STO     DTEMP          X                                         3F605260
+DIMTST ZET     EOR            END OF RECOR.                             3F605270
+       TRA     ERR14                                                    3F605280
+       TRA     DIMSCN         GO ON SCAN.                               3F605290
+       REM                                                              3F605300
+DBLK   TRA     DIMTST                                                   3F605310
+       REM                                                              3F605320
+DIMCOM TXI     *+1,4,1        INCREASE COUNTER OF SUBSCRIPT.            3F605330
+DIM222 TXH     ERR7,4,** TEST FOR TOO MANY SUBSCRIPTS                $5$3F605340
+       ZET     DTEMP                                                    3F605350
+       TRA     DIMSUB                                                   3F605360
+       TRA     ERR14         PUNCTUATION ERROR OR ZERO SUBSCRIPT        3F605370
+VDIM7  PZE     **                                                    $5$3F605380
+VDIM6  PZE     **                                                    $5$3F605390
+VDIM5  PZE     **                                                    $5$3F605400
+VDIM4  PZE     **                                                    $5$3F605410
+       SPACE   2                                                        3F605420
+VDIM3  PZE     **                                                       3F605430
+VDIM2  PZE     **                                                       3F605440
+VDIM1  PZE     **                                                       3F605450
+VDIM   NULL                                                             3F605460
+       SPACE   2                                                        3F605470
+       REM                                                              3F605480
+DIMLPR PZE     **                                                       3F605490
+STO    STO     **                                                       3F605500
+       REM                                                              3F605510
+DIMPAR STL     DIMLPR                                                   3F605520
+       TRA     DIMCOM         LEFT PARENT                               3F605530
+       REM                                                              3F605540
+DIM1TT ZET     DIMLPR                                                   3F605550
+       TRA     DIMPPR         TRANSFER ON  )                            3F605560
+       ZET     EOR            TRANSFER ON  ,                            3F605570
+       TRA     ERR14                                                    3F605580
+       TRA     DIMSC1                                                   3F605590
+DIMADD PZE     0                                                        3F605600
+       REM                                                              3F605610
+       REM                                                              3F605620
+DIMSUB SXA     DIMSUX,4                                                 3F605630
+DIM2   CLA     DTEMP                                                    3F605640
+       CAS     VDIM,4                                                   3F605650
+       TRA     ERR7          SUBSCRIPT TOO LARGE                        3F605660
+       TRA     *+1                                                      3F605670
+       SUB     =1                                                       3F605680
+       TXL     DIMOUT,4,1                                               3F605690
+       STQ     MQD            SAVE INPUT WORD                           3F605700
+       XCA                                                              3F605710
+DIMDEC TXI     *+1,4,-1                                                 3F605720
+       MPY     VDIM,4                                                   3F605730
+       TXL     DIMOU1,4,1                                               3F605740
+       TRA     DIMDEC                                                   3F605750
+DIMOU1 XCA                                                              3F605760
+       LDQ     MQD            RESTORE INPUT WORD                        3F605770
+DIMOUT ADD     DIMADD                                                   3F605780
+       STO     DIMADD         ADDEND HAS  (I-1)+(J-1)D1+(K-1)D1D2       3F605790
+DIMSUX AXT     **,4                                                     3F605800
+       TRA     DIM1TT                                                   3F605810
+       REM                                                              3F605820
+       REM         DIMPPR - TESTS FOR = AFTER  )                        3F605830
+       REM                                                              3F605840
+DIMPPR STZ     DIMLPR                                                   3F605850
+       STZ     SWDIM                                                    3F605860
+       ZET     EOR                                                      3F605870
+       TRA     ERR14                                                    3F605880
+       CLA     DIMADD                                                   3F605890
+       ZET     VARCOM                                                   3F605900
+       TRA     *+3                                                      3F605910
+       NZT     VARDP                                                    3F605920
+       TRA     DIM124                                                   3F605930
+       ADD     DIMADD                                                   3F605940
+DIM124 PAC     ,4                                                       3F605950
+       SXA     STOR1,4                                                  3F605960
+DIM333 ZAC                                                              3F605970
+       LGL     6                                                        3F605980
+       DECRS                                                            3F605990
+       LAS     EQSGN                                                    3F606000
+       TRA     *+2                                                      3F606010
+       TRA     NMJR           = OK                                      3F606020
+       LAS     BLANK                                                    3F606030
+       TRA     ERR14                                                    3F606040
+       ZET     EOR                                                   $5$3F606050
+       TRA     ERR14                                                    3F606060
+       TRA     DIM333                                                   3F606070
+       SPACE   3                                                        3F606080
+       REM        LITSTR   - STORE  ROUTINE  -  STORES CONVERTED        3F606090
+       REM                    LITTERAL IN PROPER LOCATION.              3F606100
+       SPACE   3                                                        3F606110
+LITSTR NZT     VARCOM                                                   3F606120
+       TRA     STOR           NO,                                       3F606130
+STOCP  DLD     SAUV           YES,LOAD AC AND MQ.                       3F606140
+STOR   SXA     STOX,1         SAVE XR1.                                 3F606150
+       AXT     1,4                                                      3F606160
+STOR1  AXT     **,1                                                     3F606170
+       TXL     *+2,1,0                                                  3F606180
+STORSZ TXL     ERR8,1,**      DECREMENT HAS TRUE SIZE OF THE ARRAY.     3F606190
+STOPE  STO     **,1           ADDRESS FIELD =ADDRESS OF FIRST ELEMENT.  3F606200
+STOPE1 NOP     **,1           NOP IS STQ FOR DOUBLE WORD.               3F606210
+STO1O2 TXI     *+1,1,**       DECREMENT IS 1 FOR SINGLE WORD STORAGE    3F606220
+       REM                       -      -  2  -  DOUBLE  -      -       3F606230
+       SXA     STOR1,1                                                  3F606240
+       LXD     STODEC,1  PICK UP REPEAT COUNT                        $5$3F606250
+       TXH     STOAST,1,0 IF REPEAT IS NEEDED, TRA STOAST            $5$3F606260
+STOX   AXT     **,1           RESET XR1.                                3F606270
+       LDQ     MQSV                                                     3F606280
+       TRA     NMJR           GO BACK TO MAIN SCAN.                     3F606290
+STOAST TXI     *+1,4,1                                                  3F606300
+STODEC TXL     STOR1,4,**                                               3F606310
+       ZSD     STODEC    RESET REPEAT COUNT                          $5$3F606320
+       TRA     STOX                                                     3F606330
+STQ    STQ     **                                                       3F606340
+       REM                   LITERAL SCANNING ROUTINE.                  3F606350
+       REM     LITERAL SCAN -SET POINTERS FOR FCNV,                     3F606360
+       REM                  -SCAN LITERAL FOR WIDTH AND TYPE,           3F606370
+       REM                  -LINK TO PSUEDO-LIST TO CONVERT AND STORE   3F606380
+       REM                  -RETURN TO MAIN SCAN FOR NEXT LITERAL OR    3F606390
+       REM                   VARIABLE NAME.                             3F606400
+LITRAL STQ     MQD                                                      3F606410
+       TXI     *+1,1,1                                                  3F606420
+       SXA     .FDX1,1      SET POINTERS AT 1ST DIGIT                   3F606430
+       TXI     *+1,1,-1                                                 3F606440
+       SXA     .FDX2,2      FOR FCNV                                    3F606450
+       STZ     SWDCP                                                    3F606460
+       STZ     SWREIN                                                   3F606470
+       STZ     LCHK                                                     3F606480
+       STZ     REALSW                                                   3F606490
+       STZ     DPSW                                                     3F606500
+       STZ     DIG                                                      3F606510
+       AXT     0,4                   WIDTH COUNTER                      3F606520
+SCAN11 ZET     EOR                                                      3F606530
+       TRA     LCOM                  TREAT END OF RECORD AS COMMA       3F606540
+       PXD     0,0                                                      3F606550
+       LGL     6                                                        3F606560
+       DECRS                         RELOAD MQ IF EMPTY,IF EOR SETSWITCH3F606570
+       CAS     NINE                                                     3F606580
+       TRA     CONT                                                     3F606590
+       TXI     *+2,4,1               BUMP                               3F606600
+       TXI     *+1,4,1               WIDTH COUNTER                      3F606610
+CKBLK  ZET     LCHK                                                     3F606620
+       TRA     ERR3                                                     3F606630
+       TRA     SCAN11                                                   3F606640
+CONT   CAS     BLANK                                                    3F606650
+       TRA     *+2                                                      3F606660
+       TRA     LBLNK                 SEE IF BLANK IS LEGAL              3F606670
+       CAS     COMMA                                                    3F606680
+       TRA     *+2                                                      3F606690
+       TRA     LCOM                  END OF LITERAL-CONVERT IT          3F606700
+       CAS     PLUS                                                     3F606710
+       TRA     *+2                                                      3F606720
+       TXI     CKBLK,4,1             ADD TO WIDTH                       3F606730
+       CAS     MINUS                                                    3F606740
+       TRA     *+2                                                      3F606750
+       TXI     CKBLK,4,1             ADD TO WIDTH                       3F606760
+       CAS     ASTRSK                                                   3F606770
+       TRA     *+2                                                      3F606780
+       TRA     LASTR                 SET COUNTER WITH NUMBER BEFORE *   3F606790
+       CAS     PER                                                      3F606800
+       TRA     *+2                                                      3F606810
+       TRA     LPER                  CHECK FOR LEGALITY OF .            3F606820
+       CAS     RPAR                                                     3F606830
+       TRA     *+2                                                      3F606840
+       TRA     LRPAR                 CHECK FOR LEGALITY OF )            3F606850
+       CAS     E                                                        3F606860
+       TRA     *+2                                                      3F606870
+       TRA     EREAL                 REAL NUMBER FOUND                  3F606880
+       CAS     D                                                        3F606890
+       TRA     *+2                                                      3F606900
+       TRA     LD                    DOUBLE PRECISION NUMBER FOUND      3F606910
+       CAS     DOLSGN                                                   3F606920
+       TRA     *+2                                                      3F606930
+       TRA     LDOL                                                     3F606940
+       ZET     EOR                                                      3F606950
+       TRA     NMJR                  END OF RECORD- RETURN TO MAIN SCAN 3F606960
+       TRA     ERR13                                                    3F606970
+LBLNK  STL     LCHK                  SET BLANK SWITCH                   3F606980
+       TRA     SCAN11                                                   3F606990
+LDOL   STL     DOLSW                                                    3F607000
+       TRA     LCOM                                                     3F607010
+       REM     HERE ON COMMA                                            3F607020
+LCOM   TXL     ERR14,4,0             NO LITERAL TO CONVERT-ERROR        3F607030
+       NZT     LPARSW                                                   3F607040
+       TRA     *+4                                                      3F607050
+       ZET     SWCMA                                                    3F607060
+       TRA     ERR14                                                    3F607070
+       STL     SWCMA                 TURN ON COMMA SWITCH               3F607080
+       SXA     WIDTH,4               SET WIDTH COUNT IN FCNV            3F607090
+       ZET     VARCOM                                                   3F607100
+       TRA     COMPLX                COMPLEX NUMBER EXPECTED            3F607110
+       ZET     REALSW                                                   3F607120
+       TRA     REAL                  REAL NUMBER FOUND                  3F607130
+       ZET     DPSW                                                     3F607140
+       TRA     DOUBL                 DOUBLE PRECISION NUMBER FOUND      3F607150
+       ZET     VAREAL                                                   3F607160
+       TRA     INRL                                                     3F607170
+       NZT     VARINT                MUST BE INTEGER-CONVERT AS SUCH    3F607180
+       TRA     DPTS                                                     3F607190
+       ZET     SWREIN                                                   3F607200
+       TRA     INRL                                                     3F607210
+       TRA     RLICNV                CONVERT INTEGER                    3F607220
+DPTS   NZT     VARDP                                                    3F607230
+       TRA     ERR12                                                    3F607240
+       TRA     DOUBL                                                    3F607250
+       REM     PROCESS REAL NUMBER                                      3F607260
+REAL   ZET     VAREAL                                                   3F607270
+       TRA     INRL                  REAL EXPECTED-OK                   3F607280
+       ZET     VARDP                                                    3F607290
+       TRA     DOUBL                                                    3F607300
+INRL   CLA     NOP                   INITIALIZE FOR REAL CONVERSION     3F607310
+       STD     FIXSW                                                    3F607320
+       STZ     .FEXP                                                    3F607330
+       AXT     DBC,4                                                    3F607340
+       SXA     CNVSW,4                                                  3F607350
+       AXT     2,4                                                      3F607360
+       SXA     COUNT,4                                                  3F607370
+       STQ     MQSV                  SAVE MQ FOR AMIN SCAN              3F607380
+       TSX     .FCNV.,4              CONVERT DATA                       3F607390
+       AXT     EXPON,4                                                  3F607400
+       SXA     DBC10,4                                                  3F607410
+       NZT     VARCOM                WAS COMPLEX NUMBER EXPECTED        3F607420
+       TRA     REINTS                NO-GO SAVE WHAT YOU HAVE           3F607430
+       NZT     SWCMA                                                    3F607440
+       TRA     STOIM                 GO STORE IMAGINARY PART OF COMPLEX 3F607450
+       STO     SAUV                  LEFT PAREN-STORE REAL PORTION      3F607460
+       LDQ     MQSV                                                     3F607470
+       TRA     NMJR                                                     3F607480
+       REM     SAVE IMAGINARY NUMBER-SCAN FOR COMMA AND RETURN TO MAIN  3F607490
+STOIM  STO     SAUV+1                SAVE IMAGINARY NUMBER        SCAN  3F607500
+       TRA     LITSTR                                                   3F607510
+       REM     COME HERE TO PROCESS RIGHT PAREN,TREAT AS COMMA          3F607520
+LRPAR  ZET     VARCOM                                                $5$3F607530
+       NZT     LPARSW                                                   3F607540
+       TRA     ERR14                 ANOTHER ONE                        3F607550
+       STZ     LPARSW                RESET LEFT PAREN SWITCH            3F607560
+       NZT     SWCMA                                                    3F607570
+       TRA     ERR14                 STILL ANOTHER                      3F607580
+       STZ     SWCMA                 KILL COMMA SWITCH                  3F607590
+       SXA     WIDTH,4                                                  3F607600
+       TSX     LOGTT,4                                                  3F607610
+       TRA     REAL                  OK-PROCESS ASREAL NUMBER           3F607620
+REINTS NZT     SWREIN                                                   3F607630
+       TRA     LITSTR                                                   3F607640
+       REM     RECONVERT TO INTEGER AND STORE                           3F607650
+       UFA     =182B8                                                   3F607660
+       RQL     8                                                        3F607670
+       LRS     8                                                        3F607680
+       XCA                                                              3F607690
+       TRA     LITSTR                                                   3F607700
+COMPLX NZT     SWDCP                                                 (7)3F607720
+       TRA     ERR14                                                    3F607740
+       NZT     LPARSW    IS THE LITERAL PRECEDED BY A LEFT PAREN.    $5$3F607750
+       TRA     ERR10     NO, PUNCTUATION ERROR                       $5$3F607760
+       TRA     REAL                                                     3F607770
+       REM     CONVERT FACTOR AND STORE IN COUNTER                      3F607780
+LASTR  NZT     LPARSW                                                $5$3F607790
+       ZET     SWCMA                                                    3F607800
+       TRA     ERR14                                                    3F607810
+       NZT     REALSW                                                $5$3F607820
+       ZET     SWAST                                                    3F607830
+       TRA     ERR14                                                    3F607840
+       STL     SWAST                                                    3F607850
+       TXL     ERR14,4,0                                                3F607860
+       SXA     WIDTH,4                                                  3F607870
+       REM     CONVERT TO INTEGER                                       3F607880
+       NZT     DPSW                                                  $5$3F607890
+       ZET     REALSW                                                   3F607900
+       TRA     ERR14                                                    3F607910
+       ZET     SWDCP                                                    3F607920
+       TRA     ERR14                                                    3F607930
+RLICNV CLA     TRA                                                      3F607940
+       STD     FIXSW                                                    3F607950
+       AXT     DBC,4                                                    3F607960
+       SXA     CNVSW,4                                                  3F607970
+       AXT     2,4                                                      3F607980
+       SXA     COUNT,4                                                  3F607990
+       STQ     MQSV                                                     3F608000
+       TSX     .FCNV.,4                                                 3F608010
+       NZT     SWAST                                                    3F608020
+       TRA     LITSTR                                                   3F608030
+       ALS     18                                                       3F608040
+       STD     STODEC                IF *,SAVE INTEGER AS COUNTER       3F608050
+       STL     NUMSW                 SET SWITCH TO CATCH VARIABLE NAME  3F608060
+       LDQ     MQSV                  TURNING UP AT THIS POINT           3F608070
+       STZ     SWAST               RESET ASTERISK SWITCH             $5$3F608080
+       TRA     NMJR                  RETURN TO MAIN SCAN                3F608090
+       REM     PROCESS DECIMAL POINT-CHECK FOR MISPLACEMENT             3F608100
+LPER   ZET     VARINT                                                   3F608110
+       STL     SWREIN                RECONVERT TO INTEGER               3F608120
+       ZET     SWDCP                                                    3F608130
+       TRA     ERR14                 IF TWO ., ERROR                    3F608140
+       STL     SWDCP                                                    3F608150
+       TXI     CKBLK,4,1             COUNT . IN WIDTH AND CONTINUE      3F608160
+       REM     PROCESS REAL NUMBER INDICATOR                            3F608170
+ EREAL NZT     REALSW                                                $5$3F608180
+       ZET     DPSW                                                     3F608190
+       TRA     ERR14                 CANNOT BE DOUBLE PRECISION TOO     3F608200
+       STL     REALSW                                                $5$3F608210
+       ZET     VARINT                                                   3F608220
+       STL     SWREIN                RECONVERT TO INTEGER               3F608230
+       TXI     BLKCK,4,1             COUNT E IN WIDTH                   3F608240
+       REM     PROCESS DOUBLE PRECISION INDICATOR                       3F608250
+LD     NZT     DPSW                                                  $5$3F608260
+       ZET     REALSW                                                   3F608270
+       TRA     ERR14                 REDUNDANT QUALIFIER                3F608280
+       STL     DPSW                                                  $5$3F608290
+       ZET     VARINT                                                   3F608300
+       STL     SWREIN                                                   3F608310
+       NZT     VARCOM                                                $5$3F608320
+       ZET     LPARSW                                                   3F608330
+       TRA     ERR1          *MIXED MODES NOT ALLOWED                (7)3F608340
+       ZET     SWCMA                                                    3F608350
+       TRA     ERR14                 PUNCTUATION ERROR                  3F608360
+       TXI     BLKCK,4,1             ADD D IN WIDTH                     3F608370
+       REM     CHECK FOR BLANK FOLLOWING E OR D                         3F608380
+BLKCK  PXD     0,0                                                      3F608390
+       LGL     6                                                        3F608400
+       CAS     BLANK                                                    3F608410
+       TRA     *+2                                                      3F608420
+       TRA     LBK                                                      3F608430
+       LGR     6                                                        3F608440
+       TRA     CKBLK                                                    3F608450
+LBK    DECRS                                                            3F608460
+       TXI     CKBLK,4,1                                                3F608470
+       REM     CONVERT DOUBLE PRECISION NUMBER                          3F608480
+DOUBL  NZT     VARDP                                                    3F608490
+       TRA     VRREL                                                    3F608500
+       STL     DDDFLG                                                   3F608510
+       STZ     .FEXP                                                    3F608520
+       LXA     DBC20,4                                                  3F608530
+       SXA     D1,4                                                     3F608540
+       AXT     DDBC,4                                                   3F608550
+       SXA     DBC20,4                                                  3F608560
+       LXA     DDSW,4                                                   3F608570
+       SXA     D2,4                                                     3F608580
+       AXT     DDFIX,4                                                  3F608590
+       SXA     DDSW,4                                                   3F608600
+       AXT     EXPON,4                                                  3F608610
+       NZT     REALSW                                                   3F608620
+       AXT     DEXPON,4                                                 3F608630
+       SXA     DBC10,4                                                  3F608640
+       CLA     NOP                                                      3F608650
+       STD     FIXSW                                                    3F608660
+       AXT     DBC,4                                                    3F608670
+       SXA     CNVSW,4                                                  3F608680
+       AXT     2,4                                                      3F608690
+       SXA     COUNT,4                                                  3F608700
+       STQ     MQSV                                                     3F608710
+       TSX     .FCNV.,4                                                 3F608720
+       SXA     *+2,2                                                    3F608730
+       TSX     DDRST2,2                                                 3F608740
+       AXT     **,2                                                     3F608750
+       ZET     SWREIN                                                   3F608760
+       TRA     REINTS+2              RECONVERT TO INTEGER               3F608770
+       TRA     LITSTR                                                   3F608780
+SV1    AXT     **,1          RESTORE INDEX REGISTERS.                   3F608790
+SV2    AXT     **,2                                                     3F608800
+LIST   AXT     **,4         *EXIT TO MAIN PROGRAM.                      3F608810
+       TRA     1,4                                                      3F608820
+VRREL  AXT     DEXPON,4                                                 3F608830
+       SXA     DBC10,4                                                  3F608840
+       TRA     INRL                                                     3F608850
+       REM                                                              3F608860
+ASTRSK OCT     54                                                       3F608870
+BLANK  OCT     60                                                       3F608880
+BLANKS BCI     1,                                                       3F608890
+COMMA  OCT     73                                                       3F608900
+D      OCT     24                                                       3F608910
+DOLNAM PZE     **                                                       3F608920
+DOLSGN OCT     53                                                       3F608930
+DTEMP  PZE     **                                                       3F608940
+E      OCT     25                                                       3F608950
+EQSGN  BCI     1,00000=                                                 3F608960
+F      BCI     1,00000F                                                 3F608970
+FALSE  BCI     1,.FALSE                                                 3F608980
+FXNAM  PZE     **                                                       3F608990
+INT    PZE                                                              3F609000
+LPAR   OCT     74                                                       3F609010
+MINUS  OCT     40                                                       3F609020
+NINE   OCT     11                                                       3F609030
+PER    BCI     1,00000.                                                 3F609040
+PREVCH BSS     1                                                    (10)3F609045
+PLUS   OCT     20                                                       3F609050
+RPAR   BCI     1,00000)                                                 3F609060
+EXPON  BCI     1,00000E                                                 3F609070
+T      BCI     1,00000T                                                 3F609080
+TRUE   BCI     1,.TRUE.                                                 3F609090
+TRA    TRA     0                                                        3F609100
+NOP    NOP     0                                                        3F609110
+       REM                                                              3F609120
+       REM                                                              3F609130
+EOR    PZE                                                              3F609140
+DOLSW  PZE     **                                                       3F609150
+DPSW   PZE                                                              3F609160
+LPARSW PZE                                                              3F609170
+NUMSW  PZE                                                              3F609180
+REALSW PZE                                                              3F609190
+SWAST  PZE                                                              3F609200
+SWCMA  PZE     **                                                       3F609210
+SWDCP  PZE                                                              3F609220
+SWDIM  PZE                                                              3F609230
+SWEQ   PZE                                                              3F609240
+SWREIN PZE                                                              3F609250
+MQSV   PZE     **                                                       3F609260
+       REM                                                              3F609270
+       REM                                                              3F609280
+VADDR  PZE     **                                                       3F609290
+VARNAM PZE     0                                                        3F609300
+VMAX   PZE     **                                                       3F609310
+VSIZ   PZE     ,,**                                                     3F609320
+VTEMP  PZE     **                                                       3F609330
+VTYPE  PZE     ,**                                                      3F609340
+       REM                                                              3F609350
+       REM                                                              3F609360
+VARCOM                       COMPLEX            INDICATOR  4            3F609370
+VARDP                        DOUBLE PRECISION   - -        3            3F609380
+VARLOG                       LOGICAL            - -        2            3F609390
+VAREAL                       REAL NUMBER        - -        1            3F609400
+VARINT                       INTEGER            - -        0            3F609410
+VFLAG  PZE     0             ZERO IF NO VARIABLE INDICATOR IS ON.       3F609420
+.NAME. PZE     0,,0                                                  $5$3F609430
+.INTAP BSS     1                                                     (7)3F609431
+       REM                                                              3F609440
+       EVEN                                                             3F609450
+SAUV   BSS     2                                                        3F609460
+LCHK   PZE                                                              3F609470
+ERR1   CLA     .FBDBF         LOCATION OF BUFFER CONTAINING DATA     (6)3F609480
+       ALS     18             CARD WHICH HAS ERROR, IS PLACED IN     (6)3F609482
+       STD     CODE1          DECREMENT OF CODE FOR PRINTOUT BY FXEM (6)3F609484
+       CALL    .FXEM.(CODE1)  EXIT FOR EXECUTION ERROR               (6)3F609486
+       TRA     .LXERR                  NO OPTIONAL EXIT                 3F609490
+CODE1  PZE     58                                                       3F609500
+ER58MS PZE     E58MES,,7                                                3F609510
+ER58OP PZE     NOOPXT,,7                                                3F609520
+E58MES BCI     7,0NO DOUBLE PRECISION COMPLEX ALLOWED                   3F609530
+NOOPXT BCI     7,0NO OPTIONAL EXIT - EXECUTION TERMINATED.              3F609540
+ERR3   CLA     .FBDBF         LOCATION OF BUFFER CONTAINING DATA     (6)3F609610
+       ALS     18             CARD WHICH HAS ERROR, IS PLACED IN     (6)3F609612
+       STD     CODE3          DECREMENT OF CODE FOR PRINTOUT BY FXEM (6)3F609614
+       CALL    .FXEM.(CODE3)  EXIT FOR EXECUTION ERROR               (6)3F609616
+       TRA     .LXERR                  NO OPTION EXIT                   3F609620
+CODE3  PZE     60                                                       3F609630
+ER60MS PZE     E60MES,,3                                                3F609640
+ER60OP PZE     NOOPXT,,7                                                3F609650
+E60MES BCI     3,0EMBEDDED BLANKS                                       3F609660
+ERR4   CLA     .FBDBF         LOCATION OF BUFFER CONTAINING DATA     (6)3F609670
+       ALS     18             CARD WHICH HAS ERROR, IS PLACED IN     (6)3F609672
+       STD     CODE4          DECREMENT OF CODE FOR PRINTOUT BY FXEM (6)3F609674
+       CALL    .FXEM.(CODE4)  EXIT FOR EXECUTION ERROR               (6)3F609676
+       TRA     .LXERR                  NO OPTIONAL EXIT                 3F609680
+CODE4  PZE     61                                                       3F609690
+ER61MS PZE     E61MES,,8                                                3F609700
+ER61OP PZE     NOOPXT,,7                                                3F609710
+E61MES BCI     8,0NUM FLD OR EQ SIGN MISSING OR PUNCTUATION ERR.    (10)3F609720
+ERR5   CLA     .FBDBF         LOCATION OF BUFFER CONTAINING DATA     (6)3F609730
+       ALS     18             CARD WHICH HAS ERROR, IS PLACED IN     (6)3F609732
+       STD     CODE5          DECREMENT OF CODE FOR PRINTOUT BY FXEM (6)3F609734
+       CALL    .FXEM.(CODE5)  EXIT FOR EXECUTION ERROR               (6)3F609736
+       TRA     .LXERR                  NO OPTIONAL EXIT                 3F609740
+CODE5  PZE     62                                                       3F609750
+ER62MS PZE     E62MES,,8                                                3F609760
+ER62OP PZE     NOOPXT,,7                                                3F609770
+E62MES BCI     8,0UNEXPECTED END OF NAMELIST OR END OF RECORD           3F609780
+ERR6   CLA     .FBDBF         LOCATION OF BUFFER CONTAINING DATA     (6)3F609790
+       ALS     18             CARD WHICH HAS ERROR, IS PLACED IN     (6)3F609792
+       STD     CODE6          DECREMENT OF CODE FOR PRINTOUT BY FXEM (6)3F609794
+       CALL    .FXEM.(CODE6)  EXIT FOR EXECUTION ERROR               (6)3F609796
+       TRA     .LXERR                  NO OPTIONAL EXIT                 3F609800
+CODE6  PZE     63                                                       3F609810
+ER63MS PZE     E63MES,,9                                                3F609820
+ER63OP PZE     NOOPXT,,7                                                3F609830
+E63MES BCI     9,0NAMELIST NAME NOT FOLLOWED BY MATCHING VARIABLE NAME  3F609840
+ERR7   CLA     .FBDBF         LOCATION OF BUFFER CONTAINING DATA     (6)3F609850
+       ALS     18             CARD WHICH HAS ERROR, IS PLACED IN     (6)3F609852
+       STD     CODE7          DECREMENT OF CODE FOR PRINTOUT BY FXEM (6)3F609854
+       CALL    .FXEM.(CODE7)  EXIT FOR EXECUTION ERROR               (6)3F609856
+       TRA     .LXERR                  NO OPTIONAL EXIT                 3F609860
+CODE7  PZE     64                                                       3F609870
+ER64MS PZE     E64MES,,12                                               3F609880
+ER64OP PZE     NOOPXT,,7                                                3F609890
+E64MES BCI     9,0SUBSCRIPT TOO LARGE OR TOO MANY SUBSCRIPTS OR INCONSI 3F609900
+       BCI     3,STENT DIMENSIONING                                     3F609910
+MASK   OCT     000000000100                                             3F609920
+ERR8   CAL     MASK                                                     3F609930
+       ORS     .OPTW.+1                                                 3F609940
+       CLA     .FBDBF         ADDITIONAL CARDS NEEDED TO PUT OUT     (6)3F609943
+       ALS     18             THE EXTRA LINE CONTAINING THE          (6)3F609945
+       STD     CODE8          DATA CARD THAT IS IN ERROR             (6)3F609947
+       CALL    .FXEM.(CODE8) EXIT FOR EXECUTION ERROR                   3F609950
+       TRA     .LXERR                  NO OPTIONAL EXIT                 3F609960
+CODE8  PZE     65                                                       3F609970
+ER65MS PZE     E65MES,,7                                                3F609980
+ER65OP PZE     E65AMS,,6                                                3F609990
+E65MES BCI     7,0THE SIZE OF AN ARRAY HAS BEEN EXCEEDED                3F610000
+E65AMS BCI     6,0READING OF ARRAY VALUES CONTINUES                     3F610010
+ERR9   CLA     .FBDBF         LOCATION OF BUFFER CONTAINING DATA     (6)3F610020
+       ALS     18             CARD WHICH HAS ERROR, IS PLACED IN     (6)3F610022
+       STD     CODE9          DECREMENT OF CODE FOR PRINTOUT BY FXEM (6)3F610024
+       CALL    .FXEM.(CODE9)  EXIT FOR EXECUTION ERROR               (6)3F610026
+       TRA     .LXERR                  NO OPTIONAL EXIT                 3F610030
+CODE9  PZE     66                                                       3F610040
+ER66MS PZE     E66MES,,7                                                3F610050
+ER66OP PZE     NOOPXT,,7                                                3F610060
+E66MES BCI     7,0LITERAL NOT PRECEDED BY VARIABLE NAME                 3F610070
+ERR10  CLA     .FBDBF         LOCATION OF BUFFER CONTAINING DATA     (6)3F610080
+       ALS     18             CARD WHICH HAS ERROR, IS PLACED IN     (6)3F610082
+       STD     CODE10         DECREMENT OF CODE FOR PRINTOUT BY FXEM (6)3F610084
+       CALL    .FXEM.(CODE10) EXIT FOR EXECUTION ERROR               (6)3F610086
+       TRA     .LXERR                  NO OPTIONAL EXIT                 3F610090
+CODE10 PZE     67                                                       3F610100
+ER67MS PZE     E67MES,,8                                                3F610110
+ER67OP PZE     NOOPXT,,7                                                3F610120
+E67MES BCI     8,0PUNCTUATION MISSING FOR COMPLEX LITERAL               3F610130
+ERR11  CLA     .FBDBF         LOCATION OF BUFFER CONTAINING DATA     (6)3F610140
+       ALS     18             CARD WHICH HAS ERROR, IS PLACED IN     (6)3F610142
+       STD     CODE11         DECREMENT OF CODE FOR PRINTOUT BY FXEM (6)3F610144
+       CALL    .FXEM.(CODE11) EXIT FOR EXECUTION ERROR               (6)3F610146
+       TRA     .LXERR                  NO OPTIONAL EXIT                 3F610150
+CODE11 PZE     68                                                       3F610160
+ER68MS PZE     E68MES,,7                                                3F610170
+ER68OP PZE     NOOPXT,,7                                                3F610180
+E68MES BCI     7,0ILLEGAL CHARACTER IN LOGICAL INPUT DATA               3F610190
+ERR12  CLA     .FBDBF         LOCATION OF BUFFER CONTAINING DATA     (6)3F610200
+       ALS     18             CARD WHICH HAS ERROR, IS PLACED IN     (6)3F610202
+       STD     CODE12         DECREMENT OF CODE FOR PRINTOUT BY FXEM (6)3F610204
+       CALL    .FXEM.(CODE12) EXIT FOR EXECUTION ERROR               (6)3F610206
+       TRA     .LXERR                  NO OPTIONAL EXIT                 3F610210
+CODE12 PZE     69                                                       3F610220
+ER69MS PZE     E69MES,,7                                                3F610230
+ER69OP PZE     NOOPXT,,7                                                3F610240
+E69MES BCI     7,0DATA TYPE DOES NOT MATCH VARIABLE NAME                3F610250
+ERR13  CLA     .FBDBF         LOCATION OF BUFFER CONTAINING DATA     (6)3F610260
+       ALS     18             CARD WHICH HAS ERROR, IS PLACED IN     (6)3F610262
+       STD     CODE13         DECREMENT OF CODE FOR PRINTOUT BY FXEM (6)3F610264
+       CALL    .FXEM.(CODE13) EXIT FOR EXECUTION ERROR               (6)3F610266
+       TRA     .LXERR                  NO OPTIONAL EXIT                 3F610270
+CODE13 PZE     70                                                       3F610280
+ER70MS PZE     E70MES,,16                                               3F610290
+ER70OP PZE     NOOPXT,,7                                                3F610300
+E70MES BCI     9,0ILLEGAL CHARACTER OR ALL BLANKS IN LITERAL OR VARIABL 3F610310
+       BCI     7,E NAME BEGINS WITH NUMERICAL CHARACTER                 3F610320
+ERR14  CLA     .FBDBF         LOCATION OF BUFFER CONTAINING DATA     (6)3F610330
+       ALS     18             CARD WHICH HAS ERROR, IS PLACED IN     (6)3F610332
+       STD     CODE14         DECREMENT OF CODE FOR PRINTOUT BY FXEM (6)3F610334
+       CALL    .FXEM.(CODE14) EXIT FOR EXECUTION ERROR               (6)3F610336
+       TRA     .LXERR                  NO OPTIONAL EXIT                 3F610340
+CODE14 PZE     52                                                       3F610350
+ER52MS PZE     E52MES,,7                                                3F610360
+ER52OP PZE     NOOPXT,,7                                                3F610370
+E52MES BCI     7,0PUNCTUATION ERROR OR ZERO SUBSCRIPT                   3F610380
+STOP   HTR     STOP                                                     3F610390
+LNKG   LDIR                                                             3F610400
+       END                                                           $5$3F610410

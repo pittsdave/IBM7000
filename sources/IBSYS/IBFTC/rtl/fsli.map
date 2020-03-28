@@ -1,0 +1,41 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - FSLI              3F7G0000
+$IBMAP FSLI    41                                                       3F7G0010
+       TTL     FSLI/SHORT LIST INPUT                                    3F7G0020
+       REM                                                              3F7G0030
+       REM     CONTROL IS TRANSFERRED TO THIS ROUTINE BY FSLDI AND      3F7G0040
+       REM     FSLBI TO SET UP INDEXING FOR PROCESSING THE INPUT        3F7G0050
+       REM     OF NON-SUBSCRIPTED ARRAYS.                               3F7G0060
+       REM                                                              3F7G0070
+       ENTRY   .SLI.                                                    3F7G0080
+       ENTRY   .SLI1.                                                   3F7G0090
+       ENTRY   .SDI.                                                    3F7G0100
+       ENTRY   .SDI1.                                                   3F7G0110
+.SLI.  SXA     SV4,4                                                    3F7G0120
+       TSX     GTARGS,2              OBTAIN ARGUMENTS IN CALLING        3F7G0130
+       PAC     0,4                   SEQUENGE TO FSLDI.                 3F7G0140
+       SXD     SL3,4                                                    3F7G0150
+       AXT     0,2                                                      3F7G0160
+.SLI1. TSX     **,4                  LIST FOR INPUT OF                  3F7G0170
+ SL2   STO     **,2                  NON-SUBSCRIPTED                    3F7G0180
+       TXI     *+1,2,-1              SINGLE-PRECISION                   3F7G0190
+ SL3   TXH     *-3,2,**              ARRAYS.                            3F7G0200
+ SV4   AXT     **,4                                                     3F7G0210
+       TRA     1,4                                                      3F7G0220
+.SDI.  SXA     SV4,4                                                    3F7G0230
+       TSX     GTARGS,2              OBTAIN ARGUMENTS IN CALLING        3F7G0240
+       ALS     1                     SEQUENCE TO FSLBI.                 3F7G0250
+       PAC     0,4                                                      3F7G0260
+       SXD     SD3,4                                                    3F7G0270
+       AXT     0,2                                                      3F7G0280
+.SDI1. TSX     **,4                  LIST FOR INPUT OF                  3F7G0290
+ SD2   DST     **,2                  NON-SUBSCRIPTED                    3F7G0300
+       TXI     *+1,2,-2              DOUBLE-PRECISION                   3F7G0310
+SD3    TXH     .SDI1.,2,**           ARRAYS.                            3F7G0320
+       TRA     SV4                                                      3F7G0330
+GTARGS LXA     SYSLOC,4              OBTAIN INCOMING ARGUMENTS.         3F7G0340
+       CLA     3,4                   LOCATION OF ARRAY.                 3F7G0350
+       STA     SL2                                                      3F7G0360
+       STA     SD2                                                      3F7G0370
+       CLA*    4,4                   NUMBER OF ELEMENTS IN ARRAY.       3F7G0380
+       TRA     1,2                                                      3F7G0390
+       END                                                              3F7G0400

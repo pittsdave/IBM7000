@@ -1,0 +1,168 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F6F0000
+$IBMAP FATN    150                                                      3F6F0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F6F0015
+       ENTRY   ATAN                                                     3F6F0020
+       ENTRY   ATAN2                                                    3F6F0030
+       SPACE   3                                                        3F6F0040
+*              ARCTANGENT SUBROUTINE                                    3F6F0050
+*                  ATAN ACCEPTS A SINGLE ARGUMENT AND ANSWER IS         3F6F0060
+*                    BETWEEN -PI/2 AND PI/2                             3F6F0070
+*                  ATAN2 ACCEPTS A PAIR OF ARGUMENTS - ORDINATE AND     3F6F0080
+*                    ABSCISSA, AND ANSWER IS BETWEEN -PI AND PI         3F6F0090
+       SPACE   3                                                        3F6F0100
+ ATAN2 STL     FLAG                                                     3F6F0110
+ ATAN  SXA     SYSLOC,4                                                 3F6F0120
+       SXA     LINK,4                                                   3F6F0130
+       CLA*    3,4           PICK UP ARG,T                              3F6F0140
+       STO     ARG                                                      3F6F0150
+       NZT     FLAG                                                     3F6F0160
+       TRA     ATAN1         IF SINGLE ARGUMENT CALL, SKIP.             3F6F0170
+       ZET*    4,4                                                      3F6F0180
+       TRA     BB                                                       3F6F0190
+       TNZ     AA                                                       3F6F0200
+       CALL    .FXEM.(EATN)    IF THE ARG PAIR IS (0,0), ERROR.         3F6F0210
+       ZAC                                                              3F6F0220
+       LXA     LINK,4                                                   3F6F0230
+       TRA     RET1                                                     3F6F0240
+  AA   LDQ     PIHLF         CASE OF SMALL X                            3F6F0250
+       LRS     0               GIVE + OR - PI/2 DEPENDING ON SIGN OF Y  3F6F0260
+       XCA                                                              3F6F0270
+       TRA     RET1                                                     3F6F0280
+  BB   CLA*    4,4                                                      3F6F0290
+       ACL     CH27                                                     3F6F0300
+       SLW     BUFF                                                     3F6F0310
+       CLA     ARG                                                      3F6F0320
+       LAS     BUFF          IF Y/X IS GREATER THAN 2**27               3F6F0330
+       TRA     AA              IN MAGNITUDE, GO TO AA. THIS AVOIDS      3F6F0340
+       TRA     AA                FLOAT POINT OVEFLOW.                   3F6F0350
+       FDP*    4,4                                                      3F6F0360
+       XCA                   WITH X/Y, JOIN MAIN CIRCUIT                3F6F0370
+       STO     ARG                                                      3F6F0380
+       SPACE                                                            3F6F0390
+ ATAN1 SXA     SXR1,1                                                   3F6F0400
+       SSP                                                              3F6F0410
+       LDQ     C5                                                       3F6F0420
+       LRS     27                                                       3F6F0430
+       PAX     ,1                                                       3F6F0440
+       TXL     *+3,1,155                                                3F6F0450
+       CLA     PIHLF         FOR LARGE ARGUMENT RETURN WITH HALF PI     3F6F0460
+   A   TXL     SIGN,0,**                                                3F6F0470
+       TXH     *+3,1,114                                                3F6F0480
+       CLA     ARG           FOR SMALL ARGUMENT RETURN WITH THE ARGUMENT3F6F0490
+       TRA     SXR1                                                     3F6F0500
+       SPACE                                                            3F6F0510
+       AXT     0,4                                                      3F6F0520
+       TXL     B,1,128                                                  3F6F0530
+       TXI     *+1,4,2       IF ARGUMENT GREATER THAN 1, TAKE THE RECI- 3F6F0540
+       STQ     BUFF            PROCAL                                   3F6F0550
+       CLA     ONE                                                      3F6F0560
+       DVP     BUFF                                                     3F6F0570
+       SXD     A,1                                                      3F6F0580
+       LDC     A,1                                                      3F6F0590
+       TXI     *+1,1,258                                                3F6F0600
+       SPACE                                                            3F6F0610
+   B   ZAC                                                              3F6F0620
+       LRS     130,1         X OR 1 OVER X IN MQ, SCALING (2,33)        3F6F0630
+       SPACE                                                            3F6F0640
+       CLA     TAN15                                                    3F6F0650
+       TLQ     C             IF ARGUMENT GREATER THAN TAN PI/12, COMPUTE3F6F0660
+       XCA                     TAN Z WHERE TAN (Z+PI/6)=X.              3F6F0670
+       ADD     RTTHR                                                    3F6F0680
+       STO     BUFF            TAN Z = SQRT3-4/(X+SQRT3)                3F6F0690
+       CLA     MFOUR                                                    3F6F0700
+       DVP     BUFF                                                     3F6F0710
+       XCA                                                              3F6F0720
+       ADD     RTTHR                                                    3F6F0730
+       LRS     34                                                       3F6F0740
+       TXI     *+2,4,1                                                  3F6F0750
+       SPACE                                                            3F6F0760
+   C   LLS     1             MODIFIED ARGUMENT IN MQ , SCALE (1,34)     3F6F0770
+       STQ     BUFF                                                     3F6F0780
+       MPY     BUFF                                                     3F6F0790
+       STO     SQ            X SQUARE, SCALE (2,33)                     3F6F0800
+       ADD     C6            COMPUTE CONTINUED FRACTION FOR (ATAN X)/X  3F6F0810
+       STO     BUFF+1                                                   3F6F0820
+       CLA     C5             (ATAN X)/X = C1*SQ+C2                     3F6F0830
+       DVP     BUFF+1                         +(C3/(SQ+C4+C5/(SQ+C6)))  3F6F0840
+       XCA                                                              3F6F0850
+       ADD     SQ                                                       3F6F0860
+       ADD     C4                                                       3F6F0870
+       STO     BUFF+1                                                   3F6F0880
+       CLA     C3                                                       3F6F0890
+       DVP     BUFF+1                                                   3F6F0900
+       STQ     BUFF+1                                                   3F6F0910
+       LDQ     SQ                                                       3F6F0920
+       MPY     C1                                                       3F6F0930
+       ADD     BUFF+1                                                   3F6F0940
+       ADD     C2              SCALE (2,33)                             3F6F0950
+       SPACE                                                            3F6F0960
+       TXL     D,4,0                                                    3F6F0970
+       XCA                   FOR ANGLE GREATER THAN PI/12, CONTINUE     3F6F0980
+       MPY     BUFF            WITH FIXED POINT OPERATION.   OBTAIN Z   3F6F0990
+       TXL     *+2,4,1         AND ADD TO (OR SUBTRACT FROM) APPROPRIATE3F6F1000
+       CHS                     BASE ANGLE                               3F6F1010
+       ADD     N+1,4                                                    3F6F1020
+       AXT     0,1           CONVERT TO NORMALIZED FLOAT POINT NUMBER   3F6F1030
+       LRS     33                                                       3F6F1040
+       LLS     1                                                        3F6F1050
+       LBT                                                              3F6F1060
+       TXI     *-2,1,1                                                  3F6F1070
+       LLS     26                                                       3F6F1080
+       RQL     28                                                       3F6F1090
+       ORA     CHAR,1                                                   3F6F1100
+       FRN                                                              3F6F1110
+       SPACE                                                            3F6F1120
+ SIGN  LDQ     ARG                                                      3F6F1130
+       LLS     0                                                        3F6F1140
+  RET  LXA     LINK,4                                                   3F6F1150
+ SXR1  AXT     **,1                                                     3F6F1160
+       NZT     FLAG                                                     3F6F1170
+       TRA     1,4                                                      3F6F1180
+       SPACE                                                            3F6F1190
+       LDQ*    4,4           TEST SIGN OF DENOMINATOR IF ATAN2 ENTRY    3F6F1200
+       TQP     RET1          ANSWER RANGE FOR ATAN2 IS                  3F6F1210
+       TPL     *+3             FROM - PI TO PI                          3F6F1220
+       FAD     PI                                                       3F6F1230
+       TRA     RET1                                                     3F6F1240
+       FSB     PI                                                       3F6F1250
+ RET1  STZ     FLAG                                                     3F6F1260
+       TRA     1,4                                                      3F6F1270
+       SPACE                                                            3F6F1280
+   D   ARS     6             FOR ANGLE LESS THAN PI/12, USE FLOAT POINT 3F6F1290
+       ORA     CHAR-1          OPERATION TO SAVE RELATIVE ACCURACY      3F6F1300
+       XCA                                                              3F6F1310
+       FMP     ARG                                                      3F6F1320
+       FRN                                                              3F6F1330
+       TRA     RET                                                      3F6F1340
+       SPACE                                                            3F6F1350
+  PI   OCT     202622077325      PI FLOAT POINT                         3F6F1360
+ PIHLF OCT     201622077325        PI/2   FLOAT POINT                   3F6F1370
+  ONE  OCT     100000000000        1                     B2             3F6F1380
+ TAN15 OCT     021114121365        TAN PI/12             B2             3F6F1390
+ RTTHR OCT     156663656413        SQRT 3                B2             3F6F1400
+ MFOUR OCT     -100000000000       -4                    B4             3F6F1410
+       OCT     041405221603        PI/3                  B3             3F6F1420
+       OCT     062207732504        PI/2                  B3             3F6F1430
+   N   OCT     020602510701        PI/6                  B3             3F6F1440
+       OCT     177000000000                                             3F6F1450
+       OCT     200000000000                                             3F6F1460
+ CHAR  OCT     201000000000                                             3F6F1470
+  C1   OCT     -004352472453       -0.0174149659864      B0             3F6F1480
+  C2   OCT     033326050225        0.428408163265        B2             3F6F1490
+  C3   OCT     022500447357        1.16413294461         B4             3F6F1500
+  C4   OCT     215407354215        2.21116520610         B2             3F6F1510
+  C5   OCT     -003701404617       -0.242371744720       B4             3F6F1520
+  C6   OCT     130705255247        1.38883479390         B2             3F6F1530
+ CH27  OCT     033000000000                                             3F6F1540
+  ARG  BSS     1                                                        3F6F1550
+  SQ   BSS     1                                                        3F6F1560
+ BUFF  BSS     2                                                        3F6F1570
+ FLAG  PZE                                                              3F6F1580
+ EATN  DEC     11                                                       3F6F1590
+       PZE     E11MES,,4                                                3F6F1600
+       PZE     E11OMS,,3                                                3F6F1610
+E11MES BCI     4,0ATAN2(0,0) NOT ALLOWED                                3F6F1620
+E11OMS BCI     3,0SET RESULT = 0                                        3F6F1630
+       SPACE                                                            3F6F1640
+  LINK LDIR                                                             3F6F1650
+       END                                                              3F6F1660

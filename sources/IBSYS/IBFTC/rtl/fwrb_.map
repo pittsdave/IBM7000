@@ -1,0 +1,51 @@
+$IBMAP FWRB.   297                                                      3F4T0000
+       TTL  ALTERNATE I/O BIN WRITE ROUTINE AND SEC. BINARY BUFFER      3F4T0010
+       LBL     .WRB,BEGIN     FWRB.                                  (7)3F4T0013
+*              CALLING SEQUENCE FOR -- WRITE (N) LIST --                3F4T0020
+*                   CALL ..FWRB(ARG)                                    3F4T0030
+*                    WHERE ARG = LOCATION OF PZE UNITXX, XX IS          3F4T0040
+*                                LOCATION OF LOGICAL UNIT N             3F4T0050
+       ENTRY   ..FWRB                                                   3F4T0060
+ SIZE  SET     256                 SETS SECONDARY BUFFER = 256          3F4T0070
+..FWRB SXA     SYSLOC,4            SAVE FORTRAN CALL LOCATION IN SYSLOC 3F4T0080
+       SXA     LK.DR,4             SAVE X4 IN LINKAGE DIRECTOR          3F4T0090
+       SXA     ARG,4               SAVE ORIGINAL FORTRAN CALL           3F4T0100
+       STZ     INFLG               SET FIRST TIME FLAG                  3F4T0110
+       CALL    ..FBIW              WRITE ENTRY TO FBIN.                 3F4T0120
+*                                   SETS UP .LXSL COMMAND AND           3F4T0130
+*                                   GENERATES CALL TO FIOS.             3F4T0140
+       CLA     BUF                 BUFFER SIZE IN AC                    3F4T0150
+       CALL    .FIOB.(ENT,ARG)     CALL BINARY COORDINATOR              3F4T0160
+       ORG     *-2                                                      3F4T0170
+ ENT   TRA     WRITE                AND RELINQUISH                      3F4T0180
+ ARG   PZE     0,,0                  CONTROL TO IT                      3F4T0190
+*                     PROCESS FIOB WRITE REQUEST                        3F4T0200
+ WRITE NZT     INFLG               TEST FOR INITIAL WRITE REQUEST       3F4T0210
+       TRA     FIRST                IF FIRST TIME, BYPASS TRANSMISSION  3F4T0220
+       TSX     ..FTCK,4            CHECK PRIOR TRANSMISSION             3F4T0230
+       LXD     .FRITE,4            GET WORD COUNT                       3F4T0240
+       SXD     SEL,4                SET                                 3F4T0250
+       CAL     SEL                  UP DATA FOR CURRENT                 3F4T0260
+       SLW     ..FSEL+1             BUFFER                              3F4T0270
+       TSX     ..FIOC,4            REQUEST OUTPUT RECORD VIA ..FIOC     3F4T0280
+       NZT     FLAG                ALTERNATE                            3F4T0290
+       TRA     ALT                  BUFFER                              3F4T0300
+       TRA     STD                 ADDRESSES                            3F4T0310
+ FIRST STL     INFLG               RESET FIRST TIME FLAG                3F4T0320
+ STD   CLA     PRI                                                      3F4T0330
+       STZ     FLAG                 *                                   3F4T0340
+       TRA     STO                  *                                   3F4T0350
+ ALT   CLA     SEC                  *                                   3F4T0360
+       STL     FLAG                 *                                   3F4T0370
+ STO   STO     SEL                  *                                   3F4T0380
+       STA     .FBIBF              PLACE BUFFER ADDRESS IN FIOB         3F4T0390
+       TRA     1,2                 RETURN TO FIOB                       3F4T0400
+ FLAG  PZE     0,,0                                                     3F4T0410
+ SEL   IORT    **,,**              CURRENT SELECTED BUFFER              3F4T0420
+ PRI   IORT    ..FB1B,,SIZE        PRIMARY BUFFER                       3F4T0430
+ SEC   IORT    ..FB2B,,SIZE        SECONDARY BUFFER                     3F4T0440
+ INFLG PZE     0,,0                FIRST TIME FLAG                      3F4T0450
+ BUF   PZE     0,,SIZE-1           BUFFER SIZE (LOGICAL)                3F4T0460
+..FB2B BSS     SIZE                LOCATION OF SECONDARY BUFFER         3F4T0470
+ LK.DR LDIR                                                             3F4T0480
+       END                                                              3F4T0490

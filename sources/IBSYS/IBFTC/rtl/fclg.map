@@ -1,0 +1,94 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F8D0000
+$IBMAP FCLG    150                                                      3F8D0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F8D0015
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90,             3F8D0020
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94.            3F8D0030
+       REM       (OR TO ANY VALUE NOT EQUAL TO 90)                      3F8D0040
+M9094  SET     90                                                       3F8D0050
+       PCC     ON                                                       3F8D0060
+       IFF     M9094=90                                                 3F8D0070
+       GOTO    BEG94                                                    3F8D0080
+       PCC     OFF                                                      3F8D0090
+       ENTRY   CLOG                                                     3F8D0100
+       SPACE   3                                                        3F8D0110
+       REM     COMPLEX LOGARITHM SUBROUTINE                             3F8D0120
+       SPACE   3                                                        3F8D0130
+  CLOG SXA     SYSLOC,4                                                 3F8D0140
+       SXA     LINK,4                                                   3F8D0150
+       CAL     3,4           OBTAIN ARGUMENT POINTERS                   3F8D0160
+       STO     ADX1                                                     3F8D0170
+       STO     ADX2                                                     3F8D0180
+       ADD     K1A                                                      3F8D0190
+       STO     ADY                                                      3F8D0200
+       TSX     CABS,4        /X+IY/                                     3F8D0210
+       TXI     *+3,,1                                                   3F8D0220
+       PZE     11,,LINK                                                 3F8D0230
+  ADX1 PZE                                                              3F8D0240
+       TZE     ERROR         IF X=0 Y=0, ERROR                          3F8D0250
+       STO     BUFF                                                     3F8D0260
+       CALL    ALOG(BUFF)                                               3F8D0270
+       STO     BUFF          ANS = LOG/X+IY/ + I ATAN2(Y/X)             3F8D0280
+       TSX     ATAN2,4                                                  3F8D0290
+       TXI     *+4,,2                                                   3F8D0300
+       PZE     22,,LINK                                                 3F8D0310
+   ADY PZE                                                              3F8D0320
+  ADX2 PZE                                                              3F8D0330
+  K1A  OCT     013100000001     XCA AS OPERATION,   K1A AS CONSTANT     3F8D0340
+       CLA     BUFF                                                     3F8D0350
+   RET LXA     LINK,4                                                   3F8D0360
+       TRA     1,4                                                      3F8D0370
+       SPACE                                                            3F8D0380
+ ERROR CALL    .FXEM.(ECLOG)                                            3F8D0390
+       CLA     MOMEGA                                                   3F8D0400
+       TRA     RET                                                      3F8D0410
+       SPACE                                                            3F8D0420
+MOMEGA OCT     777777777777                                             3F8D0430
+  BUFF BSS     1                                                        3F8D0440
+ ECLOG DEC     28                                                       3F8D0450
+       PZE     E28MES,,4                                                3F8D0460
+       PZE     E28OMS,,5                                                3F8D0470
+E28MES BCI     4,0CLOG(0+0I) NOT ALLOWED                                3F8D0480
+E28OMS BCI     5,0SET RESULT = -OMEGA + 0I                              3F8D0490
+       SPACE                                                            3F8D0500
+  LINK LDIR                                                             3F8D0510
+BEG94  NULL                                                             3F8D0520
+       PCC     ON                                                       3F8D0530
+       IFT     M9094=90                                                 3F8D0540
+       GOTO    END94                                                    3F8D0550
+       PCC     OFF                                                      3F8D0560
+       EJECT                                                            3F8D0570
+       ENTRY   CLOG                                                     3F8D0580
+       SPACE   3                                                        3F8D0590
+       REM     COMPLEX LOGARITHM SUBROUTINE                             3F8D0600
+       SPACE   3                                                        3F8D0610
+  CLOG SXA     SYSLOC,4                                                 3F8D0620
+       SXA     LINK,4                                                   3F8D0630
+       DLD*    3,4           PICK UP CARG,T                             3F8D0640
+       DST     BUFF          REAL ARG TO BUFF,  IMAG ARG TO BUFF+1      3F8D0650
+       CALL    CABS(BUFF)    /X+IY/                                     3F8D0660
+       TZE     ERROR         IF X=0 Y=0, ERROR                          3F8D0670
+       STO     BUFF+2                                                   3F8D0680
+       CALL    ALOG(BUFF+2)                                             3F8D0690
+       STO     BUFF+2        ANS = LOG/X+IY/ + I ATAN2(Y/X)             3F8D0700
+       CALL    ATAN2(BUFF+1,BUFF)                                       3F8D0710
+       XCA                                                              3F8D0720
+       CLA     BUFF+2                                                   3F8D0730
+   RET LXA     LINK,4                                                   3F8D0740
+       TRA     1,4                                                      3F8D0750
+       SPACE                                                            3F8D0760
+ ERROR CALL    .FXEM.(ECLOG)                                            3F8D0770
+       CLA     MOMEGA                                                   3F8D0780
+       TRA     RET                                                      3F8D0790
+       SPACE                                                            3F8D0800
+       EVEN                                                             3F8D0810
+  BUFF BSS     3                                                        3F8D0820
+MOMEGA OCT     777777777777                                             3F8D0830
+ ECLOG DEC     28                                                       3F8D0840
+       PZE     E28MES,,4                                                3F8D0850
+       PZE     E28OMS,,5                                                3F8D0860
+E28MES BCI     4,0CLOG(0+0I) NOT ALLOWED                                3F8D0870
+E28OMS BCI     5,0SET RESULT = -OMEGA + 0I                              3F8D0880
+       SPACE                                                            3F8D0890
+  LINK LDIR                                                             3F8D0900
+END94  NULL                                                             3F8D0910
+       END                                                              3F8D0920

@@ -1,0 +1,122 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F6C0000
+$IBMAP FSCN    150                                                      3F6C0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F6C0015
+       ENTRY   SIN                                                      3F6C0020
+       ENTRY   COS                                                      3F6C0030
+       SPACE   3                                                        3F6C0040
+       REM     SINE - COSINE SUBROUTINE                                 3F6C0050
+       SPACE   3                                                        3F6C0060
+  COS  STL     FLAG                                                     3F6C0070
+  SIN  SXA     SYSLOC,4                                                 3F6C0080
+       SXA     LINK,4                                                   3F6C0090
+       CLA*    3,4           PICK UP ARG,T                              3F6C0100
+       ZET     FLAG                                                     3F6C0110
+       SSP                                                              3F6C0120
+       STO     ARG           FLAG IS ZERO FOR SIN ENTRY                 3F6C0130
+       SSP                                                              3F6C0140
+       LDQ     LEAD0                                                    3F6C0150
+       LRS     9                                                        3F6C0160
+       PDX     ,4                                                       3F6C0170
+       TXH     ERROR,4,153   ORIG. ARG. TOO LARGE FOR SIGNIF. RESULTS.  3F6C0180
+       SXA     SXR2,2                                                   3F6C0190
+       LLS     19                                                       3F6C0200
+       LRS     156,4         THIS RIGHT SHIFT EXPRESS ARG IN B26        3F6C0210
+       VDP     PIOV4,,26                                                3F6C0220
+       STO     RI            REMAINDER MODULO PI/4                      3F6C0230
+       LLS     32                                                       3F6C0240
+       ZAC                                                              3F6C0250
+       LLS     3                                                        3F6C0260
+       PAX     ,2            XR2 KEEPS TRACK OF THE OCTANT X BELONGED   3F6C0270
+       ZET     FLAG          IF COSINE REQUESTED, ADD PI/2 TO ARG       3F6C0280
+       TXI     MOD1,2,2                                                 3F6C0290
+       TXH     MOD2,4,115                                               3F6C0300
+       CLA     ARG                                                      3F6C0310
+       TRA     SXR2                                                     3F6C0320
+ MOD1  TXL     MOD2,2,7                                                 3F6C0330
+       TXI     *+1,2,-8                                                 3F6C0340
+ MOD2  SXA     SIGN,2        FOR LATER ADJUSTMENT OF SIGN               3F6C0350
+       TXL     *+2,2,3                                                  3F6C0360
+       TXI     *+1,2,-4      WE NOW CONSIDER ONLY UPPER HALF            3F6C0370
+       TXL     RED2,2,0      DEPENDING ON OCTANT, ADJUST AS FOLLOWS     3F6C0380
+       TXL     RED1,2,1                        MOD.ARG  XR2             3F6C0390
+       TXI     *+1,2,-1            1ST OCTANT     R      0              3F6C0400
+       TXL     RED3,2,1            2ND OCTANT  PI/4-R    1              3F6C0410
+       TXI     *+1,2,-2            3RD OCTANT     R      1              3F6C0420
+ RED1  CLA     PIOV4               4TH OCTANT  PI/4-R    0              3F6C0430
+       SUB     RI                                                       3F6C0440
+       STO     RI                                                       3F6C0450
+       TRA     RED3+1                                                   3F6C0460
+ RED2  CAL     ARG           1ST OCTANT.   IF ABS ARG IS LESS THAN 1,   3F6C0470
+       TXL     RED4,4,128      USE ORIGINAL ABS ARG FOR R2.             3F6C0480
+ RED3  CLA     RI            WE NEED MOD. ARG IN BOTH FIXED POINT       3F6C0490
+       TXH     RED4+1,2,0      AND FLOAT POINT FORMS                    3F6C0500
+       LRS     8                                                        3F6C0510
+       ORA     CHAR                                                     3F6C0520
+       STO     R2                                                       3F6C0530
+       XCA                                                              3F6C0540
+       ARS     8                                                        3F6C0550
+       ORA     CHAR+1                                                   3F6C0560
+       FAD     R2                                                       3F6C0570
+ RED4  STO     R2            R2 IS OUR FLOATING POINT ARGUMENT.         3F6C0580
+       REM                   ARITHMETIC SECTION BEGINS                  3F6C0590
+       SXD     EITHR,2       XR2=0 FOR SIN SERIES, =1 FOR COS SERIES.   3F6C0600
+       LDQ     RI            RI IS OUR MOD.ARG. IN FX.PT.B0             3F6C0610
+       MPY     RI                                                       3F6C0620
+       STO     SQAR                                                     3F6C0630
+       AXT     6,4                                                      3F6C0640
+ EITHR TXI     *+1,4,**      XR4=6 FOR SIN LOOP, =7 FOR COS LOOP        3F6C0650
+       CLA     CHAR-1,4                                                 3F6C0660
+ LOOP  XCA                   POLYNOMIAL APPROXIMATION.                  3F6C0670
+       MPY     SQAR                                                     3F6C0680
+       ADD     CHAR+1,4                                                 3F6C0690
+       TIX     LOOP,4,2                                                 3F6C0700
+       CAS     CHAR          RESULT IS IN B1,   IF IT IS GREATER        3F6C0710
+       CLA     CHAR            THAN 1, REDUCE IT TO 1 AND               3F6C0720
+       ADD     MASK              ADJUST TO COME OUT WITH FLOAT 1        3F6C0730
+       LRS     7             FLOAT THE RESULT                           3F6C0740
+       ADD     CHAR                                                     3F6C0750
+       RQL     28                                                       3F6C0760
+       FRN                                                              3F6C0770
+       TXL     LAST,4,1      XR4=1 AFTER COS LOOP, =2 AFTER SIN LOOP    3F6C0780
+       XCA                                                              3F6C0790
+       FMP     R2            R2= RI IN FLOATING FORM                    3F6C0800
+       FRN                                                              3F6C0810
+ LAST  LDQ     ARG           HERE ARE PROVISION FOR PROPER SIGN OF ANSWE3F6C0820
+       LLS     0                                                        3F6C0830
+ SIGN  AXT     **,2          AT THIS POINT XR2 HAD QUOTIENT OF (X/PI/4) 3F6C0840
+       TXL     *+2,2,3             MODULI 8, IF GREATER THAN 3 X WAS IN 3F6C0850
+       CHS                         LOWER HALF,WE SHOULD CHANGE SIGN.    3F6C0860
+ SXR2  AXT     **,2                                                     3F6C0870
+  RET  LXA     LINK,4                                                   3F6C0880
+       STZ     FLAG                                                     3F6C0890
+       TRA     1,4                                                      3F6C0900
+       SPACE                                                            3F6C0910
+ ERROR CALL    .FXEM.(ESCN)                                             3F6C0920
+       ZAC                                                              3F6C0930
+       TRA     RET                                                      3F6C0940
+       SPACE                                                            3F6C0950
+ LEAD0 OCT     000001462217    .2438663341E-4  B1    C4                 3F6C0960
+       OCT     -000014620331   -.1950390425E-3 B1    S3                 3F6C0970
+       OCT     -000133004045   -.1388671182E-2 B1    C3                 3F6C0980
+       OCT     001042030565    .8332035786E-2  B1    S2                 3F6C0990
+       OCT     005252523632    .4166662099E-1  B1    C2                 3F6C1000
+       OCT     -025252517757   -.1666665067    B1    S1                 3F6C1010
+       OCT     -077777777712   -.4999999969    B1    C1                 3F6C1020
+       OCT     177777777713    .9999999969     B1    S0                 3F6C1030
+ CHAR  OCT     200000000000    1. B1  ALSO USED TO FLOAT NUMBERS        3F6C1040
+       OCT     145000000000                                             3F6C1050
+ MASK  OCT     100000000000                                             3F6C1060
+ PIOV4 OCT     +311037552421       PI/4 AS FIXED POINT NUMBER B0        3F6C1070
+  ARG  BSS     1                                                        3F6C1080
+  RI   BSS     1                                                        3F6C1090
+  R2   BSS     1                                                        3F6C1100
+ SQAR  BSS     1                                                        3F6C1110
+ FLAG  PZE                                                              3F6C1120
+ ESCN  DEC     12                                                       3F6C1130
+       PZE     E12MES,,10                                               3F6C1140
+       PZE     E12OMS,,3                                                3F6C1150
+E12MES BCI ,0SIN(X) OR COS(X), /X/ GRT THAN OR EQ TO 2**25 NOT ALLOWED  3F6C1160
+E12OMS BCI     3,0SET RESULT = 0                                        3F6C1170
+       SPACE                                                            3F6C1180
+  LINK LDIR                                                             3F6C1190
+       END                                                              3F6C1200

@@ -1,0 +1,69 @@
+$IBMAP ACEPT   ADDREL                                                   3LQ00000
+       LBL     ACPT,BEGIN     ACEPT                                  (7)3LQ00007
+*  ACEPT LIBRARY SUBROUTINE                                             3LQ00010
+*  CALLING SEQUENCE                                                     3LQ00020
+*      LDI     A                                                        3LQ00030
+*      TSX     .ACEPT,4                                                 3LQ00040
+*      TXI     *+3,,1                                                   3LQ00050
+*      PZE     8888,,LINKAGE-DIRECTOR                                   3LQ00060
+*      PZE     FWA,,BYTE           (OF DATA ITEM ACCEPTED)              3LQ00070
+*                                                                       3LQ00080
+       ENTRY   .ACEPT                                                   3LQ00090
+.ACEPT SXA     ACEXIT,4                                                 3LQ00100
+       CAL     3,4                                                      3LQ00110
+       SLW     .CBREF              SET TARGET CELL                      3LQ00120
+       STI     ACIND                                                    3LQ00130
+       LXA     ACIND,4                                                  3LQ00140
+       SXD     ACLNG,4             SET LENGTH IN MOVE                   3LQ00150
+       LNT     400000              SYSIN1 TEST                          3LQ00160
+       TRA     ACE                 NO - CARD READER                     3LQ00170
+ACOPEN TSX     .CCDTY,4            YES - TEST ASSIGNMENT                3LQ00180
+       PZE     ACIN1                                                    3LQ00190
+       TRA     ACOPEN-1            SYSIN1 IS  CARD READER               3LQ00200
+       TSX     .OPEN,4             SYSIN1 NOT CARD READER               3LQ00210
+       MZE     ACIN1                 THEN OPEN SYSIN1 ONCE              3LQ00220
+       STL     ACOPEN                                                   3LQ00230
+       STZ     .CAREF                                                   3LQ00240
+       TSX     .READ,4                                                  3LQ00250
+       PZE     ACIN1,,.CEOBP       FILE,,END OF BUFFER                  3LQ00260
+       PZE     ACEOF,,.CERRP       END OF FILE,,ERROR                   3LQ00270
+       IOCDN*  .CAREF,,12                                               3LQ00280
+ACMOVE TSX     .CMPK3,4            MOVE DATA TO TARGET                  3LQ00290
+ACLNG  TXI     .CANA1,1,**                                              3LQ00300
+ACEXIT AXT     **,4                                                     3LQ00310
+       TRA     1,4                                                      3LQ00320
+ACE    TSX     .OPEN,4             OPEN CARD FILE ONCE                  3LQ00330
+       MZE     ACCRD                                                    3LQ00340
+       STL     ACOPEN-1                                                 3LQ00350
+       TSX     .READ,4                                                  3LQ00360
+       PZE     ACCRD,,.CEOBP                                            3LQ00370
+       PZE     ACEOF,,.CERRP                                            3LQ00380
+       IOCDN*  X,,24                                                    3LQ00390
+       TSX     .CHBCD,4            CONVERT HOLLERITH TO BCD             3LQ00400
+       PZE     X,,ACIM                                                  3LQ00410
+       CAL     ACIMLO                                                   3LQ00420
+       SLW     .CAREF              SET SOURCE CELL                      3LQ00430
+       TRA     ACMOVE                                                   3LQ00440
+ACEOF  LXA     ACIND,4                                                  3LQ00450
+       SXD     *+2,4                                                    3LQ00460
+       TSX     .CMPK3,4                                                 3LQ00470
+       TXI     .CZEAN,1,**                                              3LQ00480
+       LDI     ACIND                                                    3LQ00490
+       CAL     ACSYTP                                                   3LQ00500
+       LNT     400000                                                   3LQ00510
+       CAL     ACSYCD                                                   3LQ00520
+       SLW     ACMESS+2                                                 3LQ00530
+       TSX     .CDPLY,4            ISSUE EOF MESSAGE                    3LQ00540
+       PZE     ACMESS,,8                                                3LQ00550
+       TRA     ACEXIT                                                   3LQ00560
+ACMESS BCI     5,ACCEPT FROM ****** ENCOUNTERED                         3LQ00570
+       BCI     7, END OF FILE. ZERO VALUE PROVIDED.                     3LQ00580
+ACSYTP BCI     1,SYSIN1                                                 3LQ00590
+ACSYCD BCI     1,SYSCRD                                                 3LQ00600
+ACIMLO PZE     *+1                                                      3LQ00610
+ACIM   BSS     12                                                       3LQ00620
+ACIND  PZE     **                                                       3LQ00630
+X      PZE     **                  BASE LOCATOR FOR CARDS               3LQ00640
+ACIN1  FILE    ACIN1,IN1,BLK=24,MIN=24,MXBCD,OPTHCV,NOLIST              3LQ00650
+ACCRD  FILE    ACCRD,CRD,BLK=24,MIN=24,MXBCD,REQHCV                     3LQ00660
+       END                                                              3LQ00670

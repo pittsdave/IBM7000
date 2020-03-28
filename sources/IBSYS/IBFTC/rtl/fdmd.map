@@ -1,0 +1,37 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F9C0000
+$IBMAP FDMD    35                                                       3F9C0010
+       TTL     DOUBLE PRECISION MODULUS FUNCTION-DMD                    3F9C0020
+DMOD   SAVE    (4)                                                      3F9C0030
+       DLD*    4,4                                                      3F9C0040
+       DST     Y                                                        3F9C0050
+       TZE     ARG2Z                                                    3F9C0060
+       DLD*    3,4                                                      3F9C0070
+       DST     X                                                        3F9C0080
+       DFDP    Y             COMPUTE X/Y                                3F9C0090
+       STQ     E1            COMPUTE INTF (X/Y)                         3F9C0100
+       UFA     CONST                                                    3F9C0110
+       STO     E2                                                       3F9C0120
+       XCA                                                              3F9C0130
+       UFA     E1                                                       3F9C0140
+       UFA     E2                                                       3F9C0150
+       STQ     E1            NORMALIZE                                  3F9C0160
+       FAD     E1                                                       3F9C0170
+       DFMP    Y             COMPUTE Y*INTF(X/Y)                        3F9C0180
+       CHS                                                              3F9C0190
+       LRS     0                                                        3F9C0200
+       DFAD    X             COMPUTE X-Y*INTF(X/Y)                      3F9C0210
+       TNZ     *+3                                                      3F9C0220
+       SSP                                                              3F9C0230
+       LRS     0                                                        3F9C0240
+       RETURN  DMOD                                                     3F9C0250
+ ARG2Z DLD*    3,4                                                      3F9C0260
+       RETURN  DMOD                                                     3F9C0270
+ CONST OCT     266000000000,233000000000                                3F9C0280
+E1                                                                      3F9C0290
+E2                                                                      3F9C0300
+E3                                                                      3F9C0310
+E4                                                                      3F9C0320
+       EVEN                                                             3F9C0330
+ X     DEC     0,0                                                      3F9C0340
+ Y     DEC     0,0                                                      3F9C0350
+       END                                                              3F9C0360

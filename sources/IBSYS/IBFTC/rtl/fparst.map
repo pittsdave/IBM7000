@@ -1,0 +1,51 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - FPARST                          3FPST000
+$IBMAP FPARST  28                                                       3FPST010
+       LBL     PAST,BEGIN     FPARST                                 (7)3FPST013
+       TTL     FPARST/PART AND STORE FUNCTIONS FOR SIFT                 3FPST020
+       REM                                                              3FPST030
+       REM     IF A REFERENCE TO A DOUBLE PRECISION (OR COMPLEX)        3FPST040
+       REM     VARIABLE NAME ALSO APPEARS IN A STATEMENT WITHOUT A D    3FPST050
+       REM     (OR AN I) IN COLUMN ONE IN A FORTRAN II SOURCE PROGRAM,  3FPST060
+       REM     THAT VARIABLE OR ELEMENT OF AN ARRAY BECOMES AN ARGUMENT 3FPST070
+       REM     TO A PART FUNCTION.  THE PART FUNCTION ALSO CONTAINS AS  3FPST080
+       REM     ARGUMENTS THE NAME OF THE ARRAY AND ITS LENGTH.  AT      3FPST090
+       REM     EXECUTION TIME THE PART FUNCTION RETURNS THE ADDRESS OF  3FPST100
+       REM     THE DESIRED PART OF THE DOUBLE PRECISION (OR COMPLEX)    3FPST110
+       REM     PAIR.  IF A REFERENCE SIMILAR TO THAT DESCRIBED ABOVE    3FPST120
+       REM     OCCURS ON THE LEFT SIDE OF AN ARITHMETIC STATEMENT,      3FPST130
+       REM     THEN THE STATEMENT SPECIFIES THAT A QUANTITY BE STORED   3FPST140
+       REM     IN ONE PART OF THE NUMBER PAIR.  TO ACCOMPLISH THIS IN   3FPST150
+       REM     FORTRAN IV, SIFT REPLACES THE ARITHMETIC STATEMENT BY    3FPST160
+       REM     A CALL TO THE STORE SUBROUTINE. THE FIRST THREE ARGUMENTS3FPST170
+       REM     ARE THE SAME AS IN A CALL TO PART, AND THE FOURTH        3FPST180
+       REM     ARGUMENT IS THE EXPRESSION WHOSE VALUE IS TO  BE STORED. 3FPST190
+       REM                                                              3FPST200
+       ENTRY   PART                                                     3FPST210
+       ENTRY   STORE                                                    3FPST220
+PART   STZ     TEST                                                     3FPST230
+       TRA     *+2                                                      3FPST240
+STORE  STL     TEST                                                     3FPST250
+OUT    SAVEN   (4)                                                      3FPST260
+       SXA     LNKG,4                                                   3FPST270
+       CLS*    5,4                   FORTRAN II ARRAY SIZE.             3FPST280
+       ALS     1                     DOUBLE IT.                         3FPST290
+       SUB     3,4                   START OF ARRAY.                    3FPST300
+       ADD     4,4                   FORTRAN IV ARRAY ELEMENT.          3FPST310
+       TZE     FIX                   IF ZERO OR POSITIVE, ADDRESS IS    3FPST320
+       TPL     FIX                   FOR LOW ORDER OR IMAGINARY PART.   3FPST330
+       CLA     4,4                   FORTRAN IV ADDRESS IS CORRECT.     3FPST340
+SETADD STA     A                     SET ADDRESS.                       3FPST350
+       STA     B                                                        3FPST360
+       ZET     TEST                  TEST WHETHER PART OR STORE ENTRY.  3FPST370
+       TRA     STOR                  STORE ENTRY.                       3FPST380
+A      CLA     **                    PART ENTRY.                        3FPST390
+       RETURN  OUT                   EXIT TO CALLER.                    3FPST400
+FIX    ADD     =1                    GET PROPER FORTRAN IV ADDRESS.     3FPST410
+       ADD     3,4                                                      3FPST420
+       TRA     SETADD                                                   3FPST430
+STOR   CLA*    6,4                   GET VALUE OF EXPRESSION TO         3FPST440
+B      STO     **                    BE STORED AND STORE.               3FPST450
+       RETURN  OUT                   EXIT TO CALLER.                    3FPST460
+TEST   PZE     **                                                       3FPST470
+LNKG   LDIR                                                             3FPST480
+       END                                                              3FPST490

@@ -1,0 +1,7 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - UN07              3F5UN700
+$IBMAP UN07    6                                                        3F5UN710
+       TTL     UN07/FILE SPECIFICATIONS FOR LOGICAL UNIT 7              3F5UN720
+       ENTRY   .UN07.                                                   3F5UN730
+.UN07. PZE     UNIT07                                                   3F5UN740
+UNIT07 FILE    ,PP,READY,OUTPUT,BLK=28,MULTIREEL,BIN,NOLIST             3F5UN750
+       END                                                              3F5UN760

@@ -1,0 +1,23 @@
+$*     7090/7094 BINARY WRITE ROUTINE                                   3F4F0000
+$IBMAP FWRB                                                             3F4F0010
+       TTL     BINARY WRITE ROUTINE                                     3F4F0020
+*              BINARY WRITE ROUTINE                                     3F4F0030
+       ENTRY   .FWRB.                                                   3F4F0040
+.FWRB. SXA     LNKG,4                                                   3F4F0050
+       SXA     SYSLOC,4                                                 3F4F0060
+       SXA     RTRN,4                SAVE RETURN TO MAIN PROGRAM        3F4F0065
+       CALL    .FIOS.(ARG1,ARG2)     CALL                               3F4F0066
+       ORG     *-2                                                      3F4F0070
+ARG1   PZE     0,,1                                                     3F4F0080
+ARG2   IOSTN*  .FBIBF,,**            TRANSMIT I/O COMMAND               3F4F0090
+       CLA     .FCKSZ                GET BLOCK SIZE FROM FIOS           3F4F0100
+       CALL    .FIOB.(RTNWB,RTRN)    BUILD BUFFER                       3F4F0110
+       ORG     *-2                   OVERLAY CALL WITH ARGS             3F4F0115
+RTNWB  TRA     WRRB                  TRA=OUTPUT ,WRRB=LOC. OF WRITE     3F4F0120
+RTRN   PZE                           TRANSMIT ADDRESS OF CALL           3F4F0130
+WRRB   LXD     .FRITE,4              SET WORD COUNT                     3F4F0150
+       SXD     .FRTB.+3,4            IN IOCS.                           3F4F0160
+       TSX     .FRTB.,4              WRITE A RECORD                     3F4F0170
+       TRA     1,2                                                      3F4F0180
+LNKG   LDIR                                                             3F4F0200
+       END                                                              3F4F0220

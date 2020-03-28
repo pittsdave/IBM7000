@@ -1,0 +1,322 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F9F0000
+$IBMAP FDAT    150                                                      3F9F0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F9F0015
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90,             3F9F0020
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94.            3F9F0030
+       REM       (OR TO ANY VALUE NOT EQUAL TO 90)                      3F9F0040
+M9094  SET     90                                                       3F9F0050
+       PCC     ON                                                       3F9F0060
+       IFF     M9094=90                                                 3F9F0070
+       GOTO    BEG94                                                    3F9F0080
+       PCC     OFF                                                      3F9F0090
+       ENTRY   DATAN                                                    3F9F0100
+       ENTRY   DATAN2                                                   3F9F0110
+       SPACE   3                                                        3F9F0120
+*              DOUBLE PRECISION ARCTANGENT SUBROUTINE                   3F9F0130
+*                  DATAN ACCEPTS A SINGLE ARGUMENT AND ANSWER IS        3F9F0140
+*                    BETWEEN -PI/2 AND PI/2                             3F9F0150
+*                  DATAN2 ACCEPTS A PAIR OF ARGUMENTS - ORDINATE AND    3F9F0160
+*                    ABSCISSA, AND ANSWER IS BETWEEN -PI AND PI         3F9F0170
+       SPACE   3                                                        3F9F0180
+*              DOUBLE PRECISION ARITHMETIC MACRO DEFINITION             3F9F0190
+       SPACE                                                            3F9F0200
+ DPOP  MACRO   SUBR,A,TAG                                               3F9F0210
+       TSX     SUBR,4                                                   3F9F0220
+ DTAG  SET     0                                                        3F9F0230
+       IFT     TAG=1                                                    3F9F0240
+ DTAG  SET     1                                                        3F9F0250
+       IFT     TAG=2                                                    3F9F0260
+ DTAG  SET     2                                                        3F9F0270
+       PZE     A,DTAG                                                   3F9F0280
+       PZE     A+1,DTAG                                                 3F9F0290
+       ENDM    DPOP                                                     3F9F0300
+       SPACE   3                                                        3F9F0310
+DATAN2 STL     FLAG          FLAG TO DISTINGUISH DATAN2                 3F9F0320
+ DATAN SXA     SYSLOC,4                                                 3F9F0330
+       SXA     LINK,4                                                   3F9F0340
+       SXA     SXR1,1                                                   3F9F0350
+       SXA     SXR2,2                                                   3F9F0360
+       CAL     3,4                                                      3F9F0370
+       ADD     K1A                                                      3F9F0380
+       STO     ARG+1                                                    3F9F0390
+       CLA*    3,4                                                      3F9F0400
+       LDQ*    ARG+1         THE 1ST OR ONLY ARG IN AC,MQ               3F9F0410
+       NZT     FLAG                                                     3F9F0420
+       TRA     DATAN1        IF DATAN ENTRY, SKIP                       3F9F0430
+       ZET*    4,4                                                      3F9F0440
+       TRA     BB            IF X IS NOT ZERO,SKIP AND PROCEED          3F9F0450
+       TNZ     AA                                                       3F9F0460
+       CALL    .FXEM.(EDAT)  IF BOTH X AND Y ARE ZERO, ERROR            3F9F0470
+       ZAC                                                              3F9F0480
+       LRS     36                                                       3F9F0490
+       TRA     RET                                                      3F9F0500
+  AA   LDQ     PIOV2+1       IF ONLY X IS ZERO, ANSWER IS + OR -PI/2    3F9F0510
+       LRS     0               DEPENDING ON SIGN OF Y                   3F9F0520
+       CLA     PIOV2                                                    3F9F0530
+       LLS     0                                                        3F9F0540
+       TRA     RET                                                      3F9F0550
+  BB   CAL     4,4           NOW X IS NOT ZERO                          3F9F0560
+       STO     ADMX            SET ADDRESS POINTER FOR X PAIR           3F9F0570
+       ADD     K1A                                                      3F9F0580
+       STO     ADLX                                                     3F9F0590
+       CLA*    4,4           IF X IS POSITIVE, RESET FLAG               3F9F0600
+       TMI     *+2                                                      3F9F0610
+       STZ     FLAG                                                     3F9F0620
+       ACL     CH54                                                     3F9F0630
+       SLW     TEST                                                     3F9F0640
+       CLA*    3,4           OBTAIN Y AGAIN                             3F9F0650
+       LDQ*    ARG+1                                                    3F9F0660
+       LAS     TEST          IF Y IS GREATER THAN X*2**54 IN ABSOLUTE   3F9F0670
+  K1A  AXT     1,0             VALUE, TREAT AS IF X WERE 0 TO AVOID     3F9F0680
+       TRA     AA                DIVIDE OVERFLOW                        3F9F0690
+       TSX     DFDP,4        OBTAIN Y/X AND JOIN WITH DATAN             3F9F0700
+ ADMX  PZE                                                              3F9F0710
+ ADLX  PZE                                                              3F9F0720
+       SPACE                                                            3F9F0730
+DATAN1 STO     TEST          USED FOR SIGN CONTROL ONLY. THEN           3F9F0740
+       SSP                     FORCE SIGN TO BE +                       3F9F0750
+       LRS     0                                                        3F9F0760
+       DST     ARG                                                      3F9F0770
+       ARS     9                                                        3F9F0780
+       PDX     ,1                                                       3F9F0790
+       TXL     *+4,1,182                                                3F9F0800
+       DLD     PIOV2         IF ARG IS GREATER THAN 2**54,              3F9F0810
+       TRA     SIGN            GIVE + OR -PI/2 AS ANSWER                3F9F0820
+       CLA     ARG                                                      3F9F0830
+       TXL     SIGN,1,101    IF ARG IS SMALLER THAN 2**(-27), ANS=ARG   3F9F0840
+       AXT     0,2           XR2 IS USED TO DISTINGUISH SECTIONS        3F9F0850
+       TXL     A,1,128                                                  3F9F0860
+       CLS     MONE          IF ARG IS GREATER THAN 1, TAKE INVERSE     3F9F0870
+       LDQ     MONE+1                                                   3F9F0880
+       DPOP    DFDP,ARG                                                 3F9F0890
+       TXI     *+1,2,4       XR2 TO DISTINGUISH CASES                   3F9F0900
+   A   CAS     TAN15                                                    3F9F0910
+       TXI     *+3,2,2                                                  3F9F0920
+       TRA     B                                                        3F9F0930
+       TRA     B                                                        3F9F0940
+       DST     ARG           IF MODIFIED ARG, SAY X, IS GREATER THAN    3F9F0950
+       DPOP    DFAD,RTTHR      TAN (PI/12), COMPUTE TAN Z WHERE         3F9F0960
+       DST     BUFF              TAN (Z+PI/6) = X                       3F9F0970
+       DLD     ARG                 TAN Z = (XSQRT3-1)/(X+SQRT3)         3F9F0980
+       DPOP    DFMP,RT3M1    COMPUTE NUMERATOR WITH CARE                3F9F0990
+       DPOP    DFAD,MONE       TO PRESERVE ACCURACY                     3F9F1000
+       DPOP    DFAD,ARG                                                 3F9F1010
+       DPOP    DFDP,BUFF                                                3F9F1020
+       SPACE                                                            3F9F1030
+   B   DST     ARG           NOW ARG IS REDUCED TO LESS THAN            3F9F1040
+       DPOP    DFMP,ARG        TAN(PI/2) IN ABSOLUTE VALUE              3F9F1050
+       DST     SQ                                                       3F9F1060
+       AXT     16,1                                                     3F9F1070
+       LRS     72                                                       3F9F1080
+ LOOP  DPOP    DFAD,COEF+2,1 ATAN X = X(1+F*SQ) WHERE                   3F9F1090
+       DPOP    DFAD,SQ         F = A1/(SQ+B1+A2/(SQ+B2+A3/.../(SQ+B4))) 3F9F1100
+       DST     BUFF                                                     3F9F1110
+       DLD     COEF+4,1                                                 3F9F1120
+       DPOP    DFDP,BUFF                                                3F9F1130
+       TIX     LOOP,1,4                                                 3F9F1140
+       DPOP    DFMP,SQ                                                  3F9F1150
+       DPOP    DFMP,ARG                                                 3F9F1160
+       DPOP    DFAD,ARG                                                 3F9F1170
+       TXL     *+3,2,2       REDUCED ANSWER READY                       3F9F1180
+       CHS                   DEPENDING ON SECTION, ADD OR SUBTRACT      3F9F1190
+       LRS     0               REDUCED ANS FROM PROPER BASE ANGLE       3F9F1200
+       DPOP    DFAD,ZERO,2                                              3F9F1210
+       SPACE                                                            3F9F1220
+ SIGN  STQ     BUFF+1        AFFIX PROPER SIGN AND RETURN TO            3F9F1230
+       LDQ     TEST            EITHER MAIN PROGRAM OR DATAN2 CIRCUIT    3F9F1240
+       LLS     0                                                        3F9F1250
+       LDQ     BUFF+1                                                   3F9F1260
+       LRS     0             DATAN ANSWER IS READY                      3F9F1270
+       NZT     FLAG            UNLESS DATAN2 ENTRY AND ABSCISSA         3F9F1280
+       TRA     FIN               WAS NEGATIVE, JUMP                     3F9F1290
+       DST     BUFF          IF ABSCISSA NEGATIVE, ADD OR SUBTRACT      3F9F1300
+       CHS                     PI DEPENDING ON SIGN OF DATAN ANSWER     3F9F1310
+       LDQ     PI+1                                                     3F9F1320
+       LRS     0                                                        3F9F1330
+       CLA     PI                                                       3F9F1340
+       LLS     0                                                        3F9F1350
+       DPOP    DFAD,BUFF                                                3F9F1360
+  RET  STZ     FLAG          RETURN                                     3F9F1370
+  FIN  LXA     LINK,4                                                   3F9F1380
+ SXR1  AXT     **,1                                                     3F9F1390
+ SXR2  AXT     **,2                                                     3F9F1400
+       TRA     1,4                                                      3F9F1410
+       SPACE                                                            3F9F1420
+ CH54  OCT     66000000000                                              3F9F1430
+ TAN15 OCT     177422302430                    TAN (PI/12)              3F9F1440
+  PI   OCT     202622077325,147042055061       PI                       3F9F1450
+ MONE  OCT     -201400000000,-146000000000                              3F9F1460
+ RTTHR OCT     201673317272,146054114525       SQRT 3                   3F9F1470
+ RT3M1 OCT     200566636564,145130231252      SQRT 3 - 1                3F9F1480
+       OCT     201503750266,146215675354       B4=1.26544461067154890   3F9F1490
+       OCT     -175502167171,-142623566535     A4=-.0786701382962415653 3F9F1500
+       OCT     202421475516,147135555470       B3=2.13765949556336733   3F9F1510
+       OCT     -201464652334,-146216516352     A3=-1.20637840447753071  3F9F1520
+       OCT     203641102513,150504766775       B2=6.51765892712660257   3F9F1530
+       OCT     -204667070204,-151374053176     A2=-13.7221837630692088  3F9F1540
+       OCT     203464256777,150355624132       B1=4.81784054424956026   3F9F1550
+ COEF  OCT     -200653574647,-145152175341     A1=-.835437113102598223  3F9F1560
+       OCT     201414052216,146026563313       PI/3                     3F9F1570
+ PIOV2 OCT     201622077325,146042055061       PI/2                     3F9F1580
+       OCT     200414052216,145026563313       PI/6                     3F9F1590
+ ZERO  OCT     0,0                                                      3F9F1600
+  ARG  BSS     2                                                        3F9F1610
+  SQ   BSS     2                                                        3F9F1620
+ BUFF  BSS     2                                                        3F9F1630
+ TEST  BSS     1                                                        3F9F1640
+ FLAG  PZE                                                              3F9F1650
+ EDAT  DEC     24                                                       3F9F1660
+       PZE     E24MES,,4                                                3F9F1670
+       PZE     E24OMS,,3                                                3F9F1680
+E24MES BCI     4,0DATAN2(0,0) NOT ALLOWED                               3F9F1690
+E24OMS BCI     3,0SET RESULT = 0                                        3F9F1700
+       SPACE                                                            3F9F1710
+  LINK LDIR                                                             3F9F1720
+BEG94  NULL                                                             3F9F1730
+       PCC     ON                                                       3F9F1740
+       IFT     M9094=90                                                 3F9F1750
+       GOTO    END94                                                    3F9F1760
+       PCC     OFF                                                      3F9F1770
+       EJECT                                                            3F9F1780
+       ENTRY   DATAN                                                    3F9F1790
+       ENTRY   DATAN2                                                   3F9F1800
+       SPACE   3                                                        3F9F1810
+*              DOUBLE PRECISION ARCTANGENT SUBROUTINE                   3F9F1820
+*                  DATAN ACCEPTS A SINGLE ARGUMENT AND ANSWER IS        3F9F1830
+*                    BETWEEN -PI/2 AND PI/2                             3F9F1840
+*                  DATAN2 ACCEPTS A PAIR OF ARGUMENTS - ORDINATE AND    3F9F1850
+*                    ABSCISSA, AND ANSWER IS BETWEEN -PI AND PI         3F9F1860
+       SPACE   3                                                        3F9F1870
+DATAN2 STL     FLAG                                                     3F9F1880
+ DATAN SXA     SYSLOC,4                                                 3F9F1890
+       SXA     LINK,4                                                   3F9F1900
+       STI     SVIND                                                    3F9F1910
+       DLD*    3,4           PICK UP DARG,T                             3F9F1920
+       NZT     FLAG                                                     3F9F1930
+       TRA     DATAN1        IF DATAN ENTRY, SKIP                       3F9F1940
+       ZET*    4,4                                                      3F9F1950
+       TRA     BB            IF X IS NOT ZERO, SKIP AND PROCEED         3F9F1960
+       TNZ     AA                                                       3F9F1970
+       CALL    .FXEM.(EDAT)  IF BOTH X AND Y ARE ZERO, ERROR            3F9F1980
+       DLD     ZERO                                                     3F9F1990
+       LXA     LINK,4                                                   3F9F2000
+       TRA     RET                                                      3F9F2010
+  AA   LDQ     PIOV2+1       IF ONLY X IS ZERO, ANSWER IS + OR -PI/2    3F9F2020
+       LRS     0               DEPENDING ON SIGN OF Y                   3F9F2030
+       CLA     PIOV2                                                    3F9F2040
+       LLS     0                                                        3F9F2050
+       TRA     RET                                                      3F9F2060
+  BB   CLA*    4,4                                                      3F9F2070
+       ACL     CH54          NOW X IS NOT ZERO                          3F9F2080
+       SLW     TEST                                                     3F9F2090
+       DLD*    3,4                                                      3F9F2100
+       LAS     TEST            IF Y IS GREATER THAN X*2**54 IN ABSOLUTE 3F9F2110
+       TRA     AA                VALUE, TREAT AS IF X WERE 0 TO AVOID   3F9F2120
+       TRA     AA                DIVIDE OVERFLOW                        3F9F2130
+       DFDP*   4,4           OBTAIN Y/X AND JOIN WITH DATAN             3F9F2140
+DATAN1 SXA     SXR1,1                                                   3F9F2150
+       STO     TEST          USED FOR SIGN CONTROL ONLY.   THEN FORCE   3F9F2160
+       SSP                     SIGN TO BE +                             3F9F2170
+       DST     ARG                                                      3F9F2180
+       ARS     9                                                        3F9F2190
+       PDX     ,1                                                       3F9F2200
+       TXL     *+3,1,182                                                3F9F2210
+       DLD     PIOV2         IF ARG IS GREATER THAN 2**54 GIVE + OR -   3F9F2220
+       TRA     SIGN            PI/2 AS ANS                              3F9F2230
+       DLD     ARG                                                      3F9F2240
+       TXL     SIGN,1,101    IF ARG IS SMALLER THAN 2**(-27), ANS=ARG   3F9F2250
+       AXT     0,4                                                      3F9F2260
+       SPACE                                                            3F9F2270
+       TXL     A,1,128                                                  3F9F2280
+       DLD     ONE           IF ARG IS GREATER THAN 1, TAKE INVERSE     3F9F2290
+       DFDP    ARG                                                      3F9F2300
+       TXI     *+1,4,4         XR4 TO DISTINGUISH CASES                 3F9F2310
+   A   CAS     TAN15                                                    3F9F2320
+       TXI     *+3,4,2                                                  3F9F2330
+       TRA     B                                                        3F9F2340
+       TRA     B                                                        3F9F2350
+       DST     ARG           IF MODIFIED ARG, SAY X, IS GREATER THAN    3F9F2360
+       DFAD    RTTHR           TAN (PI/12), COMPUTE TAN Z WHERE         3F9F2370
+       DST     BUFF              TAN (Z+PI/6) = X                       3F9F2380
+       DLD     ARG             TAN Z = (X*SQRT3 - 1)/(X + SQRT3)        3F9F2390
+       DFMP    RT3M1                                                    3F9F2400
+       DFSB    HALF          COMPUTE NUMERATOR WITH CARE                3F9F2410
+       DFSB    HALF            TO PRESERVE ACCURACY                     3F9F2420
+       DFAD    ARG                                                      3F9F2430
+       DFDP    BUFF                                                     3F9F2440
+       SPACE                                                            3F9F2450
+   B   DST     ARG           NOW ARG IS REDUCED TO LESS THAN TAN(PI/12) 3F9F2460
+       DFMP    ARG             IN ABSOLUTE VALUE                        3F9F2470
+       DST     SQ                                                       3F9F2480
+       AXT     16,1                                                     3F9F2490
+       DLD     ZERO                                                     3F9F2500
+ LOOP  DFAD    COEF+2,1      ATAN X = X(1+F*SQ)  WHERE                  3F9F2510
+       DFAD    SQ                                                       3F9F2520
+       DST     BUFF            F = A1/(SQ+B1+A2/(SQ+B2+A3/.../(SQ+B4))) 3F9F2530
+       DLD     COEF+4,1                                                 3F9F2540
+       DFDP    BUFF                                                     3F9F2550
+       TIX     LOOP,1,4                                                 3F9F2560
+       DFMP    SQ                                                       3F9F2570
+       DFMP    ARG                                                      3F9F2580
+       DFAD    ARG           REDUCED ANSWER READY                       3F9F2590
+       TXL     *+2,4,2       DEPENDING ON SECTION, ADD OR SUBTRACT      3F9F2600
+       CHS                     REDUCED ANS FROM PROPER BASE ANGLE       3F9F2610
+       DFAD    ZERO,4                                                   3F9F2620
+       SPACE                                                            3F9F2630
+ SIGN  STQ     BUFF          AFFIX PROPER SIGN AND RETURN TO EITHER     3F9F2640
+       LDQ     TEST            MAIN PROGRAM OR DATAN2 CIRCUIT           3F9F2650
+       LLS     0                                                        3F9F2660
+       LDQ     BUFF                                                     3F9F2670
+       LRS     0             DATAN ANSWER READY                         3F9F2680
+ SXR1  AXT     **,1                                                     3F9F2690
+       LXA     LINK,4                                                   3F9F2700
+       NZT     FLAG                                                     3F9F2710
+       TRA     FIN                                                      3F9F2720
+       SPACE                                                            3F9F2730
+       LDI*    4,4           HERE ONLY FOR DATAN2 ENTRY                 3F9F2740
+       LNT     400000          IF ABSCISSA POSITIVE, ANS IS READY       3F9F2750
+       TRA     RET                                                      3F9F2760
+       TPL     *+3             IF ABSCISSA NEGATIVE, ADD OR             3F9F2770
+       DFAD    PI                SUBTRACT PI TO OBTAIN ANSWER           3F9F2780
+       TRA     *+2                 BETWEEN - PI AND PI                  3F9F2790
+       DFSB    PI                                                       3F9F2800
+  RET  STZ     FLAG                                                     3F9F2810
+       SPACE                                                            3F9F2820
+  FIN  LDI     SVIND         RETURN                                     3F9F2830
+       TRA     1,4                                                      3F9F2840
+       SPACE                                                            3F9F2850
+ CH54  OCT     66000000000                                              3F9F2860
+ TAN15 OCT     177422302430                    TAN (PI/12)              3F9F2870
+       EVEN                                                             3F9F2880
+  PI   OCT     202622077325,147042055061       PI                       3F9F2890
+  ONE  OCT     201400000000,146000000000       1.                       3F9F2900
+ RTTHR OCT     201673317272,146054114525       SQRT 3                   3F9F2910
+ RT3M1 OCT     200566636564,145130231252      SQRT 3 - 1                3F9F2920
+ HALF  OCT     200400000000,145000000000      1/2                       3F9F2930
+       OCT     201503750266,146215675354       B4=1.26544461067154890   3F9F2940
+       OCT     -175502167171,-142623566535     A4=-.0786701382962415653 3F9F2950
+       OCT     202421475516,147135555470       B3=2.13765949556336733   3F9F2960
+       OCT     -201464652334,-146216516352     A3=-1.20637840447753071  3F9F2970
+       OCT     203641102513,150504766775       B2=6.51765892712660257   3F9F2980
+       OCT     -204667070204,-151374053176     A2=-13.7221837630692088  3F9F2990
+       OCT     203464256777,150355624132       B1=4.81784054424956026   3F9F3000
+ COEF  OCT     -200653574647,-145152175341     A1=-.835437113102598223  3F9F3010
+       OCT     201414052216,146026563313       PI/3                     3F9F3020
+ PIOV2 OCT     201622077325,146042055061       PI/2                     3F9F3030
+       OCT     200414052216,145026563313       PI/6                     3F9F3040
+ ZERO  OCT     0,0                                                      3F9F3050
+  ARG  BSS     2                                                        3F9F3060
+  SQ   BSS     2                                                        3F9F3070
+ BUFF  BSS     2                                                        3F9F3080
+ TEST  BSS     1                                                        3F9F3090
+ SVIND BSS     1                                                        3F9F3100
+ FLAG  PZE                                                              3F9F3110
+ EDAT  DEC     24                                                       3F9F3120
+       PZE     E24MES,,4                                                3F9F3130
+       PZE     E24OMS,,3                                                3F9F3140
+E24MES BCI     4,0DATAN2(0,0) NOT ALLOWED                               3F9F3150
+E24OMS BCI     3,0SET RESULT = 0                                        3F9F3160
+       SPACE                                                            3F9F3170
+  LINK LDIR                                                             3F9F3180
+END94  NULL                                                             3F9F3190
+       END                                                              3F9F3200

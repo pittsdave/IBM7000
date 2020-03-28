@@ -1,0 +1,138 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F8B0000
+$IBMAP FCXP    150                                                      3F8B0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F8B0015
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90,             3F8B0020
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94.            3F8B0030
+       REM       (OR TO ANY VALUE NOT EQUAL TO 90)                      3F8B0040
+M9094  SET     90                                                       3F8B0050
+       PCC     ON                                                       3F8B0060
+       IFF     M9094=90                                                 3F8B0070
+       GOTO    BEG94                                                    3F8B0080
+       PCC     OFF                                                      3F8B0090
+       ENTRY   CEXP                                                     3F8B0100
+       SPACE   3                                                        3F8B0110
+       REM     COMPLEX EXPONENTIAL SUBROUTINE                           3F8B0120
+       SPACE   3                                                        3F8B0130
+  CEXP SXA     SYSLOC,4                                                 3F8B0140
+       SXA     LINK,4                                                   3F8B0150
+       CAL     3,4           OBTAIN ARGUMENT POINTERS                   3F8B0160
+       STO     ARG1                                                     3F8B0170
+       ADD     K1A                                                      3F8B0180
+       STO     ARG2                                                     3F8B0190
+       STO     ARG3                                                     3F8B0200
+       CLA*    3,4           SCREEN REAL ARG                            3F8B0210
+       LDQ     EXPMAX                                                   3F8B0220
+       TLQ     ERROR1                                                   3F8B0230
+       TSX     EXP,4                                                    3F8B0240
+       TXI     *+3,,1                                                   3F8B0250
+       PZE     14,,LINK                                                 3F8B0260
+  ARG1 PZE     **                                                       3F8B0270
+ CEXP1 STO     BUFF                                                     3F8B0280
+       CLA*    ARG2          SCREEN IMAG ARG                            3F8B0290
+       LAS     SINMAX                                                   3F8B0300
+       TRA     ERROR2        ARG TOO LARGE FOR SCN                      3F8B0310
+  K1A  AXT     1,0                                                      3F8B0320
+       TSX     SIN,4                                                    3F8B0330
+       TXI     *+3,,1                                                   3F8B0340
+       PZE     23,,LINK                                                 3F8B0350
+  ARG2 PZE     **                                                       3F8B0360
+       XCA                                                              3F8B0370
+       FMP     BUFF          ANS = EXP(X)*(COS(Y)+ISIN(Y))              3F8B0380
+       FRN                                                              3F8B0390
+       STO     BUFF+1                                                   3F8B0400
+       TSX     COS,4                                                    3F8B0410
+       TXI     *+3,,1                                                   3F8B0420
+       PZE     31,,LINK                                                 3F8B0430
+  ARG3 PZE     **                                                       3F8B0440
+       XCA                                                              3F8B0450
+       FMP     BUFF                                                     3F8B0460
+       FRN                                                              3F8B0470
+       LDQ     BUFF+1                                                   3F8B0480
+   RET LXA     LINK,4                                                   3F8B0490
+       TRA     1,4                                                      3F8B0500
+       SPACE                                                            3F8B0510
+ERROR1 CALL    .FXEM.(ECEXP1)                                           3F8B0520
+       CLA     OMEGA                                                    3F8B0530
+       TRA     CEXP1                                                    3F8B0540
+ERROR2 CALL    .FXEM.(ECEXP2)                                           3F8B0550
+       ZAC                                                              3F8B0560
+       LRS     35                                                       3F8B0570
+       TRA     RET                                                      3F8B0580
+       SPACE                                                            3F8B0590
+ OMEGA OCT     377777777777                                             3F8B0600
+EXPMAX OCT     207540074636  88.029692                                  3F8B0610
+SINMAX OCT     232000000000                                             3F8B0620
+  BUFF BSS     2                                                        3F8B0630
+ECEXP1 DEC     26                                                       3F8B0640
+       PZE     E26MES,,8                                                3F8B0650
+       PZE     E26OMS,,6                                                3F8B0660
+E26MES BCI     8,0CEXP(X+IY), X GRT THAN 88.029692 NOT ALLOWED          3F8B0670
+E26OMS BCI     6,0SET RESULT = OMEGA*(COSY + ISINY)                     3F8B0680
+ECEXP2 DEC     27                                                       3F8B0690
+       PZE     E27MES,,8                                                3F8B0700
+       PZE     E27OMS,,3                                                3F8B0710
+E27MES BCI     8,0CEXP(X+IY), /Y/ GRT THAN 2**25 NOT ALLOWED            3F8B0720
+E27OMS BCI     3,0SET RESULT = 0+0I                                     3F8B0730
+       SPACE                                                            3F8B0740
+  LINK LDIR                                                             3F8B0750
+BEG94  NULL                                                             3F8B0760
+       PCC     ON                                                       3F8B0770
+       IFT     M9094=90                                                 3F8B0780
+       GOTO    END94                                                    3F8B0790
+       PCC     OFF                                                      3F8B0800
+       EJECT                                                            3F8B0810
+       ENTRY   CEXP                                                     3F8B0820
+       SPACE   3                                                        3F8B0830
+       REM     COMPLEX EXPONENTIAL SUBROUTINE                           3F8B0840
+       SPACE   3                                                        3F8B0850
+  CEXP SXA     SYSLOC,4                                                 3F8B0860
+       SXA     LINK,4                                                   3F8B0870
+       DLD*    3,4           PICK UP CARG,T                             3F8B0880
+       DST     BUFF          REAL ARG TO BUFF,  IMAG ARG TO BUFF+1      3F8B0890
+       LDQ     EXPMAX        SCREEN REAL ARG                            3F8B0900
+       TLQ     ERROR1                                                   3F8B0910
+       CALL    EXP(BUFF)                                                3F8B0920
+ CEXP1 STO     BUFF                                                     3F8B0930
+       CLA     BUFF+1        SCREEN IMAG ARG                            3F8B0940
+       LAS     SINMAX                                                   3F8B0950
+       TRA     ERROR2        ARG TOO LARGE FOR SCN                      3F8B0960
+       AXT     0,0                                                      3F8B0970
+       CALL    SIN(BUFF+1)                                              3F8B0980
+       XCA                                                              3F8B0990
+       FMP     BUFF          ANS = EXP(X)*(COS(Y)+ISIN(Y))              3F8B1000
+       FRN                                                              3F8B1010
+       STO     BUFF+2                                                   3F8B1020
+       CALL    COS(BUFF+1)                                              3F8B1030
+       XCA                                                              3F8B1040
+       FMP     BUFF                                                     3F8B1050
+       FRN                                                              3F8B1060
+       LDQ     BUFF+2                                                   3F8B1070
+   RET LXA     LINK,4                                                   3F8B1080
+       TRA     1,4                                                      3F8B1090
+       SPACE                                                            3F8B1100
+ERROR1 CALL    .FXEM.(ECEXP1)                                           3F8B1110
+       CLA     OMEGA                                                    3F8B1120
+       TRA     CEXP1                                                    3F8B1130
+ERROR2 CALL    .FXEM.(ECEXP2)                                           3F8B1140
+       ZAC                                                              3F8B1150
+       LRS     35                                                       3F8B1160
+       TRA     RET                                                      3F8B1170
+       SPACE                                                            3F8B1180
+  BUFF BSS     3                                                        3F8B1190
+ OMEGA OCT     377777777777                                             3F8B1200
+EXPMAX OCT     207540074636  88.029692                                  3F8B1210
+SINMAX OCT     232000000000                                             3F8B1220
+ECEXP1 DEC     26                                                       3F8B1230
+       PZE     E26MES,,8                                                3F8B1240
+       PZE     E26OMS,,6                                                3F8B1250
+E26MES BCI     8,0CEXP(X+IY), X GRT THAN 88.029692 NOT ALLOWED          3F8B1260
+E26OMS BCI     6,0SET RESULT = OMEGA*(COSY + ISINY)                     3F8B1270
+ECEXP2 DEC     27                                                       3F8B1280
+       PZE     E27MES,,8                                                3F8B1290
+       PZE     E27OMS,,3                                                3F8B1300
+E27MES BCI     8,0CEXP(X+IY), /Y/ GRT THAN 2**25 NOT ALLOWED            3F8B1310
+E27OMS BCI     3,0SET RESULT = 0+0I                                     3F8B1320
+       SPACE                                                            3F8B1330
+  LINK LDIR                                                             3F8B1340
+END94  NULL                                                             3F8B1350
+       END                                                              3F8B1360

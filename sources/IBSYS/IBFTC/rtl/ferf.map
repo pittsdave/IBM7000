@@ -1,0 +1,107 @@
+$*             LIBRARY ERROR FUNCTION SUBROUTINE                        3F9N0000
+$IBMAP FERF    150                                                      3F9N0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F9N0015
+       ENTRY   ERF                                                      3F9N0020
+       SPACE   3                                                        3F9N0030
+       REM     ERROR FUNCTION SUBROUTINE                                3F9N0040
+       SPACE   3                                                        3F9N0050
+  ERF  SXA     SYSLOC,4                                                 3F9N0060
+       SXA     LINK,4                                                   3F9N0070
+       CLA*    3,4           PICK UP ARG,T                              3F9N0080
+       STO     ARG+1         FOR SIGN CONTROL                           3F9N0090
+       SSP                                                              3F9N0100
+       STO     ARG                                                      3F9N0110
+       LDQ     MAX                                                      3F9N0120
+       TLQ     INF           IF X GREATER THAN 4.17, GIVE ONE AS ANSWER 3F9N0130
+       XCA                                                              3F9N0140
+       FMP     ARG                                                      3F9N0150
+       STO     FLTSQ         SQUARE IN FLOAT POINT FOR E**-FLTSQ        3F9N0160
+       RQL     8                                                        3F9N0170
+       LRS     27                                                       3F9N0180
+       PAC     ,4                                                       3F9N0190
+       ZAC                                                              3F9N0200
+       LLS     -98,4                                                    3F9N0210
+       RND                                                              3F9N0220
+       STO     SQ            SQUARE IN FIXED POINT SCALING B5           3F9N0230
+       SPACE                                                            3F9N0240
+       LDQ     BREAK                                                    3F9N0250
+       AXT     10,4                                                     3F9N0260
+       TLQ     *+2           IF X GREATER THAN 1.51, XR4=10             3F9N0270
+       TIX     *+1,4,1       IF X SMALLER THAN 1.51, XR4=9              3F9N0280
+       ZAC                                                              3F9N0290
+ LOOP  ADD     BETA+1,4      COMPUTE 5 TERM CONTINUED FRACTION WITH     3F9N0300
+       ADD     SQ              APPROPRIATE SET OF CONSTANTS DEPENDING   3F9N0310
+       STO     BUFF            ON THE RANGE                             3F9N0320
+       CLA     ALPHA+1,4                                                3F9N0330
+       DVP     BUFF                                                     3F9N0340
+       XCA                                                              3F9N0350
+       TIX     LOOP,4,2                                                 3F9N0360
+       SPACE                                                            3F9N0370
+       TXH     BIG,4,1       IF X WAS GREATER THAN 1.51, SKIP           3F9N0380
+       XCA                                                              3F9N0390
+       MPR     SQ                                                       3F9N0400
+       SUB     ALPHA-1       FACTOR IS READY IN SCALING B5              3F9N0410
+       ALS     5             FLOAT THE FACTOR                           3F9N0420
+       PBT                                                              3F9N0430
+       AXT     2,4                                                      3F9N0440
+       LRS     10,4                                                     3F9N0450
+       ORA     CHAR,4                                                   3F9N0460
+       RQL     28                                                       3F9N0470
+       FRN                   NOW FACTOR IS READY IN FLOAT POINT         3F9N0480
+       XCA                                                              3F9N0490
+       FMP     ARG                                                      3F9N0500
+       TRA     MERGE         COMPUTATION ENDS FOR X LESS THAN 1.51      3F9N0510
+       SPACE                                                            3F9N0520
+  BIG  ARS     7             MAGNITUDE OF RESULT IS LESS THAN 0.22      3F9N0530
+       ORA     CHAR            BRING THIS TO B6 AND FLOAT IT            3F9N0540
+       XCA                                                              3F9N0550
+       FMP     ARG                                                      3F9N0560
+       STO     BUFF                                                     3F9N0570
+       CLS     FLTSQ                                                    3F9N0580
+       STO     FLTSQ                                                    3F9N0590
+       CALL    EXP(FLTSQ)                                               3F9N0600
+       XCA                                                              3F9N0610
+       FMP     BUFF                                                     3F9N0620
+       FAD     ONE                                                      3F9N0630
+       SPACE                                                            3F9N0640
+ MERGE FRN                                                              3F9N0650
+       LDQ     ARG+1         ADJUST SIGN AND RETURN TO MAIN PROGRAM     3F9N0660
+       LLS     0                                                        3F9N0670
+       LXA     LINK,4                                                   3F9N0680
+       TRA     1,4                                                      3F9N0690
+       SPACE                                                            3F9N0700
+  INF  CLA     ONE           THE CASE WHEN X IS GREATER THAN 4.17       3F9N0710
+       TRA     MERGE+1                                                  3F9N0720
+       SPACE                                                            3F9N0730
+  MAX  OCT     203412702437    4.17                                     3F9N0740
+ BREAK OCT     022173224200    1.51**2  IN FIXED POINT B5               3F9N0750
+       OCT     200000000000    CHARACTERISTICS TO FLOAT NUMBERS         3F9N0760
+  ONE  OCT     201400000000    CHARACTERISTICS, ALSO DOUBLES AS 1.      3F9N0770
+ CHAR  OCT     176000000000    CHARACTERISTICS                          3F9N0780
+       OCT     -002546632144   A5 FOR BIG ARG   -10.803134        B10   3F9N0790
+       OCT     020037203556    A5 FOR SM. ARG   64.244197         B10   3F9N0800
+       OCT     -001700000000   A4 FOR BIG ARG   -7.5              B10   3F9N0810
+       OCT     007635131455    A4 FOR SM. ARG   31.227929         B10   3F9N0820
+       OCT     -000600000000   A3 FOR BIG ARG   -3.               B10   3F9N0830
+       OCT     062261376110    A3 FOR SM. ARG   201.38669         B10   3F9N0840
+       OCT     -000100000000   A2 FOR BIG ARG   -0.5              B10   3F9N0850
+       OCT     -051626106115   A2 FOR SM. ARG   -167.17295        B10   3F9N0860
+       OCT     -011015656501   A1 FOR BIG ARG IN B4 = 2/SQRT(PI)  B5    3F9N0870
+ ALPHA OCT     -011217512462   A1 FOR SM. ARG   -1.1600697        B5    3F9N0880
+       OCT     042115730200    B5 FOR BIG ARG   4.2690240         B5    3F9N0890
+       OCT     054500177563    B5 FOR SM. ARG   5.5781859         B5    3F9N0900
+       OCT     064000000000    B4 FOR BIG ARG   6.5               B5    3F9N0910
+       OCT     -016136305707   B4 FOR SM. ARG   -1.7730436        B5    3F9N0920
+       OCT     044000000000    B3 FOR BIG ARG   4.5               B5    3F9N0930
+       OCT     134436235275    B3 FOR SM. ARG   11.569899         B5    3F9N0940
+       OCT     024000000000    B2 FOR BIG ARG   2.5               B5    3F9N0950
+       OCT     116366667120    B2 FOR SM. ARG   9.8102679         B5    3F9N0960
+       OCT     004000000000    B1 FOR BIG ARG   0.5               B5    3F9N0970
+ BETA  OCT     121564517660    B1 FOR SM. ARG   10.215980         B5    3F9N0980
+  ARG  BSS     2                                                        3F9N0990
+ FLTSQ BSS     1                                                        3F9N1000
+  SQ   BSS     1                                                        3F9N1010
+ BUFF  BSS     1                                                        3F9N1020
+       SPACE                                                            3F9N1030
+  LINK LDIR                                                             3F9N1040
+       END                                                              3F9N1050

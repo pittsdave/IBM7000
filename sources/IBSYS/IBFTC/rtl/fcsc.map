@@ -1,0 +1,182 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F8E0000
+$IBMAP FCSC    150                                                      3F8E0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F8E0015
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90,             3F8E0020
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94.            3F8E0030
+       REM       (OR TO ANY VALUE NOT EQUAL TO 90)                      3F8E0040
+M9094  SET     90                                                       3F8E0050
+       PCC     ON                                                       3F8E0060
+       IFF     M9094=90                                                 3F8E0070
+       GOTO    BEG94                                                    3F8E0080
+       PCC     OFF                                                      3F8E0090
+       ENTRY   CSIN                                                     3F8E0100
+       ENTRY   CCOS                                                     3F8E0110
+       SPACE   3                                                        3F8E0120
+       REM     COMPLEX SINE - COSINE SUBROUTINE                         3F8E0130
+       SPACE   3                                                        3F8E0140
+  CSIN STL     FLAG                                                     3F8E0150
+  CCOS SXA     SYSLOC,4                                                 3F8E0160
+       SXA     LINK,4                                                   3F8E0170
+       CAL     3,4                                                      3F8E0180
+       STO     ADX1                                                     3F8E0190
+       STO     ADX2                                                     3F8E0200
+       ADD     K1A                                                      3F8E0210
+       STO     ADY1                                                     3F8E0220
+       STO     ADY2                                                     3F8E0230
+       CLA*    3,4           SCREEN REAL ARG                            3F8E0240
+       LAS     MAXRL                                                    3F8E0250
+       TRA     ERROR1                                                   3F8E0260
+  K1A  AXT     1,0                                                      3F8E0270
+       TSX     SIN,4                                                    3F8E0280
+       TXI     *+3,,1                                                   3F8E0290
+       PZE     17,,LINK                                                 3F8E0300
+  ADX1 PZE                                                              3F8E0310
+       STO     B1            B1 = SIN(X)                                3F8E0320
+       TSX     COS,4                                                    3F8E0330
+       TXI     *+3,,1                                                   3F8E0340
+       PZE     22,,LINK                                                 3F8E0350
+  ADX2 PZE                                                              3F8E0360
+       STO     B2            B2 = COS(X)                                3F8E0370
+       CLA*    ADY1          SCREEN IMAG ARG                            3F8E0380
+       LAS     MAXIM                                                    3F8E0390
+       TRA     ERROR2                                                   3F8E0400
+       AXT     0,0                                                      3F8E0410
+       TSX     COSH,4                                                   3F8E0420
+       TXI     *+3,,1                                                   3F8E0430
+       PZE     31,,LINK                                                 3F8E0440
+  ADY1 PZE                                                              3F8E0450
+       STO     B3            B3 = COSH(Y)                               3F8E0460
+       TSX     SINH,4                                                   3F8E0470
+       TXI     *+3,,1                                                   3F8E0480
+       PZE     36,,LINK                                                 3F8E0490
+  ADY2 PZE                                                              3F8E0500
+       XCA                   MQ = SINH(Y)                               3F8E0510
+  TEST ZET     FLAG                                                     3F8E0520
+       TRA     SINE                                                     3F8E0530
+       FMP     B1            ICOS = (COS X)(COSH Y)                     3F8E0540
+       FRN                                                              3F8E0550
+       CHS                             - I(SIN X)(SINH Y)               3F8E0560
+       STO     B1                                                       3F8E0570
+       LDQ     B2            ISIN = (SIN X)(COSH Y)                     3F8E0580
+       TRA     CONT                    + I(COS X)(SINH Y)               3F8E0590
+  SINE FMP     B2                                                       3F8E0600
+       FRN                                                              3F8E0610
+       LDQ     B1                                                       3F8E0620
+       STO     B1                                                       3F8E0630
+  CONT FMP     B3                                                       3F8E0640
+       FRN                                                              3F8E0650
+       LDQ     B1                                                       3F8E0660
+   RET LXA     LINK,4                                                   3F8E0670
+       STZ     FLAG                                                     3F8E0680
+       TRA     1,4                                                      3F8E0690
+       SPACE                                                            3F8E0700
+ERROR1 CALL    .FXEM.(ECSC1)                                            3F8E0710
+       ZAC                                                              3F8E0720
+       LRS     35                                                       3F8E0730
+       TRA     RET                                                      3F8E0740
+ERROR2 CALL    .FXEM.(ECSC2)                                            3F8E0750
+       LDQ     HFOMEG                                                   3F8E0760
+       STQ     B3                                                       3F8E0770
+       LRS     0                                                        3F8E0780
+       TRA     TEST                                                     3F8E0790
+       SPACE                                                            3F8E0800
+ MAXRL OCT     232000000000     2**25                                   3F8E0810
+ MAXIM OCT     207540074636        88.029692                            3F8E0820
+HFOMEG OCT     376777777777                                             3F8E0830
+  B1   PZE                                                              3F8E0840
+  B2   PZE                                                              3F8E0850
+  B3   PZE                                                              3F8E0860
+ FLAG  PZE                                                              3F8E0870
+ ECSC1 DEC     29                                                       3F8E0880
+       PZE     E29MES,,10                                               3F8E0890
+       PZE     E29OMS,,3                                                3F8E0900
+E29MES BCI ,0CSIN(X+IY) OR CCOS(X+IY), /X/ GRT THAN 2**25 NOT ALLOWED   3F8E0910
+E29OMS BCI     3,0SET RESULT = 0+0I                                     3F8E0920
+ ECSC2 DEC     30                                                       3F8E0930
+       PZE     E30MES,,11                                               3F8E0940
+       PZE     E30OMS,,8                                                3F8E0950
+E30MES BCI     9,0CSIN(X+IY) OR CCOS(X+IY), /Y/ GRT THAN 88.029692 NOT  3F8E0960
+       BCI     2,ALLOWED                                                3F8E0970
+E30OMS BCI     8,0REF IBLIB ERR MSG LIST FOR EVALUATION METHOD          3F8E0980
+       SPACE                                                            3F8E0990
+  LINK LDIR                                                             3F8E1000
+BEG94  NULL                                                             3F8E1010
+       PCC     ON                                                       3F8E1020
+       IFT     M9094=90                                                 3F8E1030
+       GOTO    END94                                                    3F8E1040
+       PCC     OFF                                                      3F8E1050
+       EJECT                                                            3F8E1060
+       ENTRY   CSIN                                                     3F8E1070
+       ENTRY   CCOS                                                     3F8E1080
+       SPACE   3                                                        3F8E1090
+       REM     COMPLEX SINE - COSINE SUBROUTINE                         3F8E1100
+       SPACE   3                                                        3F8E1110
+  CSIN STL     FLAG                                                     3F8E1120
+  CCOS SXA     SYSLOC,4                                                 3F8E1130
+       SXA     LINK,4                                                   3F8E1140
+       DLD*    3,4           PICK UP CARG,T                             3F8E1150
+       DST     BUFF          REAL ARG TO BUFF,  IMAG ARG TO BUFF+1      3F8E1160
+       LAS     MAXRL         SCREEN REAL ARG                            3F8E1170
+       TRA     ERROR1                                                   3F8E1180
+       AXT     0,0                                                      3F8E1190
+       CALL    SIN(BUFF)                                                3F8E1200
+       STO     BUFF+2                                                   3F8E1210
+       CALL    COS(BUFF)                                                3F8E1220
+       STO     BUFF                                                     3F8E1230
+       CLA     BUFF+1        SCREEN IMAG ARG                            3F8E1240
+       LAS     MAXIM                                                    3F8E1250
+       TRA     ERROR2                                                   3F8E1260
+       AXT     0,0                                                      3F8E1270
+       CALL    COSH(BUFF+1)                                             3F8E1280
+       STO     BUFF+3                                                   3F8E1290
+       CALL    SINH(BUFF+1)                                             3F8E1300
+       XCA                                                              3F8E1310
+  TEST ZET     FLAG                                                     3F8E1320
+       TRA     SINE                                                     3F8E1330
+       FMP     BUFF+2        ICOS = (COS X)(COSH Y)                     3F8E1340
+       FRN                                                              3F8E1350
+       CHS                             - I(SIN X)(SINH Y)               3F8E1360
+       STO     BUFF+2                                                   3F8E1370
+       LDQ     BUFF          ISIN = (SIN X)(COSH Y)                     3F8E1380
+       TRA     CONT                    + I(COS X)(SINH Y)               3F8E1390
+  SINE FMP     BUFF                                                     3F8E1400
+       FRN                                                              3F8E1410
+       LDQ     BUFF+2                                                   3F8E1420
+       STO     BUFF+2                                                   3F8E1430
+  CONT FMP     BUFF+3                                                   3F8E1440
+       FRN                                                              3F8E1450
+       LDQ     BUFF+2                                                   3F8E1460
+   RET LXA     LINK,4                                                   3F8E1470
+       STZ     FLAG                                                     3F8E1480
+       TRA     1,4                                                      3F8E1490
+       SPACE                                                            3F8E1500
+ERROR1 CALL    .FXEM.(ECSC1)                                            3F8E1510
+       ZAC                                                              3F8E1520
+       LRS     35                                                       3F8E1530
+       TRA     RET                                                      3F8E1540
+ERROR2 CALL    .FXEM.(ECSC2)                                            3F8E1550
+       LDQ     HFOMEG                                                   3F8E1560
+       STQ     BUFF+3                                                   3F8E1570
+       LRS     0                                                        3F8E1580
+       TRA     TEST                                                     3F8E1590
+       SPACE                                                            3F8E1600
+  BUFF BSS     4                                                        3F8E1610
+ MAXRL OCT     232000000000     2**25                                   3F8E1620
+ MAXIM OCT     207540074636        88.029692                            3F8E1630
+HFOMEG OCT     376777777777                                             3F8E1640
+ FLAG  PZE                                                              3F8E1650
+ ECSC1 DEC     29                                                       3F8E1660
+       PZE     E29MES,,10                                               3F8E1670
+       PZE     E29OMS,,3                                                3F8E1680
+E29MES BCI ,0CSIN(X+IY) OR CCOS(X+IY), /X/ GRT THAN 2**25 NOT ALLOWED   3F8E1690
+E29OMS BCI     3,0SET RESULT = 0+0I                                     3F8E1700
+ ECSC2 DEC     30                                                       3F8E1710
+       PZE     E30MES,,11                                               3F8E1720
+       PZE     E30OMS,,8                                                3F8E1730
+E30MES BCI     9,0CSIN(X+IY) OR CCOS(X+IY), /Y/ GRT THAN 88.029692 NOT  3F8E1740
+       BCI     2,ALLOWED                                                3F8E1750
+E30OMS BCI     8,0REF IBLIB ERR MSG LIST FOR EVALUATION METHOD          3F8E1760
+       SPACE                                                            3F8E1770
+  LINK LDIR                                                             3F8E1780
+END94  NULL                                                             3F8E1790
+       END                                                              3F8E1800

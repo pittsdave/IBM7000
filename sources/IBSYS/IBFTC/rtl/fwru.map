@@ -1,0 +1,28 @@
+$*     7090/7094 WRITE WITHOUT FORMAT STATEMENT                         3F4L0000
+$IBMAP FWRU                                                             3F4L0010
+       TTL     UNFORMATTED WRITE ROUTINE                                3F4L0020
+*              UNFORMATTED WRITE ROUTINE                                3F4L0030
+*      ENTRY POINT FOR WRITE (UNIT,XXX) - BCD WRITE -                   3F4L0040
+*      WHERE XXX IS NAME OF TABLE OF ARRAYS                             3F4L0050
+*      TO BE WRITTEN                                                    3F4L0060
+       ENTRY   .FWRU.                                                   3F4L0070
+OUTBUF EQU     .OUTBF                                                   3F4L0071
+.FWRU. SXA     SYSLOC,4                                                 3F4L0080
+       SXA     LNKG,4                                                   3F4L0090
+       SXA     WRSAV,4                                                  3F4L0100
+       CALL    .FIOS.(ARG,IOCOM)                                        3F4L0110
+       ORG     *-2                   OVERLAY CALL                       3F4L0120
+ARG    PZE     0,,0                                                     3F4L0130
+IOCOM  IOCD    OUTBUF,,**                                               3F4L0140
+       CALL    .FWRO.(WRITE,WRSAV)                                      3F4L0150
+       ORG     *-2                                                      3F4L0155
+WRITE  TRA     WRTNU                                                    3F4L0160
+WRSAV  PZE                                                              3F4L0170
+*      WRITE ROUTINE-ENTERED FROM FWRO.                                 3F4L0180
+WRTNU  SXA     SV4,4                 ENTER HERE FROM FWRO               3F4L0200
+       SXD     .FILL.,2              STORE WORD COUNT IN I/O COMMAND    3F4L0210
+       TSX     .FRTD.,4              WRITE A LINE                       3F4L0220
+SV4    AXT     **,4                                                     3F4L0230
+       TRA     1,4                   RETURN TO FWRO                     3F4L0240
+LNKG   LDIR                                                             3F4L0260
+       END                                                              3F4L0270

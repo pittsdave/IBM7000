@@ -1,0 +1,36 @@
+$IBMAP FRWT.   21                                                       3F4X0000
+       TTL     ALTERNATE FORTRAN I/O REWIND ROUTINE                 (13)3F4X0010
+       LBL     .RWT,BEGIN     FRWT.                                  (7)3F4X0015
+*              CALLING SEQUENCE FOR -- REWIND N --                      3F4X0020
+*                   CALL ..FRWT(ARG)                                    3F4X0030
+*                    WHERE ARG = LOCATION OF PZE UNITXX, XX IS          3F4X0040
+*                                LOCATION OF LOGICAL UNIT N             3F4X0050
+       ENTRY   ..FRWT                                                   3F4X0060
+..FRWT SXA     LK.DR,4             SAVE RETURN                          3F4X0070
+       CAL*    3,4                 GET CONTENTS OF .UNIT. CELL          3F4X0080
+       STI     IND                 SAVE SENSE INDICATORS            (13)3F4X0081
+       STA     WEOF                SET UP                               3F4X0100
+       STA     RWD                  IOEX COMMANDS                       3F4X0110
+       CALL    ..FCHK(NOTE,ACTION) CHECK VALIDITY OF REQUEST            3F4X0120
+       ORG     *-2                                                      3F4X0130
+ NOTE  BCI     1, RWT              MESSAGE                              3F4X0140
+ACTION PZE     IGNORE,,7           ACTION, 7 = IN1,OU1,AND PP1 TESTED   3F4X0150
+       LAC     RWD,4               -(FCB)                           (13)3F4X0160
+       LDI     1,4                 MOVE 2ND WORD OF FCB TO SENSE IND(13)3F4X0170
+       SSP                         SET AC POSITIVE                  (13)3F4X0172
+       LFT     001                 TEST IF  OUTPUT, IF OUTPUT       (13)3F4X0173
+       SSM                         SET AC NEGATIVE                  (13)3F4X0174
+       RIL     001                 SET FILE TO INPUT                (13)3F4X0175
+       STI     1,4                 STORE SENSE IND IN 2ND WORD FCB  (13)3F4X0176
+       TPL     INPUT               NO EOF IF INPUT                  (13)3F4X0178
+       TSX     .NDSEL,4            EOF                                  3F4X0180
+ WEOF  PZE     **,,7                VIA                                 3F4X0190
+       NOP                           IOEX                               3F4X0200
+ INPUT TSX     .NDSEL,4            RWD VIA                              3F4X0210
+ RWD   PZE     **,,3                 IOEX                               3F4X0220
+IGNORE LXA     LK.DR,4             RESTORE X4                           3F4X0230
+       LDI     IND                 RESTORE SENSE INDICATORS         (13)3F4X0235
+       TRA     1,4                 RETURN                               3F4X0240
+IND    PZE     0                                                    (13)3F4X0245
+ LK.DR LDIR                                                             3F4X0250
+       END                                                              3F4X0260

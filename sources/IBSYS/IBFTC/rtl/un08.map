@@ -1,0 +1,7 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - UN08              3F5UN800
+$IBMAP UN08    6                                                        3F5UN810
+       TTL     UN08/FILE SPECIFICATIONS FOR LOGICAL UNIT 8              3F5UN820
+       ENTRY   .UN08.                                                   3F5UN830
+.UN08. PZE     UNIT08                                                   3F5UN840
+UNIT08 FILE    ,,MOUNT,INOUT,BLK=22,BCD                                 3F5UN850
+       END                                                              3F5UN860

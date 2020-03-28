@@ -1,0 +1,240 @@
+$*     7090/7094 INPUT/OUTPUT SUPERVISOR                                3F4B0000
+$IBMAP FIOS                                                             3F4B0010
+       TTL     FIOS-I/O SUPERVISOR                                   (7)3F4B0020
+*      I/O SUPERVISOR                                                   3F4B0030
+*              THE PURPOSE OF FIOS IS TO INITIALIZE                     3F4B0040
+*              ALL IOCS CALLING SEQUENCES FOR BCD                       3F4B0050
+*              AND BINARY READING AND WRITING. IT ALSO                  3F4B0060
+*              PROCESS THE ARGUMENTS OBTAINED FROM                      3F4B0070
+*              THE OBJECT PROGRAM I/O CALLING SEQUENCE                  3F4B0080
+*              FIOS PRESUPPOSES THE SETTING OF READ-                    3F4B0090
+*              WRITE, BINARY-BCD SWITCHES                               3F4B0100
+*              .REED=0, WRITE = NOT ZERO, READ                          3F4B0110
+*              .BIN=0, BCD = NOT ZERO, BINARY                           3F4B0120
+*                                                                       3F4B0130
+.FCKSZ ENTRY   .CHKSZ                                                   3F4B0140
+       ENTRY   .REED                                                    3F4B0150
+       ENTRY   .BIN                                                     3F4B0160
+.FCT   ENTRY   .CT                                                      3F4B0170
+       ENTRY   .FIOS.                                                $5$3F4B0180
+       ENTRY   .FRTD.                                                $5$3F4B0190
+       ENTRY   .FRTB.                                                $5$3F4B0200
+       ENTRY   REOF                                                  $5$3F4B0210
+       ENTRY   .FOPN                                                 $5$3F4B0220
+       ENTRY   .FILL.                                                $5$3F4B0230
+       ENTRY   .FILR.                                                $5$3F4B0240
+       ENTRY   .FCLS                                                 $5$3F4B0250
+       ENTRY   .TOUT.                                                $5$3F4B0260
+       ENTRY   .FSEL.                                                $5$3F4B0270
+.FIOS. SXA     RETURN,4                                                 3F4B0280
+       SXA     LNKG,4                LINKAGE DIRECTOR                   3F4B0290
+       CLA     3,4                   GET ARGS FOR READ AND BIN SWITCHES 3F4B0300
+       STA     .REED                                                    3F4B0310
+       STD     .BIN                                                     3F4B0320
+       CLA     4,4                   GET I/O COMMAND                    3F4B0330
+       STO     .FILL.                STORE IN IOCS CALL                 3F4B0340
+       STO     .FILR.                                                   3F4B0350
+       STI     SAVIND                SAVE INDICATORS                    3F4B0360
+       LXA     SYSLOC,4              GET LICATION OF CALL FROM          3F4B0370
+       CLA*    3,4                   OBJ. PORG. TO LOCATE FCB           3F4B0380
+       STA     FILEBK                SAVE LOC. OF FCB                   3F4B0390
+       STA     .FCLS+2               SET FILE DESIGNATION               3F4B0400
+       STA     .FOPN+2               IN IOCS CALLING SEQUENCES.         3F4B0410
+       STA     .FSEL.+2                                                 3F4B0420
+       STA     .FRTD.+2                                                 3F4B0430
+       NZT     .BIN                                                     3F4B0440
+       TRA     INITRW                IF BCD, TEST FOR SYSOU1            3F4B0450
+       STA     .FRTB.+2              IF BINARY,SET UP BINARY            3F4B0460
+       ADD     =4                    CALLING SEQUENCES.GET ADDRESS      3F4B0470
+       STA     *+1                   OF FIFTH WORD IN FILE CONTROL      3F4B0480
+       LDC     **,4                  BLOCK.LOCATION OF BUFFER POOL      3F4B0490
+       CLA     1,4                   SECOND BUFFER POOL CONTROL WORD.   3F4B0500
+       ARS     22                    PLACE BLOCK SIZE IN ADDRESS.       3F4B0510
+       PAX     ,4                                                       3F4B0520
+       SXD     .FILL.,4              INITIALIZE FOR BLOCK SIZE          3F4B0530
+       TXI     *+1,4,-1              AND SAVE FOR PURPOSE OF            3F4B0540
+       SXD     .CHKSZ,4              TESTING SIZE OF BINARY             3F4B0550
+INITRW LAC     SYSUNI,4                                                 3F4B0560
+       CLA     SYSOU1,4              CHECK TO SEE IF                    3F4B0570
+       PAX     0,4                   THIS WRITE                         3F4B0580
+       SXD     CHECK3,4              REQUEST IS FOR SYSOU1              3F4B0590
+       CLA*    FILEBK                                                   3F4B0600
+       PAC     0,4                                                      3F4B0610
+CHECK3 TXI     *+1,4,**                                                 3F4B0620
+       TXH     CONT,4,0                                                 3F4B0630
+       ZET     .REED                 TEST OPERATION REQUESTED           3F4B0640
+       TRA     FERR1                 ERROR-CANNOT READ SYSOU1.          3F4B0650
+       ZET     .BIN                                                  $5$3F4B0660
+       TRA     CONT                   READ BINARY                    $5$3F4B0670
+       LXA     .TOUT.,4       IS FOUT IN CORE                        $5$3F4B0680
+       TXL     CONT,4,0       NO, GO USE .WRITE.                     $5$3F4B0690
+       AXT     .TOUT.,4          SET UP TO USE .FOUT.                $5$3F4B0700
+       SXA     .FRTD.+1,4        TO WRITE ON SYSOU1                  $5$3F4B0710
+RETURN AXT     **,4                                                     3F4B0720
+       LDI     SAVIND                RESTORE INDICATORS                 3F4B0730
+       TRA     1,4                   RETURN TO INTERFACE ROUTINE        3F4B0740
+CONT   AXT     .WRITE,4          OVERLAY TSX TO FOUT                 $5$3F4B0750
+       SXA     .FRTD.+1,4        WRITE OTHER TAPES WITHOUT FOUT      $5$3F4B0760
+       LXA     FILEBK,4              OBTAIN FCB WORD 2.                 3F4B0770
+       TXI     *+1,4,1               AND SAVE                           3F4B0780
+       SXA     GFCB2,4                                                  3F4B0790
+       TXI     *+1,4,1               OBTAIN FCB WORD 3                  3F4B0800
+       SXA     GFCB3,4               AND SAVE                           3F4B0810
+GFCB3  LDI     **                    LOAD IND. WITH FCB WORD 3          3F4B0820
+       STZ     MCB                   MCB OFF = OTHER UNIT               3F4B0830
+       LFT     100000                                                $5$3F4B0840
+       STL     MCB                   MCB ON = SYSIN1                    3F4B0850
+GFCB2  LDI     **                    GET FCB WORD 2                     3F4B0860
+       STL     PRACT                 PRACT ON = INPUT                   3F4B0870
+       LFT     003000                                                   3F4B0880
+       STZ     PRACT                 PRACT OFF = NOT INPUT              3F4B0890
+       STZ     FSTAT                 FSTAT OFF = CLOSED FILE            3F4B0900
+       LFT     040000                                                   3F4B0910
+       STL     FSTAT                 FSTAT ON = OPEN FILE               3F4B0920
+       NZT     .REED                                                    3F4B0930
+       TRA     WRTST                 WRITING - GO INITIALIZE IT         3F4B0940
+       ZET     PRACT                 READING - TEST FOR INPUT           3F4B0950
+       TRA     THRO                  INPUT-                             3F4B0960
+       ZET     FSTAT                 NOT INPUT-                         3F4B0970
+       TSX     .FCLS,4        FILE OPEN, SO CLOSE IT                 $5$3F4B0980
+       LDI*    GFCB2                                                 (7)3F4B0981
+       RIL     003000                SET FCB FOR INPUT                  3F4B0990
+       STI*    GFCB2                                                    3F4B1000
+       TRA     *+2                                                      3F4B1010
+THRO   NZT     FSTAT                                                    3F4B1020
+       TSX     .FOPN,4               OPEN FILE                          3F4B1030
+       AXT     REOF,4            PLACE EOF RETURN FOR OTHER UNITS    $5$3F4B1040
+       ZET     MCB                                                      3F4B1050
+       AXT     SYSEOF,4          PLACE EOF RETURN FOR SYSIN1         $5$3F4B1060
+       SXA     .FSEL.+3,4                                               3F4B1070
+       TRA     RETURN                                                   3F4B1080
+WRTST  ZET     MCB                    IS IT SYSIN1                   $5$3F4B1090
+       TRA     FERR                   SORRY CAN'T WRITE              $5$3F4B1100
+CONT1  ZET     PRACT                                                    3F4B1110
+       TRA     TST3                  INPUT                              3F4B1120
+       NZT     FSTAT                 NOT INPUT-IS FILE OPEN             3F4B1130
+OPN1   TSX     .FOPN,4               NO-OPEN FILE                       3F4B1140
+       TRA     RETURN                YES                                3F4B1150
+TST3   ZET     FSTAT                 INPUT-IS FILE OPEN                 3F4B1160
+       TSX     .FCLS,4               YES-CLOSE FILE                     3F4B1170
+       LDI*    GFCB2                                                 $5$3F4B1180
+       SIL     001000                SET FCB BITS                       3F4B1190
+       RIL     002000                FOR OUTPUT                         3F4B1200
+       STI*    GFCB2                                                    3F4B1210
+       TRA     OPN1                                                  $5$3F4B1220
+.FSEL. SXA     RETIRN,4                                              $5$3F4B1230
+       TSX     .READ,4                                                  3F4B1240
+       PZE     **,,REOB                                                 3F4B1250
+       PZE     **,,RERR                                                 3F4B1260
+.FILR. IORTN*  **,,**                                                   3F4B1270
+       NZT     .BIN                  CHECK MODE                         3F4B1280
+       TRA     RETIRN         BCD-RETURN                             $5$3F4B1290
+       LDC     *-3,4                 BINARY-SAVE                        3F4B1300
+       SXD     .FCT,4                WORD COUNT                         3F4B1310
+RETIRN AXT     **,4                                                  $5$3F4B1320
+       TRA     1,4                                                      3F4B1330
+*      BCD AND BINARY IOCS WRITE CALLING SEQUENCE                       3F4B1340
+.FRTB. XEC     .FSEL.                                                   3F4B1350
+       TSX     .WRITE,4              WRITE A RECORD-IF BINARY           3F4B1360
+       PZE     **,,0                                                    3F4B1370
+       IOCDN   **,,0                                                    3F4B1380
+       TRA     *+2                                                      3F4B1390
+.FRTD. XEC     .FSEL.                IF BINARY-LOCATE A BUFFER          3F4B1400
+       TSX     .WRITE,4              IF BCD-WRITE A LINE                3F4B1410
+       PZE     **,,WEOB                                                 3F4B1420
+.FILL. IOCD    **,,**                                                   3F4B1430
+       TRA     RETIRN         OR BCD                                 $5$3F4B1440
+*      CLOSE A FILE                                                     3F4B1450
+.FCLS  XEC     .FSEL.                                                   3F4B1460
+       TSX     .CLOSE,4                                                 3F4B1470
+       MON     **                                                       3F4B1480
+       TRA     RETIRN                                                $5$3F4B1490
+*      OPEN A FILE                                                      3F4B1500
+.FOPN  XEC     .FSEL.                                                   3F4B1510
+       TSX     .OPEN,4                                                  3F4B1520
+       MON     **                                                       3F4B1530
+       TRA     RETIRN                                                $5$3F4B1540
+REOF   AXT     34,4                ASSUME FILE IS BCD                $5$3F4B1550
+       ZET     .BIN                IS FILE ACTUALLY BINARY           $5$3F4B1560
+       AXT     41,4                YES,CHANGE XR4 ACCORDINGLY        $5$3F4B1570
+       SXA     CODE3,4                                               $5$3F4B1580
+       TSX     FILENM,4                                              $5$3F4B1590
+       STO     E41MES+5                                                 3F4B1600
+       STQ     E41MES+6                                                 3F4B1610
+REOFXT CALL    .FXEM.(CODE3)         EOF READING. EXECUTION ERROR.      3F4B1620
+       TRA     .FSEL.+1              OPTIONAL EXIT. READ NEXT FILE   $5$3F4B1630
+RERR   AXT     35,4              ASSUME FILE IS BCD                  $5$3F4B1640
+       ZET     .BIN              IS FILE ACTUALLY BINARY             $5$3F4B1650
+       AXT     42,4              YES, CHANGE XR4 ACCORDINGLY         $5$3F4B1660
+       SXA     CODE4,4                                               $5$3F4B1670
+       TSX     FILENM,4                                              $5$3F4B1680
+       STO     E42MES+5                                                 3F4B1690
+       STQ     E42MES+6                                                 3F4B1700
+RERRXT CALL    .FXEM.(CODE4)         REDUNDANCY READING.                3F4B1710
+       TRA     .FSEL.+1                                              $5$3F4B1720
+REOB   TSX     FILENM,4                                                 3F4B1730
+       STO     E43MES+5                                                 3F4B1740
+       STQ     E43MES+6                                                 3F4B1750
+REOBXT CALL    .FXEM.(CODE5)         EOB EXIT READING.                  3F4B1760
+       TRA     .LXERR                NO OPTIONAL EXIT.                  3F4B1770
+WEOB   TSX     FILENM,4                                                 3F4B1780
+       STO     E44MES+5                                                 3F4B1790
+       STQ     E44MES+6                                                 3F4B1800
+WEOBXT CALL    .FXEM.(CODE6)         EOB EXIT WRITING.                  3F4B1810
+       TRA     .LXERR                NO OPTIONAL EXIT.                  3F4B1820
+FILENM SXA     FILEN,4                                                  3F4B1830
+       LAC     .FCLS+2,4                                                3F4B1840
+       CAL     10,4                                                     3F4B1850
+       ARS     12                                                       3F4B1860
+       LDQ     BLANKS                                                   3F4B1870
+       LGR     24                                                       3F4B1880
+       CLA     9,4                                                      3F4B1890
+FILEN  AXT     **,4                                                     3F4B1900
+       TRA     1,4                                                      3F4B1910
+CODE3  PZE     **                                                    $5$3F4B1920
+ER41MS PZE     E41MES,,7                                                3F4B1930
+ER41OP PZE     E41OMS,,3                                                3F4B1940
+E41MES BCI     7,0END OF FILE READING                                   3F4B1950
+E41OMS BCI     3,0READ NEXT FILE                                        3F4B1960
+CODE4  PZE     **                                                    $5$3F4B1970
+ER42MS PZE     E42MES,,7                                                3F4B1980
+ER42OP PZE     E42OMS,,6                                                3F4B1990
+E42MES BCI     7,0PERMANENT READ REDUNDANCY                             3F4B2000
+E42OMS BCI     6,0RECORD USED AS READ THE 100TH TIME                    3F4B2010
+CODE5  PZE     43                                                       3F4B2020
+ER43MS PZE     E43MES,,7                                                3F4B2030
+ER43OP PZE     NOOPXT,,7                                                3F4B2040
+E43MES BCI     7,0END-OF-BUFFER EXIT READING                            3F4B2050
+CODE6  PZE     44                                                       3F4B2060
+ER44MS PZE     E44MES,,7                                                3F4B2070
+ER44OP PZE     NOOPXT,,7                                                3F4B2080
+E44MES BCI     7,0END-OF-BUFFER EXIT WRITING                            3F4B2090
+BLANKS BCI     1,                                                       3F4B2100
+.TOUT. BSS     4                                                     $5$3F4B2110
+       TRA     RETIRN                                                $5$3F4B2120
+SAVIND PZE                           SAVE INDICATORS                    3F4B2130
+.REED  PZE                           .REED ON = READ, .REED OFF = WRITE 3F4B2140
+.BIN   PZE                           .BIN ON = BINARY, .BIN OFF = BCD   3F4B2150
+.CT    PZE                           CONTAINS INPUT RECORD SIZE         3F4B2160
+FILEBK PZE     **                    LOCATION OF FILE CONTROL BLOCK     3F4B2170
+.CHKSZ PZE                           BLOCK SIZE FOUND IN BUFFER POOL    3F4B2180
+MCB    PZE                           ON = SYSIN1, OFF = OTHER UNIT      3F4B2190
+FSTAT  PZE                           ON = OPEN FILE, OFF = CLOSE D FILE 3F4B2200
+PRACT  PZE                           ON = INPUT, OFF = NOT INPUT        3F4B2210
+FERR   CALL    .FXEM.(CODE7)         WRITE REQUEST ON SYSIN1. EXECUTION 3F4B2220
+       TRA     .LXERR                NO OPTIONAL EXIT.                  3F4B2230
+FERR1  CALL    .FXEM.(CODE8)         READ REQUEST ON SYSOU1. EXECUTION  3F4B2240
+       TRA     .LXERR                ERROR. NO OPTIONAL EXIT.           3F4B2250
+SYSEOF CALL    EXIT                                                     3F4B2260
+CODE7  PZE     54                                                       3F4B2270
+ER54MS PZE     E54MES,,8                                                3F4B2280
+ER54OP PZE     NOOPXT,,7                                                3F4B2290
+E54MES BCI     8,0WRITE REQUEST ON UNIT DEFINED AS SYSIN1 ILLEGAL       3F4B2300
+CODE8  PZE     56                                                       3F4B2310
+ER56MS PZE     E56MES,,8                                                3F4B2320
+ER56OP PZE     NOOPXT,,7                                                3F4B2330
+E56MES BCI     8,0READ REQUEST ON UNIT DEFINED AS SYSOU1 ILLEGAL        3F4B2340
+NOOPXT BCI     7,0NO OPTIONAL EXIT-EXECUTION TERMINATED.             $5$3F4B2350
+LNKG   LDIR                                                             3F4B2360
+       BCI     1,FIOS                                                   3F4B2370
+       END                                                           $5$3F4B2380

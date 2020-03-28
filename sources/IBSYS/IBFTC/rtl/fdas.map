@@ -1,0 +1,62 @@
+$*             LIBRARY DFAD,DFMP,DFDP FOR D.P. FUNCTION SUBROUTINES     3F9Q0000
+$IBMAP FDAS    150                                                      3F9Q0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F9Q0015
+       ENTRY   DFAD                                                     3F9Q0020
+       ENTRY   DFMP                                                     3F9Q0030
+       ENTRY   DFDP                                                     3F9Q0040
+       SPACE   3                                                        3F9Q0050
+*              DFAD,DFMP,DFDP SUBROUTINE FOR D. P. FUNCTION SUBROUTINES 3F9Q0060
+*                1. CALLING SEQUENCE     TSX   DF**,4                   3F9Q0070
+*                                        PZE   MSOP2,T                  3F9Q0080
+*                                        PZE   LSOP2,T                  3F9Q0090
+*                2. AC,MQ CONTAIN MS AND LS PARTS OF 1ST OPERAND.       3F9Q0100
+*                3. (MSOP2,T),(LSOP2,T) ARE LOCATIONS OF MS AND LS      3F9Q0110
+*                      PARTS OF 2ND OPERAND.                            3F9Q0120
+*                4. ANSWER IS GIVEN IN AC,MQ.                           3F9Q0130
+*                5. THESE CIRCUITS ARE LOGICALLY CONSIDERED TO BE PART  3F9Q0140
+*                      OF THE CALLING PROGRAM, AND THEREFORE SYSLOC IS  3F9Q0150
+*                      NOT RE-SET BY THIS PROGRAM. FOR THE SAME REASON  3F9Q0160
+*                      A LINKAGE DIRECTOR IS NOT PROVIDED               3F9Q0170
+       SPACE   3                                                        3F9Q0180
+ DFAD  STQ     L1            (MA+LA)+(MB+LB)                            3F9Q0190
+       FAD*    1,4             =LA+LB+L(MA+MB)+M(MA+MB)                 3F9Q0200
+       STO     M2                IGNORE SMALLER TERM                    3F9Q0210
+       STQ     L2                                                       3F9Q0220
+       CLA     L1            ADD LA AND LB FIRST TO RETAIN SHARPNESS.   3F9Q0230
+       FAD*    2,4             THIS ORDER IS ESPECIALLY IMPORTANT FOR   3F9Q0240
+       FAD     L2                THE D. P. FUNCTION SUBROUTINES.        3F9Q0250
+       FAD     M2                                                       3F9Q0260
+       TRA     3,4                                                      3F9Q0270
+       SPACE                                                            3F9Q0280
+ DFMP  STO     M1            (MA+LA)*(MB+LB)                            3F9Q0290
+       FMP*    1,4             = MA*LB + LA*MB + L(MA*MB) + M(MA*MB)    3F9Q0300
+       STO     L1                IGNORE SMALLER TERMS                   3F9Q0310
+       LDQ     M1                                                       3F9Q0320
+       FMP*    1,4                                                      3F9Q0330
+       STO     M2                                                       3F9Q0340
+       STQ     L2                                                       3F9Q0350
+       LDQ     M1                                                       3F9Q0360
+       FMP*    2,4                                                      3F9Q0370
+       FAD     L1                                                       3F9Q0380
+       FAD     L2                                                       3F9Q0390
+       FAD     M2                                                       3F9Q0400
+       TRA     3,4                                                      3F9Q0410
+       SPACE                                                            3F9Q0420
+ DFDP  STQ     L1            (MA+LA)/(MB+LB)                            3F9Q0430
+       FDP*    1,4             = ((MA+LA)/MB)*(1-LB/MB)                 3F9Q0440
+       STO     L2              = (-Q(MA/MB)*LB + R(MA/MB)+LA)/MB        3F9Q0450
+       STQ     M2                + Q(MA/MB)                             3F9Q0460
+       FMP*    2,4                                                      3F9Q0470
+       CHS                     WHERE Q IS QUOTIENT, R IS REMAINDER      3F9Q0480
+       FAD     L2                                                       3F9Q0490
+       FAD     L1                                                       3F9Q0500
+       FDP*    1,4                                                      3F9Q0510
+       XCA                                                              3F9Q0520
+       FAD     M2                                                       3F9Q0530
+       TRA     3,4                                                      3F9Q0540
+       SPACE                                                            3F9Q0550
+  M1   PZE                                                              3F9Q0560
+  M2   PZE                                                              3F9Q0570
+  L1   PZE                                                              3F9Q0580
+  L2   PZE                                                              3F9Q0590
+       END                                                              3F9Q0600

@@ -1,0 +1,89 @@
+$*     7090/7094 IBLIB FORTRAN MATHEMATICS LIBRARY                      3F8A0000
+$IBMAP FCAB    150                                                      3F8A0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F8A0015
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90,             3F8A0020
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94.            3F8A0030
+       REM       (OR TO ANY VALUE NOT EQUAL TO 90)                      3F8A0040
+M9094  SET     90                                                       3F8A0050
+       PCC     ON                                                       3F8A0060
+       IFF     M9094=90                                                 3F8A0070
+       GOTO    BEG94                                                    3F8A0080
+       PCC     OFF                                                      3F8A0090
+       ENTRY   CABS                                                     3F8A0100
+       SPACE   3                                                        3F8A0110
+       REM     COMPLEX ABSOLUTE VALUE SUBROUTINE                        3F8A0120
+       SPACE   3                                                        3F8A0130
+  CABS SXA     SYSLOC,4                                                 3F8A0140
+       SXA     LINK,4                                                   3F8A0150
+       CAL     3,4           OBTAIN ARGUMENT.   TAG ALLOWED.            3F8A0160
+       ADD     K1A                                                      3F8A0170
+       STO     BUFF                                                     3F8A0180
+       CLA*    3,4           MAKE BOTH PARTS OF ARGUMENT POSITIVE       3F8A0190
+       XCL                                                              3F8A0200
+       CAL*    BUFF                                                     3F8A0210
+  K1A  OCT     013100000001     XCA AS OPERATION,   K1A AS CONSTANT     3F8A0220
+       TLQ     *+2                                                      3F8A0230
+       XCA                                                              3F8A0240
+       TZE     1,4                                                      3F8A0250
+       STO     BUFF          LARGER OF TWO PARTS TO BUFF                3F8A0260
+       XCA                   IF X GREATER THAN Y                        3F8A0270
+       FDP     BUFF            ANS = /X/*SQRT(1+(Y/X)**2)               3F8A0280
+       STQ     BUFF+1                                                   3F8A0290
+       FMP     BUFF+1                                                   3F8A0300
+       FAD     ONE                                                      3F8A0310
+       FRN                                                              3F8A0320
+       STO     BUFF+1                                                   3F8A0330
+       CALL    SQRT(BUFF+1)                                             3F8A0340
+       XCA                                                              3F8A0350
+       FMP     BUFF                                                     3F8A0360
+       FRN                                                              3F8A0370
+       LDQ     ZERO          CLEAR MQ                                   3F8A0380
+       LXA     LINK,4                                                   3F8A0390
+       TRA     1,4                                                      3F8A0400
+       SPACE                                                            3F8A0410
+  ONE  OCT     201400000000                                             3F8A0420
+  ZERO OCT     0                                                        3F8A0430
+  BUFF BSS     2                                                        3F8A0440
+       SPACE                                                            3F8A0450
+  LINK LDIR                                                             3F8A0460
+BEG94  NULL                                                             3F8A0470
+       PCC     ON                                                       3F8A0480
+       IFT     M9094=90                                                 3F8A0490
+       GOTO    END94                                                    3F8A0500
+       PCC     OFF                                                      3F8A0510
+       EJECT                                                            3F8A0520
+       ENTRY   CABS                                                     3F8A0530
+       SPACE   3                                                        3F8A0540
+       REM     COMPLEX ABSOLUTE VALUE SUBROUTINE                        3F8A0550
+       SPACE   3                                                        3F8A0560
+ CABS  SXA     SYSLOC,4                                                 3F8A0570
+       SXA     LINK,4                                                   3F8A0580
+       DLD*    3,4           PICK UP CARG,T                             3F8A0590
+       SSP                                                              3F8A0600
+       LRS     0                                                        3F8A0610
+       TLQ     *+2                                                      3F8A0620
+       XCA                                                              3F8A0630
+       TZE     1,4                                                      3F8A0640
+       STO     BUFF          LARGER OF TWO PARTS TO BUFF                3F8A0650
+       XCA                   IF X GREATER THAN Y                        3F8A0660
+       FDP     BUFF            ANS = /X/*SQRT(1+(Y/X)**2)               3F8A0670
+       STQ     BUFF+1                                                   3F8A0680
+       FMP     BUFF+1                                                   3F8A0690
+       FAD     ONE                                                      3F8A0700
+       FRN                                                              3F8A0710
+       STO     BUFF+1                                                   3F8A0720
+       CALL    SQRT(BUFF+1)                                             3F8A0730
+       XCA                                                              3F8A0740
+       FMP     BUFF                                                     3F8A0750
+       FRN                                                              3F8A0760
+       LDQ     ZERO          CLEAR MQ                                   3F8A0770
+       LXA     LINK,4                                                   3F8A0780
+       TRA     1,4                                                      3F8A0790
+       SPACE                                                            3F8A0800
+  ONE  OCT     201400000000                                             3F8A0810
+ ZERO  OCT     0                                                        3F8A0820
+ BUFF  BSS     2                                                        3F8A0830
+       SPACE                                                            3F8A0840
+  LINK LDIR                                                             3F8A0850
+END94  NULL                                                             3F8A0860
+       END                                                              3F8A0870

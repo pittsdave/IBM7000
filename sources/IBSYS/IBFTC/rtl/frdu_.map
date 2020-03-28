@@ -1,0 +1,50 @@
+$*  7090/7094 IBLIB ALTERNATE INPUT/OUTPUT FORTRAN LIBRARY- FRDU.    $5$3F5A0000
+$IBMAP FRDU.                                                         $5$3F5A0005
+       TTL     FRDU. - ALTERNATE I/O UNFORMATTED READ ROUTINE        (7)3F5A0010
+       SPACE                                                         $5$3F5A0020
+       LBL     .RDU,BEGIN     FRDU.                                  (7)3F5A0025
+       REM     CALLING SEQUENCE IS                                   $5$3F5A0030
+       REM        CALL ..FRDU(ARG,YYY)                               $5$3F5A0040
+       REM     WHERE ARG = LOCATION OF PZE UNITXX                    $5$3F5A0050
+       REM           XX = LOGICAL UNIT N                             $5$3F5A0060
+       REM         YYYY = NAMELIST NAME                              $5$3F5A0070
+       SPACE                                                         $5$3F5A0080
+       ENTRY   ..FRDU                                                $5$3F5A0090
+       SPACE                                                         $5$3F5A0110
+..FRDU SXA     LNKG,4                SAVE RETURN TO MAIN PROGRAM.    $5$3F5A0120
+       SXA     SYSLOC,4                                              $5$3F5A0130
+       SXA     RTRN,4                                                $5$3F5A0140
+       CLA*    4,4                   OBTAIN NAMELIST NAME.           $5$3F5A0150
+       STO     .NAME.                                                $5$3F5A0160
+       CLA     4,4                                                   $5$3F5A0170
+       STA     .NMLST                OBTAIN LOCATION OF NAMELIST NAME$5$3F5A0180
+       STZ     .INTAP         INITIALIZE                             (7)3F5A0181
+       CLA*    3,4            AC = LOCATION OF FCB                   (7)3F5A0182
+       PAX     0,4                                                   (7)3F5A0183
+       TXI     *+1,4,2        IR4 = LOCATION OF 3RD WORD OF FCB      (7)3F5A0184
+       SXA     *+1,4                                                 (7)3F5A0185
+       LDI     **             IND. = 3RD WORD OF FCB                 (7)3F5A0186
+       LFT     100000        IS THE INPUT UNIT SYSIN1/2              (7)3F5A0187
+       STL     .INTAP         YES. SET FLAG TO INDICATE READING IN1  (7)3F5A0189
+       CALL    ..FBCD                                                $5$3F5A0190
+       CALL    .FIOU.(RTNUI,RTRN)    ENTER UNFORMATTED I/O SCAN.     $5$3F5A0200
+       ORG     *-2                   OVERLAY CALL WITH ARGUMENTS.    $5$3F5A0210
+RTNUI  NOP     RDUIO                 NOP = READ, RDUIO = LOC. OF CALL$5$3F5A0220
+RTRN   PZE     **                    CONTAINS RETURN TO MAIN PROGRAM.$5$3F5A0230
+       SPACE                                                         $5$3F5A0240
+       REM                  PROCESS FIOU READ REQUEST                $5$3F5A0250
+       SPACE                                                         $5$3F5A0260
+RDUIO  SXA     RDRT,2                                                $5$3F5A0270
+       TSX     ..FIOC,4       REQUEST SINGLE RECORD                  $5$3F5A0280
+       TSX     ..FTCK,4              CHECK CURRENT READ TRANSMISSION.$5$3F5A0290
+       AXT     ..FBCB,4       PLACE LOC. OF BUFFER                   $5$3F5A0291
+       SXA     .FBDBF,4         FOR FIOU                             $5$3F5A0292
+       AXC     ..FBCB,4                                              $5$3F5A0300
+       SXD     *+2,4                                                 $5$3F5A0301
+       LXA     .COMM,4                                               $5$3F5A0302
+       TXI     *+1,4,**                                              $5$3F5A0303
+       SXA     .CTUIO,4                                              $5$3F5A0304
+RDRT   AXT     **,2                                                  $5$3F5A0310
+       TRA     1,2                   RETURN TO .FIOU.                $5$3F5A0320
+LNKG   LDIR                                                          $5$3F5A0340
+       END                                                           $5$3F5A0350

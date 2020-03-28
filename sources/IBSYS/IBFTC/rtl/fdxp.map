@@ -1,0 +1,242 @@
+$JOB   7090-PR-130   7090/7094 IBSYS PROCESSOR   7090-SV-918 VERSION $6$IBB00000
+$EXECUTE       IBJOB                                                 $6$IBB00005
+$IBJOB         NOGO                                                  $6$IBB00010
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F9A0000
+$IBMAP FDXP    150                                                      3F9A0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F9A0015
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90,             3F9A0020
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94.            3F9A0030
+       REM       (OR TO ANY VALUE NOT EQUAL TO 90)                      3F9A0040
+M9094  SET     90                                                       3F9A0050
+       PCC     ON                                                       3F9A0060
+       PMC     ON
+       DETAIL
+       IFF     M9094=90                                                 3F9A0070
+       GOTO    BEG94                                                    3F9A0080
+       PCC     OFF                                                      3F9A0090
+       ENTRY   DEXP                                                     3F9A0100
+       SPACE   3                                                        3F9A0110
+       REM     DOUBLE PRECISION EXPONENTIAL SUBROUTINE                  3F9A0120
+       SPACE   3                                                        3F9A0130
+*              DOUBLE PRECISION ARITHMETIC MACRO DEFINITION             3F9A0140
+       SPACE                                                            3F9A0150
+ DPOP  MACRO   SUBR,A,TAG                                               3F9A0160
+       TSX     SUBR,4                                                   3F9A0170
+ DTAG  SET     0                                                        3F9A0180
+       IFT     TAG=1                                                    3F9A0190
+ DTAG  SET     1                                                        3F9A0200
+       IFT     TAG=2                                                    3F9A0210
+ DTAG  SET     2                                                        3F9A0220
+       PZE     A,DTAG                                                   3F9A0230
+       PZE     A+1,DTAG                                                 3F9A0240
+       ENDM    DPOP                                                     3F9A0250
+       SPACE   3                                                        3F9A0260
+ DEXP  SXA     SYSLOC,4                                                 3F9A0270
+       SXA     LINK,4                                                   3F9A0280
+       SXA     SXR2,2                                                   3F9A0290
+       CAL     3,4           OBTAIN POINTER FOR LOW ARG                 3F9A0300
+       ADD     K1A                                                      3F9A0310
+       STO     L                                                        3F9A0320
+       CLA*    3,4           HIGH ARG TO AC                             3F9A0330
+       LDQ     MAXIM                                                    3F9A0340
+       TLQ     ERROR         ERROR IF ARG TOO BIG                       3F9A0350
+       LDQ     MINIM                                                    3F9A0360
+       TLQ     BEGIN                                                    3F9A0370
+       ZAC                   ARG TOO SMALL, GIVE 0 ANSWER               3F9A0380
+       LRS     36                                                       3F9A0390
+       TRA     1,4                                                      3F9A0400
+ BEGIN STO     M                                                        3F9A0410
+       LDQ*    L             LOW ARG TO MQ                              3F9A0420
+       ARS     9                                                        3F9A0430
+       PDX     ,2            CHARACTERISTIC TO XR2                      3F9A0440
+       LLS     8                                                        3F9A0450
+       CLA     M                                                        3F9A0460
+       LRS     0                                                        3F9A0470
+       LLS     8                                                        3F9A0480
+       STO     CHAR          Y=X*LOGE(BASE2)   E**X=2**Y                3F9A0490
+       MPR     LOG2E           MULTIPLY FIXED POINT FASHION             3F9A0500
+       STO     L1                TO INSURE ACCURACY                     3F9A0510
+       LDQ     CHAR                                                     3F9A0520
+       MPY     LOG2E                                                    3F9A0530
+       DST     M                                                        3F9A0540
+       LDQ     CHAR                                                     3F9A0550
+       MPR     LOG2E+1                                                  3F9A0560
+       ADD     L1                                                       3F9A0570
+       ADD     L                                                        3F9A0580
+       LRS     35                                                       3F9A0590
+       ADD     M                                                        3F9A0600
+       LRS     135,2         PRODUCT READY, SCALE B8                    3F9A0610
+       STO     M                                                        3F9A0620
+       ARS     27            DECOMPOSE Y=Y1+Y2                          3F9A0630
+       ALS     27              Y1 INTEGER PART, Y2 FRACTION PART        3F9A0640
+       TPL     *+2                                                      3F9A0650
+       SUB     CHONE         IF Y NEGATIVE,                             3F9A0660
+       STO     CHAR            Y1-1 IS CHARACTERISTIC MODIFIER,         3F9A0670
+       CLA     M               Y2+1 IS MODIFIED FRACTION                3F9A0680
+       ALS     10                                                       3F9A0690
+       ARS     2                                                        3F9A0700
+       ORA     CHLP                                                     3F9A0710
+       LRS     8                                                        3F9A0720
+       ORA     CH2HD                                                    3F9A0730
+       STQ     L                                                        3F9A0740
+       TPL     *+2                                                      3F9A0750
+       FAD     K1                                                       3F9A0760
+       FAD     L                                                        3F9A0770
+       DST     M             Y2 READY                                   3F9A0780
+       DLD     K             COMPUTE 2**Y2                              3F9A0790
+       AXT     22,2            BY POWER SERIES                          3F9A0800
+ LOOP  DPOP    DFMP,M        DFMP (AC,MQ) WITH (M,L)                    3F9A0810
+       DPOP    DFAD,K1+2,2   DFAD (AC,MQ) WITH (K1+2(2),K1+3(2))        3F9A0820
+       TIX     LOOP,2,2                                                 3F9A0830
+       ADD     CHAR          2**Y2 IS READY   MULTIPLY 2**Y1            3F9A0840
+       XCA                                                              3F9A0850
+       ADD     CHAR                                                     3F9A0860
+       TPL     *+2                                                      3F9A0870
+       ZAC                                                              3F9A0880
+  K1A  OCT     013100000001    XCA AS OPERATION, K1A AS CONSTANT        3F9A0890
+ SXR2  AXT     **,2                                                     3F9A0900
+  RET  LXA     LINK,4                                                   3F9A0910
+       TRA     1,4                                                      3F9A0920
+       SPACE                                                            3F9A0930
+ ERROR CALL    .FXEM.(EDEXP)                                            3F9A0940
+       DLD     OMEGA                                                    3F9A0950
+       TRA     RET                                                      3F9A0960
+       SPACE                                                            3F9A0970
+   K   OCT     142532374743,107537467743   CHEBYCHEV CONSTANTS          3F9A0980
+       OCT     145701221314,112343676276                                3F9A0990
+       OCT     151670457337,116044431210                                3F9A1000
+       OCT     155542424727,122264337060                                3F9A1010
+       OCT     160777640427,125426625754                                3F9A1020
+       OCT     164503021727,131237013176                                3F9A1030
+       OCT     167535417775,134747136776                                3F9A1040
+       OCT     172473125333,137657134507                                3F9A1050
+       OCT     174706541065,141603405315                                3F9A1060
+       OCT     176753767577,143701275247                                3F9A1070
+       OCT     200542710277,145575071765                                3F9A1080
+  K1   OCT     201400000000,146000000001                                3F9A1090
+ LOG2E OCT     270524354512,340577027357   LOGE(BASE2)   B1             3F9A1100
+ OMEGA OCT     377777777777,344777777777                                3F9A1110
+   M   PZE                   BUFFERS M AND L SHOULD BE TOGETHER         3F9A1120
+   L   PZE                                                              3F9A1130
+  L1   PZE                                                              3F9A1140
+ CHAR  PZE                                                              3F9A1150
+ MAXIM OCT     207540074635        88.029691                            3F9A1160
+ MINIM OCT     -207545523741       -89.415986                           3F9A1170
+ CHONE OCT     1000000000                                               3F9A1180
+ CH2HD OCT     200000000000                                             3F9A1190
+ CHLP  OCT     145                                                      3F9A1200
+ EDEXP DEC     19                                                       3F9A1210
+       PZE     E19MES,,7                                                3F9A1220
+       PZE     E19OMS,,4                                                3F9A1230
+E19MES BCI     7,0DEXP(X), X GRT THAN 88.029692 NOT ALLOWED             3F9A1240
+E19OMS BCI     4,0SET RESULT = + OMEGA                                  3F9A1250
+       SPACE                                                            3F9A1260
+  LINK LDIR                                                             3F9A1270
+BEG94  NULL                                                             3F9A1280
+       PCC     ON                                                       3F9A1290
+       IFT     M9094=90                                                 3F9A1300
+       GOTO    END94                                                    3F9A1310
+       PCC     OFF                                                      3F9A1320
+       EJECT                                                            3F9A1330
+       ENTRY   DEXP                                                     3F9A1340
+       SPACE   3                                                        3F9A1350
+       REM     DOUBLE PRECISION EXPONENTIAL SUBROUTINE                  3F9A1360
+       SPACE   3                                                        3F9A1370
+ DEXP  SXA     SYSLOC,4                                                 3F9A1380
+       SXA     LINK,4                                                   3F9A1390
+       DLD*    3,4           PICK UP DARG,T                             3F9A1400
+       DST     M                                                        3F9A1410
+       LDQ     MAXIM                                                    3F9A1420
+       TLQ     ERROR         ERROR IF ARG TOO BIG                       3F9A1430
+       LDQ     MINIM                                                    3F9A1440
+       TLQ     BEGIN                                                    3F9A1450
+       DLD     ZERO          ARG TOO SMALL, GIVE 0                      3F9A1460
+       TRA     1,4                                                      3F9A1470
+ BEGIN STI     IND                                                      3F9A1480
+       ARS     9                                                        3F9A1490
+       PDX     ,4            CHARACTERISTIC TO XR4                      3F9A1500
+       LDQ     L                                                        3F9A1510
+       LLS     8                                                        3F9A1520
+       CLA     M                                                        3F9A1530
+       LRS     0                                                        3F9A1540
+       LLS     8                                                        3F9A1550
+       STO     CHAR          Y=X*LOGE(BASE2)   E**X=2**Y                3F9A1560
+       MPR     LOG2E           MULTIPLY FIXED POINT FASHION             3F9A1570
+       STO     L1                TO INSURE ACCURACY                     3F9A1580
+       LDQ     CHAR                                                     3F9A1590
+       MPY     LOG2E                                                    3F9A1600
+       DST     M                                                        3F9A1610
+       LDQ     CHAR                                                     3F9A1620
+       MPR     LOG2E+1                                                  3F9A1630
+       ADD     L1                                                       3F9A1640
+       ADD     L                                                        3F9A1650
+       LRS     35                                                       3F9A1660
+       ADD     M                                                        3F9A1670
+       LRS     135,4         PRODUCT READY, SCALE B8                    3F9A1680
+       STO     M                                                        3F9A1690
+       ARS     27            DECOMPOSE Y=Y1+Y2                          3F9A1700
+       ALS     27              Y1 INTEGER PART, Y2 FRACTION PART        3F9A1710
+       TPL     *+2                                                      3F9A1720
+       SUB     CHONE         IF Y NEGATIVE,                             3F9A1730
+       STO     CHAR            Y1-1 IS CHARACTERISTIC MODIFIER,         3F9A1740
+       CLA     M               Y2+1 IS MODIFIED FRACTION                3F9A1750
+       ALS     10                                                       3F9A1760
+       ARS     2                                                        3F9A1770
+       ORA     CHLP                                                     3F9A1780
+       LRS     8                                                        3F9A1790
+       ORA     CH2HD                                                    3F9A1800
+       STQ     L                                                        3F9A1810
+       TPL     *+2                                                      3F9A1820
+       FAD     K1                                                       3F9A1830
+       FAD     L                                                        3F9A1840
+       DST     M             Y2 READY                                   3F9A1850
+       DLD     K                                                        3F9A1860
+       AXT     22,4          COMPUTE E**X                               3F9A1870
+ LOOP  DFMP    M               VIA POWER SERIES                         3F9A1880
+       DFAD    K1+2,4                                                   3F9A1890
+       TIX     LOOP,4,2                                                 3F9A1900
+       ADD     CHAR                                                     3F9A1910
+       DFAD    ZERO                                                     3F9A1920
+       LDI     IND              RESTORE INDICATORS                      3F9A1930
+  RET  LXA     LINK,4                                                   3F9A1940
+       TRA     1,4                                                      3F9A1950
+       SPACE                                                            3F9A1960
+ ERROR CALL    .FXEM.(EDEXP)                                            3F9A1970
+       DLD     OMEGA                                                    3F9A1980
+       TRA     RET                                                      3F9A1990
+       SPACE                                                            3F9A2000
+ CHAR  PZE                                                              3F9A2010
+       EVEN                                                             3F9A2020
+ ZERO  OCT     0,0                                                      3F9A2030
+   K   OCT     142532374743,107537467743  CHEBYCHEV CONSTANTS           3F9A2040
+       OCT     145701221314,112343676276                                3F9A2050
+       OCT     151670457337,116044431210                                3F9A2060
+       OCT     155542424727,122264337060                                3F9A2070
+       OCT     160777640427,125426625754                                3F9A2080
+       OCT     164503021727,131237013176                                3F9A2090
+       OCT     167535417775,134747136776                                3F9A2100
+       OCT     172473125333,137657134507                                3F9A2110
+       OCT     174706541065,141603405315                                3F9A2120
+       OCT     176753767577,143701275247                                3F9A2130
+       OCT     200542710277,145575071765                                3F9A2140
+  K1   OCT     201400000000,146000000001                                3F9A2150
+ LOG2E OCT     270524354512,340577027357                                3F9A2160
+ OMEGA OCT     377777777777,344777777777                                3F9A2170
+   M   PZE                                                              3F9A2180
+   L   PZE                                                              3F9A2190
+  L1   PZE                                                              3F9A2200
+ CHLP  OCT     145                                                      3F9A2210
+ MAXIM OCT     207540074635        88.029691                            3F9A2220
+ MINIM OCT     -207545523741       -89.415986                           3F9A2230
+ CHONE OCT     1000000000                                               3F9A2240
+ CH2HD OCT     200000000000                                             3F9A2250
+  IND  PZE                                                              3F9A2260
+ EDEXP DEC     19                                                       3F9A2270
+       PZE     E19MES,,7                                                3F9A2280
+       PZE     E19OMS,,4                                                3F9A2290
+E19MES BCI     7,0DEXP(X), X GRT THAN 88.029692 NOT ALLOWED             3F9A2300
+E19OMS BCI     4,0SET RESULT = + OMEGA                                  3F9A2310
+       SPACE                                                            3F9A2320
+  LINK LDIR                                                             3F9A2330
+END94  NULL                                                             3F9A2340
+       END                                                              3F9A2350

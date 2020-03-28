@@ -1,0 +1,79 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F6B0000
+$IBMAP FXPF    150                                                      3F6B0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F6B0015
+       ENTRY   EXP                                                      3F6B0020
+       SPACE   3                                                        3F6B0030
+       REM     EXPONENTIAL SUBROUTINE                                   3F6B0040
+       SPACE   3                                                        3F6B0050
+  EXP  SXA     SYSLOC,4                                                 3F6B0060
+       SXA     LINK,4                                                   3F6B0070
+       CLA*    3,4           PICK UP ARG,T                              3F6B0080
+       LDQ     MAXIM                                                    3F6B0090
+       TLQ     ERROR         IF ARG TOO LARGE, GIVE ERROR               3F6B0100
+       LDQ     MINIM                                                    3F6B0110
+       TLQ     *+3                                                      3F6B0120
+       ZAC                   IF ARG TOO SMALL, GIVE ZERO ANS            3F6B0130
+       TRA     1,4                                                      3F6B0140
+       LDQ     CNVRT         CLEAR MQ                                   3F6B0150
+       LRS     27                                                       3F6B0160
+       SSM                                                              3F6B0170
+       ADD     CNVRT         CONVERT TO FIXED POINT                     3F6B0180
+       STA     SHIFT                                                    3F6B0190
+       MPY     LOGE2         MULTIPLY BY LOG E BASE 2                   3F6B0200
+ SHIFT LRS     **                                                       3F6B0210
+       ALS     27            SEPARATE INTEFER AND FRACTION              3F6B0220
+       STO     SAVE1                                                    3F6B0230
+       LRS     4                                                        3F6B0240
+       STQ     SAVE2                                                    3F6B0250
+       MPY     SAVE2         COMPUTE E**X*LN2                           3F6B0260
+       STO     SAVE3           USING CONTINUED FRACTION                 3F6B0270
+       ADD     A                                                        3F6B0280
+       STO     SAVE4                                                    3F6B0290
+       CLA     B                                                        3F6B0300
+       DVP     SAVE4                                                    3F6B0310
+       STQ     SAVE4                                                    3F6B0320
+       LDQ     SAVE3                                                    3F6B0330
+       MPY     C                                                        3F6B0340
+       LLS     4                                                        3F6B0350
+       SUB     SAVE4                                                    3F6B0360
+       ADD     D                                                        3F6B0370
+       SUB     SAVE2                                                    3F6B0380
+       STO     SAVE4                                                    3F6B0390
+       CLA     SAVE2                                                    3F6B0400
+       LDQ     FPNT1                                                    3F6B0410
+       VDP     SAVE4,0,28                                               3F6B0420
+       XCA                                                              3F6B0430
+       ORA     FPFRM                                                    3F6B0440
+       FAD     FPNT1                                                    3F6B0450
+       FRN                                                              3F6B0460
+       ADD     SAVE1                                                    3F6B0470
+       TRA     1,4           RETURN TO MAIN PROGRAM                     3F6B0480
+       SPACE                                                            3F6B0490
+ ERROR CALL    .FXEM.(EEXP)                                             3F6B0500
+       CLA     OMEGA                                                    3F6B0510
+       LXA     LINK,4                                                   3F6B0520
+       TRA     1,4                                                      3F6B0530
+       SPACE                                                            3F6B0540
+ MAXIM OCT     207540074636        88.029692                            3F6B0550
+ MINIM OCT     -207545523742       -89.415987                           3F6B0560
+ OMEGA OCT     377777777777                                             3F6B0570
+ LOGE2 OCT     270524354513  1.442695049B1                              3F6B0580
+ CNVRT OCT     242                                                      3F6B0590
+ FPNT1 OCT     201400000000                                             3F6B0600
+ FPFRM OCT     200000000000                                             3F6B0610
+   A   OCT     127325604305  87.417497202B8                             3F6B0620
+   B   OCT     046477071524  617.9722695B12                             3F6B0630
+   C   OCT     010676467775  0.03465735903B0                            3F6B0640
+   D   OCT     237214030721  9.9545957821B4                             3F6B0650
+ SAVE1 BSS     1                                                        3F6B0660
+ SAVE2 BSS     1                                                        3F6B0670
+ SAVE3 BSS     1                                                        3F6B0680
+ SAVE4 BSS     1                                                        3F6B0690
+  EEXP DEC     8                                                        3F6B0700
+       PZE     E8MES,,7                                                 3F6B0710
+       PZE     E8OMS,,4                                                 3F6B0720
+ E8MES BCI     7,0EXP(X), X GRT THAN 88.029692 NOT ALLOWED              3F6B0730
+ E8OMS BCI     4,0SET RESULT = + OMEGA                                  3F6B0740
+       SPACE                                                            3F6B0750
+  LINK LDIR                                                             3F6B0760
+       END                                                              3F6B0770

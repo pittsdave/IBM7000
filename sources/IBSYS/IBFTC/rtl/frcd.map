@@ -1,0 +1,200 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - FRCD              3FB00000
+$IBMAP FRCD    190                                                      3FB00010
+       TTL     FRCD/ON-LINE CARD READ AND HOLLERITH TO BCD CONVERSION   3FB00020
+       REM                                                              3FB00030
+       REM     CALL .FRCD.(LF) IS COMPILED FOR READ F.                  3FB00040
+       REM     LF IS LOCATION OF FORMAT STATEMENT F.                    3FB00050
+       REM     ENTRY POINT .CARD. IS USED BY FRWD TO READ ONE CARD      3FB00060
+       REM     ON-LINE AND TO CONVERT FROM HOLLERITH TO BCD.            3FB00070
+       REM                                                              3FB00080
+       ENTRY   .FRCD.                                                   3FB00090
+.FRCD. SXA     LNKG,4                                                   3FB00191
+       SXA     SYSLOC,4                                                 3FB00192
+       SXA     RTRN,4                SAVE RETURN TO MAIN PROGRAM        3FB00193
+       LAC     SYSUNI,4              OBTAIN LOCATION OF WORD            3FB00200
+       CLA     SYSCRD,4              CONTAINING UCB OF SYSTEM CARD      3FB00210
+       STA     UCBADD                READER. STORE FOR CALLING SEQUENCE.3FB00220
+       CALL    .FIOH.(RDCRD,RTRN)                                       3FB00230
+       ORG     *-2                   OVERLAY CALL WITH ARGS             3FB00240
+RDCRD  NOP     CARD,1                NOP=READ,TAG=ONLIN SWITCH ON       3FB00250
+RTRN   PZE     0,,BCDBUF             DEC. CONTAINS ADDRESS OF BUFFER    3FB00251
+CARD   SXA     SVCARD,2              IOEX READ ROUTINE                  3FB00260
+       SXA     SVCARD+1,4                                               3FB00261
+       TSX     IOXRW,4               ONE CARD ON-LINE.                  3FB00270
+       PTW     UCBADD,1,IOCRD                                           3FB00280
+       PZE     CEOF                                                     3FB00290
+       TSX     CONHB,4               CONVERT INPUT CARD TO BCD.         3FB00300
+       AXT     1,2                                                      3FB00310
+       SXA     .FDX1,2                                                  3FB00311
+       SXA     .FDX2,2                                                  3FB00312
+SVCARD AXT     **,2                                                     3FB00313
+       AXT     **,4                                                     3FB00314
+       TRA     1,2                                                      3FB00320
+       REM  ROUTINE TO PERFORM IOEX READ                                3FB00330
+IOXRW  SXA     IOXS4,4               SAVE FOR RETURN.                   3FB00340
+       CLA     2,4                                                      3FB00350
+       STA     IOXEF                 SET EOF EXIT.                      3FB00360
+       CAL     1,4                   FIRST WORD OF CALLING SEQUENCE.    3FB00370
+       STA     IOXND                 PUT LOC IN ACTIVE CALLING SEQ.     3FB00380
+       STA     *+1                   SET TO PICK UP UCB.                3FB00390
+       LAC     **,4                  -L(UCB)                            3FB00400
+       ARS     18                    LOCATION OF I/O COMMAND.           3FB00410
+       STA     IOXSLL                PUT IN SELECT WORD.                3FB00420
+       CLA     IOXSLL                GET SELECT WORD.                   3FB00430
+       ZET     1,4                   TEST FOR UNIT IN USE.              3FB00440
+       TRA     *-1                   WAIT UNTIL OUT OF USE.             3FB00450
+       STO     1,4                   SIGNED CONTROL TO UCB WORD 2.      3FB00460
+       STZ     IOXIN                 SET IN-OPERATION WORD ON.          3FB00470
+       TSX     .ACTV,4               GO ACTIVATE.                       3FB00480
+IOXND  PZE     **                    UNIT.                              3FB00490
+       NZT     IOXIN                 TEST FOR REQUEST COMPLETE.         3FB00500
+       TRA     *-1                   WAIT UNTIL DONE.                   3FB00510
+       LDI     IOXIN                 PICK UP COMPLETION BITS.           3FB00520
+IOXS4  AXT     **,4                  SET FOR EXIT.                      3FB00530
+       LFT     200000                TEST FOR EOF.                      3FB00540
+IOXEF  TRA     **                    EOF EXIT.                          3FB00550
+       TRA     3,4                   NORMAL RETURN.                     3FB00560
+       REM                                                              3FB00570
+IOXSLL PTW     **,1,IOXSEL           LOCATION OF SELECT ROUTINE.        3FB00580
+IOXIN  PZE     **                    IN-OPERATION WORD.                 3FB00590
+       REM                                                              3FB00600
+       REM  SELECT ROUTINE                                              3FB00610
+IOXSEL SXA     IOXSS4,4              SAVE FOR RETURN.                   3FB00620
+       PAC     0,4                   -L(UCB)                            3FB00630
+       TMI     IOXPST                POST ENTRY.                        3FB00640
+       STZ     SYSJOB+2            ALWAYS BCD. SET MODSW.               3FB00641
+       CLA     0,4                   UCB WORD 1.                        3FB00650
+       PDX     0,2                   UNIT TO IR2.                       3FB00660
+       CLA     1,4                   UCB WORD 2.                        3FB00670
+       STA*    .RCHX                 STORE LOC TO RCHX FROM.            3FB00680
+       SXA     *+2,2                 PUT UNIT IN SELECT.                3FB00690
+       ZET*    SYSJOB+1              SKIP SELECT IF DCS.                3FB00691
+       RDS     **                    READ SELECT.                       3FB00700
+       XEC*    .RCHX                 ISSUE RESET LOAD CHANNEL.          3FB00710
+IOXSS4 AXT     **,4                  RESTORE FOR RETURN.                3FB00720
+       TRA     1,4                   EXIT.                              3FB00730
+IOXPST STI     IOXIN                 POST TIME, SAVE ERROR FLAGS.       3FB00740
+       STL     IOXIN                 SET IN-OPERATION WORD OFF.         3FB00750
+       STZ     1,4                   SET UCB WORD 2 TO ZERO.            3FB00760
+       TRA     IOXSS4                GO EXIT.                           3FB00770
+       REM  HOLLERITH TO BCD CONVERSION                                 3FB00780
+CONHB  SXA     SVCON,4                                                  3FB00790
+       STI     CONJ                                                     3FB00800
+       AXT     12,1                  CLEAR BCD BUFFER.                  3FB00810
+       STZ     BCDBUF+12,1                                              3FB00820
+       TIX     *-1,1,1                                                  3FB00830
+       AXT     4,4                   INITIALIZE LEFT HALF.              3FB00840
+CON1   AXC     13,2                                                     3FB00850
+       LDI     CONG                  CLEAR SENSE INDICATORS.            3FB00860
+       CAL*    COND+4,4              PLACE 3-ROW IN AC.                 3FB00870
+       TXI     *+1,2,2                                                  3FB00880
+       ORA*    COND+4,4              4-ROW INTO 3-ROW.                  3FB00890
+       SLW     CONH                  3-OR 4-ROW TO CONH.                3FB00900
+       TXI     *+1,2,-12                                                3FB00910
+       LDI*    COND+4,4              Y-ROW TO INDICATORS.               3FB00920
+       TXI     *+1,2,2                                                  3FB00930
+       OFT*    COND+4,4              CHECK X-ROW AGAINST Y-ROW.         3FB00940
+       TRA     ERR                   ZONE PUNCH ERROR.                  3FB00950
+       OSI*    COND+4,4                                                 3FB00960
+       STI     CONI                  STORE X OR Y.                      3FB00970
+       TXI     *+1,2,20                                                 3FB00980
+       LDI*    COND+4,4              9-ROW TO INDICATORS.               3FB00990
+       TXI     *+1,2,-16                                                3FB01000
+       AXT     7,1                                                      3FB01010
+CON2   OFT*    COND+4,4              CHECK 9-ROW AGAINST 1 THRU 7.      3FB01020
+       TRA     ERR                   NUMERIC PUNCH ERROR.               3FB01030
+       OSI*    COND+4,4              ROWS 9 AND 1-7 ORED INTO SI.       3FB01040
+       TXI     *+1,2,2                                                  3FB01050
+       TIX     CON2,1,1                                                 3FB01060
+       IIS     CONH                  TAKE 3 OR 4 OUT OF INDICATORS.     3FB01070
+       OFT*    COND+4,4              CHECK 8-ROW AGAINST 9,7,6,5,2,1.   3FB01080
+       TRA     ERR                   NUMERIC PUNCH ERROR.               3FB01090
+       OSI*    COND+4,4              8-ROW ORED INTO INDICATORS.        3FB01100
+       OSI     CONH                  9 THRU 1 ORED INTO INDICATORS.     3FB01110
+       TXI     *+1,2,-16                                                3FB01120
+       PIA                                                              3FB01130
+       ANA*    COND+4,4                                                 3FB01140
+       SLW     CONH                  STORE ZERO ZONES.                  3FB01150
+       ANA     CONI                                                     3FB01160
+       TNZ     ERR                   ZONE PUNCH ERROR.                  3FB01170
+       CAL*    COND+4,4                                                 3FB01180
+       OAI                                                              3FB01190
+       OSI     CONI                  ALL PUNCHES ORED INTO INDICATORS.  3FB01200
+       ANA     CONI                                                     3FB01210
+       SLW*    COND+4,4                                                 3FB01220
+       PIA                                                              3FB01230
+       COM                                                              3FB01240
+       ORA     CONH                                                     3FB01250
+       TXI     *+1,2,-6                                                 3FB01260
+       SLW*    COND+4,4                                                 3FB01270
+CON3   AXT     6,1                                                      3FB01280
+       CAL*    COND+4,4                                                 3FB01290
+       SLW     CONH                                                     3FB01300
+CON4   LDQ     CONH                                                     3FB01310
+       SXA     X1,1                                                     3FB01320
+       AXT     6,1                                                      3FB01330
+CON5   ALS     5                                                        3FB01340
+       LGL     1                                                        3FB01350
+       TIX     CON5,1,1                                                 3FB01360
+X1     AXT     **,1                                                     3FB01370
+       STQ     CONH                                                     3FB01380
+       XCL                                                              3FB01390
+       MPY     CONA-1,2                                                 3FB01400
+       LLS     35                                                       3FB01410
+       ACL*    CONE+4,4                                                 3FB01420
+       SLW*    CONE+4,4                                                 3FB01430
+       TIX     CON4,1,1              THROUGH WITH THIS HALF.            3FB01440
+       TXH     CON6,2,-3             YES.                               3FB01450
+       TXI     CON3,2,2              NO.                                3FB01460
+CON6   TIX     CON1,4,2              THROUGH WITH THIS CARD.            3FB01470
+       LDI     CONJ                  YES. RESTORE INDICATORS.           3FB01480
+SVCON  AXT     **,4                                                     3FB01490
+       TRA     1,4                                                      3FB01500
+ERR    CALL    .FXEM.(CODE1)         ILLEGAL CARD CHARACTER.            3FB01510
+       TRA     CARD+2                OPTIONAL EXIT,READ NEXT CARD.      3FB01520
+CEOF   CALL    .FXEM.(CODE2)         EOF CARD READER.                   3FB01530
+       TRA     .LXERR                NO OPTIONAL EXIT.                  3FB01540
+       REM                                                              3FB01550
+       REM  CONSTANTS AND WORKING STORAGE                               3FB01560
+CONA   OCT     11                                                       3FB01570
+CONB   PZE     HBUF,0,24                                                3FB01580
+       OCT     10                                                       3FB01590
+       PZE                                                              3FB01600
+       OCT     7                                                        3FB01610
+       PZE                                                              3FB01620
+       OCT     6                                                        3FB01630
+       PZE                                                              3FB01640
+       OCT     5                                                        3FB01650
+COND   PZE     HBUF-1,2                                                 3FB01660
+       OCT     4                                                        3FB01670
+       PZE     HBUF,2                                                   3FB01680
+       OCT     3                                                        3FB01690
+CONE   PZE     BCDBUF+6,1                                               3FB01700
+       OCT     2                                                        3FB01710
+       PZE     BCDBUF+12,1                                              3FB01720
+       OCT     1                                                        3FB01730
+CONG   PZE                                                              3FB01740
+       OCT     12                                                       3FB01750
+CONH   PZE                                                              3FB01760
+       OCT     40                                                       3FB01770
+CONI   PZE                                                              3FB01780
+       OCT     20                                                       3FB01790
+CONJ   PZE                                                              3FB01800
+       OCT     60                                                       3FB01810
+CODE1  PZE     45                                                       3FB01820
+ER45MS PZE     E45MES,,4                                                3FB01830
+ER45OP PZE     E45OMS,,5                                                3FB01840
+E45MES BCI     4,0ILLEGAL CARD CHARACTER                                3FB01850
+E45OMS BCI     5,0IGNORE CARD. READ NEXT CARD                           3FB01860
+CODE2  PZE     46                                                       3FB01870
+ER46MS PZE     E46MES,,4                                                3FB01880
+ER46OP PZE     NOOPXT,,7                                                3FB01890
+E46MES BCI     4,0END-OF-FILE CARD READER                               3FB01900
+NOOPXT BCI     7,0NO OPTIONAL EXIT - EXECUTION TERMINATED               3FB01910
+UCBADD PZE     **                                                       3FB01930
+IOCRD  IORT    HBUF,,24              I/O CARD READ COMMAND.             3FB01940
+HBUF   BSS     26                    HOLLERITH INPUT BUFFER.            3FB01950
+BCDBUF BSS     12                    BCD BUFFER.                        3FB01960
+       BCI     2,                                                       3FB01970
+LNKG   LDIR                                                             3FB01980
+       END                                                              3FB01990

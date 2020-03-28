@@ -1,0 +1,53 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - FRWT              3F7C0000
+$IBMAP FRWT    61                                                       3F7C0010
+       TTL     FRWT/REWIND DESIGNATED UNIT                           (7)3F7C0020
+       REM                                                              3F7C0030
+       REM     CALLING SEQUENCE IS CALL .FRWT.(ARG)                     3F7C0040
+       REM     COMPILED FOR SOURCE STATEMENT REWIND N.                  3F7C0050
+       REM     ARG IS LOCATION OF PZE UNITXX WHERE XX IS                3F7C0060
+       REM     LOGICAL UNIT NUMBER.                                     3F7C0070
+       REM                                                              3F7C0080
+.FRWT. SAVE    (2)I                                                     3F7C0090
+       CLA*    3,4                   FIRST WORD OF FILE CONTROL BLOCK.  3F7C0100
+       STA     CLSEFR+1              STORE IN IOCS CALLING SEQUENCES.   3F7C0110
+       STA     OPN+1                                                    3F7C0120
+       STA     NILCLS                                                (7)3F7C0130
+       PAC     0,4                   EXAMINE THIRD WORD                 3F7C0140
+       LDI     2,4                   IN FILE CONTROL BLOCK              3F7C0150
+       LFT     200000                FOR MONITOR CONTROL BIT.           3F7C0160
+       TRA     NOREW                 SYSTEM FILE. DO NOT REWIND.        3F7C0170
+       LDI     1,4                                                   (7)3F7C0190
+       LFT     003000                                                   3F7C0200
+       TRA     WEOF                  PREVIOUS ACTIVITY OUTPUT.          3F7C0210
+       LFT     040000                INPUT.  IS FILE OPEN...         (7)3F7C0211
+       TRA     INCLS                 YES                             (7)3F7C0212
+       SIL     001000                NO.  OPEN AFTER                 (7)3F7C0213
+       STI     1,4                   SETTING IT TO OUTPUT            (7)3F7C0214
+       TSX     OPN,2                 TO PREVENT BUFFERING.           (7)3F7C0215
+       TSX     .CLOSE,4              NOW CLOSE (TO PERMIT TYPE       (7)3F7C0216
+NILCLS MON     **                    SWITCH) WITH NO EOF AND NO REW. (7)3F7C0217
+       TSX     SETIN,2               SET FILE TO INPUT               (7)3F7C0218
+INCLS  TSX     CLSEFR,2              AND CLOSE WITH REWIND ONLY.     (7)3F7C0220
+       RETURN  .FRWT.                REWIND. RETURN TO OBJECT PROGRAM.  3F7C0230
+NOREW  CALL    .FOUT.(ARG)           REWIND IGNORED FOR SYSTEM FILE.    3F7C0240
+       RETURN  .FRWT.                RETURN TO OBJECT PROGRAM           3F7C0250
+ARG    PZE     RWMES,,13                                                3F7C0260
+WEOF   LNT     040000                IS FILE CLOSED.                    3F7C0270
+       TSX     OPN,2                 YES. OPEN FILE.                    3F7C0280
+       TSX     CLSEFR,2              CLOSE WITH EOF AND REWIND.         3F7C0290
+       TSX     SETIN,2               EXIT SETTING FILE TO INPUT.     (7)3F7C0300
+       RETURN  .FRWT.                RETURN TO OBJECT PROGRAM.          3F7C0340
+RWMES  BCI     9,0REQUEST TO REWIND UNIT ASSIGNED AS SYSIN1, SYSOU1,OR  3F7C0350
+       BCI     4,SYSPP1 HAS BEEN IGNORED.                               3F7C0360
+CLSEFR TSX     .CLOSE,4                                                 3F7C0370
+       PTW     **                                                       3F7C0380
+       TRA     1,2                                                      3F7C0390
+OPN    TSX     .OPEN,4                                                  3F7C0400
+       MON     **                                                       3F7C0410
+       TRA     1,2                                                      3F7C0420
+SETIN  LAC     OPN+1,4               ROUTINE TO RESET BITS 7 AND 8   (7)3F7C0430
+       LDI     1,4                   IN 2ND WORD OF FCB, SETTING     (7)3F7C0431
+       RIL     003000                THE FILE TO INPUT.              (7)3F7C0432
+       STI     1,4                                                   (7)3F7C0433
+       TRA     1,2                                                   (7)3F7C0434
+       END                                                              3F7C0440

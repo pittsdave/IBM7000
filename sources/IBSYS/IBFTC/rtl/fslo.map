@@ -1,0 +1,41 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - FSLO              3F7J0000
+$IBMAP FSLO    41                                                       3F7J0010
+       TTL     FSLO/SHORT LIST OUTPUT                                   3F7J0020
+       REM                                                              3F7J0030
+       REM     CONTROL IS TRANSFERRED TO THIS ROUTINE BY FSLDO AND      3F7J0040
+       REM     FSLBO TO SET UP INDEXING FOR PROCESSING THE OUTPUT       3F7J0050
+       REM     OF NON-SUBSCRITED ARRAYS.                                3F7J0060
+       REM                                                              3F7J0070
+       ENTRY   .SLO.                                                    3F7J0080
+       ENTRY   .SLO2.                                                   3F7J0090
+       ENTRY   .SDO.                                                    3F7J0100
+       ENTRY   .SDO2.                                                   3F7J0110
+.SLO.  SXA     SV4,4                                                    3F7J0120
+       TSX     GTARGS,2              OBTAIN ARGUMENTS IN CALLING        3F7J0130
+       PAC     0,4                   SEQUENCE TO FSLDO.                 3F7J0140
+       SXD     SL3,4                                                    3F7J0150
+       AXT     0,2                                                      3F7J0160
+ SL1   CLA     **,2                  LIST FOR OUTPUT OF                 3F7J0170
+.SLO2. TSX     **,4                  NON-SUBSCRIPTED                    3F7J0180
+       TXI     *+1,2,-1              SINGLE-PRECISION                   3F7J0190
+ SL3   TXH     *-3,2,**              ARRAYS.                            3F7J0200
+ SV4   AXT     **,4                                                     3F7J0210
+       TRA     1,4                                                      3F7J0220
+.SDO.  SXA     SV4,4                                                    3F7J0230
+       TSX     GTARGS,2              OBTAIN ARGUMENTS IN CALLING        3F7J0240
+       ALS     1                     SEQUENCE TO FSLBO.                 3F7J0250
+       PAC     0,4                                                      3F7J0260
+       SXD     SD3,4                                                    3F7J0270
+       AXT     0,2                                                      3F7J0280
+ SD1   DLD     **,2                  LIST FOR OUTPUT OF                 3F7J0290
+.SDO2. TSX     **,4                  NON-SUBSCRIPTED                    3F7J0300
+       TXI     *+1,2,-2              DOUBLE-PRECISION                   3F7J0310
+SD3    TXH     SD1,2,**              ARRAYS.                            3F7J0320
+       TRA     SV4                                                      3F7J0330
+GTARGS LXA     SYSLOC,4              OBTAIN INCOMING ARGUMENTS.         3F7J0340
+       CLA     3,4                   LOCATION OF ARRAY.                 3F7J0350
+       STA     SL1                                                      3F7J0360
+       STA     SD1                                                      3F7J0370
+       CLA*    4,4                   NUMBER OF ELEMENTS IN ARRAY.       3F7J0380
+       TRA     1,2                                                      3F7J0390
+       END                                                              3F7J0400

@@ -1,0 +1,66 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F6E0000
+$IBMAP FTNH    150                                                      3F6E0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F6E0015
+       ENTRY   TANH                                                     3F6E0020
+       SPACE   3                                                        3F6E0030
+       REM     HYPERBOLIC TANGENT SUBROUTINE                            3F6E0040
+       SPACE   3                                                        3F6E0050
+  TANH SXA     SYSLOC,4                                                 3F6E0060
+       SXA     LINK,4                                                   3F6E0070
+       CLA*    3,4           PICK UP ARG,T                              3F6E0080
+       STO     SAVE1         SAVE ARGUMENT                              3F6E0090
+       SSP                                                              3F6E0100
+       LDQ     MAXIM         RETURN WITH 1.0                            3F6E0110
+       TLQ     ONE             IF BIGGER THAN 10.4                      3F6E0120
+       LDQ     TRESH         TEST FOR                                   3F6E0130
+       TLQ     OTHER           CIRCUIT                                  3F6E0140
+       LDQ     SAVE1                                                    3F6E0150
+       FMP     SAVE1         SQUARE                                     3F6E0160
+       STO     SAVE2                                                    3F6E0170
+       LDQ     K9                                                       3F6E0180
+       STQ     SAVE3                                                    3F6E0190
+       AXT     4,4                                                      3F6E0200
+  LOOP FDP     SAVE3         COMPUTE                                    3F6E0210
+       XCA                     CONTINUED                                3F6E0220
+       FAD     K1+1,4            FRACTION                               3F6E0230
+       STO     SAVE3                                                    3F6E0240
+       CLA     SAVE2                                                    3F6E0250
+       TIX     LOOP,4,1                                                 3F6E0260
+       CLA     SAVE1                                                    3F6E0270
+       FDP     SAVE3                                                    3F6E0280
+       XCA                                                              3F6E0290
+       TRA     RET           GO TO FINALIZE                             3F6E0300
+       SPACE                                                            3F6E0310
+ OTHER ADD     FMP2          MULTIPLY BY 2                              3F6E0320
+       STO     SAVE3                                                    3F6E0330
+       CALL    EXP(SAVE3)    COMPUTE BY EXPONENTIAL METHOD              3F6E0340
+       FAD     K1              EXPONENTIAL                              3F6E0350
+       STO     SAVE2             METHOD                                 3F6E0360
+       CLS     K2                                                       3F6E0370
+       FDP     SAVE2                                                    3F6E0380
+       XCA                                                              3F6E0390
+       FAD     K1                                                       3F6E0400
+       FRN                                                              3F6E0410
+ SIGN  LDQ     SAVE1         SET                                        3F6E0420
+       LLS     0               SIGN                                     3F6E0430
+   RET LXA     LINK,4        RESTORE                                    3F6E0440
+       TRA     1,4                                                      3F6E0450
+       SPACE                                                            3F6E0460
+   ONE CLA     K1            PUT ONE AS                                 3F6E0470
+       TRA     SIGN              ANSWER                                 3F6E0480
+       SPACE                                                            3F6E0490
+ MAXIM OCT     204514631463  10.4                                       3F6E0500
+ TRESH OCT     200431175237  0.5493061442                               3F6E0510
+  FMP2 OCT     1000000000                                               3F6E0520
+    K2 OCT     202400000000  2.0                                        3F6E0530
+    K9 OCT     204440701331  9.0274307                                  3F6E0540
+       OCT     203700000000  7.0                                        3F6E0550
+       OCT     203500000000  5.0                                        3F6E0560
+       OCT     202600000000  3.0                                        3F6E0570
+    K1 OCT     201400000000  1.0                                        3F6E0580
+ SAVE1 PZE                                                              3F6E0590
+ SAVE2 PZE                                                              3F6E0600
+ SAVE3 PZE                                                              3F6E0610
+       SPACE                                                            3F6E0620
+  LINK LDIR                                                             3F6E0630
+       END                                                              3F6E0640

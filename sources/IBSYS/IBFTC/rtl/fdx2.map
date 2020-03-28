@@ -1,0 +1,61 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F9H0000
+$IBMAP FDX2    50                                                       3F9H0010
+       TTL     DOUBLE PRECISION EXPONENTIAL,FLTG. BASE AND EXPT.-DX2    3F9H0020
+.DXP2. SAVE    (4)                                                      3F9H0030
+       DLD*    4,4                                                      3F9H0040
+       DST     EXPT                                                     3F9H0050
+       DLD*    3,4                                                      3F9H0060
+       DST     BASE                                                     3F9H0070
+       NZT     EXPT                                                     3F9H0080
+       TRA     TEST                                                     3F9H0090
+       TZE     OUT                                                      3F9H0100
+       TMI     ERR2                                                     3F9H0110
+ CALLG CALL    DLOG(BASE)                                               3F9H0120
+       DFMP    EXPT                                                     3F9H0130
+       DST     EXPT                                                     3F9H0140
+ CLEX  CALL    DEXP(EXPT)                                               3F9H0150
+       RETURN  .DXP2.                                                   3F9H0160
+ TEST  TZE     ERR                                                      3F9H0170
+       DLD     FLONE                                                    3F9H0180
+       RETURN  .DXP2.                                                   3F9H0190
+ OUT   CLA     EXPT                                                     3F9H0200
+       TMI     ERR1                                                     3F9H0210
+       ZAC                                                              3F9H0220
+       LDQ     ZERO                                                     3F9H0230
+       RETURN  .DXP2.                                                   3F9H0240
+ ERR   CALL    .FXEM.(DXP2E2)                                           3F9H0250
+ CALLM ZAC                                                              3F9H0260
+       LDQ     ZERO                                                     3F9H0270
+       RETURN  .DXP2.                                                   3F9H0280
+ ERR1  CALL    .FXEM.(DXP2E3)                                           3F9H0290
+       TRA     CALLM                                                    3F9H0300
+ ERR2  CALL    .FXEM.(DXP2E1)                                           3F9H0310
+       SSP                                                              3F9H0320
+       LRS     0                                                        3F9H0330
+       DST     BASE                                                     3F9H0340
+       TRA     CALLG                                                    3F9H0350
+ZERO   DEC     0                                                        3F9H0360
+       EVEN                                                             3F9H0370
+FLONE  DEC     1.0                                                      3F9H0380
+       OCT     146000000000                                             3F9H0390
+ BASE  DEC     0,0                                                      3F9H0400
+ EXPT  DEC     0,0                                                      3F9H0410
+ E1                                                                     3F9H0420
+ E2                                                                     3F9H0430
+ E3                                                                     3F9H0440
+ E4                                                                     3F9H0450
+DXP2E1 DEC     16             (-A)**B                                   3F9H0460
+ER16MS PZE     E16MES,,5                                                3F9H0470
+ER16OP PZE     E16OMS,,3                                                3F9H0480
+E16MES BCI     5,0EXPONENTIATION ERROR (-B)**C                          3F9H0490
+E16OMS BCI     3,0EVALUATE FOR +B                                       3F9H0500
+DXP2E2 DEC     17             0**0                                      3F9H0510
+ER17MS PZE     E17MES,,5                                                3F9H0520
+ER17OP PZE     E17OMS,,3                                                3F9H0530
+E17MES BCI     5,0EXPONENTIATION ERROR 0**0                             3F9H0540
+E17OMS BCI     3,0SET RESULT = 0                                        3F9H0550
+DXP2E3 DEC     18             0**(-A)                                   3F9H0560
+ER18MS PZE     E18MES,,5                                                3F9H0570
+ER18OP PZE     E17OMS,,3                                                3F9H0580
+E18MES BCI     5,0EXPONENTIATION ERROR 0**(-C)                          3F9H0590
+       END                                                              3F9H0600

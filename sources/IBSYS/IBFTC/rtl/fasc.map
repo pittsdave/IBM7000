@@ -1,0 +1,90 @@
+$*             LIBRARY ARCSINE-ARCCOSINE SUBROUTINE                     3F9L0000
+$IBMAP FASC    150                                                      3F9L0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F9L0015
+       ENTRY   ARCOS                                                    3F9L0020
+       ENTRY   ARSIN                                                    3F9L0030
+       SPACE   3                                                        3F9L0040
+       REM     ARCSINE - ARCCOSINE SUBROUTINE                           3F9L0050
+       SPACE   3                                                        3F9L0060
+ ARCOS STL     FLAG1         ARCCOS ENTRY.   SET FLAG                   3F9L0070
+ ARSIN SXA     SYSLOC,4                                                 3F9L0080
+       SXA     LINK,4                                                   3F9L0090
+       CLA*    3,4           PICK UP ARG, T                             3F9L0100
+       STO     SIGN          ARCSIN ENTRY     SAVE SIGN                 3F9L0110
+       SSP                                                              3F9L0120
+       LDQ     ONE           IF MAGNITUDE GRT THAN 1, ERROR             3F9L0130
+       TLQ     ERROR                                                    3F9L0140
+       LDQ     HALF          IF MAGNITUDE GRT THAN 1/2, SKIP            3F9L0150
+       TLQ     BIG                                                      3F9L0160
+ SERIE STO     ARG           FOR /X/ SMALLER THAN 1/2,                  3F9L0170
+       XCA                     COMPUTE ARCSIN(/X/) BY CHEBYSHEV         3F9L0180
+       FMP     ARG               INTERPOLATION                          3F9L0190
+       STO     SQ                                                       3F9L0200
+       AXT     5,4                                                      3F9L0210
+       ZAC                                                              3F9L0220
+       FAD     COEF+5,4                                                 3F9L0230
+       XCA                                                              3F9L0240
+       FMP     SQ                                                       3F9L0250
+       TIX     *-3,4,1                                                  3F9L0260
+       XCA                   THIS PARTICULAR ORDER OF COMPUTATION HAS   3F9L0270
+       FMP     ARG             A SUBSTANTIAL BEARING ON THE ACCURACY    3F9L0280
+       FAD     ARG                                                      3F9L0290
+       NZT     FLAG2         IF ORIG /X/ SMALLER THAN 1/2               3F9L0300
+       TXI     *+3,4,-1        SET XR4=0, AND JUMP                      3F9L0310
+       TZE     *+2           IF ORIG /X/ GREATER THAN 1/2               3F9L0320
+       ADD     CH1             DOUBLE ARCSIN(SQRT((1-/X/)/2)), XR4=1    3F9L0330
+       XEC     TEST+1,4                                                 3F9L0340
+       TRA     *+3           IF ASIN AND BIG, OR IF ACOS AND SMALL,     3F9L0350
+       CHS                     SUBTRACT THE WORK FROM PI/2              3F9L0360
+       FAD     PIOV2                                                    3F9L0370
+       LDQ     SIGN                                                     3F9L0380
+       TQP     *+4           IF ORIGINAL ARG WAS +, ANSWER IS READY     3F9L0390
+       CHS                   IF NEGATIVE AND ASIN, CHANGE SIGN OF ANS   3F9L0400
+       ZET     FLAG1                                                    3F9L0410
+       FAD     PI            IF NEGATIVE AND ACOS, SUBTRACT THE WORK    3F9L0420
+       STZ     FLAG2           FROM PI                                  3F9L0430
+  RET  STZ     FLAG1                                                    3F9L0440
+       LXA     LINK,4                                                   3F9L0450
+       TRA     1,4                                                      3F9L0460
+       SPACE                                                            3F9L0470
+  BIG  SSM                   CASE WHEN /X/ IS GRT THAN 1/2              3F9L0480
+       FAD     ONE                                                      3F9L0490
+       TZE     *+2           OBTAIN MODIFIED ARGUMENT,                  3F9L0500
+       SUB     CH1             SQRT((1-/X/)/2) AND MERGE MAIN           3F9L0510
+       STO     ARG                                                      3F9L0520
+       STL     FLAG2                                                    3F9L0530
+       TSX     SQRT,4                                                   3F9L0540
+       TXI     SERIE,,1                                                 3F9L0550
+       PZE     50,,LINK                                                 3F9L0560
+       PZE     ARG                                                      3F9L0570
+       SPACE                                                            3F9L0580
+ TEST  ZET     FLAG1                                                    3F9L0590
+       NZT     FLAG1                                                    3F9L0600
+       SPACE                                                            3F9L0610
+ ERROR CALL    .FXEM.(EASCN)                                            3F9L0620
+       ZAC                                                              3F9L0630
+       TRA     RET                                                      3F9L0640
+       SPACE                                                            3F9L0650
+ FLAG1 PZE                                                              3F9L0660
+ FLAG2 PZE                                                              3F9L0670
+ SIGN  BSS     1                                                        3F9L0680
+  ARG  BSS     1                                                        3F9L0690
+  SQ   BSS     1                                                        3F9L0700
+ HALF  OCT     200400000000                                             3F9L0710
+  CH1  OCT     1000000000                                               3F9L0720
+ PIOV2 OCT     201622077325                                             3F9L0730
+  PI   OCT     202622077325                                             3F9L0740
+ COEF  OCT     174533367164    0.0424173419                             3F9L0750
+       OCT     173611074307    0.0239940153                             3F9L0760
+       OCT     174564717277    0.0455206330                             3F9L0770
+       OCT     175462767135    0.0749469671                             3F9L0780
+       OCT     176525253701    0.166667820                              3F9L0790
+  ONE  OCT     201400000000                                             3F9L0800
+ EASCN DEC     72                                                       3F9L0810
+       PZE     E72MES,,8                                                3F9L0820
+       PZE     E72OMS,,3                                                3F9L0830
+E72MES BCI     8,0ARSIN(X) OR ARCOS(X),/X/ GRT THAN 1 NOT ALLOWED       3F9L0840
+E72OMS BCI     3,0SET RESULT = 0                                        3F9L0850
+       SPACE                                                            3F9L0860
+  LINK LDIR                                                             3F9L0870
+       END                                                              3F9L0880

@@ -1,0 +1,270 @@
+$*     7090/7094 IBLIB FORTRAN SYSTEM LIBRARY - FFPT                    3AM00000
+$IBMAP .FPTRP  150,()OK                                                 3AM00010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3AM00011
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90,             3AM00012
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94.            3AM00013
+       REM       (OR TO ANY VALUE NOT EQUAL TO 90)                      3AM00014
+M9094  SET     90                                                       3AM00015
+       PCC     ON                                                       3AM00016
+       IFF     M9094=90                                                 3AM00017
+       GOTO    BEG94                                                    3AM00018
+       PCC     OFF                                                      3AM00019
+       TTL     .FPTRP - FLOATING POINT TRAP ROUTINE                     3AM00020
+       ENTRY   .FFPT.                                                   3AM00030
+       ENTRY   OVFLOW                                                   3AM00040
+       ENTRY   .FPARG                                                   3AM00050
+       ENTRY   .FPOUT                                                   3AM00060
+.FFPT. TXI     *+6,0,0                                                  3AM00070
+       AXT     **,1                                                     3AM00080
+       AXT     **,4                                                     3AM00090
+       LDI     *+2                                                      3AM00100
+       TRA     **                                                       3AM00110
+       PZE                                                              3AM00120
+       STI     *-1                                                      3AM00130
+       SXA     *-5,4                                                    3AM00140
+       SXA     *-7,1                                                    3AM00150
+       LXA     0,4                                                      3AM00160
+       SXA     *-6,4                                                    3AM00170
+       STO     SAC                                                      3AM00180
+       STQ     SMQ                                                      3AM00190
+       CLA     0                                                        3AM00200
+       ORS     OVFLOW         SAVE INDICATORS                        $5$3AM00210
+       PAI                                                              3AM00220
+       PAX     ,1             COMPUTE ADDRESS OF TRAP.                  3AM00230
+       TXI     *+1,1,-1                                                 3AM00240
+       PXA     ,1             CONVERT BINARY TO OCTAL                   3AM00250
+       LGR     15                                                       3AM00260
+       CLA     BLNK                                                     3AM00270
+       TOV     *+1                                                      3AM00280
+       ALS     3                                                        3AM00290
+       LGL     3                                                        3AM00300
+       TNO     *-2                                                      3AM00310
+       LFT     40             ODD ADDRESS.                              3AM00320
+       TRA     ODD            YES.                                      3AM00330
+       LFT     4              OVERFLOW.                                 3AM00340
+       TRA     OVR            YES                                       3AM00350
+       LFT     2              AC UNDERFLOW AND AC AND MQ UNDERFLOW      3AM00360
+       TRA     ACUN                                                     3AM00370
+       SLW     UM+2                                                     3AM00380
+       CLA     UMC                                                      3AM00390
+       TSX     OUT,1                                                    3AM00400
+ MQUF  CAL     L(10)                                                    3AM00410
+       ANS     SMQ                                                      3AM00420
+       LDQ     SMQ                                                      3AM00430
+       CLA     SAC                                                      3AM00440
+       TRA     .FFPT.+1                                                 3AM00450
+ACUN   SLW     UAM+2                                                    3AM00460
+       LFT     1                                                        3AM00470
+       TRA     ACMQU          YES                                       3AM00480
+ACU    CLA     UAC                                                      3AM00490
+       TSX     OUT,1                                                    3AM00500
+       TRA     ACZ                                                      3AM00510
+ACMQU  CLA     UAMC                                                     3AM00520
+       TSX     OUT,1                                                    3AM00530
+ MQZ   CAL     L(10)                                                    3AM00540
+       ANS     SMQ                                                      3AM00550
+ACZ    LDQ     SMQ                                                      3AM00560
+       CLA     SAC                                                      3AM00570
+       CLM                                                              3AM00580
+       TRA     .FFPT.+1                                                 3AM00590
+OVR    LFT     2              AC OVERFLOW AND AC AND MQ OVERFLOW.       3AM00600
+       TRA     ACOV                                                     3AM00610
+MQO    SLW     OM+2                                                     3AM00620
+       CLA     OMC                                                      3AM00630
+       TSX     OUT,1                                                    3AM00640
+ MQOV  CAL     L(1)                                                     3AM00650
+       ORS     SMQ                                                      3AM00660
+       LDQ     SMQ                                                      3AM00670
+       CLA     SAC                                                      3AM00680
+       TRA     .FFPT.+1                                                 3AM00690
+ACOV   SLW     OAM+2                                                    3AM00700
+       LFT     1                                                        3AM00710
+       TRA     ACMQO          YES                                       3AM00720
+ACO    CLA     OAC                                                      3AM00730
+       TSX     OUT,1                                                    3AM00740
+       TRA     ACON                                                     3AM00750
+ACMQO  CLA     OAMC                                                     3AM00760
+       TSX     OUT,1                                                    3AM00770
+ MQON  CAL     L(1)                                                     3AM00780
+       ORS     SMQ                                                      3AM00790
+ACON   LDQ     SMQ                                                      3AM00800
+       CLA     SAC                                                      3AM00810
+       ORA     L(1)                                                     3AM00820
+       TRA     .FFPT.+1                                                 3AM00830
+ODD    SLW     OD+2                                                     3AM00840
+       CLA     ODC                                                      3AM00850
+       TSX     OUT,1                                                    3AM00860
+ODD1   LDQ     SMQ            RESTORE MQ                                3AM00870
+       CLA     SAC            RESTORE AC                                3AM00880
+       TRA     .FFPT.+1                                                 3AM00890
+OUT    STO     .FPARG         SET UP ARGUMENT FOR OUTPUT ROUTINE.       3AM00900
+       LXA     COUNT,4        TEST WHETHER MAXIMUM MESSAGE COUNT        3AM00910
+       TNX     RTN,4,1        HAS BEEN EXCEEDED.                        3AM00920
+       SXA     COUNT,4        SAVE DECREMENTED COUNT.                   3AM00930
+.FPOUT CALL    .LXSL1(ARG)         WRITE MESSAGE.  CALL OVERLAID    (10)3AM00940
+       REM                    IF FOUT IS LOADED FOR PROGRAM.            3AM00950
+RTN    TRA     1,1                                                      3AM00960
+ARG    PTW     SYSOU1,,.FPARG                                           3AM00970
+.FPARG IOCP    **,,**                                                   3AM00980
+       TCH     .LTCH                                                    3AM00990
+.COUNT CONTRL  COUNT,UAM      MAXIMUM NUMBER OF TIMES .FPTRP            3AM01000
+COUNT  DEC     6              WILL WRITE MESSAGES PER EXECUTION.        3AM01010
+UAM    BCI     6,0UNDRFLOW AT       IN AC AND MQ.                       3AM01020
+UM     BCI     4,0UNDRFLOW AT       IN MQ                               3AM01030
+OAM    BCI     6,0OVERFLOW AT       IN AC AND MQ.                       3AM01040
+OM     BCI     4,0OVERFLOW AT       IN MQ                               3AM01050
+OD     BCI     4,0ADDRESS AT        ODD.                                3AM01060
+UAC    IOCP    UAM,,4                                                   3AM01070
+UAMC   IOCP    UAM,,6                                                   3AM01080
+UMC    IOCP    UM,,4                                                    3AM01090
+OAC    IOCP    OAM,,4                                                   3AM01100
+OAMC   IOCP    OAM,,6                                                   3AM01110
+OMC    IOCP    OM,,4                                                    3AM01120
+ODC    IOCP    OD,,4                                                    3AM01130
+ BLNK  OCT     000000000060                                             3AM01140
+ L(1)  PTH     -1,7,-1                                                  3AM01150
+ L(10) FOR                                                              3AM01160
+ L(11) SVN     -1,7,-1                                                  3AM01170
+OVFLOW PZE     0                                                        3AM01180
+ SMQ   PZE     **                                                       3AM01190
+ SAC   PZE     **                                                       3AM01200
+LNKG   LDIR                                                             3AM01210
+       ORG     8                                                        3AM01220
+       TTR     .FFPT.                                                   3AM01230
+BEG94  NULL                                                             3AM50000
+       PCC     ON                                                       3AM50010
+       IFT     M9094=90                                                 3AM50020
+       GOTO    END94                                                    3AM50030
+       PCC     OFF                                                      3AM50040
+       REM     7094 MODE FLOATING POINT TRAP SUBROUTINE.  RETURNS DIRECT3AM50050
+       REM     LY TO USER IF MQ UNDERFLOW RESULTED FROM DOUBLE PRECISION3AM50060
+       ENTRY   .FFPT.                                                   3AM50070
+       ENTRY   OVFLOW                                                   3AM50080
+       ENTRY   .FPARG                                                   3AM50090
+       ENTRY   .FPOUT                                                   3AM50100
+.FFPT. TXI     *+6,0,0                                                  3AM50110
+       AXT     **,1                                                     3AM50120
+       AXT     **,4                                                     3AM50130
+       LDI     *+2                                                      3AM50140
+  FXIT TRA     **             EXIT BACK TO MAIN PROGRAM                 3AM50150
+       PZE                                                              3AM50160
+       STI     *-1                                                      3AM50170
+       SXA     *-5,4                                                    3AM50180
+       SXA     *-7,1                                                    3AM50190
+       STO     SAC                                                      3AM50200
+       STQ     SMQ                                                      3AM50210
+       CLA     0                                                        3AM50220
+       STA     FXIT           SAVE RETURN ADDRESS                       3AM50230
+       ORS     OVFLOW         SAVE INDICATORS                           3AM50240
+       PAI                                                              3AM50250
+       PAC     ,1             COMPUTE ADDRESS OF TRAP                   3AM50260
+       TXI     *+1,1,1        SAVE THE COMPLEMENT FOR UNDERFLOW USAGE.  3AM50270
+       PCA     ,1             NOW CONVERT THE ADDRESS TO BCD FOR MESSAGE3AM50280
+       LGR     15                                                       3AM50290
+       CLA     BLNK                                                     3AM50300
+       TOV     *+1                                                      3AM50310
+       ALS     3                                                        3AM50320
+       LGL     3                                                        3AM50330
+       TNO     *-2                                                      3AM50340
+       LFT     40             ODD ADDRESS.                              3AM50350
+       TRA     ODD            YES.                                      3AM50360
+       LFT     4              OVERFLOW.                                 3AM50370
+       TRA     OVR            YES                                       3AM50380
+       LFT     2              AC UNDERFLOW AND AC AND MQ UNDERFLOW      3AM50390
+       TRA     ACUN                                                     3AM50400
+       SLW     UM+2           UNDERFLOW IN THE MQ, DISTINGUISH CASES.   3AM50410
+       CAL     0,1            OBTAIN THE INST. CAUSING THE TRAP     (10)3AM50420
+       ARS     24             WE WISH TO LEAVE THE MQ (AND AC) ALONE IF 3AM50430
+       ERA     =O4240         THE UNDERFLOW IS INSIGNIFICANT (IE , THE  3AM50440
+       LBT                    RESULT OF A DOUBLE PRECISION OPERATION.)  3AM50450
+       TNZ     SPMQUF         ALL SUCH OPERATIONS EXCEPT ONE ARE ODD.   3AM50460
+       ERA     =O4001           (EXCEPTION IS DFDH, WHICH IS -240)      3AM50470
+       TNZ     DPMQUF         ALL SINGLE PRECISION OPS EXCEPT ONE ARE   3AM50480
+       REM                    EVEN.   (EXCEPTION IS FDP WHICH IS  241)  3AM50490
+SPMQUF CLA     UMC            SINGLE PRECISION CASE, PRINT MESSAGE ON   3AM50500
+       TSX     OUT,1          STANDARD OUTPUT,                          3AM50510
+       CAL     L(10)          SET MQ=SIGNED ZERO                        3AM50520
+       ANS     SMQ                                                      3AM50530
+DPMQUF LDQ     SMQ            NO MESSAGE GIVEN FOR DBLE PRECISION CASE. 3AM50540
+       CLA     SAC                                                      3AM50550
+       TRA     .FFPT.+1                                                 3AM50560
+ACUN   SLW     UAM+2                                                    3AM50570
+       LFT     1                                                        3AM50580
+       TRA     ACMQU          YES                                       3AM50590
+ACU    CLA     UAC                                                      3AM50600
+       TSX     OUT,1                                                    3AM50610
+       TRA     ACZ                                                      3AM50620
+ACMQU  CLA     UAMC                                                     3AM50630
+       TSX     OUT,1                                                    3AM50640
+ MQZ   CAL     L(10)                                                    3AM50650
+       ANS     SMQ                                                      3AM50660
+ACZ    LDQ     SMQ                                                      3AM50670
+       CLA     SAC                                                      3AM50680
+       CLM                                                              3AM50690
+       TRA     .FFPT.+1                                                 3AM50700
+OVR    LFT     2              AC OVERFLOW AND AC AND MQ OVERFLOW.       3AM50710
+       TRA     ACOV                                                     3AM50720
+MQO    SLW     OM+2                                                     3AM50730
+       CLA     OMC                                                      3AM50740
+       TSX     OUT,1                                                    3AM50750
+ MQOV  CAL     L(1)                                                     3AM50760
+       ORS     SMQ                                                      3AM50770
+       LDQ     SMQ                                                      3AM50780
+       CLA     SAC                                                      3AM50790
+       TRA     .FFPT.+1                                                 3AM50800
+ACOV   SLW     OAM+2                                                    3AM50810
+       LFT     1                                                        3AM50820
+       TRA     ACMQO          YES                                       3AM50830
+ACO    CLA     OAC                                                      3AM50840
+       TSX     OUT,1                                                    3AM50850
+       TRA     ACON                                                     3AM50860
+ACMQO  CLA     OAMC                                                     3AM50870
+       TSX     OUT,1                                                    3AM50880
+ MQON  CAL     L(1)                                                     3AM50890
+       ORS     SMQ                                                      3AM50900
+ACON   LDQ     SMQ                                                      3AM50910
+       CLA     SAC                                                      3AM50920
+       ORA     L(1)                                                     3AM50930
+       TRA     .FFPT.+1                                                 3AM50940
+ODD    SLW     OD+2                                                     3AM50950
+       CLA     ODC                                                      3AM50960
+       TSX     OUT,1                                                    3AM50970
+ODD1   LDQ     SMQ            RESTORE MQ                                3AM50980
+       CLA     SAC            RESTORE AC                                3AM50990
+       TRA     .FFPT.+1                                                 3AM51000
+OUT    STO     .FPARG         SET UP ARGUMENT FOR OUTPUT ROUTINE.       3AM51010
+       LXA     COUNT,4        TEST WHETHER MAXIMUM MESSAGE COUNT        3AM51020
+       TNX     RTN,4,1        HAS BEEN EXCEEDED.                        3AM51030
+       SXA     COUNT,4        SAVE DECREMENTED COUNT.                   3AM51040
+.FPOUT CALL    .LXSL1(ARG)         WRITE MESSAGE.  CALL OVERLAID    (10)3AM51050
+RTN    TRA     1,1            IF FOUT IS LOADED FOR PROGRAM.            3AM51060
+ARG    PTW     SYSOU1,,.FPARG                                           3AM51070
+.FPARG IOCP    **,,**                                                   3AM51080
+       TCH     .LTCH                                                    3AM51090
+.COUNT CONTRL  COUNT,UAM      MAXIMUM NUMBER OF TIMES .FPTRP            3AM51100
+COUNT  DEC     6              WILL WRITE MESSAGES PER EXECUTION.        3AM51110
+UAM    BCI     6,0UNDRFLOW AT       IN AC AND MQ.                    (8)3AM51120
+UM     BCI     4,0UNDRFLOW AT       IN MQ.                           (8)3AM51130
+OAM    BCI     6,0OVERFLOW AT       IN AC AND MQ.                       3AM51140
+OM     BCI     4,0OVERFLOW AT       IN MQ                               3AM51150
+OD     BCI     4,0ADDRESS AT        ODD.                                3AM51160
+UAC    IOCP    UAM,,4                                                   3AM51170
+UAMC   IOCP    UAM,,6                                                   3AM51180
+UMC    IOCP    UM,,4                                                    3AM51190
+OAC    IOCP    OAM,,4                                                   3AM51200
+OAMC   IOCP    OAM,,6                                                   3AM51210
+OMC    IOCP    OM,,4                                                    3AM51220
+ODC    IOCP    OD,,4                                                    3AM51230
+ BLNK  OCT     000000000060                                             3AM51240
+ L(1)  PTH     -1,7,-1                                                  3AM51250
+ L(10) FOR                                                              3AM51260
+ L(11) SVN     -1,7,-1                                                  3AM51270
+OVFLOW PZE     0                                                        3AM51280
+ SMQ   PZE     **                                                       3AM51290
+ SAC   PZE     **                                                       3AM51300
+LNKG   LDIR                                                             3AM51310
+       LORG                                                             3AM51320
+       ORG     8                                                        3AM51330
+       TTR     .FFPT.                                                   3AM51340
+END94  NULL                                                             3AM51350
+       END                                                              3AM51360

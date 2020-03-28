@@ -1,0 +1,76 @@
+$IBMAP FBST.   47                                                    $5$3F4W0000
+       TTL     ALTERNATE FORTRAN I/O  BACKSPACE ROUTINE             (14)3F4W0010
+       LBL     .BST,BEGIN     FBST.                                  (7)3F4W0013
+*              CALLING SEQUENCE FOR -- BACKSPACE N --                $5$3F4W0020
+*                   CALL ..FBST(ARG)                                 $5$3F4W0030
+*                    WHERE ARG = LOCATION OF PZE UNITXX, XX IS       $5$3F4W0040
+*                                LOCATION OF LOGICAL UNIT N          $5$3F4W0050
+       ENTRY   ..FBST                                                $5$3F4W0060
+..FBST SXA     SYSLOC,4            SAVE FORTRAN CALL IN SYSLOC       $5$3F4W0070
+       SXA     LK.DR,4             SAVE X4 IN LINKAGE DIRECTOR       $5$3F4W0080
+       SXA     X2,2                SAVE X2                           $5$3F4W0090
+       STI     LDI                 SAVE SENSE INDICATORS             $5$3F4W0100
+       CAL*    3,4                 GET CONTENTS OF  .UNIT. CELL      $5$3F4W0110
+       STA     WEOF                                                  $5$3F4W0112
+       STA     BST                 SET UP IOEX REFERENCE             $5$3F4W0120
+       CALL    ..FCHK(NOTE,ACTION) VERIFY                            $5$3F4W0130
+       ORG     *-2                  LEGALITY OF                      $5$3F4W0140
+ NOTE  BCI     1, BST                UNIT REQUESTED                  $5$3F4W0150
+ACTION PZE     IGNORE,,2           ACTION   2 = OU1 TESTED ONLY      $5$3F4W0160
+       LAC     BST,4               -(FCB)                           (13)3F4W0162
+       LDI     1,4                 MOVE 2ND WORD OF FCB TO SENSE IND(13)3F4W0164
+       SPACE                                                         $5$3F4W0170
+       LNT     001                 TEST IF OUTPUT FILE              (13)3F4W0171
+       TRA     BCKSP               IF NOT, NO EOF                   (13)3F4W0172
+       TSX     .NDSEL,4                                              $5$3F4W0173
+WEOF   PZE     **,,7                                                 $5$3F4W0174
+       NOP                                                           $5$3F4W0175
+       TSX     BSTR,2              BACKSPACE OVER EOF JUST WRITTEN  (10)3F4W0176
+BCKSP  TSX     BSTR,2              BACKSPACE ONE RECORD             (10)3F4W0200
+       RIL     770000              PON OR PZE IN AC. DEP.           (14)3F4W0210
+       PIA                         ON PREV. ACTION                  (14)3F4W0211
+       ALS     4                                                    (14)3F4W0215
+       CALL    ..FIOS(ENT)          UP                               $5$3F4W0220
+       ORG     *-1                   .LXSEL COMMAND                  $5$3F4W0230
+ENT    IORT    TEST,,3             VIA FIOS.                        (10)3F4W0240
+       STL     .LXMOD              INDICATE MODE SWITCHING TO .LXSL (10)3F4W0241
+REPEAT TSX     ..FIOC,4           READ SINGLE RECORD IN BINARY       $5$3F4W0250
+       TSX     BSTR,2              BACKSPACE SINGLE RECORD           $5$3F4W0260
+*              CHECK TRANSMISSION VIA ..FBCK ENTRY                   $5$3F4W0270
+*              RETURN TO 1,4 IF BINARY RECORD                        $5$3F4W0280
+*              RETURN TO 2,4 IF EOF DETECTED                         $5$3F4W0281
+*              RETURN TO 3,4 IF BCD RECORD                           $5$3F4W0282
+*                  X2 AND IND ARE DESTROYED BY ..FBCK ENTRY          $5$3F4W0290
+       TSX     ..FBCK,4            TRANSMISSION CHECK                $5$3F4W0300
+       TRA     BINARY              NO ERROR FOUND, ASSUME BINARY     $5$3F4W0310
+       TRA     EOF                 EOF DETECTED                      $5$3F4W0311
+       SPACE                                                         $5$3F4W0320
+*                FINISHED BACKSPACING                                $5$3F4W0330
+DONE   NULL                                                          $5$3F4W0340
+IGNORE LDI     LDI                 RESTORE SENSE INDICATORS          $5$3F4W0360
+ X2    AXT     **,2                RESTORE X2                        $5$3F4W0370
+       LXA     LK.DR,4             RESTORE X4                        $5$3F4W0380
+       TRA     1,4                 RETURN                            $5$3F4W0390
+       SPACE                                                         $5$3F4W0400
+*                BINARY RECORD BACKSPACE LOOP                        $5$3F4W0410
+BINARY LXA     TEST,2              TEST FOR                          $5$3F4W0420
+       TNX     DONE,2,1             ADDITIONAL RECORDS               $5$3F4W0430
+       SXA     TEST,2                TO BACKSPACE                    $5$3F4W0440
+       TSX     BSTR,2              BACKSPACE ONE RECORD              $5$3F4W0450
+       TRA     BINARY              TEST AGAIN                        $5$3F4W0460
+       SPACE                                                         $5$3F4W0470
+*                BACKSPACE SUB PROGRAM                               $5$3F4W0480
+                                                                     $5$3F4W0490
+ BSTR  TSX     .NDSEL,4            BACKSPACE RECORD                  $5$3F4W0500
+ BST   PZE     **,,5                VIA                              $5$3F4W0510
+       TRA     1,2                   IOEX                            $5$3F4W0520
+       SPACE                                                         $5$3F4W0530
+*              EOF BACKSPACE CONTROL                                 $5$3F4W0531
+ EOF   TSX     BSTR,2              BACKSPACE OVER EOF MARK           $5$3F4W0532
+       TRA     REPEAT                                                $5$3F4W0533
+       SPACE                                                         $5$3F4W0534
+*                REQUIRED CONSTANTS                                  $5$3F4W0540
+TEST   BSS     3                   TRANSMISSION DATA CELLS          (10)3F4W0560
+ LDI   PZE     0,,0                INDICATOR STORAGE                 $5$3F4W0570
+ LK.DR LDIR                                                          $5$3F4W0600
+       END                                                           $5$3F4W0610

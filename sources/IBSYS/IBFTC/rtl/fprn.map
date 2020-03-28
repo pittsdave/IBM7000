@@ -1,0 +1,102 @@
+$*     7090/7094 BCD ONLINE PRINT ROUTINE                               3F4J0000
+$IBMAP FPRN    ()OK                                                     3F4J0010
+       TTL     FPRN - BCD ONLINE PRINT ROUTINE                       (6)3F4J0020
+*              BCD ONLINE PRINT ROUTINE                                 3F4J0030
+       ENTRY   .FPRN.                                                   3F4J0040
+OUTBUF EQU     .OUTBF                                                   3F4J0041
+.FPRN. SXA     LNKG,4                                                   3F4J0050
+       SXA     SYSLOC,4                                                 3F4J0060
+       SXA     RTRN,4                SAVE RETURN TO MAIN PROGRAM        3F4J0065
+       CALL    .FIOH.(RTNPR,RTRN)                                       3F4J0066
+       ORG     *-2                   OVERLAY CALL                       3F4J0070
+RTNPR  TRA     FPRINT,1              TRA=OUTPUT,TAG=ONLIN SWITCH ON     3F4J0071
+RTRN   PZE                           TRANSMIT LOC. OF CALL              3F4J0080
+       REM  ROUTINE TO PRINT ONE BCD RECORD ON-LINE                     3F4J0130
+FPRINT SXA     RETURN,2                                                 3F4J0140
+       SXA     FILL,1                GET WORD COUNT FOR IOEX            3F4J0160
+       AXT     0,1                                                      3F4J0170
+       PXD     0,0                                                      3F4J0180
+       LDQ     OUTBUF                                                   3F4J0190
+       LGL     6                     GET CARRIAGE CONTROL CHARACTER.    3F4J0200
+       TZE*    SP                    DOUBLE SPACE.                      3F4J0210
+       AXT     3,2                                                      3F4J0220
+       CAS     BLANK+1,2             DETERMINE WHETHER EJECT,           3F4J0230
+       TRA     *+2                   SUPPRESS SPACE OR                  3F4J0240
+       TRA*    SP,2                  SINGLE SPACE REQUESTED.            3F4J0250
+       TIX     *-3,2,1                                                  3F4J0260
+SINGL  STZ     SPACE                 ASSUME SINGLE SPACE.               3F4J0270
+       TRA     PRN                                                      3F4J0280
+SUPS   AXT     SUPSP,4               SUPPRESS SPACING                   3F4J0290
+       TRA     DOUBL+1                                                  3F4J0300
+DOUBL  STZ     SPACE                 DOUBLE SPACE REQUESTED.            3F4J0310
+       CLA     DOUBL1-1                                                 3F4J0320
+       STD     DBSPSW                                                   3F4J0330
+       TRA     PRN                                                      3F4J0340
+DOUBL1 CLA     NOP                                                      3F4J0350
+       STD     DBSPSW                                                   3F4J0360
+       STZ     PRNT+2,1                                                 3F4J0370
+       TXI     DBSPSW+1,1,-1                                            3F4J0380
+EJCT   CLA     EJECT                 EJECT REQUESTED. SET TO EJECT      3F4J0390
+       STO     PRNT+2                PAGE BEFORE PRINTING.              3F4J0400
+       TXI     SINGL,1,-1            SET FOR SINGLE SPACE AFTER PRINT.  3F4J0410
+PRN    CLA     BLANK                 DELETE CARRIAGE CONTROL            3F4J0420
+       LGR     6                     IN OUTPUT BUFFER.                  3F4J0430
+       STQ     OUTBUF                                                   3F4J0440
+FILL   AXT     **,2                                                     3F4J0450
+       TXH     PRN2,2,12             MORE THAN 12 BCD WORDS TO PRINT.   3F4J0460
+       PXD     0,2                   12 OR LESS BCD WORDS TO PRINT.     3F4J0470
+       ADD     SPACE                 SET NUMBER OF WORDS AND SPACE      3F4J0480
+       STD     PRNT1                 CONTROL IN MWR CALLING SEQUENCE    3F4J0490
+       CLA     PRNT1                 WORD.                              3F4J0500
+       STO     PRNT+2,1                                                 3F4J0510
+PRN1   TXI     *+1,1,-1                                                 3F4J0520
+DBSPSW NOP     DOUBL1                                                   3F4J0530
+       PXA     0,1                   OBTAIN NUMBER OF WORDS IN          3F4J0540
+       PAC     0,1                   CALLING SEQUENCE AND PLACE         3F4J0550
+       SXA     PRNT+1,1              COUNT IN MWR CALLING               3F4J0560
+       TRA     PRNT                  SEQUENCE. GO TO PRINT.             3F4J0570
+PRN2   TXH     PRN4,2,20             MORE THAN 20 BCD WORDS TO PRINT.   3F4J0580
+       TXI     *+1,2,-12             DETERMINE NUMBER OF CHARACTERS     3F4J0590
+PRN3   PXD     0,2                   IN EXCESS OF 72. PLACE NUMBER      3F4J0600
+       ADD     SPACE                 AND SPACE CONTROL IN MWR           3F4J0610
+       STD     PRNT2                 CALLING SEQUENCE WORD.             3F4J0620
+       AXT     12,2                  SET FOR FIRST 72 CHARACTERS        3F4J0630
+       TXI     *+1,2,SUPSP           WITH SPACE SUPPRESS.               3F4J0640
+       SXD     PRNT1,2                                                  3F4J0650
+       CLA     PRNT1                 PLACE IN MWR CALLING SEQUENCE.     3F4J0660
+       STO     PRNT+2,1                                                 3F4J0670
+       TXI     *+1,1,-1                                                 3F4J0680
+       CLA     PRNT2                                                    3F4J0690
+       STO     PRNT+2,1                                                 3F4J0700
+       TRA     PRN1                                                     3F4J0710
+PRN4   AXT     8,2                   TRUNCATE OUTPUT REQUEST TO         3F4J0720
+       TRA     PRN3                  120 CHARACTERS.                    3F4J0730
+PRNT   TSX     .MWR,4                PRINT ONE RECORD ON-LINE.          3F4J0740
+       PZE     **                                                       3F4J0750
+       NOP                                                              3F4J0760
+       NOP                                                              3F4J0770
+       NOP                                                              3F4J0780
+       NOP                                                              3F4J0790
+       CLA     NOP                   RESET MWR                          3F4J0800
+       STO     PRNT+2                CALLING                            3F4J0810
+       STO     PRNT+3                SEQUENCE.                          3F4J0820
+       STO     PRNT+4                                                   3F4J0830
+       STO     PRNT+5                                                   3F4J0840
+RETURN AXT     **,2                                                     3F4J0870
+       TRA     1,2                                                      3F4J0880
+       PZE     EJCT                                                     3F4J0890
+       PZE     SUPS                                                     3F4J0900
+       PZE     SINGL                                                    3F4J0910
+SP     PZE     DOUBL                                                    3F4J0920
+SPACE  PZE     **                                                       3F4J0930
+EJECT  PZE     0,,512                                                   3F4J0940
+SUPSP  EQU     512*9                                                    3F4J0950
+PRNT1  PZE     OUTBUF,,**                                               3F4J0960
+PRNT2  PZE     OUTBUF+12,,**                                            3F4J0970
+       PZE     1                                                     (6)3F4J0980
+       OCT     20                                                       3F4J0990
+BLANK  BCI     1,00000                                                  3F4J1000
+NOP    NOP                                                              3F4J1010
+BLANKS BCI     1,                                                       3F4J1020
+LNKG   LDIR                                                             3F4J1030
+       END                                                              3F4J1050

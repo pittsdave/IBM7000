@@ -1,0 +1,59 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - FVIO              3FA00000
+$IBMAP FVIO    50,()OK                                                  3FA00010
+       TTL     FVIO - FORTRAN VARIABLE I/O LOGICAL UNIT              $5$3FA00020
+       REM                                                              3FA00030
+       REM     CALLING SEQUENCE IS CALL .FVIO.(LN,ERAS) WHERE LN IS     3FA00040
+       REM     LOCATION OF VARIABLE LOGICAL UNIT AND ERAS WILL CONTAIN  3FA00050
+       REM     CONTENTS OF APPROPRIATE .UNXX.  (.UNXX. CONTAINS         3FA00060
+       REM     PZE UNITXX WHERE XX CORRESPONDS TO LOGICAL UNIT N).      3FA00070
+       REM     FVIO IS CALLED FOR ANY I/O STATEMENT SPECIFYING          3FA00080
+       REM     A VARIABLE LOGICAL UNIT.                                 3FA00090
+       REM                                                              3FA00100
+.FVIO. SAVE    (2)                                                   $5$3FA00110
+       CLA*    3,4                   PICK UP LOGICAL UNIT NUMBER     $5$3FA00120
+       PAC     ,2                                                    $5$3FA00130
+       TXL     ERROR,2,-NUNITS-1     IS UNIT ZERO, OR TOO LARGE      $5$3FA00140
+       CLA*    TABLE,2               SAVE ADDRESS OF                 $5$3FA00150
+       STO*    4,4                   FILE CONTROL BLOCK              $5$3FA00160
+       RETURN  .FVIO.                                                $5$3FA00170
+ERROR  CLA*    3,4                   LOGICAL UNIT IN ERROR           $5$3FA00250
+       ANA     ADMSK                 DEFINED FOR THIS UNIT VALUE.       3FA00260
+       XCA                           CONVERT THIS ILLEGAL VALUE         3FA00270
+       AXT     0,4                   TO DECIMAL FOR ERROR MESSAGE.      3FA00280
+       STZ     TEMP                                                     3FA00290
+CNVT   PXA     0,0                                                      3FA00300
+       DVP     L(10)                                                    3FA00310
+       ALS     0,4                                                      3FA00320
+       ORS     TEMP                                                     3FA00330
+       CLA     =1                                                       3FA00340
+       TLQ     *+2                                                      3FA00350
+       TXI     CNVT,4,-6                                                3FA00360
+       CAL     BLANKS                                                   3FA00370
+       ALS     6,4                                                      3FA00380
+       ORA     TEMP                                                     3FA00390
+       SLW     E47MES+6                                                 3FA00400
+UNERR  CALL    .FXEM.(CODE)          EXIT FOR EXECUTION ERROR.          3FA00410
+       TRA     .LXERR                NO OPTIONAL EXIT.                  3FA00420
+CODE   PZE     47                                                       3FA00430
+ER47MS PZE     E47MES,,7                                                3FA00440
+ER47OP PZE     NOOPXT,,7                                                3FA00450
+E47MES BCI     7,0LOGICAL UNIT NOT DEFINED FOR VALUE                    3FA00460
+NOOPXT BCI     7,0NO OPTIONAL EXIT - EXECUTION TERMINATED               3FA00470
+ADMSK  OCT     000000077777                                             3FA00480
+TEMP   PZE     **                                                       3FA00490
+L(10)  DEC     10                                                       3FA00500
+BLANKS BCI     1,                                                       3FA00510
+TABLE  PZE     NUNITS                                                   3FA00550
+       PZE     .UN01.                                                   3FA00560
+       PZE     .UN02.                                                   3FA00570
+       PZE     .UN03.                                                   3FA00580
+       PZE     .UN04.                                                   3FA00590
+       PZE     .UN05.                                                   3FA00600
+       PZE     .UN06.                                                   3FA00610
+       PZE     .UN07.                                                   3FA00620
+       PZE     .UN08.                                                   3FA00630
+*      ADDITIONAL UNITS MAY BE INSERTED HERE. FOR EACH UNIT             3FA00640
+*      INSERTED, A CORRESPONDING ROUTINE MUST BE INSERTED TO            3FA00650
+*      PRODUCE A $FILE CARD FOR THE ADDITIONAL UNIT.                    3FA00660
+NUNITS EQU     *-TABLE-1                                                3FA00670
+       END                                                              3FA00680

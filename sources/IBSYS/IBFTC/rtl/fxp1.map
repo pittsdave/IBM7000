@@ -1,0 +1,57 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F6G0000
+$IBMAP FXP1    50                                                       3F6G0010
+       TTL     SINGLE PREC. EXPONENTIAL-FIXED PT. BASE, EXPT.-XP1       3F6G0020
+.XP1.  SAVE    (4)                                                      3F6G0030
+       CLA*    3,4                                                      3F6G0040
+       LDQ*    4,4                                                      3F6G0050
+       STO     BASE                                                     3F6G0060
+       STQ     EXPT                                                     3F6G0070
+       TZE     TEST           TRANSFER IF ZERO BASE                     3F6G0080
+       CLA     ONE                                                      3F6G0090
+       NZT     EXPT           IF EXPT IS ZERO,                          3F6G0100
+ OUT   RETURN  .XP1.          EXIT WITH ONE AS ANSWER                   3F6G0110
+       SBM     BASE                                                     3F6G0120
+       TZE     NEW            CHECK FOR BASE OF + OR - ONE              3F6G0130
+       TQP     NEW                                                      3F6G0140
+       PXD     0,0            IF NEG EXPT, EXIT                         3F6G0150
+       TRA     OUT            WITH ZERO ANSWER                          3F6G0160
+ NEW   CLA     ONE                                                      3F6G0170
+       STO     FACTR                                                    3F6G0180
+ CLA1  CLA     EXPT                                                     3F6G0190
+       LBT                    TEST EXPONENT                             3F6G0200
+       TRA     CLA2                                                     3F6G0210
+       LDQ     BASE           CHANGE FACTR ACCORDINGLY                  3F6G0220
+       MPY     FACTR                                                    3F6G0230
+       STQ     FACTR                                                    3F6G0240
+ CLA2  CLA     EXPT           TEST EXPONENT                             3F6G0250
+       ARS     1                                                        3F6G0260
+       STO     EXPT                                                     3F6G0270
+       TZE     EXIT           FINISHED IF EXPT NOW ZERO                 3F6G0280
+       LDQ     BASE           OTHERWISE                                 3F6G0290
+       MPY     BASE           CALCULATE NEW BASE                        3F6G0300
+       STQ     BASE                                                     3F6G0310
+       TRA     CLA1           START AGAIN                               3F6G0320
+ EXIT  XCA                                                              3F6G0330
+       TRA     OUT                                                      3F6G0340
+ TEST  NZT     EXPT          TEST EXPONENT                              3F6G0350
+       TRA     ERR           EXPONENT ZERO - ERROR                      3F6G0360
+       TQP     OUT            EXPONENT POSITIVE, EXIT WITH 0            3F6G0370
+ERR1   CALL    .FXEM.(E2XP1)                                            3F6G0380
+ CALLM ZAC                                                              3F6G0390
+       TRA     OUT                                                      3F6G0400
+ERR    CALL    .FXEM.(E1XP1)                                            3F6G0410
+       TRA     CALLM                                                    3F6G0420
+ ONE   DEC     1                                                        3F6G0430
+ BASE                                                                   3F6G0440
+ EXPT                                                                   3F6G0450
+ FACTR                                                                  3F6G0460
+E1XP1  DEC     1              0**0                                      3F6G0470
+ER1MS  PZE     E1MES,,5                                                 3F6G0480
+ER1OP  PZE     E1OMS,,3                                                 3F6G0490
+E1MES  BCI     5,0EXPONENTIATION ERROR 0**0                             3F6G0500
+E1OMS  BCI     3,0SET RESULT = 0                                        3F6G0510
+E2XP1  DEC     2              0**(-J)                                   3F6G0520
+ER2MS  PZE     E2MES,,5                                                 3F6G0530
+ER2OP  PZE     E1OMS,,3                                                 3F6G0540
+E2MES  BCI     5,0EXPONENTIATION ERROR 0**(-J)                          3F6G0550
+       END                                                              3F6G0560

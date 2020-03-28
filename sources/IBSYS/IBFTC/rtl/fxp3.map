@@ -1,0 +1,51 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F6I0000
+$IBMAP FXP3    45                                                       3F6I0010
+       TTL     SINGLE PREC. EXPONENTIAL-FLTG. PT. BASE, EXPT.-XP3       3F6I0020
+.XP3.  SAVE    (4)                                                      3F6I0030
+       CLA*    3,4            OBTAIN BOTH                               3F6I0040
+       LDQ*    4,4            ARGUMENTS                                 3F6I0050
+       STO     BASE                                                     3F6I0060
+       STQ     EXPT                                                     3F6I0070
+       TZE     TEST           TRANSFER IF ZERO BASE                     3F6I0080
+       XCA                                                              3F6I0090
+       TZE     SPEC                                                     3F6I0100
+       TQP     *+2                                                      3F6I0110
+       TRA     ERR2                                                     3F6I0120
+ CALLG CALL    ALOG(BASE)                                               3F6I0130
+       XCA                                                              3F6I0140
+       FMP     EXPT           CALCULATE EXPT * LOG (BASE)               3F6I0150
+       STO     EXPT                                                     3F6I0160
+ CALL1 CALL    EXP(EXPT)                                                3F6I0170
+ OUT   RETURN  .XP3.          EXIT WITH ANSWER                          3F6I0180
+ TEST  NZT     EXPT           TEST EXPONENT                             3F6I0190
+       TRA     ERR            EXPT AND BASE BOTH ZERO                   3F6I0200
+       TQP     OUT            EXPT POSITIVE, EXIT WITH ZERO             3F6I0210
+ ERR1  CALL    .FXEM.(E3XP3)                                            3F6I0220
+ CALLM ZAC                                                              3F6I0230
+       TRA     OUT                                                      3F6I0240
+ ERR   CALL    .FXEM.(E2XP3)                                            3F6I0250
+       TRA     CALLM                                                    3F6I0260
+ ERR2  CALL    .FXEM.(E1XP3)                                            3F6I0270
+       CLS     BASE                                                     3F6I0280
+       STO     BASE                                                     3F6I0290
+       TRA     CALLG                                                    3F6I0300
+ SPEC  CLA     FLONE                                                    3F6I0310
+       TRA     OUT                                                      3F6I0320
+ FLONE DEC     1.0                                                      3F6I0330
+ BASE                                                                   3F6I0340
+ EXPT                                                                   3F6I0350
+E1XP3  DEC     5              (-A)**B                                   3F6I0360
+ER5MS  PZE     E5MES,,5                                                 3F6I0370
+ER5OP  PZE     E5OMS,,3                                                 3F6I0380
+E5MES  BCI     5,0EXPONENTIATION ERROR (-B)**C                          3F6I0390
+E5OMS  BCI     3,0EVALUATE FOR +B                                       3F6I0400
+E2XP3  DEC     6              0**0                                      3F6I0410
+ER6MS  PZE     E6MES,,5                                                 3F6I0420
+ER6OP  PZE     E6OMS,,3                                                 3F6I0430
+E6MES  BCI     5,0EXPONENTIATION ERROR 0**0                             3F6I0440
+E6OMS  BCI     3,0SET RESULT = 0                                        3F6I0450
+E3XP3  DEC     7              0**(-A)                                   3F6I0460
+ER7MS  PZE     E7MES,,5                                                 3F6I0470
+ER7OP  PZE     E6OMS,,3                                                 3F6I0480
+E7MES  BCI     5,0EXPONENTIATION ERROR 0**(-C)                          3F6I0490
+       END                                                              3F6I0500

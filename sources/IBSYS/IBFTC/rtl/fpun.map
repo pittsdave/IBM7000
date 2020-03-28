@@ -1,0 +1,30 @@
+$*     7090/7094 BCD PUNCH ROUTINE                                      3F4K0000
+$IBMAP FPUN    ()OK                                                     3F4K0010
+       TTL     BCD PUNCH ROUTINE                                        3F4K0020
+*              BCD PUNCH ROUTINE                                        3F4K0030
+       REM  ROUTINE TO PUNCH ONE BCD RECORD ON-LINE                     3F4K0040
+       ENTRY   .FPUN.                                                   3F4K0050
+OUTBUF EQU     .OUTBF                                                   3F4K0051
+.FPUN. SXA     LNKG,4                SAVE RETURN TO OBJECT PROGRAM      3F4K0060
+       SXA     SYSLOC,4                                                 3F4K0070
+       SXA     RTRN,4                SAVE RETURN TO MAIN PROGRAM        3F4K0075
+       CALL    .FIOH.(RTNPU,RTRN)                                       3F4K0076
+       ORG     *-2                   OVERLAY CALL                       3F4K0080
+RTNPU  TRA     FPUNCH,1              TRA=OUTPUT,TAG=ONLIN SWITCH ON     3F4K0081
+RTRN   PZE     0,,0                                                     3F4K0090
+*              ROUTINE TO PUNCH BCD RECORD ONLINE                       3F4K0140
+FPUNCH SXA     RETURN+1,2                                               3F4K0150
+       TXH     PUN3,1,12             IF WORD COUNT NOT GREATER THAN 12  3F4K0170
+PUN1   SXD     PUN2,1                SET NUMBER OF BCD WORDS TO         3F4K0180
+       TSX     .PUNCH,4              BE PUNCHED IN IOEX                 3F4K0190
+       PZE     1                     CALLING SEQUENCE.                  3F4K0200
+PUN2   PZE     OUTBUF,,**                                               3F4K0210
+       TRA     RETURN                RETURN TO MAIN PROGRAM             3F4K0220
+PUN3   AXT     12,1                                                     3F4K0230
+       TRA     PUN1                                                     3F4K0240
+RETURN CAL     PUN2                                                     3F4K0250
+       AXT     **,2                                                     3F4K0270
+       TRA     1,2                                                      3F4K0280
+BLANKS BCI     1,                                                       3F4K0300
+LNKG   LDIR                                                             3F4K0310
+       END                                                              3F4K0330

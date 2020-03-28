@@ -1,0 +1,171 @@
+$*             LIBRARY GAMMA AND LOG GAMMA SUBROUTINE                   3F9P0000
+$IBMAP FGAM    150                                                      3F9P0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F9P0015
+       ENTRY   GAMMA                                                    3F9P0020
+       ENTRY   ALGAMA                                                   3F9P0030
+       SPACE   3                                                        3F9P0040
+       REM     GAMMA AND LOG GAMMA FUNCTION SUBROUTINE                  3F9P0050
+       SPACE   3                                                        3F9P0060
+ GAMMA STL     FLAG          CELL FLAG TO DISTINGUISH GAMMA FROM LGAMA  3F9P0070
+       LDQ     LIM1                                                     3F9P0080
+       TRA     *+3                                                      3F9P0090
+ALGAMA STZ     FLAG          LOG GAMMA ENTRY                            3F9P0100
+       LDQ     LIM3                                                     3F9P0110
+       SXA     SYSLOC,4                                                 3F9P0120
+       SXA     LINK,4                                                   3F9P0130
+       CLA*    3,4           OBTAIN ARGUMENT                            3F9P0140
+       STO     ARG                                                      3F9P0150
+       TLQ     ERROR         ARG TOO LARGE                              3F9P0160
+       LDQ     LIM2                                                     3F9P0170
+       TLQ     CONT                                                     3F9P0180
+       ZET     FLAG                                                     3F9P0190
+       TRA     ERROR         ARG TOO SMALL FOR GAMMA                    3F9P0200
+       TMI     ERROR         ZERO OR NEGATIVE ARG IS ILLEGAL FOR        3F9P0210
+       TZE     ERROR           LOGGAMMA                                 3F9P0220
+       CALL    ALOG(ARG)       FOR SMALL ARG, LOGGAMMA(X) = -LOG(X)     3F9P0230
+       CHS                                                              3F9P0240
+       TRA     RET                                                      3F9P0250
+       SPACE                                                            3F9P0260
+ CONT  SXA     SXR1,1        NOW ARGUMENT IS LEGAL FOR BOTH CIRCUITS    3F9P0270
+       LRS     9                                                        3F9P0280
+       PDX     ,1                                                       3F9P0290
+       TXH     SECT5,1,130   JUMP IF X IS AT LEAST 4.                   3F9P0300
+       CLA     ARG                                                      3F9P0310
+       TXH     SECT3,1,129   JUMP IF X IS BETWEEN 2. AND 4.             3F9P0320
+       TXH     SECT2,1,128   JUMP IF X IS BETWEEN 1. AND 2.             3F9P0330
+ SECT1 STO     FACTR         NOW X IS LESS THAN 1.                      3F9P0340
+       FSB     K1              =0.5                                     3F9P0350
+       TRA     SECT2+1                                                  3F9P0360
+ SECT3 FSB     ONE             =1.0                                     3F9P0370
+       STO     FACTR                                                    3F9P0380
+       LDQ     K2              =2.0                                     3F9P0390
+       TLQ     SECT4                                                    3F9P0400
+ SECT2 FSB     K3              =1.5   ARG HAD BEEN REDUCED TO (1.,2.)   3F9P0410
+       RQL     8             MOVE ORIGIN TO 1.5                         3F9P0420
+       LRS     27                                                       3F9P0430
+       PAC     ,4                                                       3F9P0440
+       ZAC                                                              3F9P0450
+       LLS     -97,4                                                    3F9P0460
+       STO     ARG             MODIFIED ARGUMENT IN B4                  3F9P0470
+       AXT     10,4                                                     3F9P0480
+       ZAC                                                              3F9P0490
+ LOOP1 ADD     COEF1+1,4     LOOP FOR A 5 TERM CONTINUED FRACTION       3F9P0500
+       ADD     ARG                                                      3F9P0510
+       STO     BUFF            GAMMA(1.5+Y)=A1/(B1+Y+A2/(B2+Y+A3/..     3F9P0520
+       CLA     COEF1+2,4                         ..+A5/(B5+Y)))))       3F9P0530
+       DVP     BUFF                                                     3F9P0540
+       XCA                                                              3F9P0550
+       TIX     LOOP1,4,2     ANSWER COMES OUT IN B1.   CONSTANT A1 WAS  3F9P0560
+       LRS     7               SO CHOSEN TO AVOID A BIT IN POSITION 1.  3F9P0570
+       ORA     CHAR            FLOAT GAMMA OF MODIFIED ARG              3F9P0580
+       RQL     28                                                       3F9P0590
+       FRN                                                              3F9P0600
+       TXH     *+4,1,128     DEPENDING ON THE SECTION INTO WHICH ARG    3F9P0610
+       FDP     FACTR           FELL, DIVIDE OR MULTIPLY WITH PROPER     3F9P0620
+       XCA                     FACTOR                                   3F9P0630
+       TRA     *+4                                                      3F9P0640
+       TXL     *+4,1,129                                                3F9P0650
+       XCA                                                              3F9P0660
+       FMP     FACTR                                                    3F9P0670
+       FRN                   NOW GAMMA IS READY                         3F9P0680
+       STO     ARG                                                      3F9P0690
+       NZT     FLAG                                                     3F9P0700
+       CALL    ALOG(ARG)     IF LOGGAMMA, TAKE LOG OF RESULT            3F9P0710
+ SXR1  AXT     **,1                                                     3F9P0720
+  RET  LXA     LINK,4        RETURN                                     3F9P0730
+       TRA     1,4                                                      3F9P0740
+       SPACE                                                            3F9P0750
+ SECT4 FSB     ONE           CASE WHEN ORIGINAL ARG WAS BETWEEN 3. AND  3F9P0760
+       STO     ARG             4.   ARG HAS ALREADY BEEN REDUCED BY 1.  3F9P0770
+       XCA                     FURTHER REDUCE IT BY 1., AND PROCEED TO  3F9P0780
+       FMP     FACTR           SECTION2                                 3F9P0790
+       FRN                                                              3F9P0800
+       STO     FACTR                                                    3F9P0810
+       CLA     ARG                                                      3F9P0820
+       TRA     SECT2                                                    3F9P0830
+       SPACE                                                            3F9P0840
+ SECT5 CALL    ALOG(ARG)     CASE WHEN ARG IS GREATER THAN 4.   WE USE  3F9P0850
+       SUB     K4              STIRLINGS FORMULA.                       3F9P0860
+       STO     BUFF                                                     3F9P0870
+       ADD     K4              LOGGAMMA(X)=X(LOGX-1)-0.5*LOGX           3F9P0880
+       FSB     ONE                                   +0.5*LOG2PI+F      3F9P0890
+       XCA                                                              3F9P0900
+       FMP     ARG                                                      3F9P0910
+       FRN                                                              3F9P0920
+       STO     BUFF+1                                                   3F9P0930
+       ZAC                     WE NOW COMPUTE CORRECTIONAL TERMS F OF   3F9P0940
+       TXH     STIRG,1,140     ABOVE FORMULA.   IF ARG IS GREATER THAN  3F9P0950
+       LDQ     ARG             2**12, AVOID FLOAT POINT OVERFLOW BY     3F9P0960
+       FMP     ARG             TAKING F=0                               3F9P0970
+       STO     FACTR                                                    3F9P0980
+       AXT     3,4                                                      3F9P0990
+       CLA     COEF2,4         F=C1/X+C2/X**3+C3/X**5+C4/X**7           3F9P1000
+ LOOP2 FDP     FACTR                                                    3F9P1010
+       XCA                                                              3F9P1020
+       FAD     COEF2+1,4                                                3F9P1030
+       TIX     LOOP2,4,1                                                3F9P1040
+       FDP     ARG                                                      3F9P1050
+       XCA                                                              3F9P1060
+ STIRG FSB     BUFF                                                     3F9P1070
+       FRN                                                              3F9P1080
+       FAD     SL2PI           =(1/2)LOG(2PI)                           3F9P1090
+       FAD     BUFF+1                                                   3F9P1100
+       FRN                   LOG GAMMA READY                            3F9P1110
+       STO     ARG                                                      3F9P1120
+       ZET     FLAG                                                     3F9P1130
+       TSX     EXP,4         IF GAMMA IS REQUESTED, CALL $EXP           3F9P1140
+       TXI     SXR1,,1                                                  3F9P1150
+       PZE     117,,LINK                                                3F9P1160
+       PZE     ARG                                                      3F9P1170
+       SPACE                                                            3F9P1180
+ ERROR CLA     OMEGA                                                    3F9P1190
+       NZT     FLAG                                                     3F9P1200
+       TRA     ERROR2                                                   3F9P1210
+ERROR1 CALL    .FXEM.(EGAM1)                                            3F9P1220
+       TRA     RET                                                      3F9P1230
+ERROR2 CALL    .FXEM.(EGAM2)                                            3F9P1240
+       TRA     RET                                                      3F9P1250
+       SPACE   2                                                        3F9P1260
+ LIM1  OCT     206426574733        34.843                               3F9P1270
+ LIM2  OCT     2400000000                                               3F9P1280
+ LIM3  OCT     371614470000        1.54926*2**120                       3F9P1290
+ CHAR  OCT     200000000000                                             3F9P1300
+  ONE  OCT     201400000000        1.                                   3F9P1310
+  K1   OCT     200400000000        0.5                                  3F9P1320
+  K2   OCT     202400000000        2.                                   3F9P1330
+  K3   OCT     201600000000        1.5                                  3F9P1340
+  K4   OCT     1000000000          CHARACTERISTIC REDUCER               3F9P1350
+ SL2PI OCT     200726376162        (1/2)LOG(2PI)                        3F9P1360
+       OCT     026400372246        B5    CONTINUED FRACTION COEFFICIENTS3F9P1370
+       OCT     006062361531        A5      FOR THE RANGE (1.,2.)        3F9P1380
+       OCT     003200340365        B4                                   3F9P1390
+       OCT     -003515345172       A4                                   3F9P1400
+       OCT     201677777722        B3                                   3F9P1410
+       OCT     073222266666        A3                                   3F9P1420
+       OCT     -115244746515       B2                                   3F9P1430
+       OCT     041640747057        A2                                   3F9P1440
+       OCT     -273744427306       B1                                   3F9P1450
+ COEF1 OCT     -012041435213       A1                                   3F9P1460
+       OCT     -166451710112       C4 = -1/1760  STIRLINGS ASYMPTOTIC   3F9P1470
+       OCT     166640064007        C3 =  1/1260    EXPANSION COEFFICTS  3F9P1480
+       OCT     -170554055406       C2 = -1/360     MODIFIED             3F9P1490
+ COEF2 OCT     175525252525        C1 =  1/12                           3F9P1500
+ OMEGA OCT     377777777777                                             3F9P1510
+ FLAG  PZE                                                              3F9P1520
+  ARG  BSS     1                                                        3F9P1530
+ FACTR BSS     1                                                        3F9P1540
+ BUFF  BSS     2                                                        3F9P1550
+ EGAM1 DEC     76                                                       3F9P1560
+       PZE     E76MES,,14                                               3F9P1570
+       PZE     E76OMS,,4                                                3F9P1580
+E76MES BCI     9,0GAMMA(X), X LESS THAN OR EQ TO 2**-127 OR GRT THAN OR 3F9P1590
+       BCI     5, EQ TO 34.843 NOT ALLOWED                              3F9P1600
+E76OMS BCI     4,0SET RESULT = +OMEGA                                   3F9P1610
+ EGAM2 DEC     77                                                       3F9P1620
+       PZE     E77MES,,13                                               3F9P1630
+       PZE     E76OMS,,4                                                3F9P1640
+E77MES BCI     8,0ALGAMA(X), X NON-POSITIVE OR GRT THAN OR EQ TO        3F9P1650
+       BCI     5,2.0593*10**36 NOT ALLOWED                              3F9P1660
+       SPACE                                                            3F9P1670
+  LINK LDIR                                                             3F9P1680
+       END                                                              3F9P1690

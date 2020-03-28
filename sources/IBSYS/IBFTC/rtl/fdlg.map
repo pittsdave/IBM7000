@@ -1,0 +1,228 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F9B0000
+$IBMAP FDLG    150                                                      3F9B0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F9B0015
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90,             3F9B0020
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94.            3F9B0030
+       REM       (OR TO ANY VALUE NOT EQUAL TO 90)                      3F9B0040
+M9094  SET     90                                                       3F9B0050
+       PCC     ON                                                       3F9B0060
+       IFF     M9094=90                                                 3F9B0070
+       GOTO    BEG94                                                    3F9B0080
+       PCC     OFF                                                      3F9B0090
+       ENTRY   DLOG                                                     3F9B0100
+       ENTRY   DLOG10                                                   3F9B0110
+       SPACE   3                                                        3F9B0120
+       REM     DOUBLE PRECISION LOGARITHM SUBROUTINE                    3F9B0130
+       SPACE   3                                                        3F9B0140
+*              DOUBLE PRECISION ARITHMETIC MACRO DEFINITION             3F9B0150
+       SPACE                                                            3F9B0160
+ DPOP  MACRO   SUBR,A,TAG                                               3F9B0170
+       TSX     SUBR,4                                                   3F9B0180
+ DTAG  SET     0                                                        3F9B0190
+       IFT     TAG=1                                                    3F9B0200
+ DTAG  SET     1                                                        3F9B0210
+       IFT     TAG=2                                                    3F9B0220
+ DTAG  SET     2                                                        3F9B0230
+       PZE     A,DTAG                                                   3F9B0240
+       PZE     A+1,DTAG                                                 3F9B0250
+       ENDM    DPOP                                                     3F9B0260
+       SPACE   3                                                        3F9B0270
+DLOG10 STL     TEST          TEST DISTINGUISHES DLOG10 FROM DLOG ENTRY  3F9B0280
+ DLOG  SXA     SYSLOC,4                                                 3F9B0290
+       SXA     LINK,4                                                   3F9B0300
+       CAL     3,4                                                      3F9B0310
+       ADD     K1A                                                      3F9B0320
+       STO     ARG+1                                                    3F9B0330
+       LDQ*    ARG+1                                                    3F9B0340
+       CLA*    3,4           ARGUMENT IN AC,MQ                          3F9B0350
+       TNZ     A             IF ARG=0, ERROR                            3F9B0360
+       CALL    .FXEM.(EDLOG1)                                           3F9B0370
+       DLD     MOMEGA                                                   3F9B0380
+       TRA     RET                                                      3F9B0390
+   A   TPL     B             IF ARG NEGATIVE, ERROR                     3F9B0400
+       CALL    .FXEM.(EDLOG2)                                           3F9B0410
+       SSP                     MQ SIGN WILL BE IGNORED LATER            3F9B0420
+   B   DST     ARG           ARGUMENT POSITIVE                          3F9B0430
+       SXA     SXR2,2                                                   3F9B0440
+       LRS     27                                                       3F9B0450
+  K1A  OCT     013100000001    XCA AS OPERATION, K1A AS CONSTANT        3F9B0460
+       AXT     0,2                                                      3F9B0470
+       CAS     LIM           COMPARE MANTISSA WITH SQRT2/2              3F9B0480
+       TXI     *+2,2,2         IF GREATER THAN SQRT2/2, XR2=2           3F9B0490
+       TXI     *+1,2,2         IF SMALLER THAN SQRT2/2, XR2=0           3F9B0500
+       XCA                                                              3F9B0510
+       SUB     K1,2          =O200 OR O201 TO GET EXPONENT IF MANT      3F9B0520
+       ORA     CHAR            WAS BIG, EXPONENT-1 IF IT WAS SMALL      3F9B0530
+       FAD     CHAR          FLOAT AND NORMALIZE                        3F9B0540
+       DPOP    DFMP,LOGTW      LOG X = (P-D)LOG2+LOG((1+Z)/(1-Z))       3F9B0550
+       DST     BUFF              WHERE P IS EXPONENT, D=1 OR 0,         3F9B0560
+       CLA     ARG+1               AND Z = (M-F)/(M+F)                  3F9B0570
+       ANA     MASK          FLOAT MANTISSA                             3F9B0580
+       ORA     HALF+1                                                   3F9B0590
+       XCA                                                              3F9B0600
+       CLA     ARG                                                      3F9B0610
+       ANA     MASK                                                     3F9B0620
+       ORA     HALF                                                     3F9B0630
+       DST     ARG                                                      3F9B0640
+       DPOP    DFAD,HALF,2   COMPUTE Z = (M-F)/(M+F)                    3F9B0650
+       DST     Z               WHERE F = 1 IF M WAS BIG                 3F9B0660
+       CLA     ARG                   F = 1/2 IF M WAS SMALL             3F9B0670
+       FSB     HALF,2                                                   3F9B0680
+       FAD     ARG+1                                                    3F9B0690
+       DPOP    DFDP,Z                                                   3F9B0700
+       DST     Z             Z NOW READY                                3F9B0710
+       SPACE                                                            3F9B0720
+       DPOP    DFMP,Z        ZSQ IN CELL ARG                            3F9B0730
+       DST     ARG             LOG((1+Z)/(1-Z)) = Z(2+G(ZSQ))           3F9B0740
+       AXT     14,2              WHERE F(ZSQ) IS A 7 DEGREE POLYNOM     3F9B0750
+       DLD     COEF,2                                                   3F9B0760
+ LOOP  DPOP    DFMP,ARG                                                 3F9B0770
+       DPOP    DFAD,COEF+2,2                                            3F9B0780
+       TIX     LOOP,2,2                                                 3F9B0790
+       DPOP    DFMP,Z                                                   3F9B0800
+       DPOP    DFAD,BUFF                                                3F9B0810
+       NZT     TEST          NATURAL LOG READY                          3F9B0820
+       TRA     SXR2                                                     3F9B0830
+       DPOP    DFMP,CLOGE    MULTIPLY LOG E BASE 10                     3F9B0840
+ SXR2  AXT     **,2            FOR COMMON LOG ENTRY                     3F9B0850
+  RET  LXA     LINK,4                                                   3F9B0860
+       STZ     TEST                                                     3F9B0870
+       TRA     1,4                                                      3F9B0880
+       SPACE                                                            3F9B0890
+       OCT     200                                                      3F9B0900
+  LIM  OCT     265011714640        SQRT2/2  B0                          3F9B0910
+  K1   OCT     201                                                      3F9B0920
+ CHAR  OCT     233000000000                                             3F9B0930
+ MASK  OCT     777777777                                                3F9B0940
+       OCT     201400000000,146000000000                                3F9B0950
+ HALF  OCT     200400000000,145000000000                                3F9B0960
+       OCT     176457233057,143452334563     0.1480971268990510         3F9B0970
+       OCT     176471463374,143233335177     0.1531252792171731         3F9B0980
+       OCT     176564315145,143220456006     0.1818363168880382         3F9B0990
+       OCT     176707070500,143002037553     0.2222219705656678         3F9B1000
+       OCT     177444444445,144050500411     0.2857142876064318         3F9B1010
+       OCT     177631463146,144313656522     0.3999999999930233         3F9B1020
+       OCT     200525252525,145252525533     0.6666666666666764         3F9B1030
+ COEF  OCT     202400000000,147000000002     2. WITH COMPENSATOR        3F9B1040
+ LOGTW OCT     200542710277,145575071737     LOG 2 WITH COMPENSATOR     3F9B1050
+ CLOGE OCT     177674557305,144223345037       LOG10(E) + FUDGE         3F9B1060
+MOMEGA OCT     777777777777,744777777777                                3F9B1070
+  ARG  BSS     2                                                        3F9B1080
+ BUFF  BSS     2                                                        3F9B1090
+   Z   BSS     2                                                        3F9B1100
+ TEST  PZE                                                              3F9B1110
+EDLOG1 DEC     20                                                       3F9B1120
+       PZE     E20MES,,6                                                3F9B1130
+       PZE     E20OMS,,4                                                3F9B1140
+E20MES BCI     6,0DLOG(0) OR DLOG10(0) NOT ALLOWED                      3F9B1150
+E20OMS BCI     4,0SET RESULT = - OMEGA                                  3F9B1160
+EDLOG2 DEC     21                                                       3F9B1170
+       PZE     E21MES,,6                                                3F9B1180
+       PZE     E21OMS,,3                                                3F9B1190
+E21MES BCI     6,0DLOG(-X) OR DLOG10(-X) NOT ALLOWED                    3F9B1200
+E21OMS BCI     3,0EVALUATE FOR +X                                       3F9B1210
+       SPACE                                                            3F9B1220
+  LINK LDIR                                                             3F9B1230
+BEG94  NULL                                                             3F9B1240
+       PCC     ON                                                       3F9B1250
+       IFT     M9094=90                                                 3F9B1260
+       GOTO    END94                                                    3F9B1270
+       PCC     OFF                                                      3F9B1280
+       EJECT                                                            3F9B1290
+       ENTRY   DLOG                                                     3F9B1300
+       ENTRY   DLOG10                                                   3F9B1310
+       SPACE   3                                                        3F9B1320
+       REM     DOUBLE PRECISION LOGARITHM SUBROUTINE                    3F9B1330
+       SPACE   3                                                        3F9B1340
+DLOG10 STL     TEST          CELL TEST TO DISTINGUISH DLOG10 FROM DLOG  3F9B1350
+ DLOG  SXA     SYSLOC,4                                                 3F9B1360
+       SXA     LINK,4                                                   3F9B1370
+       STI     SVIND                                                    3F9B1380
+       DLD*    3,4           PICK UP DARG,T                             3F9B1390
+       TNZ     A                                                        3F9B1400
+       CALL    .FXEM.(EDLOG1)   IF ARG = 0, ERROR                       3F9B1410
+       DLD     MOMEGA                                                   3F9B1420
+       TRA     RET                                                      3F9B1430
+   A   TPL     B                                                        3F9B1440
+       CALL    .FXEM.(EDLOG2)   IF ARG NEGATIVE, ERROR                  3F9B1450
+       SSP                                                              3F9B1460
+   B   DST     ARG                                                      3F9B1470
+       LRS     27                                                       3F9B1480
+       XCA                                                              3F9B1490
+       AXT     0,4                                                      3F9B1500
+       CAS     LIM           COMPARE MANTISSA WITH SQRT2/2              3F9B1510
+       TXI     *+2,4,2         IF GREATER THAN SQRT2/2, XR4=2           3F9B1520
+       TXI     *+1,4,2         IF SMALLER THAN SQRT2/2, XR4=0           3F9B1530
+       XCA                                                              3F9B1540
+       SUB     K1,4          =O200 OR O201 TO GET EXPONENT IF MANT      3F9B1550
+       ORA     CHAR            WAS BIG, EXPONENT-1 IF IT WAS SMALL      3F9B1560
+       FAD     CHAR          FLOAT AND NORMALIZE                        3F9B1570
+       DFMP    LOGTW           LOG X = (P-D)LOG2+LOG((1+Z)/(1-Z))       3F9B1580
+       DST     BUFF              WHERE P IS EXPONENT, D=1 OR 0,         3F9B1590
+       DLD     ARG                 AND Z = (M-F)/(M+F)                  3F9B1600
+       ANA     MASK                                                     3F9B1610
+       ORA     HALF          GIVE CHARACTERISTIC O200 TO MANTISSA M     3F9B1620
+       STO     ARG                                                      3F9B1630
+       DFAD    HALF,4        COMPUTE Z = (M-F)/(M+F)                    3F9B1640
+       DST     Z               WHERE F = 1   IF M WAS BIG               3F9B1650
+       DLD     ARG                     = 1/2 IF M WAS SMALL             3F9B1660
+       DFSB    HALF                                                     3F9B1670
+       DFSB    ZERO,4          SUBTRACT F IN 2 STEPS                    3F9B1680
+       DFDP    Z                                                        3F9B1690
+       DST     Z             Z NOW READY                                3F9B1700
+       SPACE                                                            3F9B1710
+       DFMP    Z             ZSQ IN CELL ARG                            3F9B1720
+       DST     ARG             LOG((1+Z)/(1-Z))=Z(2+G(ZSQ))             3F9B1730
+       AXT     14,4              WHERE G(ZSQ) IS A 7 DEGREE POLYNOM     3F9B1740
+       DLD     COEF,4                                                   3F9B1750
+       DFMP    ARG                                                      3F9B1760
+       DFAD    COEF+2,4                                                 3F9B1770
+       TIX     *-2,4,2                                                  3F9B1780
+       DFMP    Z                                                        3F9B1790
+       DFAD    BUFF          NATURAL LOG READY                          3F9B1800
+       ZET     TEST                                                     3F9B1810
+       DFMP    CLOGE         LOG E BASE 10                              3F9B1820
+       LDI     SVIND                                                    3F9B1830
+  RET  LXA     LINK,4                                                   3F9B1840
+       STZ     TEST                                                     3F9B1850
+       TRA     1,4           RETURN TO MAIN PROGRAM                     3F9B1860
+       SPACE                                                            3F9B1870
+       OCT     200                                                      3F9B1880
+  LIM  OCT     265011714640        SQRT2/2  B0                          3F9B1890
+  K1   OCT     201                                                      3F9B1900
+ CHAR  OCT     233000000000                                             3F9B1910
+ MASK  OCT     777777777                                                3F9B1920
+       EVEN                                                             3F9B1930
+       OCT     201400000000,146000000000                                3F9B1940
+ HALF  OCT     200400000000,145000000000                                3F9B1950
+ ZERO  OCT     0,0                                                      3F9B1960
+       OCT     176457233057,143452334563     0.1480971268990510         3F9B1970
+       OCT     176471463374,143233335177     0.1531252792171731         3F9B1980
+       OCT     176564315145,143220456006     0.1818363168880382         3F9B1990
+       OCT     176707070500,143002037553     0.2222219705656678         3F9B2000
+       OCT     177444444445,144050500411     0.2857142876064318         3F9B2010
+       OCT     177631463146,144313656522     0.3999999999930233         3F9B2020
+       OCT     200525252525,145252525533     0.6666666666666764         3F9B2030
+ COEF  OCT     202400000000,147000000002     2. WITH COMPENSATOR        3F9B2040
+ LOGTW OCT     200542710277,145575071737     LOG 2 WITH COMPENSATOR     3F9B2050
+ CLOGE OCT     177674557305,144223345037       LOG10(E) + FUDGE         3F9B2060
+MOMEGA OCT     777777777777,744777777777                                3F9B2070
+  ARG  BSS     2                                                        3F9B2080
+ BUFF  BSS     2                                                        3F9B2090
+   Z   BSS     2                                                        3F9B2100
+ TEST  PZE                                                              3F9B2110
+ SVIND BSS     1                                                        3F9B2120
+EDLOG1 DEC     20                                                       3F9B2130
+       PZE     E20MES,,6                                                3F9B2140
+       PZE     E20OMS,,4                                                3F9B2150
+E20MES BCI     6,0DLOG(0) OR DLOG10(0) NOT ALLOWED                      3F9B2160
+E20OMS BCI     4,0SET RESULT = - OMEGA                                  3F9B2170
+EDLOG2 DEC     21                                                       3F9B2180
+       PZE     E21MES,,6                                                3F9B2190
+       PZE     E21OMS,,3                                                3F9B2200
+E21MES BCI     6,0DLOG(-X) OR DLOG10(-X) NOT ALLOWED                    3F9B2210
+E21OMS BCI     3,0EVALUATE FOR +X                                       3F9B2220
+       SPACE                                                            3F9B2230
+  LINK LDIR                                                             3F9B2240
+END94  NULL                                                             3F9B2250
+       END                                                              3F9B2260

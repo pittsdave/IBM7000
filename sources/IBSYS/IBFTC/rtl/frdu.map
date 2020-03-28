@@ -1,0 +1,42 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - FRDU                            3F4N0000
+$IBMAP FRDU    ()OK                                                     3F4N0010
+       TTL     FRDU - UNFORMATTED INPUT/OUTPUT READ ROUTINE          (7)3F4N0020
+       REM                                                              3F4N0040
+       REM     CALLING SEQUENCE IS                                      3F4N0050
+       REM       CALL .FRDU.(ARG,YYYY)                                  3F4N0060
+       REM     ARG IS LOCATION OF PZE UNITXX WHERE XX = LOGICAL UNIT N. 3F4N0070
+       REM     YYYY IS A NAMELIST NAME.                                 3F4N0080
+       REM                                                              3F4N0090
+       ENTRY   .FRDU.                                                   3F4N0100
+       REM                                                              3F4N0120
+.FRDU. SXA     LNKG,4        SAVE RETURN TO MAIN PROGRAM.               3F4N0130
+       SXA     SYSLOC,4      SAVE LINKAGE DIRECTOR FOR ERROR TRACE.     3F4N0140
+       SXA     RTRN,4                                                   3F4N0150
+       CLA*    4,4           OBTAIN NAMELIST NAME.                      3F4N0160
+       STO     .NAME.                                                   3F4N0170
+       CLA     4,4                                                      3F4N0180
+       STA     .NMLST        OBTAIN LOCATION OF NAMELIST NAME.          3F4N0190
+       STZ     .INTAP         INITIALIZE                             (7)3F4N0191
+       CLA*    3,4            AC = LOCATION OF FCB                   (7)3F4N0192
+       PAX     0,4                                                   (7)3F4N0193
+       TXI     *+1,4,2        IR4 = LOCATION OF 3RD WORD OF FCB      (7)3F4N0194
+       SXA     *+1,4                                                 (7)3F4N0195
+       LDI     **             IND. = 3RD WORD OF FCB                 (7)3F4N0196
+       LFT     100000        IS THE INPUT UNIT SYSIN1/2              (7)3F4N0197
+       STL     .INTAP         YES. SET FLAG TO INDICATE READING IN1  (7)3F4N0199
+       CALL    .FIOS.(ARG1,ARG2) *CALL I/O INITIALIZATION ROUTINE.      3F4N0200
+       ORG     *-2           OVERLAY CALL WITH ARGUMENTS.               3F4N0210
+ARG1   PZE     1,,0          SET .REED ON, .BIN OFF IN FIOS.            3F4N0220
+ARG2   IORTN*  .FBDBF,,**    TRANSMIT I/O COMMAND.                      3F4N0230
+       CALL    .FIOU.(RTNUI,RTRN)  *ENTER UNFORMATTED I/O SCAN.         3F4N0240
+       ORG     *-2           OVERLAY CALL WITH ARGUMENTS.               3F4N0250
+RTNUI  NOP     RDUIO         NOP = READ, RDUIO = LOC. OF READ CALL.     3F4N0260
+RTRN   PZE     **            CONTAINS RETURN TO MAIN PROGRAM.           3F4N0270
+RDUIO  SXA     RDRT,2                                                   3F4N0280
+       TSX     .FSEL.,4      READ A RECORD.                             3F4N0290
+       LXD     .FILR.,4      SET WORD COUNT.                            3F4N0300
+       SXA     .CTUIO,4                                                 3F4N0310
+RDRT   AXT     **,2                                                     3F4N0320
+       TRA     1,2           RETURN TO .FIOU.                           3F4N0330
+LNKG   LDIR                                                             3F4N0350
+       END                                                           $5$3F4N0360

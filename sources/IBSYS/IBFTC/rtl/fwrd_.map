@@ -1,0 +1,36 @@
+$IBMAP FWRD.   33                                                       3F4Q0000
+       TTL  ALTERNATE I/O WRITE DECIMAL INTERFACE ROUTINE               3F4Q0010
+       LBL     .WRD,BEGIN     FWRD.                                  (7)3F4Q0013
+*              CALLING SEQUENCE FOR -- WRITE (N,F) LIST --              3F4Q0020
+*                   CALL ..FWRD(ARG,LF)                                 3F4Q0030
+*                    WHERE ARG = LOCATION OF PZE UNITXX, XX IS          3F4Q0040
+*                                LOCATION OF LOGICAL UNIT N             3F4Q0050
+*                          LF  = LOCATION OF FORMAT STATEMENT F         3F4Q0060
+       ENTRY   ..FWRD                                                   3F4Q0070
+..FWRD SXA     SYSLOC,4            SAVE FORTRAN CALL LOCATION IN SYSLOC 3F4Q0080
+       SXA     LK.DR,4             SAVE X4 IN LINKAGE DIRECTOR          3F4Q0090
+       SXA     ARG,4               SAVE ORIGINAL FORTRAN CALL           3F4Q0100
+       CALL    ..FBCW              WRITE ENTRY TO FBCD.                 3F4Q0110
+*                                   SETS UP .LXSL COMMAND AND           3F4Q0120
+*                                   GENERATES CALL TO FIOS.             3F4Q0130
+       CALL    .FIOH.(ENT,ARG)     CALL HOLLERITH COORDINATOR           3F4Q0140
+       ORG     *-2                  AND                                 3F4Q0150
+ ENT   TRA     WRITE                 RELINQUISH                         3F4Q0160
+ ARG   PZE     0,,0                  CONTROL TO IT   ORIGINAL X4        3F4Q0170
+*                                                                       3F4Q0180
+*                    PROCESS FIOH WRITE REQUEST                         3F4Q0190
+*                                                                       3F4Q0200
+ WRITE TSX     ..FTCK,4            CHECK PRIOR WRITE                    3F4Q0210
+*                                                                       3F4Q0220
+*                MOVE  DATA  TO  OUTPUT BUFFER                          3F4Q0230
+       SXD     ..FSEL+1,1          STORE WORD COUNT                     3F4Q0240
+       AXT     0,4                 MOVE                                 3F4Q0250
+ LOOP  CAL     .OUTBF,4             DATA                                3F4Q0260
+       SLW     ..FBCB,4              TO                                 3F4Q0270
+       TXI     *+1,4,-1            OUTPUT                               3F4Q0280
+       TIX     LOOP,1,1             BUFFER                              3F4Q0290
+*                                                                       3F4Q0300
+       TSX     ..FIOC,4            OUTPUT SINGLE RECORD VIA ..FIOC      3F4Q0310
+       TRA     1,2                 RETURN TO FIOH                       3F4Q0320
+ LK.DR LDIR                                                             3F4Q0330
+       END                                                              3F4Q0340

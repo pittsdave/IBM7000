@@ -1,0 +1,267 @@
+$*     7090/7094 BINARY BUFFER BUILDER AND LIST PROCESSOR               3F4A0000
+$IBMAP FIOB                                                             3F4A0010
+       TTL     FIOB/BINARY BUFFER PROCESSOR                             3F4A0020
+*              BINARY BUFFER PROCESSOR                                  3F4A0030
+*              CALLING SEQUENCE IS                                      3F4A0040
+*              CALL .FIOB.(ARG)                                         3F4A0050
+*                                    NOP = INPUT                        3F4A0060
+*              ARG - DECREMENT -     TRA = OUTPUT                       3F4A0070
+*              ADDRESS               = LOCATION OF TRANSMISSION         3F4A0080
+*                                    ROUTINE                            3F4A0090
+*              FIOB INITIALIZES THE LIST PROCESSING                     3F4A0100
+*              AND END OF LIST ROUTINES. IT THEN                        3F4A0110
+*              ACQUIRES DATA AND SUPERVISES IT'S ACTIVITY               3F4A0120
+*              FOR BOTH INPUT AND OUTPUT FUNCTIONS.                     3F4A0130
+.FRITE ENTRY   RITE                                                     3F4A0140
+.FCNT  ENTRY   CT                                                       3F4A0150
+       ENTRY   .FBIBF                                                   3F4A0160
+       ENTRY   .FRLR.                                                   3F4A0161
+       ENTRY   .FWLR.                                                   3F4A0162
+       ENTRY   .FIOB.                                                   3F4A0170
+       ENTRY   .FBLT.                                                   3F4A0171
+       ENTRY   .FBDT.                                                   3F4A0172
+.FIOB. SXA     LNKG,4                                                   3F4A0180
+       STD     CHKSZ1                PUT BLOCK                          3F4A0190
+       ARS     18                    SIZE IN FIOB                       3F4A0200
+       STA     STCT                                                     3F4A0210
+       CLA     3,4                   GET TRA,NOP AND I/O RETURN LOCATION3F4A0220
+       STA     INOUT+1               WHERE TO GO FOR I/O                3F4A0230
+       STD     TST1                  INITIALIZE FOR INPUT               3F4A0240
+       STD     TST2                  OR OUTPUT - NOP = INPUT            3F4A0250
+       STD     TST3                  TRA = OUTPUT                       3F4A0260
+       STD     TST4                                                     3F4A0270
+       STD     TST5                                                     3F4A0275
+       CLA     4,4                   GET LOC OF CALL FROM OBJ. PROG.    3F4A0280
+       STA     LISTB                                                    3F4A0290
+       SXA     LISTB+1,1             SAVE INITIAL VALUES OF XR1,XR2     3F4A0291
+       SXA     LISTB+2,2             FROM MAIN PROGRAM                  3F4A0293
+       LDQ     STOIND                INITIALIZE LIST PROCESSING         3F4A0300
+TST1   NOP     *+2                   ROUTINE FOR INPUT                  3F4A0310
+       LDQ     CLAIND                OR OUTPUT.                         3F4A0320
+       SLQ     IOSW                                                     3F4A0330
+       SLQ     FBDT2                                                    3F4A0340
+       LDQ     STQIND                                                $5$3F4A0350
+TST2   NOP     *+2                                                      3F4A0360
+       LDQ     LDQIND                                                   3F4A0370
+       SLQ     FBDT4                                                    3F4A0380
+       AXT     WRR,4                                                    3F4A0381
+TST5   NOP     *+2                                                      3F4A0382
+       AXT     RDD,4                                                    3F4A0383
+       SXA     RDWR,4                                                   3F4A0384
+       AXT     WREC,4                                                   3F4A0390
+TST3   NOP     *+2                                                      3F4A0400
+       AXT     RDD,4                                                    3F4A0410
+       SXA     INOUSW,4                                                 3F4A0420
+       SXA     FBDT5,4                                                  3F4A0430
+       SXA     FBDT7,4                                                  3F4A0440
+TST4   NOP     LISTB-1                                                  3F4A0450
+       STZ     ELRFG                                                    3F4A0460
+       STZ     ENDLST                                                   3F4A0470
+RDWR   TSX     **,2                                                     3F4A0480
+LISTB  AXT     **,4                  RETURN TO OBJECT PROGRAM           3F4A0490
+       AXT     **,1                                                     3F4A0491
+       AXT     **,2                                                     3F4A0493
+       TRA     1,4                   TO PROCESS LIST                    3F4A0500
+INOUT  SXA     *+2,2                 ALL BINARY TRANSMISSION            3F4A0510
+       TSX     **,2                  DONE THRU HERE. TSX POINTS         3F4A0520
+       AXT     **,2                  TO IO CONTAINED IN THE             3F4A0530
+       TRA     1,2                   INTERFACE ROUTINE.                 3F4A0540
+*              BINARY READ ROUTINE. IT READS A RECORD                   3F4A0550
+*              AND EXAMINES LABEL FOR RECORD SIZE.                      3F4A0560
+RDD    SXA     SVRDD,2                                                  3F4A0570
+ELRSW  TRA     *+1                   EXIT IF LIST LONGER THAN RECORD    3F4A0580
+       TSX     INOUT,2               READ A RECORD.                     3F4A0590
+       AXT     0,2                                                      3F4A0600
+       LDI*    .FBIBF                EXAMINE LABEL                      3F4A0610
+       RFT     77777                 LABEL IS NON-ZERO, SET END OF      3F4A0620
+       TRA     ELR                   LOGICAL RECORD SWITCH.             3F4A0630
+CHKSZ  PIA                           ADDRESS ZERO. EXAMINE DECREMENT.   3F4A0640
+       AXT     127,4                 IF DECREMENT ZERO, SET PHYSICAL    3F4A0650
+       LFT     77777                 RECORD SIZE TO OLD SIZE (127).     3F4A0660
+       PDX     0,4                   IF NON ZERO, PICK UP COUNT.        3F4A0670
+CHKSZ1 TXL     STCNT,4,**            IF TOO LARGE                       3F4A0680
+ERR    CALL    .FXEM.(CODE)          EXIT FOR EXECTION ERROR            3F4A0690
+STCT   AXT     **,4                  OPTIONAL RETURN .SET COUNT TO      3F4A0700
+STCNT  TXI     *+1,4,1               MAXIMUM SIZE                       3F4A0710
+       TXH     *+2,4,2       DID CONTROL WORD COUNT = 1.             (9)3F4A0711
+       TXI     *+1,4,1       YES, RECORD IS POSSIBLY FORTRAN II BIN  (9)3F4A0713
+       SXA     COUNT,4               SET COUNT.                         3F4A0720
+CT     TXI     *+1,4,**              COMPARE COUNT WITH RECORD          3F4A0730
+       TXH     ERR1,4,0              SIZE RETURNED FROM IOCS CALL.      3F4A0740
+       AXT     -1,4                  SET INDEXING TO OBTAIN             3F4A0750
+       SXA     BUFCT,4               BUFFER WORD.                       3F4A0760
+SVRDD  AXT     **,2                                                     3F4A0770
+       TRA     1,2                                                      3F4A0780
+*              ROUTINE TO SET END OF RECORD SWITCH                      3F4A0790
+ELR    LXA     ELRSW,1               SAVE CURRENT ADDRESS IN END OF     3F4A0800
+       SXA     RSTOR1,1              LOGICAL RECORD SWITCH.             3F4A0810
+       AXT     ERR2,1                SET END OF LOGICAL RECORD          3F4A0820
+       SXA     ELRSW,1               SWITCH.                            3F4A0830
+       STL     ELRFG                 SET END OF LOGICAL RECORD FLAG.    3F4A0840
+       LFT     77777                                                    3F4A0850
+       TRA     CHKSZ                                                    3F4A0860
+       LDC     CT,4                                                  (9)3F4A0870
+       TRA     CT-1                                                     3F4A0880
+ERR2   CALL    .FXEM.(CODE2)         LIST LONGER THAN LOGICAL RECORD.   3F4A0890
+       STL     ENDLST                SET OPTIONAL RETURN FLAG.          3F4A0900
+       LXA     IOSW-1,1              OPTIONAL RETURN FROM FXEM.         3F4A0910
+       SXA     RSTOR2,1              SET TO ZERO OUT                    3F4A0920
+       AXT     IOSW,1                REMAINING LIST ITEMS.              3F4A0930
+       SXA     IOSW-1,1                                                 3F4A0940
+       LXA     FBDT2-1,1                                                3F4A0950
+       SXA     RSTOR3,1                                                 3F4A0960
+       AXT     FBDT2,1                                                  3F4A0970
+       SXA     FBDT2-1,1                                                3F4A0980
+       LXA     FBDT3,1                                                  3F4A0990
+       SXA     RSTOR4,1                                                 3F4A1000
+       AXT     FBDT4,1                                                  3F4A1010
+       SXA     FBDT3,1                                                  3F4A1020
+       CLA     ZAC                                                      3F4A1030
+       STO     IOSW                                                     3F4A1040
+       STO     FBDT2                                                    3F4A1050
+       CLA     ZMQ                                                      3F4A1060
+       STO     FBDT4                                                    3F4A1070
+       TRA     SVRDD                                                    3F4A1080
+WREC   SXA     SVWREC,2                                                 3F4A1090
+       STO     DATUM                 SAVE CURRENT DATUM.                3F4A1100
+       STQ     DATUM+1                                                  3F4A1110
+PRC    AXT     1,4                   INCREASE PHYSICAL                  3F4A1120
+       TXI     *+1,4,1               RECORD COUNT BY                    3F4A1130
+       SXA     PRC,4                 ONE.                               3F4A1140
+       TSX     WRR,2                 GO TO WRITE ONE RECORD.            3F4A1150
+       CLA     DATUM                 RESTORE CURRENT DATUM.             3F4A1160
+       LDQ     DATUM+1                                                  3F4A1170
+SVWREC AXT     **,2                                                     3F4A1180
+       TRA     1,2                                                      3F4A1190
+WRR    SXA     SVWRR,2                                                  3F4A1200
+       TSX     INOUT,2               TRANSMIT A LINE                    3F4A1210
+       AXT     0,2                                                      3F4A1220
+       XEC     STCT                  AXT   **,4 PLACE RECORD LENGTH     3F4A1230
+       PXD     0,4                   IN INTERNAL LABEL.                 3F4A1240
+       STO*    .FBIBF                                                   3F4A1250
+       TXI     *+1,4,1               SET COUNT.                         3F4A1260
+       SXA     COUNT,4                                                  3F4A1270
+       SXD     RITE,4                SET WORD COUNT FOR I/O COMMAND     3F4A1280
+       AXT     -1,4                  CALLING SEQUENCE. SET INDEXING     3F4A1290
+       SXA     BUFCT,4               FOR OUTPUT BUFFER.                 3F4A1300
+SVWRR  AXT     **,2                                                     3F4A1310
+       TRA     1,2                                                      3F4A1320
+       REM  LIST PROCESSING FOR SINGLE-PRECISION BINARY DATA            3F4A1330
+.FBLT. SXA     LXIT1,1                                                  3F4A1340
+       SXA     LXIT2,2                                                  3F4A1350
+       SXA     LEXIT,4                                                  3F4A1360
+BUFCT  AXT     **,2                                                     3F4A1370
+COUNT  AXT     **,4                                                     3F4A1380
+       TNX     INOUSW,4,1            TRANSFER IF BUFFER EXHAUSTED.      3F4A1390
+IOSW   CLA*    .FBIBF                CHANGED TO STO* FOR OUTPUT.        3F4A1400
+       TXI     *+1,2,-1                                                 3F4A1410
+       SXA     BUFCT,2                                                  3F4A1420
+       SXA     COUNT,4                                                  3F4A1430
+LXIT1  AXT     **,1                                                     3F4A1440
+LXIT2  AXT     **,2                                                     3F4A1450
+LEXIT  AXT     **,4                                                     3F4A1460
+       TRA     1,4                                                      3F4A1470
+INOUSW TSX     **,2                  SET TO RDD FOR INPUT, WREC FOR     3F4A1480
+       TRA     BUFCT                 OUTPUT.                            3F4A1490
+       REM  LIST PROCESSING FOR DOUBLE-PRECISION BINARY DATA            3F4A1500
+.FBDT. SXA     LXIT1,1                                                  3F4A1510
+       SXA     LXIT2,2                                                  3F4A1520
+       SXA     LEXIT,4                                                  3F4A1530
+FBDT1  LXA     BUFCT,2                                                  3F4A1540
+       LXA     COUNT,4                                                  3F4A1550
+       TNX     FBDT5,4,1             TRANSFER IF BUFFER EXHAUSTED.      3F4A1560
+FBDT2  CLA*    .FBIBF                CHANGED TO STO* FOR OUTPUT         3F4A1570
+       TXI     *+1,2,-1                                                 3F4A1580
+FBDT3  TNX     FBDT6,4,1             TRANSFER IF BUFFER EXHAUSTED.      3F4A1590
+FBDT4  LDQ*    .FBIBF                CHANGED TO STQ* FOR OUTPUT.        3F4A1600
+       TXI     *+1,2,-1                                                 3F4A1610
+       TRA     LXIT1-2                                                  3F4A1620
+FBDT5  TSX     **,2                                                     3F4A1630
+       TRA     FBDT1                                                    3F4A1640
+FBDT6  STO     DATUM+3                                                  3F4A1650
+FBDT7  TSX     **,2                  SET TO RDD FOR INPUT, WREC         3F4A1660
+       LXA     BUFCT,2               FOR OUTPUT.                        3F4A1670
+       LXA     COUNT,4                                                  3F4A1680
+       CLA     DATUM+3                                                  3F4A1690
+       TRA     FBDT3                                                    3F4A1700
+       REM  ENTRY FROM MAIN PROGRAM FOR END-OF-LIST INPUT.              3F4A1710
+.FRLR. SAVE    (2)I                                                     3F4A1720
+       NZT     ENDLST                WAS OPTIONAL ERR2 EXIT TAKEN.      3F4A1730
+       TRA     ELRTST                NO.                                3F4A1740
+       STZ     ENDLST                YES. RESET FLAG.                   3F4A1750
+RSTOR2 AXT     **,2                  RESTORE EXITS                      3F4A1760
+       SXA     IOSW-1,2              WHICH HAVE BEEN                    3F4A1770
+RSTOR3 AXT     **,2                  RESET IN PROCESS                   3F4A1780
+       SXA     FBDT2-1,2             OF SETTING LIST ITEMS              3F4A1790
+RSTOR4 AXT     **,2                  TO ZERO FOR THE CASE               3F4A1800
+       SXA     FBDT3,2               OF LIST LONGER THAN                3F4A1810
+       AXT     .FBIBF,2              LOGICAL RECORD                     3F4A1820
+       SXA     IOSW,2                                                   3F4A1830
+       SXA     FBDT2,2                                                  3F4A1840
+       SXA     FBDT4,2                                                  3F4A1850
+ELRTST ZET     ELRFG                 HAS END OF LOGICAL RECORD BEEN READ3F4A1860
+       TRA     RLR1                  YES.                               3F4A1870
+RDLGR  TSX     INOUT,2               NO.KEEP READING                    3F4A1880
+       AXT     0,2                   PHYSICAL RECORDS                   3F4A1890
+       LDI*    .FBIBF                UNTIL LAST RECORD                  3F4A1900
+       RFT     77777                 HAS BEEN READ.                     3F4A1910
+       TRA     REXIT                                                    3F4A1920
+       TRA     RDLGR                                                    3F4A1930
+RLR1   STZ     ELRFG                 RESET END OF LOGICAL RECORD FLAG.  3F4A1940
+RSTOR1 AXT     **,2                  RESET END OF LOGICAL               3F4A1950
+       SXA     ELRSW,2               RECORD SWITCH.                     3F4A1960
+REXIT  RETURN  .FRLR.                                                   3F4A1970
+       REM  ENTRY FROM MAIN PROGRAM FOR END-OF-LIST OUTPUT.             3F4A1980
+.FWLR. SAVE    (2)                                                      3F4A1990
+       LAC     BUFCT,4               COMPUTE WORD COUNT FOR LAST RECORD.3F4A2000
+       TXL     FIXCT,4,2             ADJUST WORD COUNT FOR SHORT RECORD.3F4A2010
+FWLR1  SXD     RITE,4                SET APPROPRIATE                    3F4A2020
+       TXI     *+1,4,-1              WORD COUNT IN IOCS                 3F4A2030
+       PXD     0,4                   CALLING SEQUENCE AND PREPARE       3F4A2040
+       STO     DATUM                 TO SET IN INTERNAL LABEL.          3F4A2050
+       LXA     PRC,4                 GET PHYSICAL RECORD COUNT AND      3F4A2060
+       SXA     DATUM,4               PREPARE TO SET IN                  3F4A2070
+       AXT     0,2                   INTERNAL LABEL.                    3F4A2080
+       CLA     DATUM                                                    3F4A2090
+       STO*    .FBIBF                                                   3F4A2100
+       TSX     INOUT,2               WRITE LAST RECORD.                 3F4A2110
+       AXT     1,2                   RESET PHYSICAL RECORD              3F4A2120
+       SXA     PRC,2                 COUNT TO ONE.                      3F4A2130
+       AXT     0,2                   RESET WORD COUNT IN                3F4A2140
+       SXD     RITE,2                IOCS CALLING SEQUENCE TO ZERO.     3F4A2150
+       RETURN  .FWLR.                                                   3F4A2160
+FIXCT  AXT     3,4                   MAKE WORD COUNT                    3F4A2170
+       TRA     FWLR1                 AT LEAST THREE.                    3F4A2180
+CLAIND CLA*    **                                                       3F4A2190
+LDQIND LDQ*    **                                                       3F4A2200
+STOIND STO*    **                                                       3F4A2210
+STQIND STQ*    **                                                       3F4A2220
+FILEBK PZE     **                    LOCATION OF FILE CONTROL BLOCK.    3F4A2230
+.FBIBF PZE     **,2                  LOCATION OF BINARY BUFFER,2        3F4A2240
+ERR1   CALL    .FXEM.(CODE1)         INTERNAL LABEL WORD COUNT DOES NOT 3F4A2250
+       TRA     CT+2                  AGREE WITH IOCS WORD COUNT.        3F4A2260
+       REM                           OPTIONAL RETURN FROM FXEM IS       3F4A2270
+       REM                           PROCESS RECORD READ.               3F4A2280
+CODE   PZE     38                                                       3F4A2300
+ER38MS PZE     E38MES,,7                                                3F4A2310
+ER38OP PZE     E38OMS,,6                                                3F4A2320
+E38MES BCI     7,0PHYSICAL RECORD SIZE EXCEEDS BUFFER SIZE              3F4A2330
+E38OMS BCI     6,0PROCESS PORTION OF RECORD IN BUFFER                   3F4A2340
+CODE1  PZE     39                                                       3F4A2350
+ER39MS PZE     E39MES,,10                                               3F4A2360
+ER39OP PZE     E39OMS,,4                                                3F4A2370
+E39MES BCI ,0INTERNAL LABEL WORD COUNT DOES NOT MATCH IOCS WORD COUNT   3F4A2380
+E39OMS BCI     4,0PROCESS RECORD READ                                   3F4A2390
+CODE2  PZE     40                                                       3F4A2400
+ER40MS PZE     E40MES,,6                                                3F4A2410
+ER40OP PZE     E40OMS,,6                                                3F4A2420
+E40MES BCI     6,0LIST EXCEEDS LOGICAL RECORD LENGTH                    3F4A2430
+E40OMS BCI     6,0STORE ZEROS IN REMAINING LIST ITEMS                   3F4A2440
+ELRFG  PZE     **                    NON-ZERO IF LOGICAL RECORD READ.   3F4A2450
+ENDLST PZE     **                    NON-ZERO IF END LIST OPTION TAKEN. 3F4A2460
+ZAC    ZAC                                                              3F4A2470
+ZMQ    LDQ     SYSZRO                                                (9)3F4A2480
+RITE   PZE                                                              3F4A2500
+DATUM  BSS     3                                                        3F4A2510
+LNKG   LDIR                                                             3F4A2520
+       END                                                              3F4A2540

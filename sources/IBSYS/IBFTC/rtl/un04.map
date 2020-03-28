@@ -1,0 +1,7 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - UN04              3F5UN400
+$IBMAP UN04    6                                                        3F5UN410
+       TTL     UN04/FILE SPECIFICATIONS FOR LOGICAL UNIT 4              3F5UN420
+       ENTRY   .UN04.                                                   3F5UN430
+.UN04. PZE     UNIT04                                                   3F5UN440
+UNIT04 FILE    ,UT4,READY,INOUT,BLK=256,BIN,NOLIST                      3F5UN450
+       END                                                              3F5UN460

@@ -1,0 +1,74 @@
+$*             LIBRARY HYPERBOLIC SINE AND COSINE SUBROUTINE            3F9M0000
+$IBMAP FSCH    150                                                      3F9M0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F9M0015
+       ENTRY   SINH                                                     3F9M0020
+       ENTRY   COSH                                                     3F9M0030
+       SPACE   3                                                        3F9M0040
+       REM     HYPERBOLIC SINE AND COSINE SUBROUTINE                    3F9M0050
+       SPACE   3                                                        3F9M0060
+  SINH STL     FLAG          SET FLAG FOR SINH                          3F9M0070
+  COSH SXA     SYSLOC,4                                                 3F9M0080
+       SXA     LINK,4                                                   3F9M0090
+       CLA*    3,4           PICK UP ARG,T                              3F9M0100
+       STO     SAVE1         SAVE ARGUMENT                              3F9M0110
+       SSP                                                              3F9M0120
+       LDQ     MAXIM         TEST IF ARGUMENT IS TOO LARGE              3F9M0130
+       TLQ     ERROR                                                    3F9M0140
+       NZT     FLAG          IF COSH                                    3F9M0150
+       TRA     EXPN            COMPUTE                                  3F9M0160
+       LDQ     TRESH         TEST FOR                                   3F9M0170
+       TLQ     EXPN            SINH CIRCUIT                             3F9M0180
+       XCA                                                              3F9M0190
+       FMP     SAVE1                                                    3F9M0200
+       SLW     SAVE2         SQUARE                                     3F9M0210
+       AXT     3,4                                                      3F9M0220
+       LDQ     K7                                                       3F9M0230
+  LOOP FMP     SAVE2         COMPUTE                                    3F9M0240
+       FAD     K+1,4           INFINITE                                 3F9M0250
+       FRN                       SERIE                                  3F9M0260
+       XCA                                                              3F9M0270
+       TIX     LOOP,4,1                                                 3F9M0280
+       FMP     SAVE1                                                    3F9M0290
+       FRN                                                              3F9M0300
+       TRA     RET                                                      3F9M0310
+  EXPN STO     SAVE2         COMPUTE                                    3F9M0320
+       CALL    EXP(SAVE2)      BY                                       3F9M0330
+       STO     SAVE2             EXPONENTIAL                            3F9M0340
+       CLA     K                   FUNCTION                             3F9M0350
+       FDP     SAVE2                                                    3F9M0360
+       XCA                                                              3F9M0370
+       ZET     FLAG          CHECK IF                                   3F9M0380
+       CHS                     SINH OR                                  3F9M0390
+       FAD     SAVE2             COSH                                   3F9M0400
+       FRN                                                              3F9M0410
+       SUB     K2                                                       3F9M0420
+       LDQ     SAVE1                                                    3F9M0430
+       ZET     FLAG                                                     3F9M0440
+       LLS     0                                                        3F9M0450
+   RET LXA     LINK,4                                                   3F9M0460
+       STZ     FLAG          RESET FLAG                                 3F9M0470
+       TRA     1,4                                                      3F9M0480
+       SPACE                                                            3F9M0490
+ ERROR CALL    .FXEM.(ESCNH)                                            3F9M0500
+       CLA     OMEGA                                                    3F9M0510
+       TRA     RET                                                      3F9M0520
+       SPACE                                                            3F9M0530
+ MAXIM OCT     207540074636      88.029692                              3F9M0540
+ TRESH OCT     177542710300  0.3465735903                               3F9M0550
+    K2 OCT     1000000000                                               3F9M0560
+    K7 OCT     164640064502  0.000198413273                             3F9M0570
+       OCT     172421042104  0.0083333333333                            3F9M0580
+       OCT     176525252525  0.16666666667                              3F9M0590
+     K OCT     201400000000  1.0                                        3F9M0600
+ OMEGA OCT     377777777777                                             3F9M0610
+  FLAG PZE                                                              3F9M0620
+ SAVE1 PZE                                                              3F9M0630
+ SAVE2 PZE                                                              3F9M0640
+ ESCNH DEC     75                                                       3F9M0650
+       PZE     E75MES,,10                                               3F9M0660
+       PZE     E75OMS,,4                                                3F9M0670
+E75MES BCI ,0SINH(X) OR COSH(X), /X/ GRT THAN 88.029692 NOT ALLOWED     3F9M0680
+E75OMS BCI     4,0SET RESULT = +OMEGA                                   3F9M0690
+       SPACE                                                            3F9M0700
+  LINK LDIR                                                             3F9M0710
+       END                                                              3F9M0720

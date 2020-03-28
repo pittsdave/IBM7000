@@ -1,0 +1,198 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F8C0000
+$IBMAP FCAS    150                                                      3F8C0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F8C0015
+       TTL     FCAS - FORTRAN COMPLEX FLOATING MULTIPLY AND DIVIDE.     3F8C0019
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90,             3F8C0020
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94.            3F8C0030
+       REM       (OR TO ANY VALUE NOT EQUAL TO 90)                      3F8C0040
+M9094  SET     90                                                       3F8C0050
+       PCC     ON                                                       3F8C0060
+       IFF     M9094=90                                                 3F8C0070
+       GOTO    BEG94                                                    3F8C0080
+       PCC     OFF                                                      3F8C0090
+       ENTRY   .CFMP.                                                   3F8C0100
+       ENTRY   .CFDP.                                                   3F8C0110
+       SPACE   3                                                        3F8C0120
+       REM     COMPLEX ARITHMETIC SUBROUTINE                            3F8C0130
+       SPACE   3                                                        3F8C0140
+.CFMP. STL     FLAG                                                     3F8C0150
+.CFDP. SXA     SYSLOC,4                                                 3F8C0160
+       SXA     LINK,4                                                   3F8C0170
+       SXA     RET,4                                                 (9)3F8C0175
+       CAL     3,4           OBTAIN THE TWO OPERANDS                    3F8C0180
+       ADD     K1A             TAG IN ADDRESS POINTER ALLOWED           3F8C0190
+       STO     B                                                        3F8C0200
+       CLA*    3,4           A   REAL PART OPERAND 1                    3F8C0210
+       STO     A             B   IMAG PART OPERAND1                     3F8C0220
+       CLA*    B             C   REAL PART OPERAND2                     3F8C0230
+       STO     B             D   IMAG PART OPERAND2                     3F8C0240
+       CAL     4,4                                                      3F8C0250
+       ADD     K1A                                                      3F8C0260
+       STO     D                                                        3F8C0270
+       CLA*    4,4                                                      3F8C0280
+       STO     C                                                        3F8C0290
+       LDQ*    D                                                        3F8C0300
+       STQ     D                                                        3F8C0310
+       NZT     FLAG                                                     3F8C0320
+       TRA     DIV                                                      3F8C0330
+ MULT  FMP     A             COMPLEX MULTIPLY                           3F8C0340
+       STO     BUFF                                                     3F8C0350
+       LDQ     B               (AC-BD) + I(AD+BC)                       3F8C0360
+       FMP     C                                                        3F8C0370
+       FAD     BUFF                                                     3F8C0380
+       STO     BUFF                                                     3F8C0390
+       LDQ     B                                                        3F8C0400
+       FMP     D                                                        3F8C0410
+       STO     B                                                        3F8C0420
+       LDQ     A                                                        3F8C0430
+       FMP     C                                                        3F8C0440
+       FSB     B                                                        3F8C0450
+       LDQ     BUFF                                                     3F8C0460
+       STZ     FLAG                                                     3F8C0470
+       TRA     1,4                                                      3F8C0480
+       SPACE                                                            3F8C0490
+  DIV  SSP                   COMPLEX DIVIDE                             3F8C0500
+       NZT     D                                                     (9)3F8C0505
+       TZE     ERR                                                   (9)3F8C0507
+       SBM     D               COMPARE MAGNITUDES OF C AND D            3F8C0510
+       TPL     CONT            IF ABS C GREATER THAN ABS D, SKIP        3F8C0520
+       CLS     C               OTHERWISE SWITCH COMPONENTS AS FOLLOWS   3F8C0530
+       STO     D                                                        3F8C0540
+       STQ     C                 NEW A =  OLD  B                        3F8C0550
+       CLS     A                 NEW B =  OLD -A                        3F8C0560
+       LDQ     B                 NEW C =  OLD  D                        3F8C0570
+       STO     B                 NEW D =  OLD -C                        3F8C0580
+       STQ     A                                                        3F8C0590
+ CONT  CLS     A               NOW ABS C IS GREATER THAN ABS D          3F8C0600
+       FDP     C                                                        3F8C0610
+       STQ     A               SCALE A, B, AND D BY C TO GET            3F8C0620
+       CLA     B                 -A/C, B/C, AND D/C                     3F8C0630
+       FDP     C                                                        3F8C0640
+       STQ     B                                                        3F8C0650
+       CLA     D                                                        3F8C0660
+       FDP     C                                                        3F8C0670
+       STQ     D                                                        3F8C0680
+       FMP     D                                                        3F8C0690
+       FAD     ONE                                                      3F8C0700
+       STO     C                                                        3F8C0710
+       LDQ     B               REAL PART OF ANSWER IS                   3F8C0720
+       FMP     D                                                        3F8C0730
+       FSB     A                 (A/C + B/C.D/C) / (1 + (D/C)**2)       3F8C0740
+       FDP     C                                                        3F8C0750
+       STQ     BUFF                                                     3F8C0760
+       LDQ     A               IMAGINARY PART OF ANSWER IS              3F8C0770
+       FMP     D                                                        3F8C0780
+       FAD     B                 (-A/C.D/C + B/C) / (1 + (D/C)**2)      3F8C0790
+       FDP     C                                                        3F8C0800
+       CLA     BUFF                                                     3F8C0810
+RET    AXT     **,4                                                  (9)3F8C0820
+       TRA     1,4                                                   (9)3F8C0825
+ERR    CALL    .FXEM.(CFDPE)                                         (9)3F8C0826
+       TRA     RET                                                   (9)3F8C0828
+CFDPE  DEC     25                                                    (9)3F8C0830
+ER25MS PZE     E25MES,,4                                             (9)3F8C0832
+ER25OP PZE     E25OMS,,3                                             (9)3F8C0834
+E25MES BCI     4,0COMPLEX Z/0 NOT ALLOWED                            (9)3F8C0836
+E25OMS BCI     3,0SET RESULT = 0                                     (9)3F8C0838
+  ONE  OCT     201400000000                                             3F8C0840
+  K1A  OCT     1                                                        3F8C0850
+   A   BSS     1                                                        3F8C0860
+   B   BSS     1                                                        3F8C0870
+   C   BSS     1                                                        3F8C0880
+   D   BSS     1                                                        3F8C0890
+ BUFF  BSS     1                                                        3F8C0900
+ FLAG  PZE                                                              3F8C0910
+       SPACE                                                            3F8C0920
+  LINK LDIR                                                             3F8C0930
+BEG94  NULL                                                             3F8C0940
+       PCC     ON                                                       3F8C0950
+       IFT     M9094=90                                                 3F8C0960
+       GOTO    END94                                                    3F8C0970
+       PCC     OFF                                                      3F8C0980
+       EJECT                                                            3F8C0990
+       ENTRY   .CFMP.                                                   3F8C1000
+       ENTRY   .CFDP.                                                   3F8C1010
+       SPACE   3                                                        3F8C1020
+       REM     COMPLEX ARITHMETIC SUBROUTINE                            3F8C1030
+       SPACE   3                                                        3F8C1040
+.CFMP. STL     FLAG                                                     3F8C1050
+.CFDP. SXA     SYSLOC,4                                                 3F8C1060
+       SXA     LINK,4                                                   3F8C1070
+       SXA     RET,4                                                 (9)3F8C1075
+       DLD*    3,4                                                      3F8C1080
+       DST     A             REAL ARG1 TO A,  IMAG ARG1 TO B            3F8C1090
+       DLD*    4,4                                                      3F8C1100
+       DST     C             REAL ARG2 TO C,  IMAG ARG2 TO D            3F8C1110
+       NZT     FLAG                                                     3F8C1120
+       TRA     DIV                                                      3F8C1130
+ MULT  FMP     A             COMPLEX MULTIPLY                           3F8C1140
+       STO     BUFF                                                     3F8C1150
+       LDQ     B               (AC-BD) + I(AD+BC)                       3F8C1160
+       FMP     C                                                        3F8C1170
+       FAD     BUFF                                                     3F8C1180
+       STO     BUFF                                                     3F8C1190
+       LDQ     B                                                        3F8C1200
+       FMP     D                                                        3F8C1210
+       STO     B                                                        3F8C1220
+       LDQ     A                                                        3F8C1230
+       FMP     C                                                        3F8C1240
+       FSB     B                                                        3F8C1250
+       LDQ     BUFF                                                     3F8C1260
+       STZ     FLAG                                                     3F8C1270
+       TRA     1,4                                                      3F8C1280
+       SPACE                                                            3F8C1290
+  DIV  SSP                   COMPLEX DIVIDE                             3F8C1300
+       NZT     D                                                     (9)3F8C1305
+       TZE     ERR                                                   (9)3F8C1307
+       SBM     D               COMPARE MAGNITUDES OF C AND D            3F8C1310
+       TPL     CONT            IF ABS C GREATER THAN ABS D, SKIP        3F8C1320
+       CLS     C               OTHERWISE SWITCH COMPONENTS AS FOLLOWS   3F8C1330
+       STO     D                                                        3F8C1340
+       STQ     C                 NEW A =  OLD  B                        3F8C1350
+       CLS     A                 NEW B =  OLD -A                        3F8C1360
+       LDQ     B                 NEW C =  OLD  D                        3F8C1370
+       STO     B                 NEW D =  OLD -C                        3F8C1380
+       STQ     A                                                        3F8C1390
+ CONT  CLS     A               NOW ABS C IS GREATER THAN ABS D          3F8C1400
+       FDP     C                                                        3F8C1410
+       STQ     A               SCALE A, B, AND D BY C TO GET            3F8C1420
+       CLA     B                 -A/C, B/C, AND D/C                     3F8C1430
+       FDP     C                                                        3F8C1440
+       STQ     B                                                        3F8C1450
+       CLA     D                                                        3F8C1460
+       FDP     C                                                        3F8C1470
+       STQ     D                                                        3F8C1480
+       FMP     D                                                        3F8C1490
+       FAD     ONE                                                      3F8C1500
+       STO     C                                                        3F8C1510
+       LDQ     B               REAL PART OF ANSWER IS                   3F8C1520
+       FMP     D                                                        3F8C1530
+       FSB     A                 (A/C + B/C.D/C) / (1 + (D/C)**2)       3F8C1540
+       FDP     C                                                        3F8C1550
+       STQ     BUFF                                                     3F8C1560
+       LDQ     A               IMAGINARY PART OF ANSWER IS              3F8C1570
+       FMP     D                                                        3F8C1580
+       FAD     B                 (-A/C.D/C + B/C) / (1 + (D/C)**2)      3F8C1590
+       FDP     C                                                        3F8C1600
+       CLA     BUFF                                                     3F8C1610
+RET    AXT     **,4                                                  (9)3F8C1620
+       TRA     1,4                                                   (9)3F8C1625
+ERR    CALL    .FXEM.(CFDPE)                                         (9)3F8C1626
+       TRA     RET                                                   (9)3F8C1628
+CFDPE  DEC     25                                                    (9)3F8C1630
+ER25MS PZE     E25MES,,4                                             (9)3F8C1632
+ER25OP PZE     E25OMS,,3                                             (9)3F8C1634
+E25MES BCI     4,0COMPLEX Z/0 NOT ALLOWED                            (9)3F8C1636
+E25OMS BCI     3,0SET RESULT = 0                                     (9)3F8C1638
+       EVEN                                                             3F8C1640
+   A   BSS     1                                                        3F8C1650
+   B   BSS     1                                                        3F8C1660
+   C   BSS     1                                                        3F8C1670
+   D   BSS     1                                                        3F8C1680
+  ONE  OCT     201400000000                                             3F8C1690
+ BUFF  BSS     1                                                        3F8C1700
+ FLAG  PZE                                                              3F8C1710
+       SPACE                                                            3F8C1720
+  LINK LDIR                                                             3F8C1730
+END94  NULL                                                             3F8C1740
+       END                                                              3F8C1750

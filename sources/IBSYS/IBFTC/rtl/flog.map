@@ -1,0 +1,129 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F6A0000
+$IBMAP FLOG    150                                                      3F6A0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F6A0015
+       TTL     FLOG-SINGLE PRECISION FLTG. PT. COMMON LOG + NATURAL LOG 3F6A0019
+       ENTRY   ALOG                                                     3F6A0020
+       ENTRY   ALOG10                                                   3F6A0030
+       SPACE   3                                                        3F6A0040
+       REM     LOGARITHM SUBROUTINE                                     3F6A0050
+       SPACE   3                                                        3F6A0060
+ALOG10 STL     FLAG                                                     3F6A0070
+ ALOG  SXA     SYSLOC,4                                                 3F6A0080
+       SXA     LINK,4                                                   3F6A0090
+       CLA*    3,4           PICK UP ARG,T                              3F6A0100
+       TZE     ERROR1        IF X IS 0 OR NEGATIVE, THIS IS ERROR       3F6A0110
+       TMI     ERROR2                                                   3F6A0120
+ BEGIN STO     BUFF                                                     3F6A0130
+       FSB     FLONE         Z=X-1                                      3F6A0140
+       LAS     TWOM7                                                    3F6A0150
+       TRA     A             IF ARG IS AWAY FROM 1, SKIP                3F6A0160
+       AXT     0,0                                                      3F6A0170
+       STO     BUFF          FOR X APPROX. 1, USE POWER SERIES FOR Z    3F6A0180
+       XCA                                                              3F6A0190
+       FMP     D2              F=Z-(1/2+3*2**(-18))Z*Z+(1/3)Z*Z*Z       3F6A0200
+       FAD     D1                                                       3F6A0210
+       XCA                                                              3F6A0220
+       FMP     BUFF                                                     3F6A0230
+       FAD     FLONE                                                    3F6A0240
+       XCA                                                              3F6A0250
+       FMP     BUFF                                                     3F6A0260
+       TRA     TEST                                                     3F6A0270
+       SPACE                                                            3F6A0280
+   A   LDQ     K3            NORMAL CASE                                3F6A0290
+       CLA     BUFF                                                     3F6A0300
+       LRS     27            SEND MANTISSA M TO MQ, SCALE CHARAC.       3F6A0310
+       ALS     19              TO B16, AND SUBTRACT 128+1/2             3F6A0320
+       SUB     K3                                                       3F6A0330
+       STO     CHAR                                                     3F6A0340
+       SPACE                                                            3F6A0350
+       XCA                   PICK UP M IN AC, AND COMPUTE               3F6A0360
+       LRS     1                  Z=(M-SQRT2/2)/(M+SQRT2/2)             3F6A0370
+       ADD     K1                                                       3F6A0380
+       STO     BUFF                                                     3F6A0390
+       SUB     K2                                                       3F6A0400
+       VDP     BUFF,,34                                                 3F6A0410
+       STQ     Z               SCALE B1                                 3F6A0420
+       SPACE                                                            3F6A0430
+       MPY     Z             COMPUTE FRACTIONAL APPROXIMATION OF        3F6A0440
+       STO     SQ               F=LOG((1+Z)/(1-Z)) BASE2                3F6A0450
+       ADD     C4                                                       3F6A0460
+       STO     BUFF             F=Z(C1+C2*SQ+C3/(C4+SQ))                3F6A0470
+       CLA     C3                                                       3F6A0480
+       DVP     BUFF                                                     3F6A0490
+       STQ     BUFF            SCALE B2                                 3F6A0500
+       LDQ     SQ                                                       3F6A0510
+       MPY     C2                                                       3F6A0520
+       ADD     BUFF                                                     3F6A0530
+       ADD     C1              SCALE B2                                 3F6A0540
+       XCA                                                              3F6A0550
+       MPY     Z               F NOW READY     SCALE B3                 3F6A0560
+       SPACE                                                            3F6A0570
+       LRS     13            LEADING PART OF F IN B16, TAIL PART IN MQ  3F6A0580
+       ADD     CHAR            LOG X BASE2 = CHAR.-128-1/2+F            3F6A0590
+       STO     CHAR                                                     3F6A0600
+       MPY     LOGTW         NOW LEADING PART AND TAIL PART MAY HAVE    3F6A0610
+       STO     Z               DIFFERENT SIGN.  MULTIPLY LOG 2 BASE E   3F6A0620
+       LDQ     CHAR            (IN B0) TO EACH PART, FLOAT THE PRODUCTS 3F6A0630
+       MPY     LOGTW           AND ADD THEM UP TO OBTAIN ANSWER         3F6A0640
+       ORA     K4                                                       3F6A0650
+       STO     CHAR                                                     3F6A0660
+       XCA                                                              3F6A0670
+       ADD     Z                                                        3F6A0680
+       ARS     9                                                        3F6A0690
+       ORA     K5                                                       3F6A0700
+       FAD     CHAR                                                     3F6A0710
+       FRN                                                              3F6A0720
+ TEST  NZT     FLAG                                                     3F6A0730
+       TRA     1,4                                                      3F6A0740
+       SPACE                                                            3F6A0750
+       XCA                   COMMON LOG REQUESTED                       3F6A0760
+       FMP     LOGE                                                     3F6A0770
+       FRN                                                              3F6A0780
+  RET  STZ     FLAG                                                     3F6A0790
+       TRA     1,4                                                      3F6A0800
+       SPACE                                                            3F6A0810
+ERROR1 CALL    .FXEM.(ELOG1)                                            3F6A0820
+       CLA     MOMEGA                                                   3F6A0830
+       LXA     LINK,4                                                   3F6A0840
+       STZ     FLAG                                                  (9)3F6A0845
+       TRA     1,4                                                      3F6A0850
+ERROR2 CALL    .FXEM.(ELOG2)                                            3F6A0860
+       SSP                                                              3F6A0870
+       LXA     LINK,4                                                   3F6A0880
+       TRA     BEGIN                                                    3F6A0890
+       SPACE                                                            3F6A0900
+  K1   OCT     132404746320      SQRT2/2               B1               3F6A0910
+  K2   OCT     265011714640      SQRT2                 B1               3F6A0920
+  K3   OCT     401000000         128+1/2               B16              3F6A0930
+  K4   OCT     210000000000                                             3F6A0940
+  K5   OCT     156000000000                                             3F6A0950
+ LOGTW OCT     261344137677      LOG 2 BASE E          B0               3F6A0960
+ FLONE OCT     201400000000      1                  FLOAT POINT         3F6A0970
+ TWOM7 OCT     172400000000      2 TO MINUS 7       FLOAT POINT         3F6A0980
+ LOGE  OCT     177674557306      LOG10(E) + FUDGE   FLOAT POINT         3F6A0990
+  D1   OCT     -200400003000     -1/2-3*2**(-18)    FLOAT POINT         3F6A1000
+  D2   OCT     177525252525      1/3                FLOAT POINT         3F6A1010
+  C1   OCT     160416433162      DEC 1.75825662752     B2               3F6A1020
+  C2   OCT     047602722370      DEC 0.155295647459    B0               3F6A1030
+  C3   OCT     -031150254334     DEC -1.57523642316    B4               3F6A1040
+  C4   OCT     -131343172721     DEC -1.39755981619    B2               3F6A1050
+MOMEGA OCT     777777777777                                             3F6A1060
+       SPACE                                                            3F6A1070
+ FLAG  PZE                                                              3F6A1080
+ CHAR  BSS     1                                                        3F6A1090
+   Z   BSS     1                                                        3F6A1100
+  SQ   BSS     1                                                        3F6A1110
+ BUFF  BSS     1                                                        3F6A1120
+ ELOG1 DEC     9                                                        3F6A1130
+       PZE     E9MES,,6                                                 3F6A1140
+       PZE     E9OMS,,4                                                 3F6A1150
+E9MES  BCI     6,0ALOG(0) OR ALOG10(0) NOT ALLOWED                      3F6A1160
+ E9OMS BCI     4,0SET RESULT = -OMEGA                                   3F6A1170
+ ELOG2 DEC     10                                                       3F6A1180
+       PZE     E10MES,,6                                                3F6A1190
+       PZE     E10OMS,,3                                                3F6A1200
+E10MES BCI     6,0ALOG(-X) OR ALOG10(-X) NOT ALLOWED                    3F6A1210
+E10OMS BCI     3,0EVALUATE FOR +X                                       3F6A1220
+       SPACE                                                            3F6A1230
+  LINK LDIR                                                             3F6A1240
+       END                                                              3F6A1250

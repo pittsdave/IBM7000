@@ -1,0 +1,7 @@
+$IBMAP UNIT06  6                                                        3F4Z0000
+       TTL  ALTERNATE I/O SPECIFICATION FOR LOGICAL UNIT 6              3F4Z0010
+       LBL     UNT6,BEGIN     UNIT06                                 (7)3F4Z0013
+       ENTRY   ..UN06                                                   3F4Z0020
+..UN06 PZE     UNIT06                                                   3F4Z0030
+UNIT06 FILE    ,OU,READY,OUTPUT,BLK=22,MULTIREEL,BCD,NOLIST             3F4Z0040
+       END                                                           $5$3F4Z0050

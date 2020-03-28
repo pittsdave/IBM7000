@@ -1,0 +1,7 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - UN03              3F5UN300
+$IBMAP UN03    6                                                        3F5UN310
+       TTL     UN03/FILE SPECIFICATIONS FOR LOGICAL UNIT 3              3F5UN320
+       ENTRY   .UN03.                                                   3F5UN330
+.UN03. PZE     UNIT03                                                   3F5UN340
+UNIT03 FILE    ,UT3,READY,INOUT,BLK=256,BIN,NOLIST                      3F5UN350
+       END                                                              3F5UN360

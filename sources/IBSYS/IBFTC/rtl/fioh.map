@@ -1,0 +1,1229 @@
+$*     7090/7094 BCD FORMAT SCANNER AND BUFFER BUILDING ROUTINE         3F4C0000
+$IBMAP FIOH    300,()OK                                              (8)3F4C0001
+       TTL     FIOH - FORMAT SCANNER                                (14)3F4C0002
+CHLIMT EQU     133                 LINE LIMIT IN CHARACTERS          (8)3F4C0011
+       REM     TO ASSEMBLE REGULAR ROUTINE, SET M9094 = 90 ,         $5$3F4C0012
+       REM     TO ASSEMBLE OPTIONAL ROUTINE, SET M9094 = 94 .        $5$3F4C0013
+*                   (OR TO ANY VALUE NOT EQUAL TO 90.)               $5$3F4C0014
+M9094  SET     90                                                    $5$3F4C0015
+       PCC     ON                                                    $5$3F4C0016
+       IFF     M9094=90                                              $5$3F4C0017
+       GOTO    BEG94                                                 $5$3F4C0018
+       PCC     OFF                                                   $5$3F4C0019
+       REM  FORMAT SCAN.                                                3F4C0030
+*              FORMAT SCANNER                                           3F4C0040
+*              CALLING SEQUENCE IS                                      3F4C0050
+*              CALL .FIOH.(ARG)                                         3F4C0060
+*              ARG= DECREMENT IS NOP FOR INPUT,TRA FOR OUTPUT           3F4C0070
+*                   ADDRES IS LOCATION OF IO CALLING SEQUENCE           3F4C0080
+*                                                                       3F4C0090
+*                                                                       3F4C0100
+       ENTRY   .FFIL.                                                   3F4C0110
+       ENTRY   .FRTN.                                                   3F4C0120
+       ENTRY   .FIOH.                                                   3F4C0130
+TRA    EQU     FSET1+1                                                  3F4C0140
+ANPT   EQU     .ANPT                                                    3F4C0150
+AOUT   EQU     .AOUT                                                    3F4C0160
+CHAR   EQU     .CHAR                                                    3F4C0170
+CNVSW  EQU     .CNVSW                                                   3F4C0180
+COUNT  EQU     .KOUNT                                                   3F4C0190
+D1     EQU     .D1                                                      3F4C0200
+D2     EQU     .D2                                                      3F4C0210
+DBC10  EQU     .DBC10                                                   3F4C0220
+DBC20  EQU     .DBC20                                                   3F4C0230
+DBC    EQU     .DBC                                                     3F4C0240
+DDBC   EQU     .DDBC                                                    3F4C0250
+DDDFLG EQU     .DDDFL                                                   3F4C0260
+DDFIX  EQU     .DDFIX                                                   3F4C0270
+DDFLAG EQU     .DDFLG                                                   3F4C0280
+DDRST1 EQU     .DDRS1                                                   3F4C0290
+DDSW   EQU     .DDSW                                                    3F4C0300
+DEXPON EQU     .DEXPN                                                   3F4C0310
+DFLT   EQU     .DFLT                                                    3F4C0320
+DIG    EQU     .DIG                                                     3F4C0330
+DONE   EQU     .DONE                                                    3F4C0340
+ENDFSW EQU     .ENDFS                                                   3F4C0350
+FIXSW  EQU     .FIXSW                                                   3F4C0360
+FLT    EQU     .FLT                                                     3F4C0370
+FXD    EQU     .FXD                                                     3F4C0380
+FXFL1  EQU     .FXFL1                                                   3F4C0390
+FXFL2  EQU     .FXFL2                                                   3F4C0400
+FXFL3  EQU     .FXFL3                                                   3F4C0410
+INTG   EQU     .INTG                                                    3F4C0420
+LNTP   EQU     .LNTP                                                    3F4C0430
+LOUT   EQU     .LOUT                                                    3F4C0440
+MQD    EQU     .MQD                                                     3F4C0450
+ONPT   EQU     .ONPT                                                    3F4C0460
+OOUT   EQU     .OOUT                                                    3F4C0470
+OUTBUF EQU     .OUTBF                                                   3F4C0480
+PEX    EQU     .PEX                                                     3F4C0490
+TEST   EQU     .TEST                                                    3F4C0500
+TOPACK EQU     .TOPAC                                                   3F4C0510
+WIDTH  EQU     .WIDTH                                                   3F4C0520
+.FIOH. SXA     LNKG,4                                                   3F4C0530
+       SXA     SYSLOC,4                                                 3F4C0540
+       SXA     SV1,1                 SAVE XR1 AND XR2 FROM              3F4C0550
+       SXA     SV2,2                 ORIGINAL CALL FROM MAIN PROGRAM    3F4C0560
+       CLA     4,4                   GET RETURN FROM MAIN CALL AND      3F4C0570
+       STA     LIST                  SAVE.STORE ADDRESS OF BUFFER       3F4C0580
+       STD     ARG2                  IF FRCD CALL                       3F4C0590
+       CLA     3,4                   GET TRA,NOP AND I/O RETURN         3F4C0600
+       STT     ONLIN                 SET ONLINE OPERATION SWITCH        3F4C0610
+       STA     INOUT                 SAVE RETURN TO TRANSMIT LINE       3F4C0620
+       STA     FSTLN                                                    3F4C0630
+       STD     CCOCTL                SET INPUT/OUTPUT SWITCHES          3F4C0640
+       STD     CCINTG                NOP FOR INPUT                      3F4C0650
+       STD     CCHOLL+1              TRA FOR OUTPUT                     3F4C0660
+       STD     INOUTS+1                                                 3F4C0670
+       STD     INOUT+1                                                  3F4C0680
+       STD     CCFFXD+2                                                 3F4C0690
+       STD     CCEFLT                                                   3F4C0700
+       STD     CCDFLT+3                                                 3F4C0710
+       STD     SKIP                                                     3F4C0720
+       STD     CCALPH                                                   3F4C0730
+       STD     CCLOGC                                                   3F4C0740
+       STD     TST1                                                     3F4C0750
+       AXT     OVER,2                                                   3F4C0760
+       AXT     RESCAN,1                                                 3F4C0770
+       CALL    .FCON.(ARG1,ARG2)                                        3F4C0780
+       ORG     *-2                                                      3F4C0790
+ARG1   PZE     DCPT,,CCDCPT                                             3F4C0800
+ARG2   PZE     STOP,,**                                                 3F4C0810
+       TSX     RESET,2               RESET BUFFER FOR OUTPUT            3F4C0820
+       CLA     FSET1+1                                                  3F4C0830
+       STD     EXITSW                SET EXIT SWITCH                    3F4C0840
+       STZ     DIVRT                 RESET SWITCH,RETURN THRU FCNV      3F4C0850
+       STZ     INT                                                      3F4C0860
+       SXA     ENDX,0                                                   3F4C0870
+       LXA     LIST,4                LOCATE CALL IN MAIN PROGRAM        3F4C0880
+       ZET     ONLIN                 IS THIS ONLINE OPERATION           3F4C0890
+       TXI     *+1,4,1               YES-BUMP POINTER TO GET FORMAT LOC 3F4C0900
+       CLA     4,4                   PICK UP LOCATION OF FORMAT         3F4C0910
+       STA     STPNT                 SET FORMAT POINTER                 3F4C0920
+       STA     FMTLOC                                                   3F4C0930
+TST1   NOP     *+2                                                      3F4C0940
+FSTLN  TSX     **,2                  IF INPUT, GET FIRST LINE           3F4C0950
+STPNT  AXC     **,2                                                     3F4C0960
+SCAN1  LDQ     0,2                   EXAMINE                            3F4C0970
+       AXT     36,1                  NEXT                               3F4C0980
+SCAN2  PXD     ,0                    FORMAT                             3F4C0990
+       LGL     6                     CHARACTER,                         3F4C1000
+       PAX     ,4                    AND                                3F4C1010
+SCAN3  XEC     FRMTR,4             * TAKE INDICATED TRANSFER.           3F4C1020
+       ADM     INT                   CONTROL COMES HERE ON ANY DIGIT.   3F4C1030
+       LGL     3                     MULTIPLY PREVIOUS INT BY 10,       3F4C1040
+       ADM     INT                   AND ADD IN                         3F4C1050
+       ACL     INT                   CURRENT DIGIT.                     3F4C1060
+SCAN4  SLW     INT                   SET INT.                           3F4C1070
+       REM  ENTRY FROM CCRPAR, CCDCPT.                                  3F4C1080
+SCAN5  TIX     SCAN2,1,6           * IF CHARACTER COUNT IS EXHAUSTED,   3F4C1090
+FSET1  TXI     SCAN1,2,-1            EXAMINE NEXT FORMAT WORD.          3F4C1100
+       REM  FORMAT TRANSFER TABLE.                                      3F4C1110
+       TRA     STOP                  77                                 3F4C1120
+       TRA     STOP                  76                                 3F4C1130
+       TRA     STOP                  75                                 3F4C1140
+       TRA     CCLPAR                74                                 3F4C1150
+       TRA     CCCMMA                73                                 3F4C1160
+       TRA     STOP                  72                                 3F4C1170
+       TRA     STOP                  71                                 3F4C1180
+       TRA     STOP                  70                                 3F4C1190
+       TRA     CCBLNK                67                                 3F4C1200
+       TRA     STOP                  66                                 3F4C1210
+       TRA     STOP                  65                                 3F4C1220
+       TRA     STOP                  64                                 3F4C1230
+       TRA     STOP                  63                                 3F4C1240
+       TRA     STOP                  62                                 3F4C1250
+       TRA     CCSLSH                61                                 3F4C1260
+       TRA     SCAN5                 60                                 3F4C1270
+       TRA     STOP                  57                                 3F4C1280
+       TRA     STOP                  56                                 3F4C1290
+       TRA     STOP                  55                                 3F4C1300
+       TRA     STOP                  54                                 3F4C1310
+       TRA     STOP                  53                                 3F4C1320
+       TRA     STOP                  52                                 3F4C1330
+       TRA     STOP                  51                                 3F4C1340
+       TRA     STOP                  50                                 3F4C1350
+       TRA     CCSCFP                47                                 3F4C1360
+       TRA     CCOCTL                46                                 3F4C1370
+       TRA     STOP                  45                                 3F4C1380
+       TRA     STOP                  44                                 3F4C1390
+       TRA     CCLOGC                                                   3F4C1400
+       TRA     STOP                  42                                 3F4C1410
+       TRA     STOP                  41                                 3F4C1420
+       TRA     CCSCFM                40                                 3F4C1430
+       TRA     STOP                  37                                 3F4C1440
+       TRA     STOP                  36                                 3F4C1450
+       TRA     STOP                  35                                 3F4C1460
+       TRA     CCRPAR                34                                 3F4C1470
+       TRA     CCDCPT                33                                 3F4C1480
+       TRA     STOP                  32                                 3F4C1490
+       TRA     CCINTG                31                                 3F4C1500
+       TRA     CCHOLL                30                                 3F4C1510
+       TRA     STOP                  27                                 3F4C1520
+       TRA     CCFFXD                26                                 3F4C1530
+       TRA     CCEFLT                25                                 3F4C1540
+       TRA     CCDFLT                24                                 3F4C1550
+       TRA     STOP                  23                                 3F4C1560
+       TRA     STOP                  22                                 3F4C1570
+       TRA     CCALPH                21                                 3F4C1580
+       TRA     STOP                  20                                 3F4C1590
+       TRA     STOP                  17                                 3F4C1600
+       TRA     STOP                  16                                 3F4C1610
+       TRA     STOP                  15                                 3F4C1620
+       TRA     STOP                  14                                 3F4C1630
+       TRA     STOP                  13                                 3F4C1640
+       TRA     STOP                  12                                 3F4C1650
+       LGR     3                     11 - DIGIT 9                       3F4C1660
+       LGR     3                     10 - DIGIT 8                       3F4C1670
+       LGR     3                     7 - DIGIT 7                        3F4C1680
+       LGR     3                     6 - DIGIT 6                        3F4C1690
+       LGR     3                     5 - DIGIT 5                        3F4C1700
+       LGR     3                     4 - DIGIT 4                        3F4C1710
+       LGR     3                     3 - DIGIT 3                        3F4C1720
+       LGR     3                     2 - DIGIT 2                        3F4C1730
+       LGR     3                     1 - DIGIT 1                        3F4C1740
+FRMTR  LGR     3                     0 - DIGIT 0                        3F4C1750
+       REM  ENTRY FROM FORMAT SCAN ON LEFT PARENTHESIS.                 3F4C1760
+CCLPAR LXA     GRCT,4                                                   3F4C1770
+       TXI     *+1,4,1                                                  3F4C1780
+       SXA     GRCT,4                                                   3F4C1790
+       TXL     LPAR,4,2              GO TO SAVE IF ZERO OR FIRST LEVEL. 3F4C1800
+       LXA     BX1,4                 SAVE FORMAT                        3F4C1810
+       SXA     GRSAV1,4              SCAN POSITION                      3F4C1820
+       LXA     BX2,4                 FOR FIRST LEVEL                    3F4C1830
+       SXD     GRSAV1,4              PARENTHESIS.                       3F4C1840
+       LXA     BX4,4                                                    3F4C1850
+       SXD     GRCT,4                                                   3F4C1860
+       CLA     MQR                                                      3F4C1870
+       STO     GRSAV2                                                   3F4C1880
+       LXA     GROUPX,4                                                 3F4C1890
+       SXA     GRSAV3,4                                                 3F4C1900
+       LXA     PARX,4                                                   3F4C1910
+       SXD     GRSAV3,4                                                 3F4C1920
+LPAR   SXA     BX1,1                 SAVE CURRENT                       3F4C1930
+       SXA     BX2,2                 SCAN POSITION                      3F4C1940
+       STQ     MQR                   FOR POSSIBLE RESCAN.               3F4C1950
+       LXA     INT,4                 SAVE                               3F4C1960
+       SXA     BX4,4                 GROUP COUNT, AND                   3F4C1970
+       SXA     GROUPX,4              GROUP INDEX.                       3F4C1980
+       LXA     ENDX,4                ADD 1 TO                           3F4C1990
+       TXI     *+1,4,1               END PAREN COUNT                    3F4C2000
+       SXA     ENDX,4                TO DETERMINE END OF FORMAT.        3F4C2010
+       SXA     PARX,4                SAVE PAREN INDEX FOR RESCAN.       3F4C2020
+       TRA     SCAN                * THEN CONTINUE SCAN.                3F4C2030
+       REM  ENTRY FROM FORMAT SCAN ON COMMA.                            3F4C2040
+CCCMMA AXC     RESUME-1,4            PROCESS CURRENT FIELD.             3F4C2050
+       REM  FIELD,4 / CALLERS= CCCMMA, CCSLSH, CCRPAR, CCBLNK.          3F4C2060
+FIELD  SXA     DONE,4                SAVE RETURN INDEX.                 3F4C2070
+       SXA     CX2,2                 SAVE                               3F4C2080
+       SXA     CX1,1                 CURRENT POSITION                   3F4C2090
+       STQ     MQ                    OF FORMAT SCAN.                    3F4C2100
+       LXA     INT,4                 PICKUP FIELD WIDTH,                3F4C2110
+       TXL     DONE,4,0              IF NON-ZERO,                       3F4C2120
+       SXA     WIDTH,4               SET WIDTH, AND                     3F4C2130
+EXITSW TRA     LISTRT               *EXIT TO LIST CONTROL               3F4C2140
+       CLA     TRA                   RESET SWITCH, IF THE END           3F4C2150
+       STD     *-2                   OF FORMAT WAS JUST ENCOUNTERED.    3F4C2160
+       TRA     ENDFSW+1            * EXIT TO CONVERSION.                3F4C2170
+       REM  ENTRY FROM FORMAT SCAN ON SLASH.                            3F4C2180
+CCSLSH TSX     FIELD,4             * GO PROCESS CURRENT FIELD.          3F4C2190
+       AXC     RESUME-1,2            PREPARE FOR NEXT LINE OF I/O.      3F4C2200
+       TRA     INOUTS                                                   3F4C2210
+       REM  ENTRY FROM FORMAT SCAN ON P.                                3F4C2220
+CCSCFP CLA     INT                   MOVE SCALE FACTOR                  3F4C2230
+       STO     PEX                   INTO PEX.                          3F4C2240
+       TRA     SCAN                * GO CONTINUE SCAN.                  3F4C2250
+       REM  ENTRY FROM FORMAT SCAN ON O.                                3F4C2260
+CCOCTL NOP     *+2                   (INPUT/NOP, OUTPUT/TRA).           3F4C2270
+       TXI     SETAD,4,ONPT-38       ADJUST FOR ONPT ENTRY, OR FOR      3F4C2280
+       TXI     SETAD,4,OOUT-38       OOUT. EXIT TO SET CNVSW.           3F4C2290
+       REM  ENTRY FROM FORMAT SCAN ON MINUS.                            3F4C2300
+CCSCFM CLS     INT                   SET SIGN OF SCALE FACTOR NEGATIVE, 3F4C2310
+       STO     INT                                                      3F4C2320
+       TRA     SCAN5               * AND GO CONTINUE SCAN.              3F4C2330
+       REM  ENTRY FROM FORMAT SCAN ON RIGHT PARENTHESIS.                3F4C2340
+CCRPAR TSX     FIELD,4             * GO PROCESS CURRENT FIELD.          3F4C2350
+BX4    AXT     **,4                  TEST GROUP COUNT, AND              3F4C2360
+       TIX     GROUP,4,1             PROCESS GROUP UNTIL EXHAUSTED.     3F4C2370
+       LXA     GRCT,4                RESET FORMAT SCAN POSITION         3F4C2380
+       TXH     RSETGR,4,2            FOR FIRST LEVEL GROUP COUNT.       3F4C2390
+       TXI     *+1,4,-1                                                 3F4C2400
+       SXA     GRCT,4                                                   3F4C2410
+ENDX   AXT     **,4                  THEN TEST END COUNT, AND           3F4C2420
+       TNX     ENDFMT,4,1            IF NOT EXHAUSTED,                  3F4C2430
+       SXA     ENDX,4                REDUCE COUNT, AND                  3F4C2440
+       REM  ENTRY FROM CCSLSH, CCCMMA, CCHOLL, CCBLNK.                  3F4C2450
+RESUME LDQ     MQ                    RESTORE                            3F4C2460
+CX1    AXT     **,1                  CURRENT                            3F4C2470
+CX2    AXT     **,2                  POSITION OF FORMAT SCAN.           3F4C2480
+       REM  ENTRY FROM CCLPAR,CCSCFP,CCRPAR,CCINTG,CCHOLL.              3F4C2490
+SCAN   STZ     INT                   CLEAR INT, AND                     3F4C2500
+       TRA     SCAN5               * CONTINUE FORMAT SCAN.              3F4C2510
+       REM  ENTRY FROM TOPACK ON LINE OVERFLOW.                         3F4C2520
+OVER   TSX     SETWRD,2            * RESET WORD FOR OUTPUT.             3F4C2530
+       REM  ENTRY FROM FORMAT SCAN ON ILLEGAL CONTROL CHARACTER.        3F4C2540
+STOP   CLA*    FMTLOC                STORE FIRST WORD OF FORMAT         3F4C2550
+       STO     E31MES+5              STATEMENT IN MESSAGE.              3F4C2560
+       CLA     FMTLOC                CONVERT TO OCTAL AND STORE         3F4C2570
+       TSX     CVBCD,4               IN MESSAGE.                        3F4C2590
+       SLW     E31MES+2                                                 3F4C2600
+FSTOP  CALL    .FXEM.(CODE)          EXIT FOR EXECUTION ERROR.          3F4C2620
+       TRA     *+1                   INCORRECT FORMAT STATEMENT.        3F4C2630
+ENDFMT CLA     TRA                   SET SWITCH IN IOCNV                3F4C2640
+       STD     ENDFSW                FOR END OF FORMAT, AND             3F4C2650
+       TRA     LISTRT               *GO SEE IF LIST IS EXHAUSTED        3F4C2660
+       REM  REENTRY AFTER END OF FORMAT.                                3F4C2670
+RESCAN CLA     CX1                   RESET TO NOP                       3F4C2680
+       STD     ENDFSW                END OF FORMAT SWITCH.              3F4C2690
+       STD     EXITSW                SET EXIT SWITCH IN FIELD.          3F4C2700
+       TSX     INOUTS,2                                                 3F4C2710
+PARX   AXT     **,4                  PICKUP PAREN INDEX TO              3F4C2720
+       SXA     ENDX,4                RESET END COUNT.                   3F4C2730
+       SXA     GRCT,4                                                   3F4C2740
+GROUPX AXT     **,4                  PICKUP GROUP INDEX TO              3F4C2750
+GROUP  SXA     BX4,4                 SET GROUP COUNT.                   3F4C2760
+BX1    AXT     **,1                  RESET FORMAT POSITION              3F4C2770
+BX2    AXT     **,2                  TO BEGINNING OF                    3F4C2780
+       LDQ     MQR                   LAST GROUP, AND                    3F4C2790
+       TRA     SCAN                * GO CONTINUE SCAN.                  3F4C2800
+RSETGR LXA     GRCT,4                                                   3F4C2810
+       TXI     *+1,4,-1                                                 3F4C2820
+       SXA     GRCT,4                                                   3F4C2830
+       CLA     GRSAV1                RESET FORMAT SCAN POSITION         3F4C2840
+       STA     BX1                   FOR FIRST LEVEL GROUP COUNT        3F4C2850
+       ARS     18                    AFTER SECOND                       3F4C2860
+       STA     BX2                   LEVEL GROUP                        3F4C2870
+       CLA     GRSAV2                COUNT IS DEPLETED.                 3F4C2880
+       STO     MQR                                                      3F4C2890
+       CLA     GRSAV3                                                   3F4C2900
+       STA     GROUPX                                                   3F4C2910
+       ARS     18                                                       3F4C2920
+       STA     PARX                                                     3F4C2930
+       LXD     GRCT,4                                                   3F4C2940
+       SXA     BX4,4                                                    3F4C2950
+       TRA     ENDX                                                     3F4C2960
+       REM  REENTRY FROM FORMAT SCAN FOR SINGLE PRECISION DECIMAL POINT.3F4C2970
+CCDCPT CAL     DCPT                  MODIFY                             3F4C2980
+       SLW     SCAN3                 SCAN.                              3F4C2990
+       PXD     ,0                    CLEAR OR STORE DEC. SCALE          3F4C3000
+DCPT1  STO     DIG                   ..                                 3F4C3010
+       TRA     SCAN5               * GO CONTINUE SCAN.                  3F4C3020
+       REM  REENTRY FROM FORMAT SCAN.                                   3F4C3030
+DCPT   TRA     *+1                   COLLECT                            3F4C3040
+       TXL     DCPT1,4,9             DECIMAL POSITION.                  3F4C3050
+DCPT2  SUB     BLANK                 ON NEXT                            3F4C3060
+       TZE     SCAN5               * CONTROL CHARACTER,                 3F4C3070
+       CAL     *+2                   RESET                              3F4C3080
+       SLW     SCAN3                 FORMAT SCAN                        3F4C3090
+       XEC     FRMTR,4             * AND GO CONTINUE SCAN.              3F4C3100
+       REM  REENTRY FROM FORMAT SCAN FOR DOUBLE PRECISION DECIMAL POINT.3F4C3110
+DDCPT  TRA     *+1                                                      3F4C3120
+       TXH     DCPT2,4,9             IF NUMERIC CHARACTER,              3F4C3130
+       LGR     3                     MULTIPLY PREVIOUS DIGIT BY 10      3F4C3140
+       ADM     DIG                   AND ADD IN CURRENT DIGIT.          3F4C3150
+       LGL     3                                                        3F4C3160
+       ADM     DIG                                                      3F4C3170
+       ACL     DIG                                                      3F4C3180
+       PAX     0,4                   TEST MAGNITUDE OF DIG.             3F4C3190
+       TXL     DCPT1,4,17            IF GREATER THAN 17,                3F4C3200
+       AXT     17,4                  SET VALUE OF DIG                   3F4C3210
+       PXA     0,4                   EQUAL TO 17.                       3F4C3220
+       TRA     DCPT1                                                    3F4C3230
+       REM  ENTRY FROM FORMAT SCAN ON I.                                3F4C3240
+CCINTG NOP     SETAD1                IF INPUT,                          3F4C3250
+       CLA     TRA                   PICKUP TRA, AND                    3F4C3260
+       REM  ENTRY FROM CCFFXD.                                          3F4C3270
+SETFX  STD     FIXSW                 SET FIXSW, AND                     3F4C3280
+       AXT     DBC,4                 PICKUP DBC TO                      3F4C3290
+       REM  ENTRY FROM CCFFXD, CCEFLT, CCOCTL, CCALPH.                  3F4C3300
+SETAD  SXA     CNVSW,4               SET CNVSW.                         3F4C3310
+       LXA     INT,4                 PICKUP INT, AND                    3F4C3320
+       SXA     COUNT,4               SET COUNT.                         3F4C3330
+       TRA     SCAN                * GO CONTINUE SCAN.                  3F4C3340
+SETAD1 TXI     SETAD,4,INTG-25       OUTPUT INTEGER, SET CNVSW.         3F4C3350
+       REM  ENTRY FROM FORMAT SCAN ON H.                                3F4C3360
+CCHOLL LXA     INT,4                 REPLACE                            3F4C3370
+       NOP     HOUT                  IF INPUT, THE                      3F4C3380
+       LDQ     MQD                   HOLLERITH                          3F4C3390
+       SXA     CX2,2                 FIELD                              3F4C3400
+       CAL     0,2                   IN                                 3F4C3410
+       LXA     .FDX1,2               FORMAT                             3F4C3420
+       TNX     HNPT3,1,6             STATEMENT                          3F4C3430
+       SXA     *+1,1                 WITH THE SPECIFIED NO.             3F4C3440
+       ARS     **                                                       3F4C3450
+HNPT1  TIX     HNPT2,2,1             OF                                 3F4C3460
+       LXA     .FDX2,2               BCD                                3F4C3470
+       TXI     *+1,2,-1              CHARACTERS                         3F4C3480
+       LDQ*    .FBDBF                FROM                               3F4C3490
+       SXA     .FDX2,2               THE                                3F4C3500
+       AXT     6,2                   INPUT                              3F4C3510
+HNPT2  LGL     6                     BUFFER.                            3F4C3520
+       TNX     HNPT4,4,1             ..                                 3F4C3530
+       TIX     HNPT1,1,6             ..                                 3F4C3540
+HNPT3  LXA     CX2,1                 ..                                 3F4C3550
+       SLW     0,1                   ..                                 3F4C3560
+       TXI     *+1,1,-1              ..                                 3F4C3570
+       SXA     CX2,1                 ..                                 3F4C3580
+       AXT     36,1                  ..                                 3F4C3590
+       TRA     HNPT1                 ..                                 3F4C3600
+HNPT4  SXA     .FDX1,2               ..                                 3F4C3610
+       LXA     CX2,2                 ..                                 3F4C3620
+       STQ     MQD                   ..                                 3F4C3630
+       SXA     CX1,1                 ..                                 3F4C3640
+       TXL     HNPT5,1,6             ..                                 3F4C3650
+       LDQ     0,2                   ..                                 3F4C3660
+       RQL     42,1                  ..                                 3F4C3670
+       STQ     MQ                    ..                                 3F4C3680
+       TNX     HNPT5,1,6             ..                                 3F4C3690
+       SXA     *+1,1                 ..                                 3F4C3700
+       LGL     **                    ..                                 3F4C3710
+HNPT5  SLW     0,2                   ..                                 3F4C3720
+       TRA     RESUME              * GO RESUME FORMAT SCAN.             3F4C3730
+       REM  ENTRY FROM CCBLNK.                                          3F4C3740
+HOUT   CAL     .WORD                 MOVE OUT THE SPECIFIED             3F4C3750
+       TNO     *+1                   NUMBER                             3F4C3760
+HOUT1  TIX     HOUT2,1,6             OF                                 3F4C3770
+HOUTA  AXT     36,1                  FORMAT                             3F4C3780
+       TXI     *+1,2,-1              CHARACTERS                         3F4C3790
+       LDQ     0,2                   (OR BLANKS)                        3F4C3800
+HOUT2  LGL     6                     INTO                               3F4C3810
+       TNO     HOUT6                 THE                                3F4C3820
+       TXI     *+1,4,-1              OUTPUT                             3F4C3830
+       XEC     .FPACK                BUFFER                             3F4C3840
+       SXA     HOUT5+1,1             A                                  3F4C3850
+       TXL     HOUT21,4,5            WORD                               3F4C3860
+       TXI     *+1,1,-6              AT A TIME                          3F4C3870
+       PXA     ,1                    AFTER THE PENDING                  3F4C3880
+       STA     HOUT3                 WORD                               3F4C3890
+       SUB     HOUTA                 ..                                 3F4C3900
+       STA     HOUT4                 ..                                 3F4C3910
+HOUT21 LXA     .FPACK,1              . .                                3F4C3920
+       XEC     TEST                  (HAS LINE FORMATTING OVERFLOWED)   3F4C3930
+       TXI     *+1,1,1               ..                                 3F4C3940
+       SXA     .FPACK,1              . .                                3F4C3950
+       TIX     HOUT3,4,6             ..                                 3F4C3960
+       TXI     *+1,4,1               ..                                 3F4C3970
+       TXL     *+2,4,6               ..                                 3F4C3980
+       TXI     HOUT3,4,-7            ..                                 3F4C3990
+       CAL     L(1)                  ..                                 3F4C4000
+       TRA     HOUT5                 ..                                 3F4C4010
+HOUT3  LGL     **                    ..                                 3F4C4020
+       TXI     *+1,2,-1              ..                                 3F4C4030
+       LDQ     ,2                    ..                                 3F4C4040
+HOUT4  LGL     **                    ..                                 3F4C4050
+       XEC     .FPACK                . .                                3F4C4060
+       TRA     HOUT21+1              ..                                 3F4C4070
+HOUT5  TNO     *+1                   ..                                 3F4C4080
+       AXT     **,1                  ..                                 3F4C4090
+HOUT6  TIX     HOUT1,4,1             ..                                 3F4C4100
+       SLW     .WORD                 . .                                3F4C4110
+       TRA     SCAN                * EXIT TO SCAN.                      3F4C4120
+       REM  ENTRY FROM FORMAT SCAN ON X.                                3F4C4130
+CCBLNK LXA     INT,4                 SET TO SKIP INT BLANKS CHARS.      3F4C4140
+       STQ     MQ                    IN DATA OR OUTPUT BUFFER           3F4C4150
+       SXA     CX1,1                 ..                                 3F4C4160
+       SXA     CX2,2                 ..                                 3F4C4170
+SKIP   NOP     BOUT                  IF INPUT. SKIP THE SPECIFIED       3F4C4180
+       LDQ     MQD                   BCD                                3F4C4190
+       LXA     .FDX1,1               CHARACTERS                         3F4C4200
+SKIP1  TIX     SKIP2,1,1             IN                                 3F4C4210
+       LXA     .FDX2,2               THE                                3F4C4220
+       TXI     *+1,2,-1              INPUT                              3F4C4230
+       TIX     *-1,4,6               BUFFER.                            3F4C4240
+       LDQ*    .FBDBF                ..                                 3F4C4250
+       SXA     .FDX2,2               ..                                 3F4C4260
+       AXT     6,1                   ..                                 3F4C4270
+SKIP2  LGL     6                     ..                                 3F4C4280
+       TIX     SKIP1,4,1             ..                                 3F4C4290
+       SXA     .FDX1,1               ..                                 3F4C4300
+       STQ     MQD                   ..                                 3F4C4310
+       TRA     RESUME              * GO RESUME FORMAT SCAN.             3F4C4320
+BOUT   SXA     COUNT,0               PLACE BLANKS INTO THE OUTPUT       3F4C4330
+       AXC     RESUME-1,2            BUFFER                             3F4C4340
+       SXA     DONE,2                USING THE TOPACK ROUTINE           3F4C4350
+       TXH     *+2,4,0               ..                                 3F4C4360
+       AXT     1,4                   ..                                 3F4C4370
+       SXA     WIDTH,4               AND                                3F4C4380
+       AXT     0,4                   RESUME                             3F4C4390
+       TRA     TOPACK              * THE FORMAT SCAN.                   3F4C4400
+       REM  ENTRY FROM FORMAT SCAN ON A.                                3F4C4410
+CCALPH NOP     *+2                   IF INPUT, ADJUST FOR               3F4C4420
+       TXI     SETAD,4,ANPT-17     * ANPT ENTRY, OR FOR                 3F4C4430
+       TXI     SETAD,4,AOUT-17     * AOUT. EXIT TO SET CNVSW.           3F4C4440
+       REM  ENTRY FROM FORMAT SCAN ON F.                                3F4C4450
+CCFFXD CLS     PEX                   MOVE NEGATIVE OF                   3F4C4460
+       STO     .FEXP                 SCALE FACTOR INTO EXP              3F4C4470
+       NOP     *+3                   IF INPUT,                          3F4C4480
+       REM  ENTRY FROM CCEFLT.                                          3F4C4490
+FXPT   CLA     CX1                   PICK UP NOP,AND                    3F4C4500
+       TRA     SETFX               * GO SET FIXSW.                      3F4C4510
+       AXT     FXD,4                 PICKUP FXD, AND                    3F4C4520
+       SXA     CNVSW,4               SET GATE AT CNVSW.                 3F4C4530
+       AXT     CHAR,4                IF OUTPUT,                         3F4C4540
+       SXA     FXFL1,4               SET                                3F4C4550
+       AXT     1,4                   FXFL1,2,3                          3F4C4560
+       REM  ENTRY FROM CCEFLT.                                          3F4C4570
+FXPT1  SXD     FXFL2,4               IN CONVERSION ROUTINE              3F4C4580
+       SXD     FXFL3,4               FOR FIXED POINT,                   3F4C4590
+       TRA     SETAD+1             * GO SET COUNT.                      3F4C4600
+       REM  ENTRY FROM FORMAT SCAN ON E.                                3F4C4610
+CCEFLT NOP     *+3                   IF INPUT,                          3F4C4620
+       STZ     .FEXP                 CLEAR EXP AND                      3F4C4630
+       TRA     FXPT                * EXIT TO CCFFXD.                    3F4C4640
+       AXT     FLT,4                 PICKUP FLT, AND                    3F4C4650
+       SXA     CNVSW,4               ..                                 3F4C4660
+       AXT     CHAR-4,4              IF OUTPUT,                         3F4C4670
+       SXA     FXFL1,4               SET                                3F4C4680
+       AXT     5,4                   FXFL1,2,3                          3F4C4690
+       TRA     FXPT1               * EXIT TO CCFFXD.                    3F4C4700
+       REM  ENTRY FROM FORMAT SCAN ON D.                                3F4C4710
+CCDFLT AXT     DDCPT,4               SET DOUBLE PRECISION EXIT IN       3F4C4720
+       SXA     CCDCPT,4              DECIMAL POINT SCAN.                3F4C4730
+       STL     DDDFLG                SET FLAG FOR D IN FORMAT SCAN.     3F4C4740
+       NOP     CCDOUT                IF DOUBLE PRECISION INPUT,         3F4C4750
+       STZ     .FEXP                 CLEAR EXP AND SET DOUBLE           3F4C4760
+       LXA     DBC20,4               PRECISION EXITS FOR -              3F4C4770
+       SXA     D1,4                  OVERFLOW IN DBC ROUTINE,           3F4C4780
+       AXT     DDBC,4                                                   3F4C4790
+       SXA     DBC20,4                                                  3F4C4800
+       LXA     DDSW,4                DOUBLE PRECISION FIX,              3F4C4810
+       SXA     D2,4                                                     3F4C4820
+       AXT     DDFIX,4                                                  3F4C4830
+       SXA     DDSW,4                                                   3F4C4840
+       AXT     DEXPON,4              SCAN OF D IN EXPONENT FIELD.       3F4C4850
+       SXA     DBC10,4                                                  3F4C4860
+       TRA     FXPT                                                     3F4C4870
+CCDOUT AXT     DFLT,4                IF OUTPUT, SET                     3F4C4880
+       SXA     CNVSW,4               CONVERSION SWITCH,                 3F4C4890
+       STL     DDFLAG                DOUBLE PRECISION FLAG,             3F4C4900
+       AXT     5,4                   FXFL2 AND FXFL3.                   3F4C4910
+       TRA     FXPT1                                                    3F4C4920
+       REM  ENTRY FROM FORMAT SCAN ON L                                 3F4C4930
+CCLOGC NOP     *+2                   (INPUT/NOP, OUTPUT/TRA)            3F4C4940
+       TXI     SETAD,4,LNTP-35       LNTP ENTRY FOR INPUT OR            3F4C4950
+       TXI     SETAD,4,LOUT-35       LOUT ENTRY FOR OUTPUT. SET CNVSW.  3F4C4960
+       REM  ENTRY FROM MAIN PROGRAM.                                    3F4C4970
+.FFIL. SXA     LISTDN,4                                                 3F4C4980
+       SXA     LISTDN+2,1                                               3F4C4990
+       SXA     LISTDN+1,2                                               3F4C5000
+       STZ     ONLIN                                                    3F4C5010
+       CLA     .FPACK                WHEN LIST                          3F4C5020
+       SUB     FILT                  HAS BEEN                           3F4C5030
+       TNZ     FINISH                SATISFIED,                         3F4C5040
+       CLA     .WORD                 PROCESS                            3F4C5050
+       SUB     L(1)                  ANY                                3F4C5060
+       TZE     *+2                   REMAINING                          3F4C5070
+FINISH TSX     INOUTS,2                                                 3F4C5080
+       STZ     GRCT                  RESTORE GROUP COUNTER.             3F4C5090
+       NZT     DDDFLG                TEST WHETHER DP EXITS RESTORED.    3F4C5100
+       TRA     LISTDN                                                   3F4C5110
+       STZ     DDDFLG                RESTORE DOUBLE PRECISION           3F4C5120
+       STZ     DDFLAG                EXITS CHANGED FOR OUTPUT.          3F4C5130
+       AXT     DCPT,4                                                   3F4C5140
+       SXA     CCDCPT,4                                                 3F4C5150
+LISTDN AXT     **,4                                                     3F4C5160
+       AXT     **,2                                                     3F4C5170
+       AXT     **,1                                                     3F4C5180
+       TRA     1,4                                                      3F4C5190
+       REM  ENTRY FROM MAIN PROGRAM.                                    3F4C5200
+.FRTN. SXA     LISTDN,4                                                 3F4C5210
+       SXA     LISTDN+1,2                                               3F4C5220
+       SXA     LISTDN+2,1                                               3F4C5230
+RTN1   STZ     GRCT                                                     3F4C5240
+       NZT     DDDFLG                TEST WHETHER DP EXITS RESTORED.    3F4C5250
+       TRA     LISTDN                                                   3F4C5260
+       STZ     DDDFLG                RESTORE DOUBLE PRECISION           3F4C5270
+       TSX     DDRST1,2              EXITS CHANGED FOR INPUT.           3F4C5280
+       TRA     LISTDN                                                   3F4C5290
+LISTRT ZET     DIVRT                                                    3F4C5300
+       TRA     .LIST                 NO-LIST COMPLETE,RETURN TO M.P.    3F4C5310
+       STL     DIVRT                                                    3F4C5320
+SV2    AXT     **,2                                                     3F4C5330
+SV1    AXT     **,1                                                     3F4C5340
+LIST   AXT     **,4                                                     3F4C5350
+       TRA     1,4                                                      3F4C5360
+*      ROUTINE TO HANDLE INPUT OUTPUT ,CALCULATE S WORD COUNT           3F4C5370
+*      AND RESETS BUFFER IF OUTPUT                                      3F4C5380
+INOUTS SXA     RET,2                                                    3F4C5390
+       NOP     FILWD                                                    3F4C5400
+INOUT  TSX     **,2                                                     3F4C5410
+       NOP     RESET+1                                                  3F4C5420
+RET    AXT     **,2                                                     3F4C5430
+       TRA     1,2                                                      3F4C5440
+*      CALCULATE CHARACTER COUNT FOR THIS LINE,                      (8)3F4C5441
+*      (XR1-OUTBUF)*6 + NUMBER OF CHARS IN .WORD                     (8)3F4C5442
+*      IF IT IS GREATER THAN CHLIMT LINE OVERFLOWS                   (8)3F4C5443
+FILWD  LXA     .FPACK,1                                                 3F4C5450
+       TXI     *+1,1,-OUTBUF       GET (XR1-OUTBUF)                  (8)3F4C5451
+       PXA     ,1                                                    (8)3F4C5460
+       STA     NOP                                                   (8)3F4C5461
+       ALS     1                                                     (8)3F4C5462
+       ADD     NOP                                                   (8)3F4C5463
+       ALS     1                                                     (8)3F4C5464
+       PAX     ,2                  GET (XR1-OUTBUF)*6                (8)3F4C5465
+       CAL     .WORD               PARTIAL WORD WITH                 (8)3F4C5466
+       SUB     L(1)                BLANKS AND STORE                  (8)3F4C5467
+       TZE     FTEST               IN OUTPUT BUFFER                  (8)3F4C5468
+       TXI     *+1,2,6             BUMP CHAR COUNT 6 FOR AC CHAR     (8)3F4C5469
+       CAL     .WORD                                                    3F4C5490
+       TOV     *+1                                                      3F4C5500
+       LDQ     BLANKS                                                   3F4C5510
+       LGL     6                                                        3F4C5520
+       TXI     *+1,2,-1            GET TRUE CHAR COUNT               (8)3F4C5521
+       TNO     *-2                 GO BACK IF MORE CHARS             (8)3F4C5530
+       TXL     *+2,2,CHLIMT        IF NO OVERFLOW                   (14)3F4C5531
+       TRA*    TEST                IF LINE OVERFLOWS                 (8)3F4C5533
+       XEC     .FPACK                STORE COMPLETED WORD               3F4C5540
+       TXI     *+1,1,1                                                  3F4C5550
+FILL2  TXH     INOUT,1,2           NUMBER OF WORDS STORED            (8)3F4C5570
+       AXT     3,1                   LESS THAN THREE WORDS-FIX AT 3     3F4C5580
+       TRA     INOUT                                                    3F4C5590
+FTEST  TXL     FILL2,2,CHLIMT      IF NO OVERFLOW                    (8)3F4C5591
+       TRA*    TEST                IF LINE OVERFLOWS                 (8)3F4C5593
+BLANKS BCI     1,                                                       3F4C5600
+L(1)   PZE     1                                                        3F4C5610
+       OCT     20                                                       3F4C5620
+BLANK  BCI     1,00000                                                  3F4C5630
+FILT   SLW     OUTBUF                                                   3F4C5640
+INT    PZE                                                              3F4C5650
+MQR    PZE                                                              3F4C5660
+MQ     PZE                                                              3F4C5670
+CT     PZE     **                                                       3F4C5680
+FMTLOC PZE     **                    LOCATION OF START OF FORMAT.       3F4C5690
+FILEBK PZE     **                    LOCATION OF FILE CONTROL BLOCK.    3F4C5700
+       REM                           OCCUPIES TWO CELLS.                3F4C5710
+PPFLAG PZE     **                    NON-ZERO IF PRINT OR PUNCH OUTPUT. 3F4C5720
+CDFLAG PZE     **                    NON-ZERO IF ON-LINE CARD INPUT.    3F4C5730
+GRSAV3 PZE     **                                                       3F4C5740
+GRSAV2 PZE     **                                                       3F4C5750
+GRSAV1 PZE     **                                                       3F4C5760
+GRCT   PZE     **                                                       3F4C5770
+NOP    NOP                                                              3F4C5780
+DIVRT  PZE                                                              3F4C5790
+ONLIN  PZE                                                              3F4C5800
+SETWRD CAL     L(1)                  RESET WORD                         3F4C5810
+       SLW     .WORD                                                    3F4C5820
+       TRA     1,2                   EXIT TO CALLER                     3F4C5830
+RESET  SXA     RET,2                                                    3F4C5840
+       CAL     FILT                  RESET POINTER TO START OF BUFFER   3F4C5850
+       STA     .FPACK                                                   3F4C5860
+       CAL     L(1)                  RESET WORD                         3F4C5870
+       SLW     .WORD                                                    3F4C5880
+       CAL     BLANKS                                                   3F4C5890
+       SLW     OUTBUF                                                   3F4C5900
+       SLW     OUTBUF+1                                                 3F4C5910
+       SLW     OUTBUF+2                                                 3F4C5920
+       TRA     RET                                                      3F4C5930
+CVBCD  XCA                           CONVERT BINARY ADDRESS             3F4C5940
+       RQL     21                    TO OCTAL.                          3F4C5950
+       CLA     BLANKS                                                   3F4C5960
+       SXA     *+5,1                                                    3F4C5970
+       AXT     5,1                                                      3F4C5980
+       ALS     3                                                        3F4C5990
+       LGL     3                                                        3F4C6000
+       TIX     *-2,1,1                                                  3F4C6010
+       AXT     **,1                                                     3F4C6020
+       TRA     1,4                                                      3F4C6030
+CODE   PZE     31                                                       3F4C6040
+ER31MS PZE     E31MES,,16                                               3F4C6050
+ER31OP PZE     E31OMS,,4                                                3F4C6060
+E31MES BCI ,0FORMAT AT   XXXXX,FIRST WORD XXXXXX, HAS ILLEGAL CONTROL CH3F4C6070
+       BCI     6,ARACTER OR SPECIFIES TOO LONG A LINE                   3F4C6080
+E31OMS BCI     4,0TREAT AS END OF FORMAT                                3F4C6090
+LNKG   LDIR                                                             3F4C6100
+       BCI     1,FIOH                                                   3F4C6110
+BEG94  NULL                                                          $5$3F4C6120
+*                                                                    $5$3F4C6130
+*                                                                    $5$3F4C6140
+       PCC     ON                                                    $5$3F4D0000
+       IFT     M9094=90                                              $5$3F4D0010
+       GOTO    END94                                                 $5$3F4D0020
+       PCC     OFF                                                   $5$3F4D0030
+       TTL     FIOH  -  FORMAT SCANNER                                  3F4D0040
+       REM  FORMAT SCAN.                                                3F4D0050
+*              FORMAT SCANNER                                           3F4D0060
+*              CALLING SEQUENCE IS                                      3F4D0070
+*              CALL .FIOH.(ARG)                                         3F4D0080
+*              ARG= DECREMENT IS NOP FOR INPUT,TRA FOR OUTPUT           3F4D0090
+*                   ADDRES IS LOCATION OF IO CALLING SEQUENCE           3F4D0100
+*                                                                       3F4D0110
+*                                                                       3F4D0120
+       ENTRY   .FFIL.                                                   3F4D0130
+       ENTRY   .FRTN.                                                   3F4D0140
+       ENTRY   .FIOH.                                                   3F4D0150
+TRA    EQU     FSET1+1                                                  3F4D0160
+ANPT   EQU     .ANPT                                                    3F4D0170
+AOUT   EQU     .AOUT                                                    3F4D0180
+CNVSW  EQU     .CNVSW                                                   3F4D0190
+COUNT  EQU     .KOUNT                                                   3F4D0200
+D1     EQU     .D1                                                      3F4D0210
+D2     EQU     .D2                                                      3F4D0220
+DBC10  EQU     .DBC10                                                   3F4D0230
+DBC20  EQU     .DBC20                                                   3F4D0240
+DBC    EQU     .DBC                                                     3F4D0250
+DDBC   EQU     .DDBC                                                    3F4D0260
+DDDFLG EQU     .DDDFL                                                   3F4D0270
+DDFIX  EQU     .DDFIX                                                   3F4D0280
+DDFLAG EQU     .DDFLG                                                   3F4D0290
+DDRST1 EQU     .DDRS1                                                   3F4D0300
+DDSW   EQU     .DDSW                                                    3F4D0310
+DEXPON EQU     .DEXPN                                                   3F4D0320
+DFLT   EQU     .DFLT                                                    3F4D0330
+DIG    EQU     .DIG                                                     3F4D0340
+DONE   EQU     .DONE                                                    3F4D0350
+ENDFSW EQU     .ENDFS                                                   3F4D0360
+FIXSW  EQU     .FIXSW                                                   3F4D0370
+FLT    EQU     .FLT                                                     3F4D0380
+FXD    EQU     .FXD                                                     3F4D0390
+INTG   EQU     .INTG                                                    3F4D0400
+LNTP   EQU     .LNTP                                                    3F4D0410
+LOUT   EQU     .LOUT                                                    3F4D0420
+MQD    EQU     .MQD                                                     3F4D0430
+ONPT   EQU     .ONPT                                                    3F4D0440
+OOUT   EQU     .OOUT                                                    3F4D0450
+OUTBUF EQU     .OUTBF                                                   3F4D0460
+PEX    EQU     .PEX                                                     3F4D0470
+XCF    EQU     .XCF                                                  $5$3F4D0480
+HOUT   EQU     .HOUT                                                 $5$3F4D0490
+GAIN   EQU     .GAIN                                                 $5$3F4D0500
+GAIN1  EQU     .GAIN1                                                $5$3F4D0510
+QSTO   EQU     .QSTO                                                 $5$3F4D0520
+BUF    EQU     .BUF                                                  $5$3F4D0530
+WIDTH  EQU     .WIDTH                                                   3F4D0540
+TEST   EQU     .TEST                                                 (8)3F4D0543
+.FIOH. SXA     LNKG,4                                                   3F4D0550
+       SXA     SYSLOC,4                                                 3F4D0560
+       SXA     SV1,1                 SAVE XR1 AND XR2 FROM              3F4D0570
+       SXA     SV2,2                 ORIGINAL CALL FROM MAIN PROGRAM    3F4D0580
+       LMTM                                                          (6)3F4D0581
+       SXA     SV7,7                                                 (6)3F4D0582
+       SXA     SV6,6                                                 (6)3F4D0583
+       SXA     SV5,5                                                 (6)3F4D0584
+       SXA     SV3,3                                                 (6)3F4D0585
+       CLA     4,4                   GET RETURN FROM MAIN CALL AND      3F4D0590
+       STA     LIST                  SAVE.STORE ADDRESS OF BUFFER       3F4D0600
+       STD     ARG2                  IF FRCD CALL                       3F4D0610
+       CLA     3,4                   GET TRA,NOP AND I/O RETURN         3F4D0620
+       STT     ONLIN                 SET ONLINE OPERATION SWITCH        3F4D0630
+       STA     INOUT                 SAVE RETURN TO TRANSMIT LINE       3F4D0640
+       STA     FSTLN                                                    3F4D0650
+       STD     CCOCTL                SET INPUT/OUTPUT SWITCHES          3F4D0660
+       STD     CCINTG                NOP FOR INPUT                      3F4D0670
+       STD     CCHOLL+1              TRA FOR OUTPUT                     3F4D0680
+       STD     INOUTS+1                                                 3F4D0690
+       STD     INOUT+1                                                  3F4D0700
+       STD     CCFFXD+2                                                 3F4D0710
+       STD     CCEFLT                                                   3F4D0720
+       STD     CCDFLT+3                                                 3F4D0730
+       STD     SKIP                                                     3F4D0740
+       STD     CCALPH                                                   3F4D0750
+       STD     CCLOGC                                                   3F4D0760
+       STD     TST1                                                     3F4D0770
+       AXT     OVER,2                                                $5$3F4D0780
+       AXT     RESCAN,1                                                 3F4D0790
+       CALL    .FCON.(ARG1,ARG2,ARG3)                                $5$3F4D0800
+       ORG     *-3                                                   $5$3F4D0810
+ARG1   PZE     DCPT,,CCDCPT                                             3F4D0820
+ARG2   PZE     STOP,,**                                                 3F4D0830
+ARG3   PZE     SCAN                                                  $5$3F4D0840
+       TSX     RESET,2               RESET BUFFER FOR OUTPUT            3F4D0850
+       CLA     FSET1+1                                                  3F4D0860
+       STD     EXITSW                SET EXIT SWITCH                    3F4D0870
+       STZ     DIVRT                 RESET SWITCH,RETURN THRU FCNV      3F4D0880
+       STZ     INT                                                      3F4D0890
+       SXA     ENDX,0                                                   3F4D0900
+       LXA     LIST,4                LOCATE CALL IN MAIN PROGRAM        3F4D0910
+       ZET     ONLIN                 IS THIS ONLINE OPERATION           3F4D0920
+       TXI     *+1,4,1               YES-BUMP POINTER TO GET FORMAT LOC 3F4D0930
+       CLA     4,4                   PICK UP LOCATION OF FORMAT         3F4D0940
+       STA     STPNT                 SET FORMAT POINTER                 3F4D0950
+       STA     FMTLOC                                                   3F4D0960
+TST1   NOP     *+2                                                      3F4D0970
+FSTLN  TSX     **,2                  IF INPUT, GET FIRST LINE           3F4D0980
+STPNT  AXC     **,2                                                     3F4D0990
+SCAN1  LDQ     0,2                   EXAMINE                            3F4D1000
+       AXT     36,1                  NEXT                               3F4D1010
+SCAN2  PXD     ,0                    FORMAT                             3F4D1020
+       LGL     6                     CHARACTER,                         3F4D1030
+       PAX     ,4                    AND                                3F4D1040
+SCAN3  XEC     FRMTR,4             * TAKE INDICATED TRANSFER.           3F4D1050
+       ADM     INT                   CONTROL COMES HERE ON ANY DIGIT.   3F4D1060
+       LGL     3                     MULTIPLY PREVIOUS INT BY 10,       3F4D1070
+       ADM     INT                   AND ADD IN                         3F4D1080
+       ACL     INT                   CURRENT DIGIT.                     3F4D1090
+SCAN4  SLW     INT                   SET INT.                           3F4D1100
+       REM  ENTRY FROM CCRPAR, CCDCPT.                                  3F4D1110
+SCAN5  TIX     SCAN2,1,6           * IF CHARACTER COUNT IS EXHAUSTED,   3F4D1120
+FSET1  TXI     SCAN1,2,-1            EXAMINE NEXT FORMAT WORD.          3F4D1130
+       REM  FORMAT TRANSFER TABLE.                                      3F4D1140
+       TRA     STOP                  77                                 3F4D1150
+       TRA     STOP                  76                                 3F4D1160
+       TRA     STOP                  75                                 3F4D1170
+       TRA     CCLPAR                74                                 3F4D1180
+       TRA     CCCMMA                73                                 3F4D1190
+       TRA     STOP                  72                                 3F4D1200
+       TRA     STOP                  71                                 3F4D1210
+       TRA     STOP                  70                                 3F4D1220
+       TRA     CCBLNK                67                                 3F4D1230
+       TRA     STOP                  66                                 3F4D1240
+       TRA     STOP                  65                                 3F4D1250
+       TRA     STOP                  64                                 3F4D1260
+       TRA     STOP                  63                                 3F4D1270
+       TRA     STOP                  62                                 3F4D1280
+       TRA     CCSLSH                61                                 3F4D1290
+       TRA     SCAN5                 60                                 3F4D1300
+       TRA     STOP                  57                                 3F4D1310
+       TRA     STOP                  56                                 3F4D1320
+       TRA     STOP                  55                                 3F4D1330
+       TRA     STOP                  54                                 3F4D1340
+       TRA     STOP                  53                                 3F4D1350
+       TRA     STOP                  52                                 3F4D1360
+       TRA     STOP                  51                                 3F4D1370
+       TRA     STOP                  50                                 3F4D1380
+       TRA     CCSCFP                47                                 3F4D1390
+       TRA     CCOCTL                46                                 3F4D1400
+       TRA     STOP                  45                                 3F4D1410
+       TRA     STOP                  44                                 3F4D1420
+       TRA     CCLOGC                                                   3F4D1430
+       TRA     STOP                  42                                 3F4D1440
+       TRA     STOP                  41                                 3F4D1450
+       TRA     CCSCFM                40                                 3F4D1460
+       TRA     STOP                  37                                 3F4D1470
+       TRA     STOP                  36                                 3F4D1480
+       TRA     STOP                  35                                 3F4D1490
+       TRA     CCRPAR                34                                 3F4D1500
+       TRA     CCDCPT                33                                 3F4D1510
+       TRA     STOP                  32                                 3F4D1520
+       TRA     CCINTG                31                                 3F4D1530
+       TRA     CCHOLL                30                                 3F4D1540
+       TRA     STOP                  27                                 3F4D1550
+       TRA     CCFFXD                26                                 3F4D1560
+       TRA     CCEFLT                25                                 3F4D1570
+       TRA     CCDFLT                24                                 3F4D1580
+       TRA     STOP                  23                                 3F4D1590
+       TRA     STOP                  22                                 3F4D1600
+       TRA     CCALPH                21                                 3F4D1610
+       TRA     STOP                  20                                 3F4D1620
+       TRA     STOP                  17                                 3F4D1630
+       TRA     STOP                  16                                 3F4D1640
+       TRA     STOP                  15                                 3F4D1650
+       TRA     STOP                  14                                 3F4D1660
+       TRA     STOP                  13                                 3F4D1670
+       TRA     STOP                  12                                 3F4D1680
+       LGR     3                     11 - DIGIT 9                       3F4D1690
+       LGR     3                     10 - DIGIT 8                       3F4D1700
+       LGR     3                     7 - DIGIT 7                        3F4D1710
+       LGR     3                     6 - DIGIT 6                        3F4D1720
+       LGR     3                     5 - DIGIT 5                        3F4D1730
+       LGR     3                     4 - DIGIT 4                        3F4D1740
+       LGR     3                     3 - DIGIT 3                        3F4D1750
+       LGR     3                     2 - DIGIT 2                        3F4D1760
+       LGR     3                     1 - DIGIT 1                        3F4D1770
+FRMTR  LGR     3                     0 - DIGIT 0                        3F4D1780
+       REM  ENTRY FROM FORMAT SCAN ON LEFT PARENTHESIS.                 3F4D1790
+CCLPAR LXA     GRCT,4                                                   3F4D1800
+       TXI     *+1,4,1                                                  3F4D1810
+       SXA     GRCT,4                                                   3F4D1820
+       TXL     LPAR,4,2              GO TO SAVE IF ZERO OR FIRST LEVEL. 3F4D1830
+       LXA     BX1,4                 SAVE FORMAT                        3F4D1840
+       SXA     GRSAV1,4              SCAN POSITION                      3F4D1850
+       LXA     BX2,4                 FOR FIRST LEVEL                    3F4D1860
+       SXD     GRSAV1,4              PARENTHESIS.                       3F4D1870
+       LXA     BX4,4                                                    3F4D1880
+       SXD     GRCT,4                                                   3F4D1890
+       CLA     MQR                                                      3F4D1900
+       STO     GRSAV2                                                   3F4D1910
+       LXA     GROUPX,4                                                 3F4D1920
+       SXA     GRSAV3,4                                                 3F4D1930
+       LXA     PARX,4                                                   3F4D1940
+       SXD     GRSAV3,4                                                 3F4D1950
+LPAR   SXA     BX1,1                 SAVE CURRENT                       3F4D1960
+       SXA     BX2,2                 SCAN POSITION                      3F4D1970
+       STQ     MQR                   FOR POSSIBLE RESCAN.               3F4D1980
+       LXA     INT,4                 SAVE                               3F4D1990
+       SXA     BX4,4                 GROUP COUNT, AND                   3F4D2000
+       SXA     GROUPX,4              GROUP INDEX.                       3F4D2010
+       LXA     ENDX,4                ADD 1 TO                           3F4D2020
+       TXI     *+1,4,1               END PAREN COUNT                    3F4D2030
+       SXA     ENDX,4                TO DETERMINE END OF FORMAT.        3F4D2040
+       SXA     PARX,4                SAVE PAREN INDEX FOR RESCAN.       3F4D2050
+       TRA     SCAN                * THEN CONTINUE SCAN.                3F4D2060
+       REM  ENTRY FROM FORMAT SCAN ON COMMA.                            3F4D2070
+CCCMMA AXC     RESUME-1,4            PROCESS CURRENT FIELD.             3F4D2080
+       REM  FIELD,4 / CALLERS= CCCMMA, CCSLSH, CCRPAR, CCBLNK.          3F4D2090
+FIELD  SXA     DONE,4                SAVE RETURN INDEX.                 3F4D2100
+       SXA     CX2,2                 SAVE                               3F4D2110
+       SXA     CX1,1                 CURRENT POSITION                   3F4D2120
+       STQ     MQ                    OF FORMAT SCAN.                    3F4D2130
+       LXA     INT,4                 PICKUP FIELD WIDTH,                3F4D2140
+       TXL     DONE,4,0              IF NON-ZERO,                       3F4D2150
+       SXA     WIDTH,4               SET WIDTH, AND                     3F4D2160
+EXITSW TRA     LISTRT               *EXIT TO LIST CONTROL               3F4D2170
+       CLA     TRA                   RESET SWITCH, IF THE END           3F4D2180
+       STD     *-2                   OF FORMAT WAS JUST ENCOUNTERED.    3F4D2190
+       TRA     ENDFSW+1            * EXIT TO CONVERSION.                3F4D2200
+       REM  ENTRY FROM FORMAT SCAN ON SLASH.                            3F4D2210
+CCSLSH TSX     FIELD,4             * GO PROCESS CURRENT FIELD.          3F4D2220
+       AXC     RESUME-1,2            PREPARE FOR NEXT LINE OF I/O.      3F4D2230
+       TRA     INOUTS                                                   3F4D2240
+       REM  ENTRY FROM FORMAT SCAN ON P.                                3F4D2250
+CCSCFP CLA     INT                   MOVE SCALE FACTOR                  3F4D2260
+       STO     PEX                   INTO PEX.                          3F4D2270
+       TRA     SCAN                * GO CONTINUE SCAN.                  3F4D2280
+       REM  ENTRY FROM FORMAT SCAN ON O.                                3F4D2290
+CCOCTL NOP     *+2                   (INPUT/NOP, OUTPUT/TRA).           3F4D2300
+       TXI     SETAD,4,ONPT-38       ADJUST FOR ONPT ENTRY, OR FOR      3F4D2310
+       TXI     SETAD,4,OOUT-38       OOUT. EXIT TO SET CNVSW.           3F4D2320
+       REM  ENTRY FROM FORMAT SCAN ON MINUS.                            3F4D2330
+CCSCFM CLS     INT                   SET SIGN OF SCALE FACTOR NEGATIVE, 3F4D2340
+       STO     INT                                                      3F4D2350
+       TRA     SCAN5               * AND GO CONTINUE SCAN.              3F4D2360
+       REM  ENTRY FROM FORMAT SCAN ON RIGHT PARENTHESIS.                3F4D2370
+CCRPAR TSX     FIELD,4             * GO PROCESS CURRENT FIELD.          3F4D2380
+BX4    AXT     **,4                  TEST GROUP COUNT, AND              3F4D2390
+       TIX     GROUP,4,1             PROCESS GROUP UNTIL EXHAUSTED.     3F4D2400
+       LXA     GRCT,4                RESET FORMAT SCAN POSITION         3F4D2410
+       TXH     RSETGR,4,2            FOR FIRST LEVEL GROUP COUNT.       3F4D2420
+       TXI     *+1,4,-1                                                 3F4D2430
+       SXA     GRCT,4                                                   3F4D2440
+ENDX   AXT     **,4                  THEN TEST END COUNT, AND           3F4D2450
+       TNX     ENDFMT,4,1            IF NOT EXHAUSTED,                  3F4D2460
+       SXA     ENDX,4                REDUCE COUNT, AND                  3F4D2470
+       REM  ENTRY FROM CCSLSH, CCCMMA, CCHOLL, CCBLNK.                  3F4D2480
+RESUME LDQ     MQ                    RESTORE                            3F4D2490
+CX1    AXT     **,1                  CURRENT                            3F4D2500
+CX2    AXT     **,2                  POSITION OF FORMAT SCAN.           3F4D2510
+       REM  ENTRY FROM CCLPAR,CCSCFP,CCRPAR,CCINTG,CCHOLL.              3F4D2520
+SCAN   STZ     INT                   CLEAR INT, AND                     3F4D2530
+       TRA     SCAN5               * CONTINUE FORMAT SCAN.              3F4D2540
+*         ENTRY ON LINE OVERFLOW                                     $5$3F4D2550
+OVER   TSX     SETWRD,2                                              $5$3F4D2560
+       REM  ENTRY FROM FORMAT SCAN ON ILLEGAL CONTROL CHARACTER.        3F4D2570
+STOP   CLA*    FMTLOC                STORE FIRST WORD OF FORMAT         3F4D2580
+       STO     E31MES+5              STATEMENT IN MESSAGE.              3F4D2590
+       CLA     FMTLOC                CONVERT TO OCTAL AND STORE         3F4D2600
+       TSX     CVBCD,4               IN MESSAGE.                        3F4D2620
+       SLW     E31MES+2                                                 3F4D2630
+FSTOP  CALL    .FXEM.(CODE)          EXIT FOR EXECUTION ERROR.          3F4D2650
+       TRA     *+1                   INCORRECT FORMAT STATEMENT.        3F4D2660
+ENDFMT CLA     TRA                   SET SWITCH IN IOCNV                3F4D2670
+       STD     ENDFSW                FOR END OF FORMAT, AND             3F4D2680
+       TRA     LISTRT               *GO SEE IF LIST IS EXHAUSTED        3F4D2690
+       REM  REENTRY AFTER END OF FORMAT.                                3F4D2700
+RESCAN CLA     CX1                   RESET TO NOP                       3F4D2710
+       STD     ENDFSW                END OF FORMAT SWITCH.              3F4D2720
+       STD     EXITSW                SET EXIT SWITCH IN FIELD.          3F4D2730
+       TSX     INOUTS,2                                                 3F4D2740
+PARX   AXT     **,4                  PICKUP PAREN INDEX TO              3F4D2750
+       SXA     ENDX,4                RESET END COUNT.                   3F4D2760
+       SXA     GRCT,4                                                   3F4D2770
+GROUPX AXT     **,4                  PICKUP GROUP INDEX TO              3F4D2780
+GROUP  SXA     BX4,4                 SET GROUP COUNT.                   3F4D2790
+BX1    AXT     **,1                  RESET FORMAT POSITION              3F4D2800
+BX2    AXT     **,2                  TO BEGINNING OF                    3F4D2810
+       LDQ     MQR                   LAST GROUP, AND                    3F4D2820
+       TRA     SCAN                * GO CONTINUE SCAN.                  3F4D2830
+RSETGR LXA     GRCT,4                                                   3F4D2840
+       TXI     *+1,4,-1                                                 3F4D2850
+       SXA     GRCT,4                                                   3F4D2860
+       CLA     GRSAV1                RESET FORMAT SCAN POSITION         3F4D2870
+       STA     BX1                   FOR FIRST LEVEL GROUP COUNT        3F4D2880
+       ARS     18                    AFTER SECOND                       3F4D2890
+       STA     BX2                   LEVEL GROUP                        3F4D2900
+       CLA     GRSAV2                COUNT IS DEPLETED.                 3F4D2910
+       STO     MQR                                                      3F4D2920
+       CLA     GRSAV3                                                   3F4D2930
+       STA     GROUPX                                                   3F4D2940
+       ARS     18                                                       3F4D2950
+       STA     PARX                                                     3F4D2960
+       LXD     GRCT,4                                                   3F4D2970
+       SXA     BX4,4                                                    3F4D2980
+       TRA     ENDX                                                     3F4D2990
+       REM  REENTRY FROM FORMAT SCAN FOR SINGLE PRECISION DECIMAL POINT.3F4D3000
+CCDCPT CAL     DCPT                  MODIFY                             3F4D3010
+       SLW     SCAN3                 SCAN.                              3F4D3020
+       PXD     ,0                    CLEAR OR STORE DEC. SCALE          3F4D3030
+DCPT1  STO     DIG                   ..                                 3F4D3040
+       TRA     SCAN5               * GO CONTINUE SCAN.                  3F4D3050
+       REM  REENTRY FROM FORMAT SCAN.                                   3F4D3060
+DCPT   TRA     *+1                   COLLECT                            3F4D3070
+       TXL     DCPT1,4,9             DECIMAL POSITION.                  3F4D3080
+DCPT2  SUB     BLANK                 ON NEXT                            3F4D3090
+       TZE     SCAN5               * CONTROL CHARACTER,                 3F4D3100
+       CAL     *+2                   RESET                              3F4D3110
+       SLW     SCAN3                 FORMAT SCAN                        3F4D3120
+       XEC     FRMTR,4             * AND GO CONTINUE SCAN.              3F4D3130
+       REM  REENTRY FROM FORMAT SCAN FOR DOUBLE PRECISION DECIMAL POINT.3F4D3140
+DDCPT  TRA     *+1                                                      3F4D3150
+       TXH     DCPT2,4,9             IF NUMERIC CHARACTER,              3F4D3160
+       LGR     3                     MULTIPLY PREVIOUS DIGIT BY 10      3F4D3170
+       ADM     DIG                   AND ADD IN CURRENT DIGIT.          3F4D3180
+       LGL     3                                                        3F4D3190
+       ADM     DIG                                                      3F4D3200
+       ACL     DIG                                                      3F4D3210
+       PAX     0,4                   TEST MAGNITUDE OF DIG.             3F4D3220
+       TXL     DCPT1,4,17            IF GREATER THAN 17,                3F4D3230
+       AXT     17,4                  SET VALUE OF DIG                   3F4D3240
+       PXA     0,4                   EQUAL TO 17.                       3F4D3250
+       TRA     DCPT1                                                    3F4D3260
+       REM  ENTRY FROM FORMAT SCAN ON I.                                3F4D3270
+CCINTG NOP     SETAD1                IF INPUT,                          3F4D3280
+       CLA     TRA                   PICKUP TRA, AND                    3F4D3290
+       REM  ENTRY FROM CCFFXD.                                          3F4D3300
+SETFX  STD     FIXSW                 SET FIXSW, AND                     3F4D3310
+       AXT     DBC,4                 PICKUP DBC TO                      3F4D3320
+       REM  ENTRY FROM CCFFXD, CCEFLT, CCOCTL, CCALPH.                  3F4D3330
+SETAD  SXA     CNVSW,4               SET CNVSW.                         3F4D3340
+       LXA     INT,4                 PICKUP INT, AND                    3F4D3350
+       SXA     COUNT,4               SET COUNT.                         3F4D3360
+       TRA     SCAN                * GO CONTINUE SCAN.                  3F4D3370
+SETAD1 TXI     SETAD,4,INTG-25       OUTPUT INTEGER, SET CNVSW.         3F4D3380
+       REM  ENTRY FROM FORMAT SCAN ON H.                                3F4D3390
+CCHOLL LXA     INT,4                 REPLACE                            3F4D3400
+       NOP     HOUT                  IF INPUT, THE                      3F4D3410
+       LDQ     MQD                   HOLLERITH                          3F4D3420
+       SXA     CX2,2                 FIELD                              3F4D3430
+       CAL     0,2                   IN                                 3F4D3440
+       LXA     .FDX1,2               FORMAT                             3F4D3450
+       TNX     HNPT3,1,6             STATEMENT                          3F4D3460
+       SXA     *+1,1                 WITH THE SPECIFIED NO.             3F4D3470
+       ARS     **                                                       3F4D3480
+HNPT1  TIX     HNPT2,2,1             OF                                 3F4D3490
+       LXA     .FDX2,2               BCD                                3F4D3500
+       TXI     *+1,2,-1              CHARACTERS                         3F4D3510
+       LDQ*    .FBDBF                FROM                               3F4D3520
+       SXA     .FDX2,2               THE                                3F4D3530
+       AXT     6,2                   INPUT                              3F4D3540
+HNPT2  LGL     6                     BUFFER.                            3F4D3550
+       TNX     HNPT4,4,1             ..                                 3F4D3560
+       TIX     HNPT1,1,6             ..                                 3F4D3570
+HNPT3  LXA     CX2,1                 ..                                 3F4D3580
+       SLW     0,1                   ..                                 3F4D3590
+       TXI     *+1,1,-1              ..                                 3F4D3600
+       SXA     CX2,1                 ..                                 3F4D3610
+       AXT     36,1                  ..                                 3F4D3620
+       TRA     HNPT1                 ..                                 3F4D3630
+HNPT4  SXA     .FDX1,2               ..                                 3F4D3640
+       LXA     CX2,2                 ..                                 3F4D3650
+       STQ     MQD                   ..                                 3F4D3660
+       SXA     CX1,1                 ..                                 3F4D3670
+       TXL     HNPT5,1,6             ..                                 3F4D3680
+       LDQ     0,2                   ..                                 3F4D3690
+       RQL     42,1                  ..                                 3F4D3700
+       STQ     MQ                    ..                                 3F4D3710
+       TNX     HNPT5,1,6             ..                                 3F4D3720
+       SXA     *+1,1                 ..                                 3F4D3730
+       LGL     **                    ..                                 3F4D3740
+HNPT5  SLW     0,2                   ..                                 3F4D3750
+       TRA     RESUME              * GO RESUME FORMAT SCAN.             3F4D3760
+       REM  ENTRY FROM FORMAT SCAN ON X.                                3F4D3770
+CCBLNK LXA     INT,4                 SET TO SKIP INT BLANKS CHARS.      3F4D3780
+       STQ     MQ                    IN DATA OR OUTPUT BUFFER           3F4D3790
+       SXA     CX1,1                 ..                                 3F4D3800
+       SXA     CX2,2                 ..                                 3F4D3810
+SKIP   NOP     BOUT                  IF INPUT. SKIP THE SPECIFIED       3F4D3820
+       LDQ     MQD                   BCD                                3F4D3830
+       LXA     .FDX1,1               CHARACTERS                         3F4D3840
+SKIP1  TIX     SKIP2,1,1             IN                                 3F4D3850
+       LXA     .FDX2,2               THE                                3F4D3860
+       TXI     *+1,2,-1              INPUT                              3F4D3870
+       TIX     *-1,4,6               BUFFER.                            3F4D3880
+       LDQ*    .FBDBF                ..                                 3F4D3890
+       SXA     .FDX2,2               ..                                 3F4D3900
+       AXT     6,1                   ..                                 3F4D3910
+SKIP2  LGL     6                     ..                                 3F4D3920
+       TIX     SKIP1,4,1             ..                                 3F4D3930
+       SXA     .FDX1,1               ..                                 3F4D3940
+       STQ     MQD                   ..                                 3F4D3950
+       TRA     RESUME              * GO RESUME FORMAT SCAN.             3F4D3960
+BOUT   SXA     COUNT,0               PLACE BLANKS INTO THE OUTPUT       3F4D3970
+       AXC     RESUME-1,2            BUFFER                             3F4D3980
+       SXA     DONE,2                USING THE TOPACK ROUTINE           3F4D3990
+       TXH     *+2,4,0                                               (6)3F4D3993
+       AXT     1,4                IF 0 MAKE IT 1                     (6)3F4D3996
+       TRA     XCF                                                   $5$3F4D4000
+       REM  ENTRY FROM FORMAT SCAN ON A.                                3F4D4010
+CCALPH NOP     *+2                   IF INPUT, ADJUST FOR               3F4D4020
+       TXI     SETAD,4,ANPT-17     * ANPT ENTRY, OR FOR                 3F4D4030
+       TXI     SETAD,4,AOUT-17     * AOUT. EXIT TO SET CNVSW.           3F4D4040
+       REM  ENTRY FROM FORMAT SCAN ON F.                                3F4D4050
+CCFFXD CLS     PEX                   MOVE NEGATIVE OF                   3F4D4060
+       STO     .FEXP                 SCALE FACTOR INTO EXP              3F4D4070
+       NOP     *+3                   IF INPUT,                          3F4D4080
+       REM  ENTRY FROM CCEFLT.                                          3F4D4090
+FXPT   CLA     CX1                   PICK UP NOP,AND                    3F4D4100
+       TRA     SETFX               * GO SET FIXSW.                      3F4D4110
+       AXT     FXD,4                 PICKUP FXD, AND                    3F4D4120
+       SXA     CNVSW,4               SET GATE AT CNVSW.                 3F4D4130
+       TRA     SETAD+1             * GO SET COUNT.                      3F4D4140
+       REM  ENTRY FROM FORMAT SCAN ON E.                                3F4D4150
+CCEFLT NOP     *+3                   IF INPUT,                          3F4D4160
+       STZ     .FEXP                 CLEAR EXP AND                      3F4D4170
+       TRA     FXPT                * EXIT TO CCFFXD.                    3F4D4180
+       AXT     FLT,4                 PICKUP FLT, AND                    3F4D4190
+       SXA     CNVSW,4               ..                                 3F4D4200
+       TRA     SETAD+1       GO TO SET COUNT                         $5$3F4D4210
+       REM  ENTRY FROM FORMAT SCAN ON D.                                3F4D4220
+CCDFLT AXT     DDCPT,4               SET DOUBLE PRECISION EXIT IN       3F4D4230
+       SXA     CCDCPT,4              DECIMAL POINT SCAN.                3F4D4240
+       STL     DDDFLG                SET FLAG FOR D IN FORMAT SCAN.     3F4D4250
+       NOP     CCDOUT                IF DOUBLE PRECISION INPUT,         3F4D4260
+       STZ     .FEXP                 CLEAR EXP AND SET DOUBLE           3F4D4270
+       LXA     DBC20,4               PRECISION EXITS FOR -              3F4D4280
+       SXA     D1,4                  OVERFLOW IN DBC ROUTINE,           3F4D4290
+       AXT     DDBC,4                                                   3F4D4300
+       SXA     DBC20,4                                                  3F4D4310
+       LXA     DDSW,4                DOUBLE PRECISION FIX,              3F4D4320
+       SXA     D2,4                                                     3F4D4330
+       AXT     DDFIX,4                                                  3F4D4340
+       SXA     DDSW,4                                                   3F4D4350
+       AXT     DEXPON,4              SCAN OF D IN EXPONENT FIELD.       3F4D4360
+       SXA     DBC10,4                                                  3F4D4370
+       TRA     FXPT                                                     3F4D4380
+CCDOUT AXT     DFLT,4                IF OUTPUT, SET                     3F4D4390
+       SXA     CNVSW,4               CONVERSION SWITCH,                 3F4D4400
+       TRA     SETAD+1                                               $5$3F4D4410
+       REM  ENTRY FROM FORMAT SCAN ON L                                 3F4D4420
+CCLOGC NOP     *+2                   (INPUT/NOP, OUTPUT/TRA)            3F4D4430
+       TXI     SETAD,4,LNTP-35       LNTP ENTRY FOR INPUT OR            3F4D4440
+       TXI     SETAD,4,LOUT-35       LOUT ENTRY FOR OUTPUT. SET CNVSW.  3F4D4450
+       REM  ENTRY FROM MAIN PROGRAM.                                    3F4D4460
+.FFIL. SXA     LISTDN,4                                                 3F4D4470
+       SXA     LISTDN+2,1                                               3F4D4480
+       SXA     LISTDN+1,2                                               3F4D4490
+       STZ     ONLIN                                                    3F4D4500
+       XEC     GAIN1          RESET OUTBUF LOCATION COUNT            $5$3F4D4510
+       TXH     *+2,2,LIMIT-1     IF OUTBUF EMPTY                     $5$3F4D4520
+       TRA     FINISH         OUTBUF NOT EMPTY                       $5$3F4D4530
+       XEC     GAIN           RESET OUTBUF CHARACTER COUNT           $5$3F4D4540
+       TXH     *+2,1,5        NO CHARACTERS FOR OUTPUT               $5$3F4D4550
+FINISH TSX     INOUTS,2                                                 3F4D4560
+       STZ     GRCT                  RESTORE GROUP COUNTER.             3F4D4570
+       NZT     DDDFLG                TEST WHETHER DP EXITS RESTORED.    3F4D4580
+       TRA     LISTDN                                                   3F4D4590
+       STZ     DDDFLG                RESTORE DOUBLE PRECISION           3F4D4600
+       STZ     DDFLAG                EXITS CHANGED FOR OUTPUT.          3F4D4610
+       AXT     DCPT,4                                                   3F4D4620
+       SXA     CCDCPT,4                                                 3F4D4630
+LISTDN AXT     **,4                                                     3F4D4640
+       AXT     **,2                                                     3F4D4650
+       AXT     **,1                                                     3F4D4660
+       TRA     1,4                                                      3F4D4670
+       REM  ENTRY FROM MAIN PROGRAM.                                    3F4D4680
+.FRTN. SXA     LISTDN,4                                                 3F4D4690
+       SXA     LISTDN+1,2                                               3F4D4700
+       SXA     LISTDN+2,1                                               3F4D4710
+RTN1   STZ     GRCT                                                     3F4D4720
+       NZT     DDDFLG                TEST WHETHER DP EXITS RESTORED.    3F4D4730
+       TRA     LISTDN                                                   3F4D4740
+       STZ     DDDFLG                RESTORE DOUBLE PRECISION           3F4D4750
+       TSX     DDRST1,2              EXITS CHANGED FOR INPUT.           3F4D4760
+       TRA     LISTDN                                                   3F4D4770
+LISTRT ZET     DIVRT                                                    3F4D4780
+       TRA     .LIST                 NO-LIST COMPLETE,RETURN TO M.P.    3F4D4790
+       STL     DIVRT                                                    3F4D4800
+SV7    AXT     **,7                                                  (6)3F4D4802
+SV6    AXT     **,6                                                  (6)3F4D4803
+SV5    AXT     **,5                                                  (6)3F4D4804
+SV3    AXT     **,3                                                  (6)3F4D4805
+SV2    AXT     **,2                                                     3F4D4810
+SV1    AXT     **,1                                                     3F4D4820
+LIST   AXT     **,4                                                     3F4D4830
+       TRA     1,4                                                      3F4D4840
+*      ROUTINE TO HANDLE INPUT OUTPUT ,CALCULATE S WORD COUNT           3F4D4850
+*      AND RESETS BUFFER IF OUTPUT                                      3F4D4860
+INOUTS SXA     RET,2                                                    3F4D4870
+       NOP     FILWD                                                    3F4D4880
+INOUT  TSX     **,2                                                     3F4D4890
+       NOP     RESET+1                                                  3F4D4900
+RET    AXT     **,2                                                     3F4D4910
+       TRA     1,2                                                      3F4D4920
+FILWD  XEC     GAIN1          RESET OUTBUF LOCATION COUNT            $5$3F4D4930
+       XEC     GAIN           RESET OUTBUF CHARACTER COUNT           $5$3F4D4940
+*      CALCULATE CHARACTER COUNT FOR THIS LINE, (LIMIT-XR2)*6+(7-XR1)(8)3F4D4941
+*      IF IT IS GREATER THAN CHLIMT LINE OVERFLOWS                   (8)3F4D4942
+       SXA     CHRS,1              SAVE CHAR COUNT                   (8)3F4D4943
+       TXI     *+1,1,-7            GET (XR1-7)                       (8)3F4D4944
+       SXD     CHCNT,1                                               (8)3F4D4945
+       TXI     *+1,2,-LIMIT        GET (XR2-LIMIT)                   (8)3F4D4946
+       PXA     ,2                                                    (8)3F4D4947
+       STA     NOP                                                   (8)3F4D4948
+       ALS     1                                                     (8)3F4D4949
+       ADD     NOP                                                   (8)3F4D4950
+       ALS     1                                                     (8)3F4D4951
+       PAX     ,1                  GET (XR2-LIMIT)*6                 (8)3F4D4952
+CHCNT  TXI     *+1,1,**            ADD (XR1-6)                       (8)3F4D4953
+       TXL     TEST,1,-CHLIMT-2    IF LINE OVERFLOWS                 (8)3F4D4954
+CHRS   AXT     **,1                NO, NUMBER OF CHAR REMAINING      (8)3F4D4955
+       TXH     OUT1,1,5            IF NO CHAR LEFT TO GO IN BUFFER   (8)3F4D4956
+       LDQ     QSTO           BCD CHARACTERS                         $5$3F4D4960
+       RQL     6              LEFT-JUSTIFY BCD CHARACTERS IN MQ      $5$3F4D4970
+       TIX     *-1,1,1                                               $5$3F4D4980
+       XEC     GAIN1               RESET OUTBUF LOC COUNTER          (8)3F4D4981
+       STQ*    BUF           STORE INTO OUTPUT BUFFER                $5$3F4D4990
+       TXI     *+1,2,-LIMIT-1                                        (8)3F4D5000
+OUT1   PCA     ,2                  CALCULATE NUMBER OF WORDS         (8)3F4D5020
+       PAX     ,1                                                    $5$3F4D5030
+       TXH     INOUT,1,2                                             $5$3F4D5050
+       AXT     3,1                   LESS THAN THREE WORDS-FIX AT 3     3F4D5060
+       TRA     INOUT                                                    3F4D5070
+SETWRD AXT     1,1                                                   $5$3F4D5080
+       SXA     GAIN1,1                                               $5$3F4D5090
+       AXT     6,1                                                   $5$3F4D5100
+       SXA     GAIN,1                                                $5$3F4D5110
+       TRA     1,2                                                   $5$3F4D5120
+BLANKS BCI     1,                                                       3F4D5130
+L(1)   PZE     1                                                        3F4D5140
+       OCT     20                                                       3F4D5150
+BLANK  BCI     1,00000                                                  3F4D5160
+FILT   SLW     OUTBUF                                                   3F4D5170
+INT    PZE                                                              3F4D5180
+MQR    PZE                                                              3F4D5190
+MQ     PZE                                                              3F4D5200
+CT     PZE     **                                                       3F4D5210
+FMTLOC PZE     **                    LOCATION OF START OF FORMAT.       3F4D5220
+FILEBK PZE     **                    LOCATION OF FILE CONTROL BLOCK.    3F4D5230
+       REM                           OCCUPIES TWO CELLS.                3F4D5240
+PPFLAG PZE     **                    NON-ZERO IF PRINT OR PUNCH OUTPUT. 3F4D5250
+CDFLAG PZE     **                    NON-ZERO IF ON-LINE CARD INPUT.    3F4D5260
+GRSAV3 PZE     **                                                       3F4D5270
+GRSAV2 PZE     **                                                       3F4D5280
+GRSAV1 PZE     **                                                       3F4D5290
+GRCT   PZE     **                                                       3F4D5300
+NOP    NOP                                                              3F4D5310
+DIVRT  PZE                                                              3F4D5320
+ONLIN  PZE                                                              3F4D5330
+LIMIT  EQU     LIMIT5/6+1          LINE LIMIT IN WORDS               (8)3F4D5340
+LIMIT5 EQU     CHLIMT                                               (14)3F4D5341
+RESET  SXA     RET,2                                                    3F4D5350
+       AXT     6,2                                                   $5$3F4D5360
+       SXA     GAIN,2                                                $5$3F4D5370
+       AXT     LIMIT,2                                               $5$3F4D5380
+       SXA     GAIN1,2                                               $5$3F4D5390
+       LDQ     BLANKS                                                $5$3F4D5400
+       STQ     QSTO                                                  $5$3F4D5410
+       CAL     BLANKS                                                   3F4D5420
+       SLW     OUTBUF                                                   3F4D5430
+       SLW     OUTBUF+1                                                 3F4D5440
+       SLW     OUTBUF+2                                                 3F4D5450
+       TRA     RET                                                      3F4D5460
+CVBCD  XCA                           CONVERT BINARY ADDRESS             3F4D5470
+       RQL     21                    TO OCTAL.                          3F4D5480
+       CLA     BLANKS                                                   3F4D5490
+       SXA     *+5,1                                                    3F4D5500
+       AXT     5,1                                                      3F4D5510
+       ALS     3                                                        3F4D5520
+       LGL     3                                                        3F4D5530
+       TIX     *-2,1,1                                                  3F4D5540
+       AXT     **,1                                                     3F4D5550
+       TRA     1,4                                                      3F4D5560
+CODE   PZE     31                                                       3F4D5570
+ER31MS PZE     E31MES,,16                                               3F4D5580
+ER31OP PZE     E31OMS,,4                                                3F4D5590
+E31MES BCI ,0FORMAT AT   XXXXX,FIRST WORD XXXXXX, HAS ILLEGAL CONTROL CH3F4D5600
+       BCI     6,ARACTER OR SPECIFIES TOO LONG A LINE                   3F4D5610
+E31OMS BCI     4,0TREAT AS END OF FORMAT                                3F4D5620
+LNKG   LDIR                                                             3F4D5630
+       BCI     1,FIOH                                                   3F4D5640
+END94  NULL                                                          $5$3F4D5650
+       END                                                           $5$3F4D5660

@@ -1,0 +1,31 @@
+$*     7090/7094 BCD READ ROUTINE - FRDD                                3F4G0000
+$IBMAP FRDD    15                                                       3F4G0010
+       TTL     FRDD-BCD READ ROUTINE                                    3F4G0020
+*              BCD READ ROUTINE                                         3F4G0030
+*              CALLING SEQUENCE IS                                      3F4G0040
+*              CAL .FRDD.(ARG,LF) COMPILED FOR READ(N,F)                3F4G0050
+*              ARG= LOC OF PZE UNITXX WHERE XX= LOGICAL UNIT N.         3F4G0060
+*              LF = LOC OF FORMAT STATEMENT F                           3F4G0070
+*                                                                       3F4G0080
+*                                                                       3F4G0090
+       ENTRY   .FRDD.                                                   3F4G0100
+.FRDD. SXA     LNKG,4                SAVE RETURN TO MAIN PROGRAM AND    3F4G0110
+       SXA     SYSLOC,4              SET LINKAGE DIRECTOR FOR ERRORTRACE3F4G0120
+       SXA     RTRN,4                SAVE RETURN TO MAIN PROGRAM        3F4G0125
+       CALL    .FIOS.(ARG1,ARG2)     CALL I/O INITIALIZATION ROUTINE    3F4G0126
+       ORG     *-2                                                      3F4G0130
+ARG1   PZE     1,,0                                                     3F4G0140
+ARG2   IORTN*  .FBDBF,,**            TRANSMIT I/O COMMAND               3F4G0150
+       CALL    .FIOH.(RTNRD,RTRN)    CALL BUFFER BUILDER                3F4G0160
+       ORG     *-2                                                      3F4G0170
+RTNRD  NOP     RDENT                 NOP=READ,RDENT=ADDRESS OF READ     3F4G0180
+RTRN   PZE     1                     TRANSMIT LOC. OF CALL              3F4G0190
+RDENT  SXA     RDRT,2                ENTER HERE FOR LINE OF INPUT       3F4G0210
+       TSX     .FSEL.,4            READ A RECORD                        3F4G0220
+       AXT     1,2                   RESET BUFFER                       3F4G0230
+       SXA     .FDX1,2               POINTER FOR                        3F4G0240
+       SXA     .FDX2,2               BUFFER BUILDER                     3F4G0250
+RDRT   AXT     **,2                  RETURN TO .FIOH.                   3F4G0260
+       TRA     1,2                   TO CONVERT DATA                    3F4G0270
+LNKG   LDIR                                                             3F4G0290
+       END                                                              3F4G0310

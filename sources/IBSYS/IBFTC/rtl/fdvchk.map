@@ -1,0 +1,11 @@
+$*     7090/7094 FORTRAN MACHINE INDICATOR TEST - FDVCHK                3FC10000
+$IBMAP FDVCHK  12                                                       3FC10010
+       LBL     DVCK,BEGIN     FDVCHK                                 (7)3FC10013
+       TTL     FDVCHK/DIVIDE CHECK TEST ROUTINE                         3FC10020
+DVCHK  SAVE    (4)                                                      3FC10030
+       CLA     =2                                                       3FC10040
+       DCT                                                              3FC10050
+       CLA     =1                                                       3FC10060
+       STO*    3,4                                                      3FC10070
+       RETURN  DVCHK                                                    3FC10080
+       END                                                              3FC10090

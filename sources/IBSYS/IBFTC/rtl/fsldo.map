@@ -1,0 +1,33 @@
+$*     7090/7094 IBLIB INPUT/OUTPUT FORTRAN LIBRARY - FSLDO             3F7H0000
+$IBMAP FSLDO   33                                                       3F7H0010
+       TTL     FSLDO/SHORT LIST OUTPUT (FOR DECIMAL ARRAYS)             3F7H0020
+       LBL     SLDO,BEGIN     FSLDO                                  (7)3F7H0030
+       REM                                                              3F7H0040
+       REM     CALLING SEQUENCES ARE                                    3F7H0050
+       REM     CALL .FSLO. (A,M) FOR SINGLE-PRECISION BCD ARRAYS,       3F7H0060
+       REM     CALL .FSDO. (A,M) FOR DOUBLE-PRECISION BCD ARRAYS.       3F7H0070
+       REM     A IS LOCATION OF THE ARRAY AND M IS THE LOCATION OF      3F7H0080
+       REM     THE NUMBER OF ELEMENTS IN THE ARRAY.                     3F7H0090
+       REM                                                              3F7H0100
+       ENTRY   .FSLO.                                                   3F7H0110
+       ENTRY   .FSDO.                                                   3F7H0120
+SAVE   SAVEN   (2)I                                                     3F7H0130
+       SXA     LNKG,4                                                   3F7H0140
+       TRA     1,1                                                      3F7H0150
+SXIT   AXT     **,1                                                     3F7H0160
+       RETURN  SAVE                                                     3F7H0170
+.FSLO. SXA     SXIT,1                ENTRY POINT FOR SINGLE-            3F7H0180
+       TSX     SAVE,1                PRECISION BCD ARRAYS.              3F7H0190
+       LXA     FCNV,1                INITIALIZE FOR LIST                3F7H0200
+       SXA     .SLO2.,1              PROCESSING.                        3F7H0210
+       TSX     .SLO.,4               GO TO SET UP LIST PROCESSING.      3F7H0220
+       TRA     SXIT                                                     3F7H0230
+.FSDO. SXA     SXIT,1                ENTRY POINT FOR DOUBLE-            3F7H0240
+       TSX     SAVE,1                PRECISION BCD ARRAYS.              3F7H0250
+       LXA     FCNV,1                INITIALIZE FOR LIST                3F7H0260
+       SXA     .SDO2.,1              PROCESSING.                        3F7H0270
+       TSX     .SDO.,4               GO TO SET UP LIST PROCESSING.      3F7H0280
+       TRA     SXIT                                                     3F7H0290
+FCNV   PZE     .FCNV.                                                   3F7H0300
+LNKG   LDIR                                                             3F7H0310
+       END                                                              3F7H0320

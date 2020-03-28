@@ -1,0 +1,46 @@
+$*     7090/7094 IBLIB  FORTRAN MATHEMATICS LIBRARY                     3F6D0000
+$IBMAP FSQR    150                                                      3F6D0010
+*RELEASED WITH REVISED MATHEMATICS SUBROUTINE LIBRARY (V5,M5)           3F6D0015
+       ENTRY   SQRT                                                     3F6D0020
+       SPACE   3                                                        3F6D0030
+       REM     SQUARE ROOT SUBROUTINE                                   3F6D0040
+       SPACE   3                                                        3F6D0050
+ SQRT  SXA     SYSLOC,4                                                 3F6D0060
+       SXA     LINK,4                                                   3F6D0070
+       CLA*    3,4           PICK UP ARG,T                              3F6D0080
+       TZE     1,4                                                      3F6D0090
+       TPL     BEGIN                                                    3F6D0100
+       SPACE                                                            3F6D0110
+       CALL    .FXEM.(ESQRT)                                            3F6D0120
+       SSP                                                              3F6D0130
+       SPACE                                                            3F6D0140
+ BEGIN STO     BUFF          1ST APPROX. IS OBTAINED AS FOLLOWS         3F6D0150
+       ANA     K1              BETWEEN 1/2 AND 1, BY LINE PASSING THRU  3F6D0160
+       ARS     1                 3/4 AND 1                              3F6D0170
+       ADD     BUFF            BETWEEN 1/4 AND 1/2, BY LINE PASSINGTHRU 3F6D0180
+       ARS     1                 1/2 AND 3/4                            3F6D0190
+       ADD     K2                                                       3F6D0200
+       SPACE                                                            3F6D0210
+       AXT     3,4           REFINE APPROX. BY 3 PASSES OF NEWTON-      3F6D0220
+ LOOP  STO     BUFF+1          RAPHSON LOOP                             3F6D0230
+       CLA     BUFF                                                     3F6D0240
+       FDP     BUFF+1                                                   3F6D0250
+       XCA                                                              3F6D0260
+       FAD     BUFF+1                                                   3F6D0270
+       SUB     K1                                                       3F6D0280
+       TIX     LOOP,4,1                                                 3F6D0290
+       FRN                                                              3F6D0300
+       LXA     LINK,4                                                   3F6D0310
+       TRA     1,4                                                      3F6D0320
+       SPACE                                                            3F6D0330
+  K1   OCT     1000000000                                               3F6D0340
+  K2   OCT     100400000000                                             3F6D0350
+ BUFF  BSS     2                                                        3F6D0360
+ ESQRT DEC     13                                                       3F6D0370
+       PZE     E13MES,,4                                                3F6D0380
+       PZE     E13OMS,,3                                                3F6D0390
+E13MES BCI     4,0SQRT(-X) NOT ALLOWED                                  3F6D0400
+E13OMS BCI     3,0EVALUATE FOR +X                                       3F6D0410
+       SPACE                                                            3F6D0420
+  LINK LDIR                                                             3F6D0430
+       END                                                              3F6D0440

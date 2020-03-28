@@ -1,0 +1,22 @@
+$*     7090/7094 BINARY READ ROUTINE                                    3F4H0000
+$IBMAP FRDB                                                             3F4H0010
+       TTL     FRDB/BINARY READ ROUTINE.                                3F4H0020
+       ENTRY   .FRDB.                                                   3F4H0030
+.FRDB. SXA     LNKG,4                                                   3F4H0040
+       SXA     SYSLOC,4                                                 3F4H0050
+       SXA     RTRN,4                SAVE RETURN TO MAIN PROGRAM        3F4H0055
+       CALL    .FIOS.(ARG1,ARG2)     CALL I/O INITIALIZATION ROUTINE    3F4H0056
+       ORG     *-2                   OVERLAY CALL WITH ARGS.            3F4H0060
+ARG1   PZE     1,,1                  ADD=REED,DEC.=BIN                  3F4H0070
+ARG2   IORTN*  .FBIBF,,**            TRANSMIT IO COMMAND                3F4H0080
+       CLA     .FCKSZ                GET BLOCK SIZE                     3F4H0090
+       CALL    .FIOB.(RTNRB,RTRN)    CALL BUFFER BUILDER                3F4H0100
+       ORG     *-2                                                      3F4H0110
+RTNRB  NOP     RDDB                  NOP=READ                           3F4H0120
+RTRN   PZE                           TRANSMIT LOC. OF CALL              3F4H0130
+RDDB   TSX     .FSEL.,4              READ A RECORD.                     3F4H0150
+       LXD     .FCT,4                STORE COUNT IN FIOB FROM           3F4H0160
+       SXD     .FCNT,4               FIOS                               3F4H0170
+       TRA     1,2                   RETURN TO FIOB.                    3F4H0180
+LNKG   LDIR                                                             3F4H0200
+       END                                                              3F4H0220

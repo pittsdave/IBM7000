@@ -1,0 +1,10 @@
+$IBMAP .CALOG                                                        $5$3MF00390
+       LBL     CLOG,BEGIN     .CALOG                                 (7)3MF00393
+.CALOG CAL     *+2            LN (A)                                 $5$3MF00400
+       TRA     .CGOGO                                                $5$3MF00410
+       TRA     ALOG                                                  $5$3MF00420
+       ENTRY   .CAL10                                                $5$3MF00430
+.CAL10 CAL     *+2            LOG BASE 10 (A)                        $5$3MF00440
+       TRA     .CGOGO                                                $5$3MF00450
+       TRA     ALOG10                                                $5$3MF00460
+       END                                                           $5$3MF00470

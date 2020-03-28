@@ -1,0 +1,671 @@
+$*     7090/7094 IBLIB FORTRAN SYSTEM LIBRARY - FDMP                    3F7D0000
+$IBMAP FDMP    650,()OK                                              $5$3F7D0010
+       TTL     FDMP - FORTRAN DUMP MONITOR ROUTINE                      3F7D0020
+       REM                                                              3F7D0030
+       REM                                                              3F7D0040
+       REM     CALLING SEQUENCES ARE                                    3F7D0050
+       REM     CALL DUMP (A1,B1,F1,...,AN,BN,FN)                        3F7D0060
+       REM     CALL PDUMP (A1,B1,F1,...,AN,BN,FN)                       3F7D0070
+       REM     WHERE A AND B INDICATE LIMITS                            3F7D0080
+       REM     OF CORE STORAGE TO BE DUMPED.                            3F7D0090
+       REM     F INDICATES THE FORMAT DESIRED.                          3F7D0100
+       REM                                                              3F7D0110
+       ENTRY   DUMP                                                     3F7D0120
+       ENTRY   PDUMP                                                    3F7D0130
+*                                                                       3F7D0140
+*                                                                       3F7D0150
+*                                                                       3F7D0160
+SIZE   EQU     84                                                       3F7D0170
+ ORGDP BOOL    72431                                                    3F7D0180
+IOXCOM EQU     450                                                      3F7D0190
+(FDAMT EQU     IOXCOM+33                                                3F7D0200
+SYSCOM EQU     64                                                       3F7D0210
+SYSTCH EQU     SYSCOM+23                                                3F7D0220
+.CHXSP EQU     IOXCOM+38                                                3F7D0230
+SYSTWT EQU     SYSCOM+25                                                3F7D0240
+ SAVL  EQU     -ORGDP                                                   3F7D0250
+*                                                                       3F7D0260
+ DUMP  STL     DP            SET DUMP FLAG                              3F7D0270
+       TTR     *+2                                                      3F7D0280
+ PDUMP STZ     DP            SET PDUMP FLAG                             3F7D0290
+SAV    SAVEN   (4)                                                      3F7D0300
+       SXA     LNKG,4                                                   3F7D0310
+       SXD     TABL-18,1                                                3F7D0320
+       SXD     TABL-17,2                                                3F7D0330
+       SXD     TABL-16,4     SAVE                                       3F7D0340
+       SXD     TABL-15,3     INDEX                                      3F7D0350
+       SXD     TABL-14,5     REGISTERS                                  3F7D0360
+       SXD     TABL-13,6                                                3F7D0370
+       SXD     TABL-12,7                                                3F7D0380
+       STO     TABL-2        SAVE AC (S,1-35)                           3F7D0390
+       ARS     1                                                        3F7D0400
+       SLW     TABL-3        SAVE Q AND P BITS                          3F7D0410
+       STI     TABL-6        SAVE INDICATORS                            3F7D0420
+       STQ     TABL-11       SAVE MQ                                    3F7D0430
+       STZ     TABL-30       TESTED IN DUMP RECORD                      3F7D0440
+       STZ     TABL-10                                                  3F7D0450
+       STZ     TABL-33                                                  3F7D0460
+       STZ     TABL-34                                                  3F7D0470
+       CLA     RETLC                                                    3F7D0480
+       STA     TABL-31       LOCATION OF RET ROUTINE                    3F7D0490
+       CLA     0                                                        3F7D0500
+       STZ     0                                                        3F7D0510
+       TXH     0,,0          TEST IF IN TRAP MODE                       3F7D0520
+       LTM                                                              3F7D0530
+       LXA     0,2                                                      3F7D0540
+       SXA     TABL-10,2                                                3F7D0550
+       STO     0             RESTORE LOCATION 0                         3F7D0560
+       ENK                                                              3F7D0570
+       STQ     TABL-1        SAVE KEYS                                  3F7D0580
+       AXT     3,1                                                      3F7D0590
+       STZ     TABL-6,1                                                 3F7D0600
+       XEC     GARBG,1       TABL-7 NON-ZERO IF OVERFLOW ON             3F7D0610
+       STL     TABL-6,1      TABL-8 NON-ZERO IF IOT ON                  3F7D0620
+ LDTIX TIX     *-3,1,1       TABL-9 NON-ZERO IF DCT ON                  3F7D0630
+       TRA     LITS                                                     3F7D0640
+       DCT                                                              3F7D0650
+       IOT                                                              3F7D0660
+       TNO     LDTIX                                                    3F7D0670
+ GARBG BSS     0                                                        3F7D0680
+ LITS  AXT     4,2                                                      3F7D0690
+       STZ     TABL-18,2                                                3F7D0700
+       OCT     476000200145  SLT--TABL-19 THRU TABL-22                  3F7D0710
+       TRA     *+2           NON-ZERO IF SENSE                          3F7D0720
+       STL     TABL-18,2     LIGHTS 1,2,3,4 ON.                         3F7D0730
+       TIX     LITS+1,2,1                                               3F7D0740
+ SSWT  AXT     6,1                                                      3F7D0750
+       STZ     TABL-22,1                                                3F7D0760
+       OCT     076000100167  PSE--TABL-23 THRU TABL-28                  3F7D0770
+       TRA     *+2           NON-ZERO IF SENSE                          3F7D0780
+       STL     TABL-22,1     SWITCHES 1,2,3,4,5,6 ON                    3F7D0790
+       TIX     SSWT+1,1,1                                               3F7D0800
+       LDC     TABL-16,4                                                3F7D0810
+       PXA     0,4                                                      3F7D0820
+       STA     TABL-29       LOCATION OF -CALL- TO DUMP                 3F7D0830
+       ADD     =3                                                       3F7D0840
+       STA     IORP+2        LOCATION OF FIRST ARGUMENT                 3F7D0850
+       STA     CPYP2+1                                                  3F7D0860
+       STA     CPYDH2+1                                                 3F7D0870
+       SUB     =1                                                       3F7D0880
+       STA     FRMAT+1                                                  3F7D0890
+       SUB     =1                                                       3F7D0900
+       STA     *+1           LOCATION OF WORD WITH NO.                  3F7D0910
+       CLA     **            OF ARGUMENTS IN DECREMENT                  3F7D0920
+       PDX     0,4                                                      3F7D0930
+       TXL     *+2,4,SIZE                                               3F7D0940
+       LXD     *-1,4                                                    3F7D0950
+       SXD     IORP+2,4                                                 3F7D0960
+       SXD     CPYP2+1,4                                                3F7D0970
+       SXD     CPYDH2+1,4                                               3F7D0980
+       SXA     TABL-30,4     SAVE NO. ARGS.                             3F7D0990
+       SXA     FRMAT,4                                                  3F7D1000
+ FRMAT AXT     **,1          THIS SECTION TESTS FOR                     3F7D1010
+       AXC     **,2          FORMAT STATEMENT GREATER                   3F7D1020
+       TXL     THRU,1,2      THAN 3. IF GREATER, THE                    3F7D1030
+       LDI     3,2           CONTENTS OF CELL IN                        3F7D1040
+       RFT     77774         ADDRESS OF ARGUMENT IS                     3F7D1050
+       TRA     *+3           SAVED IN DECREMENT OF                      3F7D1060
+ MORE  TXI     *+1,2,-3      FORMAT STATEMENT.                          3F7D1070
+       TXI     FRMAT+2,1,-3                                             3F7D1080
+       CLA*    3,2                                                      3F7D1090
+       ALS     18                                                       3F7D1100
+       STD     3,2                                                      3F7D1110
+       TRA     MORE                                                     3F7D1120
+THRU   XEC     .DFOUT        UNBUFFER SYSOU1 IF FOUT IS IN CORE      $5$3F7D1130
+*                                                                       3F7D1140
+*                                                                       3F7D1150
+*              THIS SECTION SAVES UPPER CORE, PANEL, AND ARGUMENTS      3F7D1160
+*              READS THE DUMP RECORD INTO THAT                          3F7D1170
+*              AREA. CONTROL IS TRANSFERRED TO                          3F7D1180
+*              DUMP RECORD IF I-O IS SUCCESSFUL.                        3F7D1190
+*                                                                       3F7D1200
+*                                                                       3F7D1210
+       LDI     SYSJOB        SAVE PRESENT SYSJOB                     $5$3F7D1211
+       STI     SVSJOB                                                $5$3F7D1212
+       SIL     000001        SET 'NOGO' BIT ON IN CASE               $5$3F7D1213
+       STI     SYSJOB        DUMP IS UNSECCESSFUL                    $5$3F7D1214
+       LAC     SYSUNI,4                                                 3F7D1220
+       CLA     SYSOU1,4                                                 3F7D1230
+       STO     SYUCB                                                    3F7D1240
+       STL     TABL-35       SYSOU1-HYPER(7909)                         3F7D1250
+       LDI*    SYUCB                                                    3F7D1260
+       LNT     020000                                                   3F7D1270
+       STZ     TABL-35       SYSOU1-TAPE(7607)                          3F7D1280
+       LAC     SYSUNI,4                                                 3F7D1290
+       CLA     SYSUT4,4                                                 3F7D1300
+       STO     UT4                                                      3F7D1310
+       ANA     MASK3                                                    3F7D1320
+       ARS     6                                                        3F7D1330
+       ORS     AA+4          HA2                                        3F7D1340
+       LDI*    UT4                                                      3F7D1350
+       STL     TABL-32                                                  3F7D1360
+       STL     TABL-36                                                  3F7D1370
+       LFT     020000                                                   3F7D1380
+       TRA     *+3           7909 CHANNEL---DISK                        3F7D1390
+       STZ     TABL-32       7607 CHANNEL---TAPE                        3F7D1400
+       TRA     TSXRW                                                    3F7D1410
+       LFT     000100                                                   3F7D1420
+       TRA     *+4           DISK                                       3F7D1430
+       AXT     34,2          HYPER                                      3F7D1440
+       SXD     RET+4,2                                                  3F7D1450
+       TRA     TSXRW                                                    3F7D1460
+       STZ     TABL-36                                                  3F7D1470
+       LNT     000040                                                   3F7D1480
+       TRA     *+3                                                      3F7D1490
+       CAL     =1                                                       3F7D1500
+       ORS     AA+4                                                     3F7D1510
+       LDC     SYSUNI,4                                                 3F7D1520
+       SXD     *+2,4                                                    3F7D1530
+       LAC     SYSUNI,4                                                 3F7D1540
+       TXI     *+1,4,**                                                 3F7D1550
+       CLA     SYSUT4,4      DISK LIMITS                                3F7D1560
+       SSP                                                              3F7D1570
+       STA     TABL-33       FIRST TRACK ON THIS UNIT                   3F7D1580
+       ARS     18                                                       3F7D1590
+       STA     TABL-34       LAST TRACK ON THIS UNIT                    3F7D1600
+       SUB     TABL-33                                                  3F7D1610
+       PAX     0,2                                                      3F7D1620
+       TXL     EROR,2,11     TOO FEW TRACKS ATTACHED TO THIS UNIT       3F7D1630
+       CLA     TABL-34                                                  3F7D1640
+       SUB     =11                                                      3F7D1650
+       STA     TABL-33       ADDRESS OF FIRST TRACK TO BE USED          3F7D1660
+       ADD     =6                                                       3F7D1670
+       STA     TABL-34       ADDRESS OF TRACK FOR SECOND SAVE           3F7D1680
+*              ROUTINE TO WRITE ON SYSUT4                               3F7D1690
+TSXRW  TSX     IOXRW,4                                                  3F7D1700
+       MZE     UT4,,IORP     TAPE (729)                                 3F7D1710
+       PZE     PRTMS,,PRTMS                                             3F7D1720
+       MZE     CPYP,6,TABL-33 DISK                                      3F7D1730
+       MZE     UT4,,CPYDH1   HYPERTAPE                                  3F7D1740
+       TSX     IOXRW,4                                                  3F7D1750
+       MZE     UT4,,IORP+1                                              3F7D1760
+       PZE     PRTMS,,PRTMS                                             3F7D1770
+       MZE     CPYP2,1,TABL-34                                          3F7D1780
+       MZE     UT4,,CPYDH2                                              3F7D1790
+*                                                                       3F7D1800
+*              ROUTINE TO POSITION TAPE AND READ DUMP RECORD            3F7D1810
+*                                                                       3F7D1820
+       LDC     SYSUBC,1      WAIT UNTIL ALL CHANNEL                  $5$3F7D1830
+WAIT   TXI     *+1,1,1       ACTIVITY CEASES                         $5$3F7D1840
+       ZET*    .CHXSP                                                $5$3F7D1850
+       TRA     *-1                                                   $5$3F7D1860
+       TXH     WAIT,1,0                                              $5$3F7D1870
+       STL     POSSW                                                    3F7D1920
+       CAL     .FDPOS        USE IBJOB COMMUNICATION                    3F7D1960
+       ANA     UCBMSK        WORD TO LOCATE AND READ                    3F7D1970
+       ARS     15            IN DUMP RECORD.                            3F7D1980
+       STA     POS1                                                     3F7D1990
+       STA     POS2                                                     3F7D2000
+       LAC     SYSUNI,2                                                 3F7D2010
+       TXI     *+1,2,1                                                  3F7D2020
+POS1   CLA     **,2                                                     3F7D2030
+       PAX     0,2           INITIALIZE SYSLDR FOR                   $5$3F7D2031
+       SXD     SYSLDR,2      CURRENT SYSTEM UNIT                     $5$3F7D2032
+       PAC     0,2                                                      3F7D2040
+       LDI     0,2                                                      3F7D2050
+       STO     SYSTAP        L(UCB) FOR CURRENT SYSTEM UNIT             3F7D2060
+       CLA     .FDPOS        DEVICE TEST.                               3F7D2070
+       TMI     DISK          -0 DISK, +0 TAPE, +1 HYPERTAPE.            3F7D2080
+       ALS     1                                                        3F7D2090
+       PBT                                                              3F7D2100
+       TRA     TAPE                                                     3F7D2110
+       TRA     HTAPE                                                    3F7D2120
+TAPE   ARS     1             TAPE AND HYPERTAPE.                        3F7D2130
+       ANA     POMSK         MASK OUT TAG AND PREFIX.                   3F7D2140
+       SLW     POTMP1        SAVE DESIRED TAPE POSITION.                3F7D2150
+POLAC  LAC     SYSTAP,2                                                 3F7D2160
+       CAL     2,2           CURRENT TAPE POSITION                      3F7D2170
+       ANA     POMSK                                                    3F7D2180
+       SUB     POTMP1        DESIRED TAPE POSITION                      3F7D2190
+       TNZ     *+4           IS POSITIONING REQUIRED.                   3F7D2200
+       NZT     1,2           APPARENTLY NOT.  CHECK FURTHER.            3F7D2210
+       TRA     TAPES         NO.  READ DUMP RECORD.                     3F7D2220
+       TRA     POLAC         POSSIBLY.                                  3F7D2230
+       PDX     0,2           IS THERE A FILE DIFFERENCE.                3F7D2240
+       TXL     POREC,2,0     NO. CHECK FOR RECORD DIFFERENCE.           3F7D2250
+POFOB  TMI     POFOF         IF -, POSITION FORWARD N FILES.            3F7D2260
+POBOF  TSX     .NDSEL,4      BACKSPACE ONE FILE.                        3F7D2270
+       PZE     SYSTAP,,6                                                3F7D2280
+       TIX     POBOF,2,1                                                3F7D2290
+       TRA     POLAC         POSITION RECORD.                           3F7D2300
+POFEOF TNX     POLAC,2,1     FORWARD SPACE N FILES.                     3F7D2310
+POFOF  TSX     IOXTP,4       FORWARD SPACE ONE FILE.                    3F7D2320
+       PZE     SYSTAP,,POFF                                             3F7D2330
+       PZE     POFEOF,,POFOF                                            3F7D2340
+       TRA     TAPES         IF APPROPRIATELY POSITIONED, EXIT.         3F7D2350
+POREC  PAX     0,2           PROB. RIGHT FILE.  GET RECORD DIFFERENCE.  3F7D2360
+       TXH     POFL1,2,16384 TEST FOR NEGATIVE RECORD COUNT.            3F7D2370
+       TMI     POFOR         IF-, FORWARD SPACE N RECORDS.              3F7D2380
+       TSX     .NDSEL,4      BACKSPACE ONE RECORD.                      3F7D2390
+       PZE     SYSTAP,,5                                                3F7D2400
+       TIX     *-2,2,1               DO N BACKSPACES.                   3F7D2410
+       TRA     POLAC         GO TO TEST AND EXIT.                       3F7D2420
+POFL1  AXT     1,2           SET FOR ONE FILE.                          3F7D2430
+       TRA     POFOB         AND GO BACK TO FILE POSITION.              3F7D2440
+POFOR  TSX     IOXTP,4       POSITION FORWARD ONE RECORD.               3F7D2450
+       PZE     SYSTAP,,PORF                                             3F7D2460
+       PZE     POLAC,,*+1                                               3F7D2470
+       TIX     POFOR,2,1     DO N RECORDS.                              3F7D2480
+       TRA     POLAC                                                    3F7D2490
+POFF   IOCPN   **,,-1        POSITION FORWARD ONE FILE.                 3F7D2540
+       TCH     *-1                                                      3F7D2550
+PORF   IORTN   **,,-1        POSITION FORWARD ONE RECORD.               3F7D2560
+POTMP1 PZE     **                                                       3F7D2580
+POMSK  OCT     077777077777  FILE-RECORD POSITION MASK.                 3F7D2600
+POSSW  PZE     **                                                       3F7D2610
+DISK   STD     SYSTCH        LOC. OF RECORD ON DISK, FOR READ           3F7D2620
+TAPES  LAC     SYSUNI,4                                                 3F7D2630
+       TXI     *+1,4,1                                                  3F7D2640
+POS2   CAL     **,4          ADDRESS OF UCB FOR UNIT ASSIGNED.          3F7D2650
+       PAC     0,4                                                      3F7D2660
+       LDI     0,4           PLACE FIRST WORD OF UCB IN SI              3F7D2670
+       RIL     760000        MASK OUT EVERYTHING UP TO                  3F7D2680
+       PIA                   CHANNEL BIT.                               3F7D2690
+       ARS     9                                                        3F7D2700
+       PDX     0,1                                                      3F7D2710
+       TXI     *+1,1,-1                                                 3F7D2720
+       SXA     DISK2,1                                                  3F7D2730
+       LXA     .CHXSP,1      DELAY UNTIL CHANNEL                        3F7D2740
+       SXA     DISK2+1,1     ACTIVITY CEASES.                           3F7D2750
+       AXT     ORGDP,1       INITIALIZE RETURN FROM                  $5$3F7D2760
+       SXA     SYSTRA,1      SYSLDR.                                    3F7D2770
+DISK2  AXC     **,4                                                     3F7D2780
+       ZET     **,4                                                     3F7D2790
+       TRA     *-1                                                      3F7D2800
+LOAD   TSX     SYSLDR,4      USE SYSLDR TO BRING IN                     3F7D2810
+*      TRA     ORGDP         DUMP RECORD. RETURN TO RET.             $5$3F7D2820
+HTAPE  CLA     POFOFH                                                   3F7D2830
+       STO     POFOF                                                    3F7D2840
+       STO     POFOR                                                    3F7D2850
+       CLA     NOP                                                      3F7D2860
+       STO     POFOR+2                                                  3F7D2870
+       AXT     34,4                                                     3F7D2880
+       SXD     POFL1-3,4                                                3F7D2890
+       TXI     *+1,4,1                                                  3F7D2900
+       SXD     POFOF-4,4                                                3F7D2910
+       TXI     *+1,4,1                                                  3F7D2920
+       SXD     POFOR+1,4                                                3F7D2930
+       TXI     *+1,4,1                                                  3F7D2940
+       SXD     POFOF+1,4                                                3F7D2950
+       CLA     .FDPOS                                                   3F7D2960
+       TRA     TAPE+1                                                   3F7D2970
+POFOFH TSX     .NDSEL,4                                                 3F7D2980
+NOP    NOP                                                              3F7D2990
+SYSTAP PZE     **                                                       3F7D3000
+UCBMSK OCT     000000700000                                          $5$3F7D3010
+SVSJOB PZE     **            SYSJOB                                  $5$3F7D3020
+*                                                                       3F7D3030
+*                                                                       3F7D3040
+*              THIS SECTION IS ENTERED AFTER                            3F7D3050
+*              DUMP RECORD IS EXECUTED AND CORE                         3F7D3060
+*              HAS BEEN RESTORED. THE PANEL, ETC. ARE                   3F7D3070
+*              RESTORED AND APPROPRIATE RETURN MADE                     3F7D3080
+*                                                                       3F7D3090
+*                                                                       3F7D3100
+ RET   LAC     UT4,1                                                    3F7D3110
+       ZET     1,1                                                      3F7D3120
+       TRA     *-1                                                      3F7D3130
+       TSX     .NDSEL,4      REPOSITION UTILITY TAPE                    3F7D3140
+       PZE     UT4,,5        TO INITIAL POSITION.                       3F7D3150
+       LDI     SVSJOB        RESTORE SYSJOB                          $5$3F7D3151
+       STI     SYSJOB                                                $5$3F7D3152
+       LXA     TABL-30,1     NO. RESTORE                                3F7D3160
+       LAC     TABL-29,2                                                3F7D3170
+       TXI     *+1,2,-2                                                 3F7D3180
+ MMORE TXL     DONE,1,2                                                 3F7D3190
+       LDI     3,2                                                      3F7D3200
+       RIL     77777         RESTORE DECREMENTS OF                      3F7D3210
+       STI     3,2           FORMAT STATEMENTS                          3F7D3220
+       TXI     *+1,2,-3      WITH ZEROES.                               3F7D3230
+       TXI     MMORE,1,-3                                               3F7D3240
+ DONE  LDI     TABL-6        RESTORE SENSE INDICATORS                   3F7D3250
+       NZT     TABL-8        RESTORE IO CHECK INDICATOR                 3F7D3260
+       TRA     *+4                                                      3F7D3270
+       AXT     0,1                                                      3F7D3280
+       XEC*    .RCHX         TURN ON I/O CHECK LIGHT                    3F7D3290
+       TRA     *+3                                                      3F7D3300
+       IOT                   TURN OFF IO CHECK LIGHT                    3F7D3310
+       NOP                                                              3F7D3320
+       NZT     TABL-9                                                   3F7D3330
+       TRA     *+4                                                      3F7D3340
+       CLA     =1                                                       3F7D3350
+       DVP     =0            TURN ON DIVIDE CHECK LIGHT                 3F7D3360
+       TRA     *+3                                                      3F7D3370
+       DCT                   TURN OFF DIVIDE CHECK LIGHT                3F7D3380
+       NOP                                                              3F7D3390
+       AXT     4,2                                                      3F7D3400
+ HERE1 NZT     TABL-18,2                                                3F7D3410
+       TRA     *+3                                                      3F7D3420
+       OCT     076000200145  SLN--TURN ON SENSE LIGHTS                  3F7D3430
+       TRA     *+3                                                      3F7D3440
+       OCT     476000200145  SLT--TURN OFF SENSE LIGHTS                 3F7D3450
+       NOP                                                              3F7D3460
+       TIX     HERE1,2,1                                                3F7D3470
+       LXD     TABL-12,7                                                3F7D3480
+       LXD     TABL-13,6                                                3F7D3490
+       LXD     TABL-14,5     RESTORE                                    3F7D3500
+       LXD     TABL-15,3     INDEX                                      3F7D3510
+       LXD     TABL-16,4     REGISTERS                                  3F7D3520
+       LXD     TABL-17,2                                                3F7D3530
+       LXD     TABL-18,1                                                3F7D3540
+       LDQ     TABL-2                                                   3F7D3550
+       CAL     TABL-3        RESTORE AC                                 3F7D3560
+       ARS     34                                                       3F7D3570
+       LLS     35                                                       3F7D3580
+       NZT     TABL-7                                                   3F7D3590
+       TOV     *+1           TURN OFF OVERFLOW INDICATOR                3F7D3600
+       ZET     TABL-10       RESTORE TRAPS IF NECESSARY.                3F7D3610
+       ETM                                                              3F7D3620
+       LDQ     TABL-11       RESTORE MQ                                 3F7D3630
+       ZET     DP                                                       3F7D3640
+       TRA     .LXERR              EXECUTION ERROR EXIT             (10)3F7D3650
+       RETURN  SAV           RETURN TO CALLER                           3F7D3660
+*                                                                       3F7D3670
+*                                                                       3F7D3680
+*                                                                       3F7D3690
+*                                                                       3F7D3700
+*                                                                       3F7D3710
+*                                                                       3F7D3720
+*                                                                       3F7D3730
+*                                                                       3F7D3740
+*                                                                       3F7D3750
+*                                                                       3F7D3760
+*                                                                       3F7D3770
+ IORP  IORT    ORGDP,,SAVL   SAVE UPPER CORE                            3F7D3780
+       IOCP    TABL-38,,38                                              3F7D3790
+       IORT    **,,**        SAVE ARGUMENTS                             3F7D3800
+*                                                                       3F7D3810
+*                                                                       3F7D3820
+*              CONSTANTS                                                3F7D3830
+ UT4   PZE     **                                                       3F7D3840
+ SYUCB PZE     0                                                        3F7D3850
+ CODEN PZE     50                                                       3F7D3880
+ER50MS PZE     E50MES,,10                                               3F7D3890
+ER50OP PZE     NOOPXT,,7                                                3F7D3900
+ DP    PZE     0                                                        3F7D3910
+TABLJS PZE     .JLIN                                                    3F7D3911
+TABLSF PZE     SYSFAZ                                                   3F7D3912
+TABL   BES     36                                                       3F7D3920
+ RETLC PZE     RET                                                      3F7D3930
+ ISIT  NOP                                                              3F7D3940
+ 9IOSL PZE     CTLR,,SE                                                 3F7D3950
+ XLIM  PZE     0                                                        3F7D3960
+ DVTN  DVTN    ,,,                                                      3F7D3970
+9IOSLI PZE     0                                                        3F7D3980
+ NUM   PZE     0                                                        3F7D3990
+ NUMX  PZE     0                                                        3F7D4000
+ SE    PAC     0,2           SEL(+)                                     3F7D4010
+       TMI     SM                                                       3F7D4020
+       CLA     1,2                                                      3F7D4030
+       STA*    .RCHX                                                    3F7D4040
+       XEC*    .RCHX                                                    3F7D4050
+       TRA     1,4           RETURN TO IOEX                             3F7D4060
+ SM    STZ     1,2           SEL(-)                                     3F7D4070
+       STI     9IOSLI                                                   3F7D4080
+       TRA     1,4           RETURN TO IOEX                             3F7D4090
+*                                                                       3F7D4100
+*                                                                       3F7D4110
+CPYP   CPYD    ORGDP,,465                                               3F7D4120
+       TCH     SYSTWT                                                   3F7D4130
+       CPYD    ORGDP+465,,465                                           3F7D4140
+       TCH     SYSTWT                                                   3F7D4150
+       CPYD    ORGDP+930,,465                                           3F7D4160
+       TCH     SYSTWT                                                   3F7D4170
+       CPYD    ORGDP+1395,,465                                          3F7D4180
+       TCH     SYSTWT                                                   3F7D4190
+       CPYD    ORGDP+1860,,465                                          3F7D4200
+       TCH     SYSTWT                                                   3F7D4210
+       CPYD    ORGDP+2325,,465                                          3F7D4220
+       TCH     SYSTWT                                                   3F7D4230
+CPYP2  CPYP    TABL-38,,38                                              3F7D4240
+       CPYD    **,,**                                                   3F7D4250
+       TCH     SYSTWT                                                   3F7D4260
+*                                                                       3F7D4270
+PRTMS  CALL    .FXEM.(CODEN)                                            3F7D4280
+       TRA     .LXERR                                                   3F7D4290
+PRTMSD TSX     IOXRW,4       OFF LINE MESSAGE                           3F7D4300
+       MZE     SYUCB,1,MSD                                              3F7D4310
+       PZE     *+3,,*+3                                                 3F7D4320
+       NOP                                                              3F7D4330
+       MZE     0,,0                                                     3F7D4340
+       TRA     .LXERR                                                   3F7D4350
+PRTMSH AXT     MSH,4                                                    3F7D4360
+       SXD     PRTMSD+1,4                                               3F7D4370
+       TRA     PRTMSD                                                   3F7D4380
+MSH    IOCP    MESSG,,5                                                 3F7D4390
+       IOCT    MESSGH,,3                                                3F7D4400
+ERORH  CLA     MESGH                                                    3F7D4410
+       STO     MESSGH                                                   3F7D4420
+       CLA     MESGH+1                                                  3F7D4430
+       STO     MESSGH+1                                                 3F7D4440
+       TRA     PRTMSH                                                   3F7D4450
+MESGH  BCI     2,EWA FLAG ON-                                           3F7D4460
+ MSD   IOCP    MESSG,,5                                                 3F7D4470
+       IOCT    MESSGD,,3                                                3F7D4480
+MESSG  BCI     5,1EXECUTION TERMINATED BY DUMP-                         3F7D4490
+MESSGD BCI     3,DISK ERROR.                                            3F7D4500
+MESSGH BCI     3,UNUSUAL END-SYSUT4                                     3F7D4510
+ EROR  TSX     IOXRW,4                                                  3F7D4520
+       MZE     SYUCB,1,DEROR                                            3F7D4530
+       PZE     *+3,,*+3                                                 3F7D4540
+       NOP                                                              3F7D4550
+       MZE     0,,0                                                     3F7D4560
+       TRA     .LXERR                                                   3F7D4570
+ DEROR IOCP    MESSG,,5                                                 3F7D4580
+       IOCT    DERORM,,7                                                3F7D4590
+DERORM BCI     7,LESS THAN 12 TRACKS ATTACHED TO SYSUT4.                3F7D4600
+E50MES BCI ,0TAPE REDUNDANCY ON SYSUT4 ATTEMPTING TO WRITE MEMORY SAVE  3F7D4610
+NOOPXT BCI     7,0NO OPTIONAL EXIT - EXECUTION TERMINATED               3F7D4620
+*                                                                       3F7D4630
+*                                                                       3F7D4640
+*              THIS ROUTINE PERFORMS AN IOEX                            3F7D4650
+*              WRITE ON TAPE OR DISK                                    3F7D4660
+*                                                                       3F7D4670
+IOXRW  STZ     POSSW                                                    3F7D4680
+       CAL     3,4                                                      3F7D4690
+       ERA     ISIT                                                     3F7D4700
+       TNZ     *+4                                                      3F7D4710
+       NZT     TABL-35       SYSOU1                                     3F7D4720
+       TRA     IOXTP         TAPE                                       3F7D4730
+       TRA     IOXHYP        HYPER                                      3F7D4740
+       NZT     TABL-32                                                  3F7D4750
+       TRA     IOXTP                                                    3F7D4770
+       NZT     TABL-36       DISK OR HYPER                              3F7D4780
+       TRA     IOXDSK                                                   3F7D4790
+       TRA     IOXHYP                                                   3F7D4800
+ IOXTP SXA     IOXS4,4                                                  3F7D4810
+       CLA     2,4                                                      3F7D4820
+       STA     IOXEF         SET EOF EXIT                               3F7D4830
+       ARS     18                                                       3F7D4840
+       STA     IOXER         SET PERM. REDUNDANCY EXIT                  3F7D4850
+       CAL     1,4           GET FIRST WORD OF CALL SEQ.                3F7D4860
+       STT     IOXSLL        SAVE MODE FOR SELECT                       3F7D4870
+       STP     IOXSLL        SAVE PREFIX FOR SELECT TYPE                3F7D4880
+       STA     IOXND         PUT LOC IN ACTIVE CALL SEQ.                3F7D4890
+       STA     *+1           SET TO PICK UP UCB                         3F7D4900
+       LAC     **,4          -L(UCB)                                    3F7D4910
+       ARS     18            I/O COMMANDS LOC TO ADDRESS                3F7D4920
+       STA     IOXSLL        PUT IN SELECT WORD                         3F7D4930
+       CLA     IOXSLL        GET SELECT WORD                            3F7D4940
+       ZET     1,4           TEST FOR UNIT IN USE                       3F7D4950
+       TRA     *-1           WAIT TILL THROUGH                          3F7D4960
+       STO     1,4           SIGNED CONTROL WORD TO UCB WORD2           3F7D4970
+       STZ     IOXIN         SET IN OPERATION WORD ON                   3F7D4980
+       TSX     .ACTV,4                                                  3F7D4990
+ IOXND PZE     **            UNIT                                       3F7D5000
+       LDI     L(0)                                                     3F7D5010
+       NZT     IOXIN         TEST FOR REQUEST COMPLETE                  3F7D5020
+       TRA     *-1           NOT DONE, WAIT                             3F7D5030
+       LDI     IOXIN         PICK UP BITS SET BY IOXSEL(-)              3F7D5040
+ IOXS4 AXT     **,4          SET FOR EXIT                               3F7D5050
+       LFT     200000        TEST EOF, EOT                              3F7D5060
+ IOXEF TRA     **            EOF EXIT                                   3F7D5070
+       LFT     100000        TEST FOR PERM. RTT                         3F7D5080
+ IOXER TRA     **            YES, ERROR EXIT                            3F7D5090
+       NZT     POSSW                                                    3F7D5100
+       TRA     5,4           NORMAL RETURN                              3F7D5110
+       TRA     3,4                                                      3F7D5120
+*                                                                       3F7D5130
+*                                                                       3F7D5140
+IOXSLL PZE     0,,IOXSEL     LOCATION OF SELECT ROUTINE                 3F7D5150
+ IOXMD PZE     **            MODE SWITCH                                3F7D5160
+ IOXIN PZE     0                                                        3F7D5170
+L(0)   DEC     0                                                        3F7D5180
+*                                                                       3F7D5190
+*              IOXSEL--ENTERED TWICE BY IOEX                            3F7D5200
+*                                                                       3F7D5210
+IOXSEL SXA     IOXSS4,4      SAVE IR4                                   3F7D5220
+       PAC     0,4           -L(UCB)                                    3F7D5230
+       TMI     IOXPST        SEL(-) OR POSTING ENTRY                    3F7D5240
+       CLA     0,4           UCB WORD 1                                 3F7D5250
+       PDX     0,2           UNIT TO IR 2                               3F7D5260
+       CLA     1,4           UCB WORD 2                                 3F7D5270
+       STA*    .RCHX         STORE LOC TO RCHX FROM                     3F7D5280
+       STT     IOXMD                                                    3F7D5290
+       ZET     IOXMD         CHECK MODE                                 3F7D5291
+       STZ     SYSJOB+2            BCD. RESET MODSW.                    3F7D5292
+       NZT     IOXMD                                                    3F7D5300
+       TXI     *+1,2,16      BINARY, BUMP TO BINARY MODE                3F7D5310
+       TMI     IOXWR         WRITE                                      3F7D5320
+       SXA     *+2,2         PLACE SELECT ADDRESS                       3F7D5330
+       ZET*    SYSJOB+1      SKIP SELECT IF DCS.                        3F7D5331
+       RDS     **            SELECT.                                    3F7D5340
+       XEC*    .RCHX         RESET AND LOAD CHANNEL.                    3F7D5350
+IOXSS4 AXT     **,4          RESTORE IR 4                               3F7D5360
+       TRA     1,4           AND EXIT IOXSEL                            3F7D5370
+IOXWR  SXA     *+2,2         PLACE SELECT ADDRESS.                      3F7D5380
+       ZET*    SYSJOB+1      SKIP SELCT IF DCS.                         3F7D5381
+       WRS     **            WRITE SELECT.                              3F7D5390
+       XEC*    .RCHX         SELECT.                                    3F7D5400
+       TRA     IOXSS4        GO EXIT.                                   3F7D5410
+IOXPST STI     IOXIN         POST TIME, SAVE ERROR FLAGS, IF ANY        3F7D5420
+       STL     IOXIN         SET IN OPERATION WORD OFF                  3F7D5430
+       STZ     1,4           SET UCB WORD 2 ZERO                        3F7D5440
+       TRA     IOXSS4        GO EXIT                                    3F7D5450
+*                                                                       3F7D5460
+IOXDSK SXA     IOXD,4                                                   3F7D5470
+       CLA     3,4                                                      3F7D5480
+       STA     CTLR+2                                                   3F7D5490
+       STT     NUMX                                                     3F7D5500
+       ARS     18                                                       3F7D5510
+       STA     *+5                                                      3F7D5520
+       CLA     NUMX                                                     3F7D5530
+       ALS     3                                                        3F7D5540
+       STD     NUM                                                      3F7D5550
+       LAC     UT4,1                                                    3F7D5560
+       CLA     **            TRACK ADDRESS                              3F7D5570
+       STA     XLIM                                                     3F7D5580
+ A     ZET     1,1           UCB 2 FREE                                 3F7D5590
+       TRA     *-1                                                      3F7D5600
+       STA     3,1                                                      3F7D5610
+       CLS     2,1                                                      3F7D5620
+       STO     2,1                                                      3F7D5630
+       TSX     .ACTV,4                                                  3F7D5640
+       PZE     UT4                                                      3F7D5650
+ AA    CLA     XLIM                                                     3F7D5660
+       TSX     .DECVA,4                                                 3F7D5670
+       LAC     UT4,4                                                    3F7D5680
+       TSX     (FDAMT,2                                                 3F7D5690
+       OCT     000000000006                                             3F7D5700
+       PZE     DVTN                                                     3F7D5710
+       CLA     9IOSL                                                    3F7D5720
+       STO     1,1                                                      3F7D5730
+       TSX     .ACTV,4                                                  3F7D5740
+       MZE     UT4                                                      3F7D5750
+       ZET     1,1                                                      3F7D5760
+       TRA     *-1                                                      3F7D5770
+       LDI     9IOSLI                                                   3F7D5780
+       LFT     001000        WAS IT UNUSUAL END.                        3F7D5790
+       TRA     PRTMSD        YES. WRITE ERROR MESSAGE OFF-LINE.         3F7D5800
+       LXD     NUM,2                                                    3F7D5810
+       TNX     IOXD,2,1      TEST FOR ALL I/O COMPLETED                 3F7D5820
+       SXD     NUM,2                                                    3F7D5830
+       LXA     CTLR+2,2                                                 3F7D5840
+       TXI     *+1,2,2                                                  3F7D5850
+       SXA     CTLR+2,2                                                 3F7D5860
+       LXA     XLIM,4                                                   3F7D5870
+       TXI     *+1,4,1                                                  3F7D5880
+       SXA     XLIM,4        UPDATE TRACK ADDRESS                       3F7D5890
+       PXA     0,4                                                      3F7D5900
+       LRS     35                                                       3F7D5910
+       DVP     =40                                                      3F7D5920
+       TNZ     AA            NO SEEK REQUIRED                           3F7D5930
+       PXA     0,4                                                      3F7D5940
+       TRA     A+2                                                      3F7D5950
+ IOXD  AXT     **,4                                                     3F7D5960
+       TRA     5,4           NORMAL RETURN                              3F7D5970
+ CTLR  SMS*    AA+4                                                     3F7D5980
+       CTLW    DVTN                                                     3F7D5990
+       TCH     **            UPDATED EACH TIME.                         3F7D6000
+*                                                                       3F7D6010
+IOXHYP SXA     IOXH4,4                                                  3F7D6020
+       SXA     IOXH4+1,2                                                3F7D6030
+       SXA     IOXH4+2,1                                                3F7D6040
+       CAL     4,4                                                      3F7D6050
+       STA     IOXHND                                                   3F7D6060
+       STT     IOXMD                                                    3F7D6070
+       AXT     6,2                                                      3F7D6080
+       ZET     IOXMD                                                    3F7D6090
+       TXI     *+1,2,16      BUMP TO BCD MODE                           3F7D6100
+       SXA     CTLWH,2                                                  3F7D6110
+       STP     IOXSLH                                                   3F7D6120
+       STA     *+1                                                      3F7D6130
+       LAC     **,1                                                     3F7D6140
+       LDI     0,1                                                      3F7D6150
+       RFT     400000                                                   3F7D6160
+       TRA     ERORH         END WARNING AREA MESSAGE                   3F7D6170
+       ARS     18                                                       3F7D6180
+       STA     CTLWH+2                                                  3F7D6190
+       LNT     000040                                                   3F7D6200
+       TRA     *+3                                                      3F7D6210
+       CAL     =1                                                       3F7D6220
+       ORS     CTLWH                                                    3F7D6230
+       CLA     MASK1                                                    3F7D6240
+       ANS     HSEL                                                     3F7D6250
+       CLA     0,1                                                      3F7D6260
+       ANA     MASK2                                                    3F7D6270
+       ORS     HSEL          PLACE UNIT NO. IN 3RD BYTE OF COMMAND      3F7D6280
+       CLA     IOXSLH                                                   3F7D6290
+       ZET     1,1                                                      3F7D6300
+       TRA     *-1                                                      3F7D6310
+       STO     1,1                                                      3F7D6320
+       TSX     .ACTV,4                                                  3F7D6330
+IOXHND PZE     **                                                       3F7D6340
+       ZET     1,1                                                      3F7D6350
+       TRA     *-1                                                      3F7D6360
+       LDI     IOSLIH                                                   3F7D6370
+       LFT     001000                                                   3F7D6380
+       TRA     PRTMSH        ERROR MESSAGE                              3F7D6390
+IOXH4  AXT     **,4                                                     3F7D6400
+       AXT     **,2                                                     3F7D6410
+       AXT     **,1                                                     3F7D6420
+       TRA     5,4           NORMAL RETURN                              3F7D6430
+*                                                                       3F7D6440
+SEH    PAC     0,2                                                      3F7D6450
+       TMI     SMH           TRA TO SEL(-)                              3F7D6460
+       CLA     1,2                                                      3F7D6470
+       STA*    .RCHX                                                    3F7D6480
+       XEC*    .RCHX                                                    3F7D6490
+       TRA     1,4                                                      3F7D6500
+SMH    STI     IOSLIH                                                   3F7D6510
+       STZ     1,2                                                      3F7D6520
+       TRA     1,4                                                      3F7D6530
+*                                                                       3F7D6540
+CTLWH  SMS     6                                                        3F7D6550
+       CTLW    HSEL                                                     3F7D6560
+       TCH     **                                                       3F7D6570
+*                                                                       3F7D6580
+CPYDH1 CPYD    ORGDP,,SAVL                                              3F7D6590
+       TCH     SYSTWT                                                   3F7D6600
+CPYDH2 CPYP    TABL-38,,38                                              3F7D6610
+       CPYD    **,,**                                                   3F7D6620
+       TCH     SYSTWT                                                   3F7D6630
+*                                                                       3F7D6640
+HSEL   OCT     120600120100                                             3F7D6650
+MASK1  OCT     777700777777                                             3F7D6660
+MASK2  OCT     000017000000                                             3F7D6670
+MASK3  OCT     007777000000                                             3F7D6680
+IOXSLH PZE     CTLWH,,SEH                                               3F7D6690
+IOSLIH PZE     0                                                        3F7D6700
+LNKG   LDIR                                                             3F7D6710
+       END                                                              3F7D6720

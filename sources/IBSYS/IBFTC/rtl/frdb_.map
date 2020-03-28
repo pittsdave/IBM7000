@@ -1,0 +1,31 @@
+$IBMAP FRDB.   26                                                       3F4S0000
+       TTL  ALTERNATE I/O BINARY READ INTERFACE ROUTINE                 3F4S0010
+       LBL     .RDB,BEGIN     FRDB.                                  (7)3F4S0013
+*              CALLING SEQUENCE FOR -- READ (N) LIST --                 3F4S0020
+*                   CALL ..FRDB(ARG)                                    3F4S0030
+*                    WHERE ARG = LOCATION OF PZE UNITXX, XX IS          3F4S0040
+*                                LOCATION OF LOGICAL UNIT N             3F4S0050
+       ENTRY   ..FRDB                                                   3F4S0060
+..FRDB SXA     SYSLOC,4            SAVE FORTRAN CALL LOCATION IN SYSLOC 3F4S0070
+       SXA     LK.DR,4             SAVE X4 IN LINKAGE DIRECTOR          3F4S0080
+       SXA     ARG,4               SAVE ORIGINAL FORTRAN CALL           3F4S0090
+       CALL    ..FBID              READ ENTRY TO FBIN.                  3F4S0100
+*                                   SETS UP .LXSL COMMAND AND           3F4S0110
+*                                   GENERATES CALL TO FIOS.             3F4S0120
+       CLA     SIZE                BUFFER SIZE TO ACCUMULATOR           3F4S0130
+       CALL    .FIOB.(ENT,ARG)     CALL BINARY COORDINATOR              3F4S0140
+       ORG     *-2                                                      3F4S0150
+ ENT   NOP     READ                 AND RELINQUISH                      3F4S0160
+ ARG   PZE     0,,0                  CONTROL TO IT                      3F4S0170
+*                     PROCESS FIOB READ REQUEST                         3F4S0180
+ READ  TSX     ..FIOC,4            REQUEST SINGLE RECORD VIA ..FIOC     3F4S0190
+       TSX     ..FTCK,4            CHECK CURRENT READ TRANSMISSION      3F4S0200
+       LAC     .COMM,4             OBTAIN RESULTS                       3F4S0210
+       TXI     *+1,4,..FB1B         OF A STCH AND PLACE                 3F4S0220
+       SXD     .FCNT,4               IN FIOB                            3F4S0230
+       AXT     ..FB1B,4             AND LOCATION OF BUFFER              3F4S0240
+       SXA     .FBIBF,4             IN FIOB                             3F4S0250
+       TRA     1,2                 RETURN TO FIOB                       3F4S0260
+ SIZE  PZE     0,,255              BINARY BUFFER SIZE (LOGICAL)         3F4S0270
+ LK.DR LDIR                                                             3F4S0280
+       END                                                              3F4S0290

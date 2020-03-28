@@ -1,0 +1,40 @@
+$*  7090/7094 IBLIB ALTERNATE INPUT/OUTPUT FORTRAN LIBRARY- FWRU.    $5$3F5B0000
+$IBMAP FWRU.                                                         $5$3F5B0005
+       TTL     ALTERNATE I/O UNFORMATTED WRITE ROUTINE.              $5$3F5B0010
+       LBL     .WRU,BEGIN     FWRU.                                  (7)3F5B0013
+       SPACE                                                         $5$3F5B0015
+       REM     UNFORMATTED WRITE ROUTINE                             $5$3F5B0020
+       SPACE                                                         $5$3F5B0025
+       REM     CALLING SEQUENCE IS                                   $5$3F5B0030
+       REM        CALL ..FWRU(ARG,YYY)                               $5$3F5B0040
+       REM     WHERE  ARG = LOCATION OF PZE UNITXX, WHERE XX         $5$3F5B0050
+       REM                  IS LOCATION OF LOGICAL UNIT N            $5$3F5B0060
+       REM            YYY = NAMELIST NAME                            $5$3F5B0070
+       SPACE                                                         $5$3F5B0080
+       ENTRY   ..FWRU                                                $5$3F5B0100
+OUTBUF EQU     .OUTBF                                                $5$3F5B0110
+       SPACE                                                         $5$3F5B0120
+..FWRU SXA     SYSLOC,4                                              $5$3F5B0130
+       SXA     LNKG,4                                                $5$3F5B0140
+       SXA     WRSAV,4                                               $5$3F5B0150
+       CALL    ..FBCW         WRITE ENTRY TO FBCD                    $5$3F5B0160
+       CALL    .FWRO.(WRITE,WRSAV)                                   $5$3F5B0170
+       ORG     *-2                                                   $5$3F5B0180
+WRITE  TRA     WRTNU                                                 $5$3F5B0190
+WRSAV  PZE     0,,0                                                  $5$3F5B0200
+       SPACE                                                         $5$3F5B0210
+       REM     PROCESS FIOH WRITE REQUEST.                           $5$3F5B0220
+       SPACE                                                         $5$3F5B0225
+WRTNU  SXA     SV4,4                 ENTRY FROM FWRO                 $5$3F5B0230
+       TSX     ..FTCK,4              CHECK PRIOR WRITE.              $5$3F5B0240
+       SXD     ..FSEL+1,2     SET WORD COUNT                         $5$3F5B0250
+       AXT     0,4                                                   $5$3F5B0260
+LOOP   CAL     .OUTBF,4                OUTPUT BUFFER.                $5$3F5B0270
+       SLW     ..FBCB,4                                              $5$3F5B0280
+       TXI     *+1,4,-1                                              $5$3F5B0290
+       TIX     LOOP,2,1                                              $5$3F5B0300
+       TSX     ..FIOC,4              OUTPUT SINGLE RECORD VIA ..FIOC $5$3F5B0310
+SV4    AXT     **,4                                                  $5$3F5B0320
+       TRA     1,4                                                   $5$3F5B0330
+LNKG   LDIR                                                          $5$3F5B0340
+       END                                                           $5$3F5B0350

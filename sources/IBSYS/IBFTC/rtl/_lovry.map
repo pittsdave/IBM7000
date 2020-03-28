@@ -1,0 +1,427 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .LOVRY                          3AK00000
+$IBMAP .LOVRY                                                           3AK00010
+       TTL     .LOVRY/LOAD OVERLAY LINKS                            (12)3AK00020
+* LOAD OVERLAY LINKS SUBROUTINE - REQUIRED FOR ALL OVERLAY EXECUTIONS.  3AK00030
+*                                                                       3AK00040
+* PURPOSE-                                                              3AK00050
+*    THIS SUBROUTINE WILL LOAD THE REQUIRED LINKS AND RESET ALL THE     3AK00060
+*      CALL TRANSFER VECTOR WORDS INVOLVED TO PROPERLY REFLECT THE      3AK00070
+*      LOAD STATUS OF THE LINKS.                                        3AK00080
+*                                                                       3AK00090
+* ENTRY-                                                                3AK00100
+*    CALL TRANSFER (.LVEC) WHEN CALLED LINK IS NOT IN CORE.             3AK00110
+*                                                                       3AK00120
+* TABLES USED-                                                          3AK00130
+*    1) LINK DIRECTOR TABLE (.LDT) - ONE WORD ENTRY PER LINK            3AK00140
+*    2) LINK RECORD CHAIN (.LRECT) - TWO WORD ENTRY PER LINK BLOCK      3AK00150
+*    3) CALL TRANSFER VECTOR TABLE (.LVEC) - TWO WORD ENTRY PER CALL    3AK00160
+*                                                                       3AK00170
+* THE CONTENTS OF ACCUMULATOR, Q AND P BITS, SENSE INDICATORS, MQ, AND  3AK00180
+* ALL INDEX REGISTERS ARE SAVED AND RESTORED UPON EXIT.                 3AK00190
+*                                                                       3AK00200
+DBLSP  EQU     4                   DOUBLE SPACE                      (4)3AK00205
+RUNOP  EQU     4                   REWIND UNLOAD OP                  (4)3AK00206
+HYPER  SET     0                   =0 FOR NO HYPERTAPE                  3AK00210
+*                                  =1 FOR HYPERTAPE                     3AK00220
+DISK   SET     0                   =0 FOR NO DISK                       3AK00230
+*                                  =1 FOR DISK                          3AK00240
+A7909  SET     0                   SET BY PROGRAM                       3AK00250
+       IFT     HYPER=1,OR                                               3AK00260
+       IFT     DISK=1                                                   3AK00270
+A7909  SET     1                                                        3AK00280
+*                                                                       3AK00290
+       ENTRY   .LOVRY                                                   3AK00300
+       ENTRY   .LDT                ** REMOVE IF NOT SUBR ASSEMBLY **    3AK00310
+       ENTRY   .LRECT              ** REMOVE IF NOT SUBR ASSEMBLY **    3AK00320
+       ENTRY   .LVEC               ** REMOVE IF NOT SUBR ASSEMBLY **    3AK00330
+       EJECT                                                            3AK00340
+.LOVRY STQ     MQSTO               SAVE IRS, MQ, ACC, Q, P, SI          3AK00350
+       LGR     2                                                        3AK00360
+       STQ     QPSTO                                                    3AK00370
+       STO     ACCSTO                                                   3AK00380
+       STI     INDSTO                                                   3AK00390
+       SXA     LK99E,4                                                  3AK00410
+       SXA     LK99C,4                                                  3AK00420
+       SXA     LK99A,2                                                  3AK00430
+       SXA     LK99B,1                                                  3AK00440
+       NZT     FSTENT              IS THIS FIRST ENTRY                  3AK00450
+       TRA     LK43                  YES - SET UP UNITAB                3AK00460
+ LK00  CAL     0,4                                                      3AK00470
+       PAX     0,1                                                      3AK00480
+       SXD     VECLOC,1            .LVEC LOCATION FROM CALL             3AK00490
+       SXA     LK99D,1             SET EXIT LOCATION                    3AK00500
+       PAC     0,2                 COMP .LVEC LOCATION FROM CALL        3AK00510
+       CLS     0,2                 SET .LVEC ENTRY TO TXL               3AK00520
+       TPL     ERROR               ALREADY TXL - ERROR                  3AK00530
+       STO     0,2                                                      3AK00540
+       PDC     0,1                 COMP LINK NUMBER FROM CALL           3AK00550
+       CLA     .LDT,1              .LDT ENTRY FOR PRIMARY LINK          3AK00560
+       TMI     LK04                LINK NOT IN CORE - SET FOR LOAD      3AK00570
+       PDC     0,2                                                      3AK00580
+       TXL     LK03,2,0            FIRST REFERENCE TO IN-CORE LINK      3AK00590
+ LK01  CLA     1,2                 CHECK REFERENCE CHAIN                3AK00600
+       PDX     0,1                                                      3AK00610
+       TXL     LK02,1,0            LAST ENTRY IN CHAIN                  3AK00620
+       PDC     0,2                                                      3AK00630
+       TRA     LK01                RETURN FOR NEXT ENTRY IN CHAIN       3AK00640
+ LK02  CAL     VECLOC                                                   3AK00650
+       STD     1,2                 ENTER THIS .LVEC ENTRY IN CHAIN      3AK00660
+       TRA     LK99                EXIT                                 3AK00670
+ LK03  CAL     VECLOC                                                   3AK00680
+       STD     .LDT,1              ENTER THIS .LVEC ENTRY IN .LDT ENTRY 3AK00690
+       TRA     LK99                EXIT                                 3AK00700
+ LK04  ORA     VECLOC                                                   3AK00710
+       PAI                                                              3AK00720
+ LK05  RFT     200000              IS UNIT TO BE REWOUND AFTER LOAD     3AK00730
+       STL     REWALD                                                   3AK00740
+       RIL     400000              SET IN-CORE BIT                      3AK00750
+       SIL     200000              SET NEW LINK BIT                     3AK00760
+       STI     .LDT,1                                                   3AK00770
+       CAL     .LDT,1                                                   3AK00780
+       ACL     .LDT,1                                                   3AK00790
+       ANA     RECMSK                                                   3AK00800
+       TZE     LK08                NO LINK TO LOAD                      3AK00810
+       ACL     RECLOC                                                   3AK00820
+       STA     LK07                                                     3AK00830
+       PAC     0,2                 COMP LOC .LRECT ENTRY                3AK00840
+ LK06  CLA     0,2                 FIRST WORD .LRECT ENTRY              3AK00850
+       SSM                         SET .LRECT ENTRY FOR LOAD            3AK00860
+       STO     0,2                                                      3AK00870
+       PAC     0,2                 LOC NEXT .LRECT ENTRY IN CHAIN       3AK00880
+       TXH     LK06,2,0            RETURN FOR NEXT ENTRY IN CHAIN       3AK00890
+       NZT     REWALD              IS UNIT TO BE REWOUND AFTER LOAD     3AK00900
+       TRA     LK08                  NO                                 3AK00910
+ LK07  AXC     **,2                                                     3AK00920
+       CAL     1,2                                                      3AK00930
+       TSX     LK40,2              GET UNITAB ENTRY                     3AK00940
+       SSM                                                              3AK00950
+       STO     UNITAB,4            SET UNIT FOR REWIND                  3AK00960
+       STZ     REWALD              CLEAR FLAG                           3AK00970
+ LK08  PIA                                                              3AK00980
+       ARS     8                                                        3AK00990
+       ANA     PARMSK              FIND PARENT LINK                     3AK01000
+       PAC     0,1                                                      3AK01010
+       TXH     LK25,1,0            PARENT LINK NOT ZERO                 3AK01020
+       LAC     LDTLEN,1            SEARCH .LDT FOR OVERWRITES           3AK01030
+       SXD     LK12,1                                                   3AK01040
+       AXC     1,1                                                      3AK01050
+ LK09  LDI     .LDT,1                                                   3AK01060
+       LFT     400000                                                   3AK01070
+       TRA     LK11                LINK NOT IN CORE                     3AK01080
+       LNT     200000                                                   3AK01090
+       TRA     LK23                OVERWRITE THIS LINK                  3AK01100
+       RIL     200000                                                   3AK01110
+ LK10  STI     .LDT,1                                                   3AK01120
+ LK11  TXI     LK12,1,-1                                                3AK01130
+ LK12  TXH     LK09,1,**           RETURN FOR NEXT LINK                 3AK01140
+       LAC     RECLEN,1            CHECK .LRECT FOR LOADS               3AK01150
+       SXD     LK15,1                                                   3AK01160
+       AXC     0,1                                                      3AK01170
+ LK13  NZT     .LRECT+1,1          IS THIS LAST .LRECT ENTRY            3AK01180
+       TRA     LK16                  YES                                3AK01190
+       CLS     .LRECT,1            FIRST WORD .LRECT ENTRY              3AK01200
+       TPL     LK26                LOAD THIS RECORD                     3AK01210
+ LK14  TXI     LK15,1,-2                                                3AK01220
+ LK15  TXH     LK13,1,**           RETURN FOR NEXT .LRECT ENTRY         3AK01230
+ LK16  AXT     7,1                 CHECK FOR REWINDS                    3AK01240
+ LK17  CLA     UNITAB,1                                                 3AK01250
+       TPL     LK21                DO NOT REWIND                        3AK01260
+       PAI                                                              3AK01270
+       SLW     UNITAB,1            RESET FLAG                           3AK01280
+       LFT     200000                                                   3AK01290
+       TRA     LK21                UNIT IS DISK - SKIP                  3AK01300
+       BES     DISK*2-2                                                 3AK01310
+       LFT     100000                                                   3AK01320
+       TRA     LK22                UNIT IS HYPERTAPE                    3AK01330
+       LXA     REWCDE,2            729 REW CODE                         3AK01340
+ LK19  SXD     LK20,2                                                   3AK01350
+       BES     HYPER*4-4                                                3AK01360
+       TSX     .NDSEL,4                                                 3AK01370
+ LK20  PZE     UNITAB,1,REWND                                           3AK01380
+ LK21  TIX     LK17,1,1            RETURN FOR NEXT UNITAB ENTRY         3AK01390
+ LK99  CLA     ACCSTO                                                   3AK01400
+       LDQ     QPSTO                                                    3AK01410
+       LGL     2                                                        3AK01420
+       LDQ     MQSTO                                                    3AK01430
+ LK99A AXT     **,2                                                     3AK01440
+ LK99B AXT     **,1                                                     3AK01450
+ LK99C AXT     **,4                                                     3AK01460
+       LDI     INDSTO                                                   3AK01470
+ LK99D TRA     **                  ** EXIT **                           3AK01480
+ LK22  LXD     REWCDE,2            HYPER REW CODE                       3AK01490
+       TRA     LK19                                                     3AK01500
+REWCDE PZE     REWND,,HREWND                                            3AK01510
+       BES     HYPER*3-3                                                3AK01520
+ LK23  SIL     400000                                                   3AK01530
+       PIA                                                              3AK01540
+       RIL     277777                                                   3AK01550
+ LK24  PDC     0,2                 COMP LOC FIRST .LVEC ENTRY           3AK01560
+       TXL     LK10,2,0            END OF CHAIN OR NO REFERENCE         3AK01570
+       CAL     1,2                                                      3AK01580
+       PDX     0,4                                                      3AK01590
+       ANA     DECMSK              CLEAR CHAIN WORD                     3AK01600
+       SLW     1,2                                                      3AK01610
+       CLA     0,2                 SET .LVEC ENTRY TO TXH               3AK01620
+       TPL     ERROR               ALREADY TXH - ERROR                  3AK01630
+       SLW     0,2                                                      3AK01640
+       PXD     0,4                                                      3AK01650
+       TRA     LK24                RETURN FOR NEXT ENTRY                3AK01660
+ LK25  LDI     .LDT,1              .LDT ENTRY FOR PARENT LINK           3AK01670
+       LFT     400000                                                   3AK01680
+       TRA     LK05                LOAD THIS LINK                       3AK01690
+       SIL     200000              SET AS NEW LINK                      3AK01700
+       STI     .LDT,1                                                   3AK01710
+       TRA     LK08                GET NEXT LINK                        3AK01720
+ LK26  STO     .LRECT,1            RESET LOAD FLAG                      3AK01730
+       SXA     LK42,1                                                   3AK01740
+       CAL     .LRECT+1,1          SECOND WORD .LRECT ENTRY             3AK01750
+       STD     NUMREC              NUMBER OF RECORDS TO BE READ         3AK01760
+       STA     FSTREC              FIRST RECORD TO BE READ              3AK01770
+       TSX     LK40,2              GET UNITAB ENTRY                     3AK01780
+       PDX     0,4                                                      3AK01790
+       SXA     UNIT,4                                                   3AK01800
+       STA     LK28                L(UCB)                               3AK01810
+ LK28  AXC     **,2                -L(UCB) TO IR2                       3AK01820
+       PAI                                                              3AK01830
+       LFT     200000              IS THIS DISK                         3AK01840
+       TRA     LK39                  YES                                3AK01850
+       BES     DISK*2-2                                                 3AK01860
+       LNT     100000              IS THIS HYPER                        3AK01870
+       TRA     LK29                  NO                                 3AK01880
+       AXT     3808,1              SET 7909 FLAG                        3AK01890
+       TRA     LK30                                                     3AK01900
+       BES     HYPER*4-4                                                3AK01910
+ LK29  AXT     3975,1              SET 7607 FLAG                        3AK01920
+ LK30  CAL     2,2                                                      3AK01930
+       ANA     RHWMSK                                                   3AK01940
+       LAS     FSTREC              IS TAPE POSITIONED CORRECTLY         3AK01950
+       TRA     LK31                  NO - BACKSPACE                     3AK01960
+       TRA     LK35                  YES - READ                         3AK01970
+       TXL     LK47,1,3808         TEST FOR HYPER.                      3AK01973
+       BES     HYPER-1                                                  3AK01975
+       CAL     UNIT                                                     3AK01980
+       STA     SLCMD1              SET L(UCB) IN CALL                   3AK01990
+       CALL    .LXSL1(SLCMD1)                                       (12)3AK02000
+       TRA     LK30                TRY AGAIN                            3AK02010
+ LK31  TXL     LK34,1,3808         TEST FOR HYPERTAPE                   3AK02020
+       LXA     BKSPCD,4            729 BACKSPACE CODE                   3AK02030
+ LK32  SXD     LK33,4                                                   3AK02040
+       BES     HYPER*3-3                                                3AK02050
+       TSX     .NDSEL,4            BACKSPACE ONE RECORD                 3AK02060
+ LK33  PZE     LK28,,BKSPR                                              3AK02070
+       TRA     LK30                TRY AGAIN                            3AK02080
+ LK34  LXD     BKSPCD,4            HYPER BACKSPACE CODE                 3AK02090
+       TRA     LK32                                                     3AK02100
+BKSPCD PZE     BKSPR,,HBKSPR                                            3AK02110
+       BES     HYPER*3-3                                                3AK02120
+ LK35  CAL     UNIT                                                     3AK02130
+       STA     SLCMD2              SET L(UCB) IN CALL                   3AK02140
+LK36   SXA     LK36.1,1            SAVE UNIT CODE                    (4)3AK02141
+       LDC     SYSUBC,1            WAIT UNTIL ALL CHANNEL            (4)3AK02142
+       TXI     *+1,1,1             ACTIVITY IS COMPLETED             (4)3AK02143
+       ZET*    .CHXAC                                                (4)3AK02144
+       TRA     *-1                                                   (4)3AK02145
+.IORT  TXH     *-3,1,0                                               (4)3AK02146
+LK36.1 AXT     **,1                RESTORE CODE                      (4)3AK02147
+       ZET*    SYSJOB+1            IF NOT DCS, AND                   (4)3AK02148
+       TXH     .SCTR,1,3808        IF 729 TAPE, DO SCATTERLOAD CHECK (4)3AK02149
+       CALL    .LXSL1(SLCMD2)                                       (12)3AK02150
+       LDI     .LXIND              CHECK FOR ERRORS                     3AK02160
+       TXL     LK38,1,3808         TEST FOR 7909                        3AK02170
+       BES     A7909-1                                                  3AK02180
+       LFT     300000              REDUNDANCY OR EOF                    3AK02190
+       TRA     ERROR                                                    3AK02200
+ LK37  LXD     NUMREC,4            UPDATE NUMBER TO BE READ             3AK02210
+       TXI     *+1,4,-1                                                 3AK02220
+       TXL     LK41,4,0            ALL DONE                             3AK02230
+       SXD     NUMREC,4                                                 3AK02240
+       TXH     LK36,1,705          TEST FOR TAPE                        3AK02250
+       CAL     FSTREC                                                   3AK02260
+       ACL     LD1                                                      3AK02270
+       STD     FSTREC                                                   3AK02280
+       STO     .LXDIS                                                   3AK02290
+       TRA     LK36                READ NEXT                            3AK02300
+       BES     DISK*5-5                                                 3AK02310
+ LK38  LFT     001000              IS THIS UNUSUAL END                  3AK02320
+       TRA     ERROR                 YES                                3AK02330
+       TXH     LK37,1,705          TEST FOR HYPERTAPE                   3AK02340
+       BES     HYPER-1                                                  3AK02350
+       LDI     .LXFLG                                                   3AK02360
+       LFT     200000              IS THIS EOF                          3AK02370
+       TRA     ERROR                 YES                                3AK02380
+       TRA     LK37                                                     3AK02390
+       BES     A7909*6-6                                                3AK02400
+ LK39  LAC     SYSUNI,2                                                 3AK02410
+ LK39A TXI     *+1,2,**                                              $5$3AK02420
+       XEC     UNIT                                                     3AK02430
+       AXT     705,1               SET 1301 FLAG                        3AK02440
+       ACL     FSTREC                                                   3AK02450
+       PAX     0,2                                                      3AK02460
+       SXD     FSTREC,2            FIRST RECORD TO BE READ              3AK02470
+       PXD     0,2                                                      3AK02480
+       SSM                                                              3AK02490
+       STO     .LXDIS                                                   3AK02500
+       LAC     LK28,2                                                   3AK02510
+       TRA     LK35                                                     3AK02520
+       BES     DISK*12-12                                               3AK02530
+ LK40  ANA     TAGMSK                                                   3AK02540
+       ALS     3                                                        3AK02550
+       PDX     0,4                 INDEX INTO UNITS TABLE               3AK02560
+       TXL     ERROR,4,0           NO UNIT - ERROR                      3AK02570
+       CLA     UNITAB,4            UNITAB ENTRY                         3AK02580
+       TRA     1,2                 RETURN                               3AK02590
+ LK41  STZ     FSTREC              CLEAR FLAGS                          3AK02600
+ LK42  AXT     **,1                                                     3AK02610
+       TRA     LK14                RETURN FOR NEXT .LRECT ENTRY         3AK02620
+ LK43  AXT     7,1                 SET L(UCB) AND UNIT TYPE             3AK02630
+ LK44  CAL     UNITAB,1              IN UNITS TABLE                     3AK02640
+       PDX     0,2                                                      3AK02650
+       SXA     *+2,2                                                    3AK02660
+       LAC     SYSUNI,2                                                 3AK02670
+       CLA     **,2                                                     3AK02680
+       STA     UNITAB,1                                                 3AK02690
+       TZE     LK46                NO UNIT ASSIGNED                     3AK02700
+       STA     *+1                                                      3AK02710
+       AXC     **,2                                                     3AK02720
+       LDI     0,2                                                      3AK02730
+       BES     A7909*2-2                                                3AK02740
+       LNT     020100                                                   3AK02750
+       TRA     *+3                                                      3AK02760
+       CAL     PTW                 UNIT IS DISK                         3AK02770
+       TRA     LK45                                                     3AK02780
+       BES     DISK*4-4                                                 3AK02790
+       LNT     020000                                                   3AK02800
+       TRA     LK46                UNIT IS 729                          3AK02810
+       CAL     PON                 UNIT IS HYPERTAPE                    3AK02820
+       BES     HYPER*4-4                                                3AK02830
+ LK45  STP     UNITAB,1            SET UNIT TYPE                        3AK02840
+       BES     A7909-1                                                  3AK02850
+ LK46  TIX     LK44,1,1            RETURN                               3AK02860
+       STL     FSTENT              SET FIRST ENTRY FLAG                 3AK02870
+       LDC     SYSUNI,1            SET NUMBER OF SYSUNI FOR          $5$3AK02872
+       SXD     LK39A,1              DISK SECOND TABLE                $5$3AK02874
+       BES     DISK*2-2                                              $5$3AK02876
+       TRA     LK00                CONTINUE                             3AK02880
+ LK47  TSX     .NDSEL,4            SKIP HYPER RECORD.                   3AK02882
+       PZE     LK28,,HTSKR                                              3AK02884
+       TRA     LK30                                                     3AK02886
+       BES     HYPER*3-3                                                3AK02888
+ERROR  CALL    .LXSL1(SLCMD3)                                       (12)3AK02890
+       STR     ,,.LXSTR                                                 3AK02900
+SLCMD1 PON     **,,IOSKP                                                3AK02910
+SLCMD2 PON     **,,IORDT                                                3AK02920
+SLCMD3 PTW     SYSOU1,,IOERR                                            3AK02930
+IOERR  IORT    ERMSG,,15                                                3AK02940
+SYTCH. TCH     .LTCH                                                 (4)3AK02950
+ERMSG  BCI     9, UNABLE TO INTERPRET OVERLAY COMMUNICATION REGION WHIL 3AK02960
+       BCI     6,E LOADING LINK. CANNOT PROCEED.                        3AK02970
+IORDT  TCH     SYSSLD                                                   3AK02980
+IOSKP  IORTN   0,,0                                                     3AK02990
+       TCH     .LTCH                                                    3AK03000
+       PZE     ,,SYSCK2            INDEX TABLE FOR SYSUNI               3AK03010
+       PZE     ,,SYSCK1                                                 3AK03020
+       PZE     ,,SYSLB4                                                 3AK03030
+       PZE     ,,SYSLB3                                                 3AK03040
+       PZE     ,,SYSLB2                                                 3AK03050
+       PZE     ,,SYSUT3                                                 3AK03060
+       PZE     ,,SYSUT2                                                 3AK03070
+UNITAB BSS     0                                                        3AK03080
+NUMREC EQU     VECLOC                                                   3AK03090
+FSTREC EQU     REWALD                                                   3AK03100
+ UNIT  CLA     **,2                                                     3AK03110
+FSTENT PZE                         FIRST ENTRY FLAG                     3AK03120
+INDSTO PZE                                                              3AK03130
+VECLOC PZE                                                              3AK03140
+MQSTO  PZE                                                              3AK03150
+ACCSTO PZE                                                              3AK03160
+QPSTO  PZE                                                              3AK03170
+REWALD PZE                                                              3AK03180
+RHWMSK OCT     777777                                                   3AK03190
+TAGMSK OCT     700000                                                   3AK03200
+PARMSK EQU     RECMSK                                                   3AK03210
+DECMSK OCT     700000777777                                             3AK03220
+RECMSK OCT     377                                                      3AK03230
+RECLEN PZE     .LVEC-.LRECT                                             3AK03240
+LDTLEN PZE     .LRECT-.LDT                                              3AK03250
+RECLOC PZE     .LRECT-2                                                 3AK03260
+LD1    PZE     ,,1                                                      3AK03270
+PTW    PTW                                                              3AK03280
+       BES     DISK*2-2                                                 3AK03290
+PON    PON                                                              3AK03300
+       BES     HYPER-1                                                  3AK03310
+REWND  EQU     3                                                        3AK03320
+BKSPR  EQU     5                                                        3AK03330
+HREWND EQU     30                                                       3AK03340
+HBKSPR EQU     34                                                       3AK03350
+HTSKR  EQU     36                                                       3AK03351
+.LDT   BSS     0                   ** REMOVE IF NOT SUBR ASSEMBLY **    3AK03360
+.LRECT BSS     0                   ** REMOVE IF NOT SUBR ASSEMBLY **    3AK03370
+.LVEC  BSS     0                   ** REMOVE IF NOT SUBR ASSEMBLY **    3AK03380
+.SCTR  LDI     0,2                                                   (4)3AK03390
+       SIL     000020              SET UP BINARY UNIT ADDRESS        (4)3AK03400
+       RIL     760000                                                (4)3AK03700
+       PIA                                                           (4)3AK03800
+       PDX     ,4                                                    (4)3AK03900
+       SXA     .Y40.2,4            INITIALIZE READ SELECT            (4)3AK04000
+       SXA     .Y40.9,4            AND BACK SPACE INSTRUCTIONS       (4)3AK04100
+       ARS     9                   PICK UP CHANNEL NUMBER            (4)3AK04200
+       PDC     ,1                                                    (4)3AK04300
+       TXI     *+1,1,1                                               (4)3AK04400
+       LDQ*    .TEFX               INITIALIZE TRANSFER ON END OF     (4)3AK04500
+       SLQ     .Y40.1              FILE INSTRUCTIONS                 (4)3AK04600
+       SLQ     .Y40.7                                                (4)3AK04700
+       LDQ*    .RCHX               INITIALIZE RESET AND LOAD         (4)3AK04800
+       SLQ     .Y40.3              CHANNEL INSTRUCTIONS              (4)3AK04900
+       SLQ     .Y40.8                                                (4)3AK05000
+       LDQ*    .TRCX               INITIALIZE REDUNDANCY CHECK       (4)3AK05100
+       SLQ     .Y40.4              INSTRUCTIONS                      (4)3AK05200
+       SLQ     .Y40.6                                                (4)3AK05300
+       LDQ*    .TCOX               INITIALIZE CHANNEL ACTIVITY       (4)3AK05400
+       SLQ     .Y40.5              TEST INSTRUCTION                  (4)3AK05500
+       CLA     .IORT               RESET FINAL IOCT TO IORT          (4)3AK05600
+       STP     .LTCH               FOR LRC CHECKING                  (4)3AK05700
+       LXA     LK36.1,1            RESTORE UNIT CODE                 (4)3AK05800
+       ENB     =0                  TRAP PROTECT SCATTERLOAD          (4)3AK05900
+.Y40.1 ***     *+1        (TEFA *+1 )    TURN OFF EOF INDICATOR      (4)3AK06000
+.Y45.1 AXT     10,4                      SET FOR 10 RETRIES          (4)3AK06100
+.Y45.2 CLA     SYSSLD                    SET UP DUMMY COMMAND        (4)3AK06200
+       STO     SYSTCH                                                (4)3AK06300
+.Y40.2 RDS     **                        SELECT UNIT AND START TO    (4)3AK06400
+.Y40.3 ***     SYSSLD     ( RCHA SYSSLD ) SCATTERLOAD NEXT REC.      (4)3AK06500
+.Y45.3 CLA     SYSTCH                    PICKUP IO COMMAND           (4)3AK06600
+       TPL     *+3                       CHECK FOR FINAL TCH         (4)3AK06700
+       ANA     .Y45.5              MASK OUT CRITICAL BITS            (4)3AK06900
+       TRA     *+2                 GO CHECK FOR SKEW READ (IOCP )    (4)3AK07000
+       ERA     SYTCH.              CHECK FOR FINAL TCH COMMAND       (4)3AK07200
+       TNZ     .Y40.8              NO GOOD, SKEW READ HAS OCCURRED   (4)3AK07300
+.Y40.4 ***     .Y40.8     ( TRCA  .Y40.8 ) KILL CHAN. IF REDUN.      (4)3AK07400
+.Y40.5 ***     .Y45.3     ( TCOA  .Y45.3 ) CONTINUE IF ACTIVE        (4)3AK07500
+.Y40.6 ***     .Y40.9     ( TRCA  .Y40.9 ) CHECK LRC CHARACTER       (4)3AK07600
+.Y40.7 ***     .Y40.9     ( TEFA  .Y40.9 ) BAD EOF ERROR             (4)3AK07700
+       CAL     .IOCT               RESTORE  .LTCH                    (4)3AK07800
+       STP     .LTCH                                                 (4)3AK07900
+       CAL     2,2                 UPDATE RECORD COUNT               (4)3AK07910
+       ACL     =1                                                    (4)3AK07920
+       STA     2,2                                                   (4)3AK07930
+       TRA     LK37                GO CHECK FOR NEXT RECORD          (4)3AK08000
+.Y40.8 ***     .LTCH     ( RCHA  .LTCH )  RESET CHAN. ACTIVITY       (4)3AK08100
+.Y40.9 BSR     **                         BACKSPACE FOR RETRY        (4)3AK08200
+       TIX     .Y45.2,4,1          RETRY IF NOT THE TENTH TIME       (4)3AK08300
+       TSX     .NDSEL,4            YES, UNLOAD OFFENDING TAPE        (4)3AK08400
+       PZE     LK28,,RUNOP                                           (4)3AK08500
+       LDQ     0,2                 PICK UP ACTUAL ADDRESS            (4)3AK08700
+       TSX     .SYMUN,4            AND CONVERT TO BCD                (4)3AK08800
+       SLW     SCTR1+7                                               (4)3AK08900
+       TSX     .MWR,4              PRINT MESSAGE ON LINE             (4)3AK09000
+       PZE     1                                                     (4)3AK09100
+       PZE     SCTR1,,12+512*DBLSP                                   (4)3AK09200
+       TSX     .PAUSE,4            OPERATOR ACTION PAUSE             (4)3AK09300
+       CAL     .IOCT               RESTORE FINAL .LTCH               (4)3AK09400
+       STP     .LTCH                                                 (4)3AK09500
+       TRA     .LXERR              RETURN TO IBSYS                   (4)3AK09600
+.IOCT  IOCT    0,,0                                                  (4)3AK09700
+SCTR1  BCI     8,SCATTERLOAD FAILURE LOADING LINK. REPLACE  XX       (4)3AK09800
+       BCI     4,, USE $RESTART OPTION.                              (4)3AK09900
+.Y45.5 OCT     377000700000        SKEW MASK                         (4)3AK10000
+LK99E  NULL                                                          (4)3AK10050
+       END                                                           (4)3AK10100

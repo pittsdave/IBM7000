@@ -1,0 +1,21 @@
+$IBMAP FBIN.   270                                                      3F4U0000
+       TTL  ALTERNATE I/O BINARY CORDINATOR AND PRIMARY BINARY BUFFER   3F4U0010
+       ENTRY   ..FBID                                                   3F4U0020
+       ENTRY   ..FBIW                                                   3F4U0030
+       ENTRY   ..FB1B                                                   3F4U0040
+ SIZE  SET     256                 SETS PRIMARY BUFFER LENGTH = 256     3F4U0050
+..FBID CAL     PON                 READ REQUEST                         3F4U0060
+       TRA     *+2                                                      3F4U0070
+..FBIW CAL     PTH                 WRITE REQUEST                        3F4U0080
+       SXA     LK.DR,4             SAVE X4 IN LINKAGE DIRECTOR          3F4U0090
+       CALL    ..FIOS(SEL)         CALL FIOS. AND SETS                  3F4U0100
+       ORG     *-1                  UP I/O .LXSEL REQUEST LINKAGE       3F4U0110
+ SEL   IORT    ..FB1B,,SIZE        I/O COMMAND FORMAT                   3F4U0120
+       LXA     LK.DR,4             RESET X4                             3F4U0130
+       STZ     ..FB1B              SET FIRST TIME FLAG                  3F4U0140
+       TRA     1,4                 EXIT TO FRDB. OR FWRB.               3F4U0150
+ PON   PON     0,,0                  PREFIX INDICATES BINARY READ       3F4U0160
+ PTH   PTH     0,,0                  PREFIX INDICATES BINARY WRITE      3F4U0170
+..FB1B BSS     SIZE                PRIMARY BINARY BUFFER LOCATION       3F4U0180
+ LK.DR LDIR                                                             3F4U0190
+       END                                                              3F4U0200
