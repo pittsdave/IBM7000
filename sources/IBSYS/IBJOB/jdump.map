@@ -1,0 +1,861 @@
+*      7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801                     1DP00000
+$TITLE         7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801, VERSION $5$1DP00010
+$IBMAP JDUMP   1000,ABSMOD,MONSYM,()OK                               $5$1DP00020
+       PCC     ON                                                       1DP00030
+       PMC     ON                                                       1DP00030
+       NOCRS                                                         $5$1DP00040
+       DETAIL                                                        $5$1DP00050
+       TTL     DUMPING AND PATCHING ROUTINES - RECORD JDUMP.            1DP00060
+       LBL     JDUMP                                                 $5$1DP00070
+       PCC     OFF                                                      1DP00090
+       REM                                                              1DP00890
+       REM     DEFINITIONS FOR COMPONENT SIZES                          1DP00900
+       REM                                                              1DP00910
+CH7909 EQU     0                                                        1DP00920
+NOCH9  EQU     1-CH7909                                                 1DP00930
+IBSIZ  EQU     1450+550*CH7909                                          1DP00940
+IOCSZ  EQU     1468                                                  $5$1DP00950
+JCSZ   EQU     28                                                    $5$1DP00960
+ACTSZ  EQU     344                                                   $5$1DP00970
+PCTSZ  EQU     2066                                                  $5$1DP00980
+PCNSZ  EQU     1372                                                  $5$1DP00990
+EDSIZ  EQU     2132                                                  $5$1DP01000
+JBCOMS EQU     75                                                       1DP01010
+IOCOMS EQU     35                                                       1DP01020
+COMSZ  EQU     JBCOMS+IOCOMS                                            1DP01030
+       REM                                                              1DP01040
+       REM     DEFINITIONS FOR COMPONENT ORIGINS                        1DP01050
+       REM                                                              1DP01060
+IOCORG EQU     IBSIZ                                                    1DP01070
+IOCEND EQU     1450+IOCSZ                                               1DP01080
+SUBSYS EQU     IOCEND+PCTSZ+ACTSZ+PCNSZ+EDSIZ+COMSZ+JCSZ                1DP01090
+IOCS   EQU     SUBSYS-IOCOMS                                            1DP01100
+IBJCOM EQU     IOCS-JBCOMS                                              1DP01110
+       REM                                                              1DP01170
+       REM     DEFINITIONS OF COMMUNICATION CELLS NEEDED                1DP01180
+       REM     DURING EXECUTION.                                        1DP01190
+       REM                                                              1DP01200
+SYSLOC EQU     IBJCOM                                                   1DP01210
+SYSFAZ EQU     SYSLOC+1                                                 1DP01220
+IBJCOR EQU     SYSLOC+2                                                 1DP01230
+IBJDAT EQU     SYSLOC+3                                                 1DP01240
+LISDAT EQU     SYSLOC+4                                                 1DP01250
+MTYPE  EQU     SYSLOC+6                                                 1DP01260
+.JLIN  EQU     SYSLOC+7                                                 1DP01270
+MODNO  EQU     SYSLOC+8                                                 1DP01280
+.JKAPU EQU     SYSLOC+9                                              $5$1DP01290
+SYSDSB EQU     SYSLOC+10                                                1DP01300
+L(0)   EQU     SYSLOC+11                                                1DP01310
+.FDPOS EQU     SYSLOC+12                                                1DP01320
+       REM                                                              1DP01330
+       REM     DEFINITIONS OF COMMUNICATION CELLS NEEDED BY SUBSYSTEMS. 1DP01340
+       REM                                                              1DP01350
+SSTRA  EQU     SYSLOC+15                                                1DP01360
+ACTION EQU     SSTRA+1                                                  1DP01370
+JOBIN  EQU     SSTRA+2                                                  1DP01380
+JOBOU  EQU     SSTRA+3                                                  1DP01390
+JOBPP  EQU     SSTRA+4                                                  1DP01400
+IOEDIT EQU     SSTRA+5                                                  1DP01410
+JREEL  EQU     SSTRA+6                                                  1DP01420
+SUBSP  EQU     SSTRA+7                                                  1DP01430
+PUNCH  EQU     SSTRA+8                                                  1DP01440
+SYSSHD EQU     SSTRA+9                                                  1DP01450
+LILDMP EQU     SSTRA+10                                                 1DP01460
+PRSW   EQU     SSTRA+12                                                 1DP01470
+       REM                                                              1DP01480
+       REM     DEFINITIONS OF CELLS USED BY IBJOB MONITOR.              1DP01490
+       REM                                                              1DP01500
+COMCEL EQU     SSTRA+15                                                 1DP01510
+EOFPP  EQU     COMCEL+1                                                 1DP01520
+CHECK  EQU     COMCEL+2                                                 1DP01530
+JOBSTD EQU     COMCEL+3                                                 1DP01540
+IEDSTD EQU     COMCEL+4                                                 1DP01550
+OEDSTD EQU     COMCEL+5                                                 1DP01560
+LDRSTD EQU     COMCEL+6                                                 1DP01570
+DECK   EQU     COMCEL+7                                                 1DP01580
+OUNIT  EQU     COMCEL+8                                                 1DP01590
+INUNIT EQU     COMCEL+9                                                 1DP01600
+LPUNI  EQU     COMCEL+10                                                1DP01610
+GOUNIT EQU     COMCEL+11                                                1DP01620
+PCINT  EQU     COMCEL+12                                                1DP01630
+CCSCH  EQU     COMCEL+13                                                1DP01640
+ERTES  EQU     COMCEL+14                                                1DP01650
+PURC   EQU     COMCEL+15                                                1DP01660
+SPACE  EQU     COMCEL+16                                                1DP01670
+LIRC   EQU     COMCEL+17                                                1DP01680
+PAGNO  EQU     COMCEL+18                                                1DP01690
+JBNAM  EQU     COMCEL+19                                                1DP01700
+DPOFL  EQU     COMCEL+20                                                1DP01710
+PTOFL  EQU     COMCEL+21                                                1DP01720
+FILES  EQU     COMCEL+22                                                1DP01730
+INREC  EQU     COMCEL+23                                                1DP01740
+INRDA  EQU     COMCEL+24                                                1DP01750
+TYPOU  EQU     COMCEL+25                                                1DP01760
+ALTRR  EQU     COMCEL+27                                                1DP01770
+IBJDMP EQU     COMCEL+28                                                1DP01780
+CELL   EQU     COMCEL+29                                                1DP01790
+SYSTAP EQU     COMCEL+30                                                1DP01800
+BOLDT  EQU     COMCEL+31                                                1DP01810
+PATS   EQU     COMCEL+32                                                1DP01820
+CPRPH  EQU     COMCEL+33                                                1DP01830
+PTCH   EQU     COMCEL+34                                                1DP01840
+IBLIB  EQU     COMCEL+35                                                1DP01850
+PTCNT  EQU     COMCEL+36                                                1DP01860
+DS.CNT EQU     COMCEL+37                                                1DP01870
+DPLIM  EQU     COMCEL+38                                                1DP01880
+JBCEL  EQU     COMCEL+39                                                1DP01890
+P.C.   EQU     COMCEL+40                                                1DP01900
+DEFINE EQU     IOCS                                                     1DP01930
+JOIN   EQU     IOCS+2                                                   1DP01940
+ATTACH EQU     IOCS+4                                                   1DP01950
+CLOSE  EQU     IOCS+6                                                   1DP01960
+OPEN   EQU     IOCS+8                                                   1DP01970
+READ   EQU     IOCS+10                                                  1DP01980
+WRITE  EQU     IOCS+12                                                  1DP01990
+STASH  EQU     IOCS+14                                                  1DP02000
+LFLBLK EQU     IOCS+17                                                  1DP02010
+LTSX   EQU     IOCS+18                                                  1DP02020
+XEOB   EQU     IOCS+19                                                  1DP02030
+XEOF   EQU     IOCS+20                                                  1DP02040
+XERR   EQU     IOCS+21                                                  1DP02050
+LTRAD  EQU     IOCS+22                                                  1DP02060
+TRANS  EQU     IOCS+23                                                  1DP02070
+WDCT   EQU     IOCS+24                                                  1DP02080
+IRS    EQU     IOCS+25                                                  1DP02090
+SENSE  EQU     IOCS+26                                                  1DP02100
+FCW    EQU     IOCS+27                                                  1DP02110
+LUNBLK EQU     IOCS+28                                                  1DP02120
+NDSEL  EQU     IOCS+29                                                  1DP02130
+EMTM   OPD     460066100016                                          $5$1DP02371
+LMTM   OPD     460066000016                                          $5$1DP02372
+ONESP  EQU     512*0                                                    1DP02770
+       REM                                                              1DP02780
+       ORG     SYSFAZ                                                   1DP02790
+       BCI     1,JDUMP                                                  1DP02800
+       ORG     PTCNT                                                    1DP02810
+       PZE                                                              1DP02820
+       ORG     DS.CNT                                                   1DP02830
+       PZE                                                              1DP02840
+       ORG     SUBSP                                                    1DP02850
+       PZE                                                              1DP02860
+       ORG     DPLIM                                                    1DP02870
+       PZE     -866                                                     1DP02880
+       ORG     IBJDMP                                                   1DP02890
+       TTR     SYSDMP                                                   1DP02900
+       ORG     BOLDT                                                    1DP02910
+       TTR     BLDT                                                     1DP02920
+       ORG     PATS                                                     1DP02930
+       TTR     PTS                                                      1DP02940
+       ORG     PTCH                                                     1DP02950
+       TTR     PTC                                                      1DP02960
+       ORG     CPRPH                                                    1DP02970
+       TTR     CPRP                                                     1DP02980
+       ORG     LILDMP                                                   1DP02990
+       TTR     LILDP                                                    1DP03000
+       ORG     SYSIDR                                                   1DP03010
+       TRA     2,4                                                      1DP03020
+       ORG     SYSACC                                                (2)1DP03021
+       PZE                                                           (2)1DP03022
+       ORG     SYSPID                                                   1DP03030
+       PZE     0,,0                                                     1DP03040
+       ORG     -865                                                     1DP03050
+DMPSAV SAVE    4                                                     $5$1DP03060
+BDMPSP SVN     0,1,2                                                    1DP03070
+       PZE     SUBSYS,,10000                                            1DP03080
+       PZE     10000,,-1083                                             1DP03090
+DTAB   BSS     31                                                       1DP03100
+ NDTBL SYN     *                                                        1DP03110
+TBLSZ  EQU     NDTBL-DTAB-2                                             1DP03120
+ SLASH OCT     000000000061                                             1DP03130
+CPRP   SXA     RESET,4                                                  1DP03140
+       SXA     RESET+1,2                                                1DP03150
+       SXA     RESET+2,1                                                1DP03160
+       AXT     0,4                                                      1DP03170
+       AXT     0,2                                                      1DP03180
+       CAL     SYSFAZ        PICK UP RECORD NAME.                       1DP03190
+       ANA     SVNSVN                                                   1DP03200
+       STO     PHASE              SAVE PHASE CODE                       1DP03210
+       LAC     DS.CNT,1           SIZE OF USED TABLE                    1DP03220
+       TXL     RESET,1,0     TRA OUT IF NO $DUMP CARDS.                 1DP03230
+       SXD     TEST,1             INIT EXIT TEST INSTR                  1DP03240
+ AGAIN CAL     DTAB,4             1ST WORD OF GROUP                     1DP03250
+       LGR     18                                                       1DP03260
+       ARS     15                                                       1DP03270
+       LGL     3                  ASSEMBLE PH NO OF DUMP                1DP03280
+       SUB     PHASE              COMP TO CURRENT PHASE                 1DP03290
+       TZE     SETUP              TRA ON EQU PH NO                      1DP03300
+ CALC  CAL     DTAB,4             SKIP TO NEXT GROUP                    1DP03310
+       PDC     ,1                                                       1DP03320
+       TXI     *+1,1,-1                                                 1DP03330
+       SXD     *+1,1                                                    1DP03340
+       TXI     *+1,4,**           COMP OF ADD OF TBL ENTRY              1DP03350
+ TEST  TXH     AGAIN,4,**         HAS ENTIRE TABLE BEEN SCANNED         1DP03360
+INSRT  TXL     RESET,2,0     TRA IF NO DUMP IN THIS RECOTD.             1DP03370
+ SVINS CLA*    INTRPT,2                                                 1DP03380
+       STO     ITWTBE,2                                                 1DP03390
+       PXA     ,2                                                       1DP03400
+       ALS     1                                                        1DP03410
+       ADD     JEOTR                                                    1DP03420
+       STO*    INTRPT,2                                                 1DP03430
+       TIX     SVINS,2,1                                                1DP03440
+       AXT     30,2                                                     1DP03450
+       LDQ     JEOTR+2                                                  1DP03460
+       CLA     JEOTR+1                                                  1DP03470
+       STQ     WWWDTB+31,2                                              1DP03480
+       STO     WWWDTB+30,2                                              1DP03490
+       TIX     *-2,2,2                                                  1DP03500
+ RESET AXT     99,4                                                     1DP03510
+       AXT     99,2                                                     1DP03520
+       AXT     99,1                                                     1DP03530
+       TRA     1,4                                                      1DP03540
+ SETUP LDI     DTAB,4                                                   1DP03550
+       PXA     0,4                *** CHECK, MAYBE XR4=XR4+1 ***        1DP03560
+       PAC     0,1                                                      1DP03570
+       PXD     0,1                                                      1DP03580
+       RIL     777777                                                   1DP03590
+       RIR     700000             ERASE TAG FIELD                       1DP03600
+       OAI                                                              1DP03610
+       TXI     *+1,2,1                                                  1DP03620
+       STI     INTRPT,2                                                 1DP03630
+       TRA     CALC                                                     1DP03640
+ JEOTR TRA     WWWDTB-2                                                 1DP03650
+       STL     WFBX                                                     1DP03660
+       TRA     DMPRTN                                                   1DP03670
+ WFBX  PZE     0                                                        1DP03680
+ PMDMP BSS     1                                                        1DP03690
+WWWDTB BSS     30                                                       1DP03700
+INTRPT BES     15                                                       1DP03710
+ITWTBE BES     15                                                       1DP03720
+SVNSVN OCT     77                                                       1DP03730
+ PHASE BSS     1                                                        1DP03740
+*              DEBUG COMMUNICATION CELLS                                1DP03750
+       SPACE   3                                                        1DP03760
+*              DUMPING ROUTINE                                          1DP03770
+LILDP  SXA     LIL.X4,4                                                 1DP03780
+       SXA     LIL.X2,2                                                 1DP03790
+       SXA     LIL.X1,1                                                 1DP03800
+       STI     LIL.IN                                                   1DP03810
+       LDI     1,4                                                      1DP03820
+       RIR     000007                                                   1DP03830
+       SIL     000007                                                   1DP03840
+       CLA     DBLSP                                                    1DP03850
+       LNT     200000                                                   1DP03860
+       CLA     SNGLE                                                    1DP03870
+       STP     LIST1+1                                                  1DP03880
+       STP     LIST2+1                                                  1DP03890
+       PIA                                                              1DP03900
+       STA     IC.P                                                     1DP03910
+       ARS     18                                                       1DP03920
+       STA     T.ICP                                                    1DP03930
+       CAL     TAG.1                                                    1DP03940
+       STT     T.ICP                                                    1DP03950
+       STL     P.LP                                                     1DP03960
+LIL.4  TSX     CIC.P,1                                                  1DP03970
+LIL.5  AXC     7,1                                                      1DP03980
+       AXC     21,2                                                     1DP03990
+M1.BCD LDQ*    IC.P                                                     1DP04000
+       TSX     BCD.8,4                                                  1DP04010
+       SLW     BCD.8W,2                                                 1DP04020
+       STQ     BCD.8W+1,2                                               1DP04030
+       TXL     *+3,1,0                                                  1DP04040
+       TXI     *+1,1,1                                                  1DP04050
+       TXI     M1.BCD,2,3                                               1DP04060
+       AXT     0,1                                                      1DP04070
+       CLA*    IC.P                                                     1DP04080
+       TXI     *+1,1,-1                                                 1DP04090
+       CAS*    IC.P                                                     1DP04100
+       TRA     LIL.21                                                   1DP04110
+       TXI     *+2,1,-1                                                 1DP04120
+       TRA     LIL.21                                                   1DP04130
+       TXH     *-4,1,-8                                                 1DP04140
+LIL.7  ZET     P.LP                                                     1DP04150
+       TRA     LIL.31                                                   1DP04160
+LIL.8  AXT     0,1                                                      1DP04170
+       CLA     BVF.PC                                                   1DP04180
+       SUB*    IC.P                                                     1DP04190
+       TNZ     LIL.41                                                   1DP04200
+LIL.9  CLA     IC.P                                                     1DP04210
+       ADD     L(8)                                                     1DP04220
+       STA     IC.P                                                     1DP04230
+       SUB     T.ICP                                                    1DP04240
+       TMI     LIL.5                                                    1DP04250
+LIL.11 TSX     LIL.CC,1                                                 1DP04260
+RI.LIL LDI     LIL.IN                                                   1DP04270
+       CALL    JOBOU(LIST8)                                          $5$1DP04280
+LIL.X4 AXT     99,4                                                     1DP04290
+LIL.X2 AXT     99,2                                                     1DP04300
+LIL.X1 AXT     99,1                                                     1DP04310
+       TRA     2,4                                                      1DP04320
+*                                                                       1DP04330
+LIL.CC LDQ     BVF.PC                                                   1DP04340
+       TSX     BCD.8,4                                                  1DP04350
+       SLW     VF.PC                                                    1DP04360
+       STQ     VF.PC+1                                                  1DP04370
+       CALL    JOBOU(LIST1)                                          $5$1DP04380
+       CLM                                                              1DP04390
+       TRA     1,1                                                      1DP04400
+*                                                                       1DP04410
+LIL.21 ZET     P.LP                                                     1DP04420
+       TRA     LIL.24                                                   1DP04430
+       TSX     LIL.CC,1                                                 1DP04440
+       STL     P.LP                                                     1DP04450
+LIL.24 TSX     CIC.P,1                                                  1DP04460
+       AXC     0,2                                                      1DP04470
+       CAL     BCD.8W-1                                                 1DP04480
+       LDQ     BCD.8W+3,2                                               1DP04490
+       LGL     24                                                       1DP04500
+       SLW     BCD.8W+2,2                                               1DP04510
+       CAL     BCD.8W+3,2                                               1DP04520
+       LDQ     BCD.8W+4,2                                               1DP04530
+       LGL     24                                                       1DP04540
+       SLW     BCD.8W+3,2                                               1DP04550
+       STQ     BCD.8W+4,2                                               1DP04560
+       TXI     *+1,2,-6                                                 1DP04570
+       TXH     *-10,2,-20                                               1DP04580
+LIL.25 CALL    JOBOU(LIST2)                                          $5$1DP04590
+       CLM                                                              1DP04600
+       CLA     IC.P                                                     1DP04610
+       ADD     L(8)                                                     1DP04620
+       STA     IC.P                                                     1DP04630
+       SUB     T.ICP                                                    1DP04640
+       TMI     LIL.4                                                    1DP04650
+       TRA     RI.LIL                                                   1DP04660
+*                                                                       1DP04670
+LIL.31 AXT     0,1                                                      1DP04680
+       CAL*    IC.P                                                     1DP04690
+       SLW     BVF.PC                                                   1DP04700
+       STZ     P.LP                                                     1DP04710
+       TRA     LIL.9                                                    1DP04720
+*                                                                       1DP04730
+LIL.41 TSX     LIL.CC,1                                                 1DP04740
+       TSX     CIC.P,1                                                  1DP04750
+       TRA     LIL.31                                                   1DP04760
+*                                                                       1DP04770
+CIC.P  LXA     IC.P,4                                                   1DP04780
+       PXA     0,4                                                      1DP04790
+       XCL                                                              1DP04800
+       TSX     BCD.8,4                                                  1DP04810
+       STQ     IC.TBP                                                   1DP04820
+       TRA     1,1                                                      1DP04830
+*                                                                       1DP04840
+ BCD.8 SXA     BCD.8X,4                                                 1DP04850
+       AXT     6,4                                                      1DP04860
+       ALS     3                                                        1DP04870
+       LGL     3                                                        1DP04880
+       TIX     *-2,4,1                                                  1DP04890
+       SLW     BC.8T                                                    1DP04900
+       AXT     6,4                                                      1DP04910
+       ALS     3                                                        1DP04920
+       LGL     3                                                        1DP04930
+       TIX     *-2,4,1                                                  1DP04940
+       XCL                                                              1DP04950
+       CAL     BC.8T                                                    1DP04960
+BCD.8X AXT     99,4                                                     1DP04970
+       TRA     1,4                                                      1DP04980
+*                                                                       1DP04990
+BC.8T  PZE     99                                                       1DP05000
+LIL.IN PZE     99                                                       1DP05010
+IC.P   PZE     99,1                                                     1DP05020
+T.ICP  PZE     99,1                                                     1DP05030
+TAG.1  PZE     0,1                                                      1DP05040
+P.LP   PZE     99                                                       1DP05050
+VF.PC  BSS     2                                                        1DP05060
+TSTCEL BSS     1                                                        1DP05070
+LIL.BL BCI     1,                                                       1DP05080
+BCD.8W BCI     9,                                                       1DP05090
+       BCI     9,                                                       1DP05100
+       BCI     6,                                                       1DP05110
+BVF.PC PZE     99                                                       1DP05120
+LAB.W  BCI     4,  IN CONSECUTIVE CELLS.                                1DP05130
+IC.TBP PZE     99                                                       1DP05140
+       EJECT                                                            1DP05150
+*              ROUTINE TO SET UP REGISTERS FOR PRINT                    1DP05160
+SAVSUB STO     AC.WD+1                                                  1DP05170
+       ARS     35                                                       1DP05180
+       STA     PQ.WD                                                    1DP05190
+       STQ     MQ.WD+1                                                  1DP05200
+       LDQ     SYSLOC                                                   1DP05210
+       STQ     SLOC                                                     1DP05220
+       PXA     0,4                                                      1DP05230
+       XCL                                                              1DP05240
+       TSX     BCD.8,4                                                  1DP05250
+       STQ     X4.WD+1                                                  1DP05260
+       PIA                                                              1DP05270
+       XCL                                                              1DP05280
+       TSX     BCD.8,4                                                  1DP05290
+       SLW     IND.WD+1                                                 1DP05300
+       STQ     IND.WD+2                                                 1DP05310
+       PXA     0,2                                                      1DP05320
+       XCL                                                              1DP05330
+       TSX     BCD.8,4                                                  1DP05340
+       STQ     X2.WD+1                                                  1DP05350
+       PXA     0,1                                                      1DP05360
+       XCL                                                              1DP05370
+       TSX     BCD.8,4                                                  1DP05380
+       STQ     X1.WD+1                                                  1DP05390
+       LDQ     AC.WD+1                                                  1DP05400
+       TSX     BCD.8,4                                                  1DP05410
+       SLW     AC.WD+1                                                  1DP05420
+       STQ     AC.WD+2                                                  1DP05430
+       LDQ     MQ.WD+1                                                  1DP05440
+       TSX     BCD.8,4                                                  1DP05450
+       SLW     MQ.WD+1                                                  1DP05460
+       STQ     MQ.WD+2                                                  1DP05470
+       CAL     0                                                        1DP05480
+       ANA     MSKAD                                                    1DP05490
+       XCL                                                              1DP05500
+       TSX     BCD.8,4                                                  1DP05510
+       STQ     LOC.WD+1                                                 1DP05520
+       CAL     H.BNK                                                    1DP05530
+       ORS     X4.WD+1                                                  1DP05540
+       ORS     X2.WD+1                                                  1DP05550
+       ORS     X1.WD+1                                                  1DP05560
+       ORS     LOC.WD+1                                                 1DP05570
+       CLA     SAVRET              COMPOSE RETURN ADDRESS               1DP05580
+       ACL     L(1)                                                     1DP05590
+       STA     *+1                                                      1DP05600
+       TRA     **                  EXIT FROM THIS SUBROUTINE            1DP05610
+SAVRET PZE     0                   STORAGE FOR RETURN LOCATION          1DP05620
+*              END OF REGISTER IMAGE SETUP                              1DP05630
+       SPACE   1                                                        1DP05640
+LOC.WD BCI     2,  LOC                                                  1DP05650
+IND.WD BCI     3,  IND                                                  1DP05660
+AC.WD  BCI     3,  AC                                                   1DP05670
+PQ.WD  BCI     1, QP                                                    1DP05680
+MQ.WD  BCI     3,  MQ                                                   1DP05690
+X1.WD  BCI     2,  XR1                                                  1DP05700
+X2.WD  BCI     2,  XR2                                                  1DP05710
+X4.WD  BCI     2,  XR4                                                  1DP05720
+H.BNK  VFD     6/48                                                     1DP05730
+L.BNK  OCT     60                                                       1DP05740
+AWFDMP PZE     99                                                       1DP05750
+BNLDTB PZE                                                              1DP05760
+       PZE                                                              1DP05770
+       PZE                                                              1DP05780
+       PZE                                                              1DP05790
+       PZE                                                              1DP05800
+       PZE                                                              1DP05810
+       PZE                                                              1DP05820
+       PZE                                                              1DP05830
+       PZE                                                              1DP05840
+       PZE                                                              1DP05850
+       PZE                                                              1DP05860
+       PZE                                                              1DP05870
+PAAWDN SXA     PAETCX,4                                                 1DP05880
+       LDQ     AWFDMP                                                   1DP05890
+       TSX     BCD.8,4                                                  1DP05900
+       LGL     42                                                       1DP05910
+       ORA     L.BNK                                                    1DP05920
+       SLW     BNLDTB                                                   1DP05930
+       TSX     .MWR,4                                                $5$1DP05940
+       PZE     1                                                        1DP05950
+       PZE     BNLDTB,,12                                               1DP05960
+       TSX     SUFNLD,4                                                 1DP05970
+PAETCX AXT     **,4                                                     1DP05980
+       TRA     1,4                                                      1DP05990
+SIWBNL SXA     SIWBNX,4                                                 1DP06000
+       PDX     0,4                                                      1DP06010
+       TXH     NNLXP2,4,0                                               1DP06020
+       PAC     0,4                                                      1DP06030
+       LDQ     0,4                                                      1DP06040
+       STA     AWFDMP                                                   1DP06050
+       TSX     BCD.8,4                                                  1DP06060
+       LXA     NNLDW,4                                                  1DP06070
+       TXI     *+1,4,3                                                  1DP06080
+       SLW     BNLDTB+13,4                                              1DP06090
+       STQ     BNLDTB+14,4                                              1DP06100
+       SXA     NNLDW,4                                                  1DP06110
+       TXL     *+2,4,10                                                 1DP06120
+       TSX     PAAWDN,4                                                 1DP06130
+SIWBNX AXT     **,4                                                     1DP06140
+       TRA     1,4                                                      1DP06150
+*                                                                       1DP06160
+NNLXP2 LXA     SIWBNX,4                                                 1DP06170
+       TRA     2,4                                                      1DP06180
+*                                                                       1DP06190
+SIANL  ZET     NNLDW                                                    1DP06200
+       TSX     PAAWDN,4                                                 1DP06210
+       TRA     .JKAPU                                                $5$1DP06220
+CTEWOR BCI     1,CTE                                                    1DP06230
+*                                                                       1DP06240
+SUFNLD STZ     NNLDW                                                    1DP06250
+       LDQ     BLANKS                                                   1DP06260
+       SXA     *+4,4                                                    1DP06270
+       AXT     12,4                                                     1DP06280
+       STQ     BNLDTB+12,4                                              1DP06290
+       TIX     *-1,4,1                                                  1DP06300
+       AXT     **,4                                                     1DP06310
+       TRA     1,4                                                      1DP06320
+*                                                                       1DP06330
+JNEOJ  SXA     JNEOJ4,4                                                 1DP06340
+       LAC     DS.CNT,2                                                 1DP06350
+       TXL     SIANL1,2,0                                               1DP06360
+       LDI     BDMPSP-1,2                                               1DP06370
+       IIR     600000                                                   1DP06380
+       RFT     700000                                                   1DP06390
+       TXI     *-4,2,1                                                  1DP06400
+       PIA                                                              1DP06410
+       PDC     0,1                                                      1DP06420
+       SXD     *+1,1                                                    1DP06430
+       TXI     *+1,2,99                                                 1DP06440
+       TXL     *-5,1,0                                                  1DP06450
+       CAL     BDMPSP-1,2                                               1DP06460
+       TSX     SIWBNL,4                                                 1DP06470
+       TRA     *+4                                                      1DP06480
+       SLW     *+2                                                      1DP06490
+       TSX     LILDP,4                                                  1DP06500
+       PZE     99                                                       1DP06510
+       TXI     *+1,2,1                                                  1DP06520
+       TXI     *-8,1,1                                                  1DP06530
+SIANL1 ZET     NNLDW                                                    1DP06540
+       TSX     PAAWDN,4                                                 1DP06550
+JNEOJ4 AXT     **,4                                                     1DP06560
+       TRA     1,4                                                      1DP06570
+       EJECT                                                            1DP06580
+ QP    PZE     0,1                                                      1DP06590
+ MQ    PZE     0                                                        1DP06600
+ AC    PZE     0                                                        1DP06610
+ OFLOW PZE     0                                                        1DP06620
+DMPRTN SXA     TRBX-2,4       SAVE IR4                                  1DP06630
+       SXA     TRBX-3,2                                                 1DP06640
+       STQ     MQ                                                       1DP06650
+       STO     AC                                                       1DP06660
+       LGR     35                                                       1DP06670
+       STA     QP                                                       1DP06680
+       STZ     OFLOW                                                    1DP06690
+       TNO     *+2                                                      1DP06700
+       STL     OFLOW                                                    1DP06710
+       CLA     SYSLOC        SAVE CONTENTS                              1DP06720
+       STO     SLOC          OF SYSLOC.                                 1DP06730
+       CLA     WFBX                                                     1DP06740
+       SUB     V1PWT                                                    1DP06750
+       ARS     1                                                        1DP06760
+       PAX     0,4                                                      1DP06770
+       CLA     INTRPT,4                                                 1DP06780
+       STA     0                                                        1DP06790
+       CLA     QP                                                       1DP06800
+       LDQ     AC                                                       1DP06810
+       LLS     35                                                       1DP06820
+       LDQ     MQ                                                       1DP06830
+       LXA     TRBX-2,4            RELOAD IR4 WITH VALUE AT DUMP TIME   1DP06840
+       STL     SAVRET                                                   1DP06850
+       TRA     SAVSUB              SET UP REGISTER PRINTOUT LINE        1DP06860
+       CALL    JOBOU(LIST4)                                          $5$1DP06870
+       CLA     WFBX                                                     1DP06880
+       SUB     V1PWT                                                    1DP06890
+       ARS     1                                                        1DP06900
+       PAX     ,4                                                       1DP06910
+       CLA     ITWTBE,4                                                 1DP06920
+       STO     TRBX-1                                                   1DP06930
+       CLA     INTRPT,4                                                 1DP06940
+       PDX     0,4                                                      1DP06950
+       TXI     *+1,4,DTAB                                               1DP06960
+       SXA     TD.IT,4                                                  1DP06970
+       ADD     TRBX+3                                                   1DP06980
+       STA     TRBX                                                     1DP06990
+       ADD     TRBX+3                                                   1DP07000
+       STA     TRBX+1                                                   1DP07010
+       ADD     TRBX+3                                                   1DP07020
+       STA     TRBX+2                                                   1DP07030
+       AXT     0,2                                                      1DP07040
+TD.IT  CAL     **,2                                                     1DP07050
+       PDC     0,2                                                      1DP07060
+TAMWGI TXL     SIANLI,2,0                                               1DP07070
+       XEC     TD.IT                                                    1DP07080
+       TSX     SIWBNL,4                                                 1DP07090
+       TXI     TAMWGI,2,1                                               1DP07100
+       SLW     *+2                                                      1DP07110
+       TSX     LILDP,4                                                  1DP07120
+       PZE     **                                                       1DP07130
+       TXI     TAMWGI,2,1                                               1DP07140
+SIANLI ZET     NNLDW                                                    1DP07150
+       TSX     PAAWDN,4                                                 1DP07160
+       CLA     SLOC                                                     1DP07170
+       STA     SYSLOC                                                   1DP07180
+       CLA     QP                                                       1DP07190
+       LDQ     AC                                                       1DP07200
+       LLS     35                                                       1DP07210
+       ZET     OFLOW                                                    1DP07220
+       TOV     *+1                                                      1DP07230
+       LDQ     MQ                                                       1DP07240
+       AXT     **,2                                                     1DP07250
+       AXT     **,4                                                     1DP07260
+       PZE     0                                                        1DP07270
+ TRBX  TRA     **                                                       1DP07280
+       TRA     **                                                       1DP07290
+       TRA     **                                                       1DP07300
+       OCT     1                                                        1DP07310
+V1PWT  PZE     WWWDTB-1                                                 1DP07320
+NNLDW  PZE     0                                                        1DP07330
+SLOC   PZE                                                              1DP07340
+PTWPRF PTW                                                              1DP07350
+L(8)   PZE     8                                                        1DP07360
+LIST1  PZE     4                                                        1DP07370
+       PTW     IC.TBP,2,5                                               1DP07380
+       MZE     LIL.BL,,1                                                1DP07390
+       MZE     VF.PC,,2                                                 1DP07400
+       MZE     LAB.W,,4                                                 1DP07410
+LIST2  PZE     5                                                        1DP07420
+       PTW     IC.TBP,2,5                                               1DP07430
+       MZE     BCD.8W-1,5,28                                            1DP07440
+       MZE     BCD.8W+5,5,28                                            1DP07450
+       MZE     BCD.8W+11,5,28                                           1DP07460
+       MZE     BCD.8W+17,5,28                                           1DP07470
+LIST3  PZE     1                                                        1DP07480
+CTAPPR PTW     **,,**                                                   1DP07490
+LIST4  PZE     1                                                        1DP07500
+       PTW     LOC.WD,,18                                               1DP07510
+LIST5  PZE     1                                                        1DP07520
+       PTW     **,,**                                                   1DP07530
+LIST8  PZE     2                                                        1DP07540
+       PZE     0,,0                                                     1DP07550
+DBLSP  PTW     0                                                        1DP07560
+SNGLE  PZE     0                                                        1DP07570
+       EJECT                                                            1DP07580
+       SPACE   4                                                        1DP07590
+       REM     THIS ROUTINE SEARCHES THE TABLE OF PATCHES               1DP07600
+       REM     FORMED BY SCANNING $PATCH CARDS. IF ANY ARE              1DP07610
+       REM     TO BE LOADED OVER THE CURRENT SYSTEM RECORD,             1DP07620
+       REM     PTCH WILL PERFORM THIS LOADING.                          1DP07630
+       SPACE                                                            1DP07640
+PTC    SXA     PTC5,4                                                   1DP07650
+       CAL     SYSFAZ        GET LAST CHARACTER OF                      1DP07660
+       ANA     SEVEN         CURRENT RECORD NAME                        1DP07670
+       STO     QUEST         AND SAVE.                                  1DP07680
+       LXA     PTCNT,4       GET WORD COUNT (COMP) OF PATCH             1DP07690
+       TXL     PTC5,4,0      TABLE AND EXIT IF EMPTY.                   1DP07700
+       SXD     PTC4,4        SAVE END TABLE VALUE FOR TEST.             1DP07710
+       AXT     0,4           SET FOR FIRST ENTRY.                       1DP07720
+PTC2   CAL     PTSP,4        GET CONTROL WORD,                          1DP07730
+       LGR     18            ASSEMBLE RECORD                            1DP07740
+       ARS     15            CHARACTER,                                 1DP07750
+       LGL     3             AND                                        1DP07760
+       SUB     QUEST         COMPARE TO                                 1DP07770
+       TZE     PTC6          CURRENT ONE. GO TO PTC IF SAME.            1DP07780
+       CAL     PTSP,4        RESTORE CONTROL WORD IN AC,                1DP07790
+       PDC     0,1           GET COUNT OF PATCH WORDS,                  1DP07800
+       TXI     *+1,1,-1      COMPUTE DECREMENT,                         1DP07810
+       SXD     *+1,1         AND                                        1DP07820
+       TXI     *+1,4,**      BUMP POINTER TO NEXT CONTROL WD.           1DP07830
+PTC4   TXH     PTC2,4,**     GO BACK IF MORE ENTRIES.                   1DP07840
+PTC5   AXT     **,4          END OF PTSP TABLE,                         1DP07850
+       TRA     1,4           GO BACK                                    1DP07860
+PTC6   CAL     PTSP,4        RESTORE CONTROL WORD IN AC,                1DP07870
+       PDC     0,1           GET COUNT OF PATCH WORDS,                  1DP07880
+       TXL     PTC9+1,1,0    TEST FOR ZERO,                             1DP07890
+       SXD     PTC9,1        AND SAVE IN TEST.                          1DP07900
+       STA     PTC8          SET PATCH LOCATION,                        1DP07910
+       AXT     0,1           AND COUNTER FOR 1ST WORD.                  1DP07920
+PTC7   TXI     *+1,4,-1      BUMP TO NEXT PATCH WORD,                   1DP07930
+       CAL     PTSP,4        AND GET IT.                                1DP07940
+PTC8   SLW     **,1          STORE IN SYSTEM RECORD.                    1DP07950
+       TXI     *+1,1,-1                                                 1DP07960
+PTC9   TXH     PTC7,1,**     ARE THERE MORE.                            1DP07970
+       TXI     PTC2,4,-1     NO, GO LOOK FOR ANOTHER ENTRY.             1DP07980
+       SPACE   2                                                        1DP07990
+SPSIZ  EQU     50                                                       1DP08000
+PTSP   BSS     SPSIZ                                                    1DP08010
+QUEST  PZE                                                              1DP08020
+SEVEN  OCT     77                                                       1DP08030
+MSKAD  OCT     77777                                                    1DP08040
+L(1)   PZE     1                                                        1DP08050
+LMES5  PZE     2                                                        1DP08060
+       PTW     PTFUL,,5                                                 1DP08070
+LMES6  PZE     2                                                        1DP08080
+       PTW     DPFUL,,5                                                 1DP08090
+BLANKS BCI     1,                                                       1DP08100
+       REM     PATS SCANS A $PATCH CARD, AND USES                       1DP08110
+       REM     ITS INFORMATION TO BUILD TABLE PTSP. THE                 1DP08120
+       REM     FORMAT OF THE CARD IS                                    1DP08130
+       REM                                                              1DP08140
+       REM     1      8       16                                        1DP08150
+       REM     $PATCH PLLLLL  INSTR1,INSTR2,...                         1DP08160
+       REM                                                              1DP08170
+       REM     WHERE P IS THE LAST CHARACTER OF THE LABEL               1DP08180
+       REM     OF THE SYSTEM RECORD TO BE MODIFIED. LLLLL IS            1DP08190
+       REM     A FIVE DIGIT OCTAL LOCATION AT WHICH THE                 1DP08200
+       REM     PATCH IS TO BE MADE. INSTR1,2,... ARE TWELVE             1DP08210
+       REM     DIGIT OCAL INSTRUCTIONS, SEPARATED BY COMMAS.            1DP08220
+       REM     PTSP CONSISTS OF CONTROL WORDS FOR A                     1DP08230
+       REM     SERIES OF PATCHES, FOLLOWED BY THE PATCH WORDS.          1DP08240
+       REM     THE CONTROL WORD FORMAT IS - P IN THE                    1DP08250
+       REM     PREFIX AND TAG, LLLLL IN THE ADDRESS,                    1DP08260
+       REM     AND N IN THE DECREMENT, WHERE N IS A                     1DP08270
+       REM     COUNT OF THE PATCH WORDS AT LLLLL.                       1DP08280
+       REM                                                              1DP08290
+       REM     PLLLLL MUST BE PRESENT ON EACH $PATCH CARD.              1DP08300
+       REM                                                              1DP08310
+       REM     THE LOCATION OF THE $PATCH CARD IS SENT                  1DP08320
+       REM     TO PATS IN THE AC.                                       1DP08330
+PTS    SAVE    4,2,1                                                 $5$1DP08340
+       PAC     0,1           PUT CARD POINTER IN XR.                    1DP08370
+       LXA     PTCNT,4       LOAD TABLE WORD COUNT                      1DP08380
+       TXL     *+2,4,0                                                  1DP08390
+PTI2   TXL     PTSER,4,-SPSIZ  ERROR MESSAGE IF FULL.                   1DP08400
+       LDQ     1,1           GET PLLLLL                                 1DP08410
+       RQL     6                                                        1DP08420
+       LGL     6             AND                                        1DP08430
+       AXT     4,2           STORE IN                                   1DP08440
+       RQL     3             CONTROL WORD                               1DP08450
+       LGL     3             IN PTSP.                                   1DP08460
+       TIX     *-2,2,1                                                  1DP08470
+       LDQ     2,1                                                      1DP08480
+       RQL     3                                                        1DP08490
+       LGL     3                                                        1DP08500
+       STT*    PTAB                                                     1DP08510
+       STA*    PTAB                                                     1DP08520
+       LGL     15                                                       1DP08530
+       STP*    PTAB                                                     1DP08540
+       SXA     PTS7,4        SAVE LOCATION OF CONTROL WORD.             1DP08550
+       SXA     PCNTR,0       INITIALIZE COUNTER.                        1DP08560
+       AXT     3,2                                                      1DP08570
+       LDQ     2,1                                                      1DP08580
+       PXD     0,0           OF VARIABLE                                1DP08590
+       RQL     18            FIELD.                                     1DP08600
+PTS2   TQP     PTS5          COULD THIS BE COMMA.                       1DP08610
+       TXI     *+1,4,-1      YES, ASSUME COMMA OR END OF CARD.          1DP08620
+PTI6   TXH     PTS3,4,-SPSIZ                                            1DP08630
+       TRA     PTSER         ERROR MESSAGE IF TABLE FULL.               1DP08640
+PTS3   SXA     PTS4,2                                                   1DP08650
+PCNTR  AXT     **,2          BUMP ENTRY                                 1DP08660
+       TXI     *+1,2,1       WORD COUNT.                                1DP08670
+       SXA     PCNTR,2                                                  1DP08680
+PTS4   AXT     **,2                                                     1DP08690
+       SLW*    PTAB          STORE PATCH WORD.                          1DP08700
+       PXD     0,0                                                      1DP08710
+       LGL     6                                                        1DP08720
+       ERA     COM           WAS IT A COMMA.                            1DP08730
+       TZE     PTS6          YES.                                       1DP08740
+       TXI     *+1,4,-1      NO, END OF CARD, SET TABLE                 1DP08750
+       SXA     PTCNT,4       COUNTER FOR NEXT WORD.                     1DP08760
+PTS7   AXT     **,4          GET LOCATION OF CONTROL WORD               1DP08770
+       LXA     PCNTR,2                                                  1DP08780
+       PXD     0,2           AND SET ENTRY WORD                         1DP08790
+       STD*    PTAB          COUNT.                                     1DP08800
+PTS9   RETURN  PTS                                                   $5$1DP08810
+PTS5   RQL     3             NO COMMA, CONVERT BCD                      1DP08850
+       LGL     3             TO OCTAL.                                  1DP08860
+PTS6   TIX     PTS2,2,1      IS THIS END OF MQ WORD.                    1DP08870
+       TXI     *+1,1,-1      YES, GET NEXT                              1DP08880
+       LDQ     2,1           WORD AND                                   1DP08890
+       AXT     6,2           GO                                         1DP08900
+       TRA     PTS2          BACK.                                      1DP08910
+COM    OCT     73                                                       1DP08920
+PTAB   PZE     PTSP,4                                                   1DP08930
+PTSER  ZET     PTOFL         IF MESSAGE ALREADY PRINTED,                1DP08940
+       TRA     PTS9          EXIT.                                      1DP08950
+       STL     PTOFL                                                    1DP08960
+       ZET     PRSW                                                     1DP08970
+       TRA     PTSR1                                                    1DP08980
+       TSX     .MWR,4                                                $5$1DP08990
+       PZE     1                                                        1DP09000
+       PZE     PTFUL,,5+ONESP                                           1DP09010
+PTSR1  CALL    JOBOU(LMES5)                                          $5$1DP09020
+       TRA     PTS9                                                     1DP09030
+PTFUL  BCI     5,PATCH TABLE HAS OVERFLOWED.                            1DP09040
+       REM                                                              1DP09050
+*              A $DUMP CARD MUST HAVE THE FOLLOWING FORMAT.             1DP09060
+*      COLUMN                                                           1DP09070
+*      1-6     $DUMP                                                    1DP09080
+*      8-11    PLLLLL    P=PHASE AND LLLLL=LOCATION TO TAKE DUMPS.      1DP09090
+*      16-ON   AREAS TO BE DUMPED IN THIS FORM.                         1DP09100
+*                                                                       1DP09110
+*                            LOC1/LOC2,LOC3/LOC4                        1DP09120
+*                                                                       1DP09130
+*                            WHERE LOC1 AND LOC3 ARE FIRST LOCATIONS    1DP09140
+*                            AND LOC2 AND LOC4 ARE LAST LOCATIONS       1DP09150
+*                            TO BE DUMPED.                              1DP09160
+BLDT   SAVE    4,2,1                                                 $5$1DP09170
+       PAC     0,1                COMP OF ADRES OF DUMP CARD            1DP09200
+       LXA     DS.CNT,2           HOW MANY WORDS OF TABLE FILLED        1DP09210
+BLD1   TXH     DMPER,2,TBLSZ  ERROR MESSAGE IF TABLE FULL.              1DP09220
+       SXD     BB40,2             SAVE CURRENT TABLE WORD COUNT         1DP09230
+BLD2   TXI     *+1,2,DTAB    ADD STARTING ADDRESS OF TABLE.             1DP09240
+       SXA     BB01,2             INIT INSTR WITH ADR OF NEXT LOC       1DP09250
+       SXA     BB21,2                                                   1DP09260
+       CAL     1,1                COL 7-12 OF DUMP CARD                 1DP09270
+       LDQ     2,1                COL 13-18 OF DUMP CARD                1DP09280
+       LGL     6                  PXXXXX IN AC                          1DP09290
+       PAI                        SAVE AC                               1DP09300
+       ANA     BB90               CALAMITY TYPE DUMP                    1DP09310
+       TZE     *+3                YES                                   1DP09320
+       PIA                        RESTORE AC                            1DP09330
+       TRA     *+2                                                      1DP09340
+       CAL     BB91               FOR CALAMITY DUMP                     1DP09350
+       XCL                                                              1DP09360
+       AXT     5,4                                                      1DP09370
+       PXD     0,0                                                      1DP09380
+       LGL     6                  PHASE NO IN AC                        1DP09390
+       RQL     3                  ELIM O FROM OCT INT                   1DP09400
+       LGL     3                  SHIFT INT INTO AC                     1DP09410
+       TIX     *-2,4,1            MOVE ALL 5 DIGITS                     1DP09420
+ BB01  STA     **                 ADRES FOR DUMP INSERTION              1DP09430
+       STT*    BB01               2ND DIG OF PHASE NO IN TAG            1DP09440
+       LGL     15                                                       1DP09450
+       STP*    BB01               1ST DIG OF PHASE NO IN PREFIX         1DP09460
+       AXT     0,4                                                      1DP09470
+       AXT     3,2                                                      1DP09480
+       LDQ     2,1                COL 13-18 OF DUMP CARD                1DP09490
+       RQL     18                 POS FIRST LIMIT                       1DP09500
+       TXI     *+1,1,-3           XR1 AT 4TH WORD                       1DP09510
+       PXD     0,0                                                      1DP09520
+ BB20  TQP     BB30               CHECK FOR NON-INTEGER                 1DP09530
+       SLW     TEMP               SAVE AC                               1DP09540
+       PXD     0,0                                                      1DP09550
+       LGL     6                  MOVE NON-INTEGER TO AC                1DP09560
+       SUB     SLSH          IS IT A SLASH                              1DP09570
+       TNZ     *+4                                                      1DP09580
+       CAL     TEMP               YES                                   1DP09590
+       ALS     3                  FOR ZERO IN TAG                       1DP09600
+       TRA     BB31                                                     1DP09610
+       LGR     6                  SAVE RESULTS OF TEST                  1DP09620
+       CAL     TEMP               NO                                    1DP09630
+       STZ     TEMP                                                     1DP09640
+       PAI                                                              1DP09650
+       ARS     18                                                       1DP09660
+       STA     TEMP                                                     1DP09670
+       PIA                                                              1DP09680
+       ALS     18                                                       1DP09690
+       ORA     TEMP                                                     1DP09700
+       TXI     *+1,4,-1           COUNT OF WORDS USED PER DCARD         1DP09710
+       ORA     SPACE                                                    1DP09720
+ BB21  SLW     **,4               STO LIMITS IN TABLE                   1DP09730
+       PXD     0,0                                                      1DP09740
+       LGL     6                  WAS CHAR A COMMA                      1DP09750
+       ERA     BB92                                                     1DP09760
+       TZE     BB31                                                     1DP09770
+       PXA     0,4                NO-COMPL OF NO. OF SETS OF LIMITS     1DP09780
+       PAC     0,4                RECOMPL FOR TRUE NO.                  1DP09790
+       PXD     0,4                                                      1DP09800
+       STD*    BB01               STO IN DEC OF LEADING WORD            1DP09810
+ BB40  TXI     *+1,4,**           ADDIN PREVIOUS SUM                    1DP09820
+       TXI     *+1,4,1            ADD 1 FOR LEADING WORD                1DP09830
+       SXA     DS.CNT,4           SAVE TOTAL                            1DP09840
+BB40A  TXH     DMPER,4,TBLSZ                                            1DP09850
+BB41   RETURN  BLDT                                                  $5$1DP09860
+ BB30  RQL     3                  ELIM 0 FROM OCT INT                   1DP09900
+       LGL     3                  SHIFT INT INTO AC                     1DP09910
+ BB31  TIX     BB20,2,1           ENTIRE WORD CONVERTED                 1DP09920
+       LDQ     0,1                YES-GET NEXT WORD                     1DP09930
+       AXT     6,2                INDEX FOR 6 CHAR PER WORD             1DP09940
+       TXI     BB20,1,-1          XR1 AT NEXT WORD                      1DP09950
+ BB90  OCT     070707070707                                             1DP09960
+ BB91  OCT     710000000000                                             1DP09970
+ BB92  OCT     000000000012       COMMA MINUS SLASH                     1DP09980
+ TEMP  BSS     1                                                        1DP09990
+SLSH   BCI     1,00000/                                                 1DP10000
+       REM                                                              1DP10010
+DMPER  ZET     DPOFL         IF MESSAGE ALREADY PRINTED,                1DP10020
+       TRA     BB41          EXIT.                                      1DP10030
+       STL     DPOFL                                                    1DP10040
+       ZET     PRSW                                                     1DP10050
+       TRA     DMPR1                                                    1DP10060
+       TSX     .MWR,4                                                $5$1DP10070
+       PZE     1                                                        1DP10080
+       PZE     DPFUL,,5+ONESP                                           1DP10090
+DMPR1  CALL    JOBOU,LMES6                                              1DP10100
+       TRA     BB41                                                     1DP10110
+DPFUL  BCI     5,DUMP TABLE HAS OVERFLOWED.                             1DP10120
+       REM                                                              1DP10130
+       LDIR                                                          $5$1DP10140
+       END                                                           $5$1DP99990

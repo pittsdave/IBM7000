@@ -1,0 +1,2029 @@
+*      7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801                     1FD00000
+$TITLE         7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801, VERSION $5$1FD00010
+$IBMAP DMPREC  2000,ABSMOD,MONSYM,()OK                               $5$1FD00020
+*      7090/7094 IBJOB PROCESSOR - IBJOB MONITOR (729/1301/7340 VERSION)1FD00030
+       PCC     ON                                                       1FD00040
+       LBL     DMPREC                                                $5$1FD00050
+       TTL     FORTRAN DUMP RECORD - RECORD DMPREC.                     1FD00070
+       TITLE                                                            1FD00090
+       PCC     OFF                                                      1FD00100
+       REM                                                              1FD00110
+       REM     DUMP RECORD IS LOCATED BY                                1FD00120
+       REM     LIBRARY ROUTINE -FDMP- AND                               1FD00130
+       REM     LOADED INTO CORE STORAGE BY                              1FD00140
+       REM     SYSLDR.  EXECUTION BEGINS                                1FD00150
+       REM     AT -START- WHEN LOADING                                  1FD00160
+       REM     IS COMPLETED.                                            1FD00170
+       REM                                                              1FD00180
+       EJECT                                                            1FD00190
+       REM                                                              1FD00200
+ ORGDP BOOL    72431                                                    1FD00210
+ SAVL  EQU     -ORGDP                                                   1FD00220
+ SAVE  EQU     ORGDP-SAVL                                               1FD00230
+SIZE   EQU     84                                                       1FD00240
+IOEXD  EQU     10                  =.IOEXD-SYSORG                    $5$1FD00250
+SELMDH BOOL    3732                                                     1FD00270
+SYSOU1 EQU     8                                                        1FD00390
+SYSUT4 EQU     19                                                       1FD00400
+PGMAX  EQU     58                  MAX NO. OF LINES/PAGE             $5$1FD00461
+SYSOU2 EQU     9                                                        1FD00470
+       REM                                                           $5$1FD00480
+       REM     SPECIAL DEFINITIONS FOR 7090 MODE MAP ASSEMBLY        $5$1FD00490
+EMTM   OPD     460066100016                                          $5$1FD00491
+LMTM   OPD     460066000016                                          $5$1FD00492
+ERRRX  EQU     SYSRET                                                $5$1FD00493
+       REM                                                              1FD00500
+       ORG     ORGDP+1                                                  1FD00510
+       BCI     1,DMPREC                                                 1FD00520
+       ORG     ORGDP                                                    1FD00530
+*                                                                       1FD00540
+       REM                                                              1FD00550
+       REM                                                              1FD00560
+       REM   **** PANEL SAVE ****                                       1FD00570
+       REM                                                              1FD00580
+START  LAC     SYSUNI,4                                              $5$1FD00590
+       CLA     SYSUT4-1,4                                               1FD00690
+       STO     UCB           SAVE L(UCB) FOR SYSUT4                     1FD00700
+       STO     UCBTP         UCB FOR RESTORE FROM 729 TAPE           $5$1FD00710
+       STO     FINLDK+21     FINAL SAVE                                 1FD00720
+       STO     FINLHY+22                                                1FD00730
+       ANA     MASK3                                                    1FD00740
+       ARS     6                                                        1FD00750
+       ORS     AA+4                                                     1FD00760
+       LDI*    UCB                                                      1FD00770
+       STL     THRTW                                                    1FD00780
+       STL     THRSX                                                    1FD00790
+       LFT     020000                                                   1FD00800
+       TRA     *+3                                                      1FD00810
+       STZ     THRTW                                                    1FD00820
+       TRA     CLASYS                                                   1FD00830
+       LFT     000100                                                   1FD00840
+       TRA     *+4                                                      1FD00850
+       AXT     34,2          HYPER                                      1FD00860
+       SXD     BS1R1-1,2                                                1FD00870
+       TRA     CLASYS                                                   1FD00880
+       STZ     THRSX         DISK                                       1FD00890
+       LNT     000040                                                   1FD00900
+       TRA     *+4                                                      1FD00910
+       CLA     =1                                                       1FD00920
+       ORS     AA+4                                                     1FD00930
+       ORS     FINLDK+16                                                1FD00940
+       LDC     SYSUNI,4                                                 1FD00950
+       SXD     *+2,4                                                    1FD00960
+       LAC     SYSUNI,4                                                 1FD00970
+       TXI     *+1,4,**                                                 1FD00980
+       CLA     SYSUT4-1,4    DISK LIMITS                                1FD00990
+       SSP                                                              1FD01000
+       ARS     18                                                       1FD01010
+       SUB     =5                                                       1FD01020
+       STA     LIMIT-34                                                 1FD01030
+CLASYS CLA     SYSUNI                                                   1FD01040
+       PAC     0,4                                                      1FD01050
+       CLA     SYSOU1-1,4                                               1FD01060
+       STO     SYUCB         SAVE L(UCB) FOR SYSOU1                     1FD01070
+       STL     THRFV                                                    1FD01080
+       LDI*    SYUCB                                                    1FD01090
+       LNT     020000                                                   1FD01100
+       STZ     THRFV         SYSOU1-TAPE(7607)                          1FD01110
+       TSX     BS1R,4        POSITION SAVING TAPE                       1FD01120
+       TSX     IOXRW,4       READ ARGUMENTS AND                         1FD01130
+       PZE     UCB,,NDIO     PANEL INTO CORE                            1FD01140
+       PZE     ERRR,,ERRR                                               1FD01150
+       PZE     CPYP2,1,LIMIT-34                                         1FD01160
+       PZE     UCB,,NDIOH                                               1FD01170
+       TSX     BS1R,4        REPOSITION                                 1FD01180
+       CLA     LIMIT-31                                                 1FD01190
+       STA     RETX                                                     1FD01200
+       CLA     LIMIT-33                                                 1FD01210
+       ADD     =4                                                       1FD01220
+       STO     LIMT                                                     1FD01230
+       CLA     LIMIT-32                                                 1FD01240
+       STO     THRTW                                                    1FD01250
+       CLA     LIMIT-35                                                 1FD01260
+       STO     THRFV                                                    1FD01270
+       CLA     LIMIT-36                                                 1FD01280
+       STO     THRSX                                                    1FD01290
+*                                                                       1FD01300
+*              THIS SECTION SETS UP PANEL FOR OUTPUT                    1FD01310
+*                                                                       1FD01320
+       LDQ     LIMIT-29                                                 1FD01330
+       TSX     CNVT,1                                                   1FD01340
+       ORS     BUF+1         SAVE LOC WHERE DUMP PLANTED                1FD01350
+       LDI     BLK                                                      1FD01360
+       CLA     LIMIT-2       AC                                         1FD01370
+       TPL     *+3           IS SIGN PLUS                               1FD01380
+       SSP                   NO                                         1FD01390
+       LDI     MINUS         INSERT MINUS SIGN                          1FD01400
+       STI     BUF2+2                                                   1FD01410
+       XCA                                                              1FD01420
+       TSX     CNVT,1                                                   1FD01430
+       STI     BUF2+3        SAVE AC                                    1FD01440
+       SLW     BUF2+4                                                   1FD01450
+       CLA     BZB                                                      1FD01460
+       STO     BUF2+6                                                   1FD01470
+       LDQ     LIMIT-3                                                  1FD01480
+       TQP     *+3                                                      1FD01490
+       CAL     Q                                                        1FD01500
+       ORS     BUF2+6        SAVE                                       1FD01510
+       RQL     1             P AND Q                                    1FD01520
+       TQP     *+3           BITS                                       1FD01530
+       CAL     P                                                        1FD01540
+       ORS     BUF2+6                                                   1FD01550
+*                                                                       1FD01560
+*              STORE         MQ,SI,PANEL KEYS FOR OUTPUT                1FD01570
+*                                                                       1FD01580
+       AXT     15,4                                                     1FD01590
+ AAA   LDQ     LIMIT+4,4                                                1FD01600
+       TSX     CNVT,1                                                   1FD01610
+       SLW     BUF2+24,4                                                1FD01620
+       CAL     MINUS                                                    1FD01630
+       LNT     40000         IS S BIT ON                                1FD01640
+       ORA     BLK           NO. SET SIGN BLANK                         1FD01650
+       SLW     BUF2+22,4     YES. STORE MINUS                           1FD01660
+       RIL     40000                                                    1FD01670
+       STI     BUF2+23,4                                                1FD01680
+       TIX     AAA,4,5                                                  1FD01690
+*                                                                       1FD01700
+*                            CONVERT AND STORE INDEX REGISTERS          1FD01710
+*                                                                       1FD01720
+       AXT     19,4                                                     1FD01730
+       AXT     7,2                                                      1FD01740
+ B     LDQ     LIMIT-11,2                                               1FD01750
+       AXT     6,1                                                      1FD01760
+       ALS     3                                                        1FD01770
+       LGL     3                                                        1FD01780
+       TIX     *-2,1,1                                                  1FD01790
+       ALS     7                                                        1FD01800
+       ARS     7                                                        1FD01810
+       ORA     BLKZ                                                     1FD01820
+       SLW     BUF4+20,4                                                1FD01830
+       TXI     *+1,2,-1                                                 1FD01840
+       TIX     B,4,3                                                    1FD01850
+       LDI     BLK                                                      1FD01860
+       AXT     18,4                                                     1FD01870
+       STI     BUF4+21,4     BLANKS                                     1FD01880
+       STI     BUF4+20,4                                                1FD01890
+       TIX     *-2,4,3                                                  1FD01900
+       STI     BUF4                                                     1FD01910
+       LDQ     BUF2+6        SAVE TEMPORARILY                           1FD01920
+       AXT     20,4                                                     1FD01930
+       LDI     BLK                                                      1FD01940
+       STI     BUF2+20,4     BLANKS                                     1FD01950
+       STI     BUF2+21,4                                                1FD01960
+       TIX     *-2,4,5                                                  1FD01970
+       STQ     BUF2+6        RESTORE                                    1FD01980
+       STI     BUF1+4                                                   1FD01990
+       STI     BUF1+5                                                   1FD02000
+       STI     BUF1+6                                                   1FD02010
+       STI     BUF1+11                                                  1FD02020
+       STI     BUF1+12                                                  1FD02030
+       STI     BUF1+13                                                  1FD02040
+*                                                                       1FD02050
+*              ON-OFF TRAPPING MODE, DIVIDE CHECK,                      1FD02060
+*              I/O CHECK,AC OVERFLOW                                    1FD02070
+*              I/O CHECK,AC OVERFLOW                                    1FD02080
+*                                                                       1FD02090
+       AXT     4,1                                                      1FD02100
+ C     CAL     OFF                                                      1FD02110
+       ZET     LIMIT-6,1                                                1FD02120
+       CAL     ON                                                       1FD02130
+       SLW     BUF1+4,1                                                 1FD02140
+       TIX     C,1,1                                                    1FD02150
+*                                                                       1FD02160
+*              STATUS OF SENSE LIGHTS                                   1FD02170
+       AXT     4,2                                                      1FD02180
+ D     CAL     OFF                                                      1FD02190
+       ZET     LIMIT-18,2                                               1FD02200
+       CAL     ON                                                       1FD02210
+       SLW     BUF1+11,2                                                1FD02220
+       TIX     D,2,1                                                    1FD02230
+*                                                                       1FD02240
+*              STATUS OF SENSE SWITCHES                                 1FD02250
+*                                                                       1FD02260
+       AXT     6,1                                                      1FD02270
+ E     CAL     OFF                                                      1FD02280
+       ZET     LIMIT-22,1                                               1FD02290
+       CAL     ON                                                       1FD02300
+       SLW     BUF1+20,1                                                1FD02310
+       TIX     E,1,1                                                    1FD02320
+       AXT     10,1                                                     1FD02330
+       STI     BUF3+20,1     BLANKS                                     1FD02340
+       TIX     *-1,1,1                                                  1FD02350
+       STI     BUF3                                                     1FD02360
+       STI     BUF3+1                                                   1FD02370
+       STI     BUF3+5                                                   1FD02380
+       STI     BUF3+6                                                   1FD02390
+*                                                                       1FD02400
+*              FLOATING POINT AC AND MQ                                 1FD02410
+*                                                                       1FD02420
+       LDQ     LIMIT-2       AC                                         1FD02430
+       AXT     8,2                                                      1FD02440
+ FAQ   TSX     FPT,1                                                    1FD02450
+       NOP                                                              1FD02460
+       SLW     BUF3+12,2                                                1FD02470
+       CAL     MINUS                                                    1FD02480
+       LNT     40000                                                    1FD02490
+       ORA     BLK                                                      1FD02500
+       SLW     BUF3+10,2                                                1FD02510
+       RIL     40000                                                    1FD02520
+       STI     BUF3+11,2                                                1FD02530
+       LDQ     LIMIT-11      MQ                                         1FD02540
+       TIX     FAQ,2,5                                                  1FD02550
+*                                                                       1FD02560
+*              COMPLEMENT OF INDEX REGISTERS                            1FD02570
+*                                                                       1FD02580
+       AXT     19,4                                                     1FD02590
+       AXT     7,1                                                      1FD02600
+ COMXR CAL     LIMIT-11,1                                               1FD02610
+       PDC     0,2                                                      1FD02620
+       PXD     0,2                                                      1FD02630
+       XCL                                                              1FD02640
+       AXT     6,2                                                      1FD02650
+       ALS     3                                                        1FD02660
+       LGL     3                                                        1FD02670
+       TIX     *-2,2,1                                                  1FD02680
+       SSM                                                              1FD02690
+       STO     BUF5+20,4                                                1FD02700
+       TXI     *+1,1,-1                                                 1FD02710
+       TIX     COMXR,4,3                                                1FD02720
+       LDI     BLK                                                      1FD02730
+       AXT     18,4                                                     1FD02740
+       STI     BUF5+21,4                                                1FD02750
+       STI     BUF5+20,4                                                1FD02760
+       TIX     *-2,4,3                                                  1FD02770
+       STI     BUF5                                                     1FD02780
+*                                                                       1FD02790
+*              WRITE OUT PANEL                                          1FD02800
+*                                                                       1FD02810
+       CLA*    LIMIT-38                                                 1FD02820
+       ADD     =8            UPDATE LINES OF OUTPUT                     1FD02830
+       STO*    LIMIT-38                                                 1FD02840
+*                                                                       1FD02850
+ OUTP  TSX     IOXRW,4                                                  1FD02860
+       MZE     SYUCB,1,DSU                                              1FD02870
+       PZE     SERRR,,SERRR                                             1FD02880
+       NOP                                                              1FD02890
+       MZE     SYUCB,1,DSUH                                             1FD02900
+       LXA     DNINE,1                                                  1FD02910
+       CAL     OUTP+1                                                   1FD02920
+       ADD     Q                                                        1FD02930
+       SLW     OUTP+1                                                   1FD02940
+       CAL     OUTP+4                                                   1FD02950
+       ADD     Q1                                                       1FD02960
+       SLW     OUTP+4                                                   1FD02970
+       TXI     *+1,1,-1                                                 1FD02980
+       SXA     DNINE,1                                                  1FD02990
+       TXH     OUTP,1,0                                                 1FD03000
+       CAL     FDUMP                                                    1FD03010
+       SLW     TEMP                                                     1FD03020
+       CAL     BLK                                                      1FD03030
+       SLW     DUMP3+4       BLANK IN OUPUT AREA                        1FD03040
+*                                                                       1FD03050
+*                                                                       1FD03060
+*                                                                       1FD03070
+*                                                                       1FD03080
+*                                                                       1FD03090
+       REM *****                                                        1FD03100
+       LXA     LIMIT-30,2                                               1FD03110
+       SXA     TEMP+5,2                                                 1FD03120
+       TXL     CONT,2,0      NO ARGUMENTS.  SKIP TESTS.  DUMP CORE.     1FD03130
+       CLA     ENDD                                                     1FD03140
+       ADM     LIMIT-30                                                 1FD03150
+       STA     END1          STORE LOCATION +1                          1FD03160
+       STA     END2          OF LAST                                    1FD03170
+       STA     END3          ARGUMENT                                   1FD03180
+ DUMP  LXA     TEMP+5,2                                                 1FD03190
+       TXL     RSR,2,0       ALL DUMPS COMPLETED                        1FD03200
+       CAL     LIMIT-30                                                 1FD03210
+       LDQ     TEMP+5                                                   1FD03220
+       TLQ     *+2           IS THIS FIRST SET                          1FD03230
+       TRA     *+3           YES.                                       1FD03240
+       LXD     CNT+3,4       NO. RESTORE PAGE                           1FD03250
+       SXA     CNT,4         FOR NEXT DUMP PORTION                      1FD03260
+ END1  CLA     END+**,2      SELECT FIRST LIMIT                         1FD03270
+       XCL                                                              1FD03280
+       TXI     *+1,2,-1                                                 1FD03290
+ END2  CLA     END+**,2      SELECT SECOND LIMIT                        1FD03300
+       TLQ     *+2           LOWER LIMIT IN AC                          1FD03310
+       TRA     *+2           UPPER LIMIT IN MQ                          1FD03320
+       XCL                                                              1FD03330
+       RQL     18            LOWER LIMIT IN DECREMENT                   1FD03340
+       LGL     18            AND UPPER LIMIT IN ADDRESS                 1FD03350
+       SLW     TEMP          OF TEMP                                    1FD03360
+       TIX     *+3,2,1       IS FORMAT ARGUMENT MISSING                 1FD03370
+       STZ     TEMP+11       YES, THIS IS LAST DUMP                     1FD03380
+       TRA     GON+1                                                    1FD03390
+ END3  CLA     END+**,2      NO, SELECT FORMAT SPECIFYING ARGUMENT      1FD03400
+       PAX     0,4                                                      1FD03410
+       TXL     GON,4,3                                                  1FD03420
+       PDX     0,4           FORMAT IN DECREMENT                        1FD03430
+       TXH     FERR,4,3      ILLEGAL FORMAT SPECIFIER                   1FD03440
+ GON   SXA     TEMP+11,4                                                1FD03450
+       TXI     *+1,2,-1                                                 1FD03460
+       SXA     TEMP+5,2                                                 1FD03470
+       REM                                                              1FD03480
+       REM   **** SET UP FOR NEXT GROUP AND CHECK FOR IDENTICAL WORDS***1FD03490
+       REM                                                              1FD03500
+ CONT  CAL     TEMP                                                     1FD03510
+       PAC     0,2           COMPLEMENT UPPER LIMIT,                    1FD03520
+       TXI     *+1,2,-1      BUMP DOWN,                                 1FD03530
+       SXA     TEMP+3,2      AND SAVE.                                  1FD03540
+       PDC     0,2           COMPLEMENT LOWER LIMIT,                    1FD03550
+ DFA   SXA     *+1,2         RECOMPLEMENT                               1FD03560
+       AXC     0,1           INTO XRA,                                  1FD03570
+       SXD     DFF2,1        SET DECREMENT,                             1FD03580
+       SXA     TEMP+4,1      AND SAVE.                                  1FD03590
+       SXD     DFF2A,2       SET DECR WITH COMPLEMENT OF LOWER LIMIT.   1FD03600
+DFA1   TXH     *+3,2,0       IS LOWER LIMIT ZERO.                       1FD03610
+       CAL     0,2           YES, PICK UP FIRST WORD OF DUMP,           1FD03620
+       TRA     DFA2+1        AND GO AROUND OTHER TESTS.                 1FD03630
+       TXL     DFC3,2,-ORGDP IS LOWER LIMIT IN DUMP RECORD AREA.        1FD03640
+       CAL     0,2           NO, PICK UP FIRST WORD OF DUMP.            1FD03650
+DFA2   TXL     DFB,2,-SAVE   IS LOWER LIMIT IN BUFFER.                  1FD03660
+       TSX     DUPTST,4      NO, TEST FOR DUPLICATE WORDS               1FD03670
+       TXI     DFA2,2,-1     AND GO BACK.                               1FD03680
+ DFB   NZT     TEMP+1        IS UPPER CORE IN BUFFER.                   1FD03690
+       TRA     DFB1-1        NO.                                        1FD03700
+       REM *****                                                        1FD03710
+*                                                                       1FD03720
+*                                                                       1FD03730
+       TSX     IOXRW,4       YES, RESTORE                               1FD03740
+       PZE     UCB,,IORT     BUFFER                                     1FD03750
+       PZE     ERRR,,ERRR                                               1FD03760
+       PZE     CPYP3,6,LIMIT-34                                         1FD03770
+       PZE     UCB,,IORTH                                               1FD03780
+       TSX     BS1R,4        REPOSITION SAVING TAPE                     1FD03790
+*                                                                       1FD03800
+       STZ     TEMP+1        INDICATE BUFFER IS RESTORED.               1FD03810
+DFB1   TXL     DFC,2,-ORGDP  IS IT IN DUMP RECORD AREA.                 1FD03820
+       TSX     DUPTST,4      NO, TEST FOR DUPLICATE WORDS.              1FD03830
+       TXI     DFB1,2,-1     AND GO BACK.                               1FD03840
+DFC3   CAL     ORGDP,2       PICK UP NEXT WORD.                         1FD03850
+ DFC   ZET     TEMP+8        IS BUFFER ON SAVING TAPE.                  1FD03860
+       TRA     DFC1          YES.                                       1FD03870
+       REM *****                                                        1FD03880
+       TSX     IOXRW,4       NO, SAVE BUFFER                            1FD03890
+       MZE     UCB,,IORT                                                1FD03900
+       PZE     ERRR,,ERRR                                               1FD03910
+       MZE     CPYP3,6,LIMIT-34                                         1FD03920
+       MZE     UCB,,IORTH                                               1FD03930
+       TSX     BS1R,4        REPOSITION SAVING TAPE                     1FD03940
+*                                                                       1FD03950
+       STL     TEMP+8        INDICATE BUFFER HAS BEEN SAVED.            1FD03960
+ DFC1  ZET     TEMP+1        IS UPPER CORE IN BUFFER.                   1FD03970
+       TRA     DFC2          YES.                                       1FD03980
+       REM *****                                                        1FD03990
+       TSX     BS1R,4        NO, POSITION SAVING TAPE                   1FD04000
+       TSX     IOXRW,4       AND READ FIRST SAVING                      1FD04010
+       PZE     UCB,,IORT     DUMP (UPPER CORE) INTO                     1FD04020
+       PZE     ERRR,,ERRR    BUFFER.                                    1FD04030
+       PZE     CPYP3,6,LIMIT-33                                         1FD04040
+       PZE     UCB,,IORTH                                               1FD04050
+*                                                                       1FD04060
+*                                                                       1FD04070
+       STL     TEMP+1        INDICATE UPPER CORE IS IN BUFFER.          1FD04080
+DFC2   TXH     *+2,2,0       IS THIS END CORE.                          1FD04090
+       TXI     DFE,2,1       YES, RESET XR AND GO TO WRITE DUPES.       1FD04100
+       ERA     -SAVL,2       TEST FOR DUPE WORDS                        1FD04110
+       TNZ     DFE1          TRA IF NOT DUPES.                          1FD04120
+       PXA     0,2           IS THIS LAST                               1FD04130
+       SUB     TEMP+3        WORD OF THIS                               1FD04140
+       TZE     DFE           DUMP PORTION.                              1FD04150
+       CAL     -SAVL,2       NO, PICK UP NEXT WORD                      1FD04160
+       TXI     DFC2,2,-1     AND GO BACK.                               1FD04170
+ DFE   CLA     -SAVL-1,2     PICK UP LAST DUPE WORD BELOW DUMP RECORD   1FD04180
+       TRA     DFF1                                                     1FD04190
+ DFE1  ERA     -SAVL,2       RESTORE AC TO LAST DUPE WORD               1FD04200
+       XCL                   AND SAVE IN MQ.                            1FD04210
+       TRA     DFF2                                                     1FD04220
+ DFF   CLA     -1,2          PICK UP LAST DUPE WORD (BELOW DUMP RECORD).1FD04230
+ DFF1  XCA                   SAVE IN MQ.                                1FD04240
+DFF2   TXI     *+1,2,0       SUB LOWER LIMIT FROM CURRENT INDEX (DECR   1FD04250
+       REM                   HAS INDEX OF LOC STARTED WITH FOR THIS TEST1FD04260
+       SXA     *+1,2                                                    1FD04270
+       AXC     0,2           COMPLEMENT TO GET TRUE DUPE WORD COUNT     1FD04280
+       PXA     0,2                                                      1FD04290
+       ARS     3             DIVIDE WORD COUNT                          1FD04300
+       ALS     3             BY EIGHT.                                  1FD04310
+       PAC     0,2           PICK UP COMPLEMENT OF HIGHEST NO. OF       1FD04320
+       REM                   DUPES DIVISIBLE BY EIGHT.                  1FD04330
+DFF2A  TXI     *+1,2,0       ADD LOWER LIMIT TO GET LAST LOC (COMPL).   1FD04340
+       TZE     TEST          IS NO. OF DUPE WORDS MORE THAN 7.          1FD04350
+       AXT     36,4          YES.                                       1FD04360
+       LXA     TEMP+11,1     PICK UP FORMAT PARAM (0 IS OCTAL           1FD04370
+       TRA     WAIT          W/O MNEMONICS, 1 IS FLOATING PT., 2 IS  (2)1FD04380
+       TRA     *+3           DECIMAL INTEGER -DECREMENT ONLY, AND 3     1FD04390
+       TSX     INT,1         IS OCTAL WITH MNEMONICS), AND              1FD04400
+       TSX     FPT,1         CONVERT ACCORDINGLY.                       1FD04410
+       TSX     CNVT,1                                                   1FD04420
+       SLW     DFBB+14                                                  1FD04430
+       CAL     MINUS         IF BIT ONE WAS NOT ZERO,                   1FD04440
+       LNT     40000         SET THE CONVERTED WORD                     1FD04450
+       ORA     LBLK          TO MINUS.                                  1FD04460
+       SLW     DFBB+12                                                  1FD04470
+       RIL     40000         TAKE OUT BIT ONE.                          1FD04480
+       STI     DFBB+13                                                  1FD04490
+       CAL     TEMP+4        PICK UP BEGINNING LOC FOR THIS             1FD04500
+       LGR     15            SET OF DUPE WORDS.                         1FD04510
+       CLM                   CONVERT                                    1FD04520
+       LGR     3             TO                                         1FD04530
+       ALS     3             BCD                                        1FD04540
+       LGL     3             AND                                        1FD04550
+       TIX     *-2,4,6       STORE.                                     1FD04560
+       ORA     OBLK                                                     1FD04570
+       SLW     DFBB+7                                                   1FD04580
+       PXA     0,2           GET TRUE                                   1FD04590
+       PAC     0,1           LOCATION  OF                               1FD04600
+       TXI     *+1,1,-1      LAST DUPE                                  1FD04610
+       PXA     0,1           WORD,                                      1FD04620
+       LGR     15            CONVERT TO                                 1FD04630
+       CLM                   BCD                                        1FD04640
+       LGR     3             AND                                        1FD04650
+       ALS     3             STORE.                                     1FD04660
+       LGL     3                                                        1FD04670
+       TIX     *-2,4,1                                                  1FD04680
+       LGL     6                                                        1FD04690
+       ORA     LBLK                                                     1FD04700
+       SLW     DFBB+9                                                   1FD04710
+CNT    AXT     12,4                TEST TO SEE IF                    $5$1FD04720
+       TXI     *+1,4,2       CURRENT                                    1FD04730
+       CAL     HZR           PAGE                                       1FD04740
+       TNX     *+2,4,PGMAX-2       IS FULL                           $5$1FD04750
+       ORA     HONE          YES, SET TO RESTORE.                       1FD04760
+       SLW     DFBB                                                     1FD04770
+       SXA     CNT,4                                                    1FD04780
+       REM *****                                                        1FD04790
+ DFF3  TSX     IOXRW,4       WRITE GROUP                                1FD04800
+       MZE     SYUCB,1,DSU2  OF DUPLICATES-ONE LINE-                    1FD04810
+       PZE     SERRR,,SERRR                                             1FD04820
+       NOP                                                              1FD04830
+       MZE     SYUCB,1,DSU2H                                            1FD04840
+       TSX     LNCNT,4       UPDATE LINE COUNT.                         1FD04850
+*                                                                       1FD04860
+ DFG   PXA     0,2                                                      1FD04870
+       SUB     TEMP+3                                                   1FD04880
+       TNZ     DFA           MORE TO GO ON THIS PORTION OF DUMP.        1FD04890
+       TRA     DUMP          FINISHED. GO SEE IF MORE BLOCKS TO DUMP.   1FD04900
+DUPTST ERA     0,2           TEST FOR DUPLICATE WORDS.                  1FD04910
+       TNZ     DFF           IF NOT DUPLICATE, TRANSFER.                1FD04920
+       PXA     0,2           IS THIS LAST                               1FD04930
+       SUB     TEMP+3        WORD OF DUMP PORTION.                      1FD04940
+       TZE     DFF                                                      1FD04950
+       CAL     0,2           NO, PICK UP NEXT WORD.                     1FD04960
+       TRA     1,4                                                      1FD04970
+LNCNT  CLA*    LIMIT-38      UPDATE OUTPUT LINE COUNT.                  1FD04980
+       ADD     =1                                                       1FD04990
+       STO*    LIMIT-38                                                 1FD05000
+       TRA     1,4                                                      1FD05010
+       REM                                                              1FD05020
+       REM   **** PREPARE 8 WORDS TO BE DUMPED ****                     1FD05030
+       REM                                                              1FD05040
+TEST   AXT     24,4                                                     1FD05050
+       TNX     LOW+1,2,0     IF INDEX IS ZERO, GO AROUND TESTS.         1FD05060
+       TXH     LOW,2,-SAVE   IS LOCATION BELOW BUFFER.                  1FD05070
+       TXH     MED,2,-ORGDP  NO, IS IT BELOW DUMP RECORD.               1FD05080
+HIGH   ZET     TEMP+8        NO, IT IS IN DUMP RECORD AREA. IS BUFFER   1FD05090
+       TRA     HIGH2         ON TAPE.  YES.                             1FD05100
+       SXA     HIGH1,4       NO,                                        1FD05110
+       REM *****                                                        1FD05120
+       TSX     IOXRW,4       SAVE BUFFER                                1FD05130
+       MZE     UCB,,IORT                                                1FD05140
+       PZE     ERRR,,ERRR                                               1FD05150
+       MZE     CPYP3,6,LIMIT-34                                         1FD05160
+       MZE     UCB,,IORTH                                               1FD05170
+       TSX     BS1R,4        REPOSITION SAVING TAPE                     1FD05180
+*                                                                       1FD05190
+HIGH1  AXT     **,4                                                     1FD05200
+       STL     TEMP+8        INDICATE BUFFER IS ON TAPE.                1FD05210
+HIGH2  ZET     TEMP+1        IS UPPER CORE IN BUFFER.                   1FD05220
+       TRA     HIGH4         YES.                                       1FD05230
+       SXA     HIGH3,4       NO,                                        1FD05240
+       REM *****                                                        1FD05250
+       TSX     BS1R,4        POSITION SAVING TAPE                       1FD05260
+       TSX     IOXRW,4       READ UPPER CORE                            1FD05270
+       PZE     UCB,,IORT     INTO BUFFER                                1FD05280
+       PZE     ERRR,,ERRR                                               1FD05290
+       PZE     CPYP3,6,LIMIT-33                                         1FD05300
+       PZE     UCB,,IORTH                                               1FD05310
+*                                                                       1FD05320
+HIGH3  AXT     **,4                                                     1FD05330
+       STL     TEMP+1        INDICATE UPPER CORE IN BUFFER.             1FD05340
+HIGH4  TNX     LOW,2,0       IS LOCATION ZERO.                          1FD05350
+       LDQ     -SAVL,2       NO, PICK UP NEXT WORD                      1FD05360
+       TSX     TESTP,1       CONVERT.                                   1FD05370
+       TIX     HIGH4,4,3     IF LINE FINISHED, GO BACK.                 1FD05380
+       TRA     FINI          LINE OF OUTPUT IS FINISHED.                1FD05390
+MED    NZT     TEMP+1        IS UPPER CORE IN BUFFER.                   1FD05400
+       TRA     MED2          NO.                                        1FD05410
+       SXA     MED1,4        YES,                                       1FD05420
+       REM *****                                                        1FD05430
+       TSX     IOXRW,4       RESTORE BUFFER                             1FD05440
+       PZE     UCB,,IORT                                                1FD05450
+       PZE     ERRR,,ERRR                                               1FD05460
+       PZE     CPYP3,6,LIMIT-34                                         1FD05470
+       PZE     UCB,,IORTH                                               1FD05480
+       TSX     BS1R,4        REPOSITION SAVING TAPE                     1FD05490
+*                                                                       1FD05500
+MED1   AXT     **,4                                                     1FD05510
+       STZ     TEMP+1        INDICATE UPPER CORE NOT IN BUFFER.         1FD05520
+MED2   TXL     HIGH,2,-ORGDP IS WORD IN UPPER CORE.                     1FD05530
+       LDQ     0,2           NO, PICK UP NEXT WORD,                     1FD05540
+       TSX     TESTP,1       CONVERT,                                   1FD05550
+       TIX     MED2,4,3      AND GO BACK IF LINE UNFINISHED.            1FD05560
+       TRA     FINI          LINE OF OUTPUT IS COMPLETE.                1FD05570
+LOW    TXL     MED,2,-SAVE   IS WORD IN BUFFER.                         1FD05580
+       LDQ     0,2           NO, PICK UP NEXT WORD,                     1FD05590
+       TSX     TESTP,1       CONVERT, AND                               1FD05600
+       TIX     LOW,4,3       GO BACK IF LINE UNFINISHED.                1FD05610
+       TRA     FINI          LINE OF OUTPUT IS COMPLETE.                1FD05620
+TESTP  SXA     TSTP2,1                                                  1FD05630
+       LXA     TEMP+11,1     PICK UP FORMAT AND                         1FD05640
+       TRA     *+4,1         CONVERT( 0 IS OCTAL, 1 IS FLOATING POINT, 21FD05650
+       TRA     *+3           IS DECIMAL INTEGER -DECR ONLY, AND 3 IS    1FD05660
+       TSX     INT,1         OCTAL WITH MNEMONICS.)                     1FD05670
+       TSX     FPT,1                                                    1FD05680
+       TSX     CNVT,1                                                   1FD05690
+       SLW     BUF+26,4                                                 1FD05700
+       CAL     MINUS         IF BIT ONE IS 1,                           1FD05710
+       LNT     40000         MAKE CONVERTED WORD NEGATIVE               1FD05720
+       ORA     BLK           AND                                        1FD05730
+       SLW     BUF+24,4      STORE.                                     1FD05740
+       RIL     40000         RESET BIT ONE TO ZERO                      1FD05750
+       STI     BUF+25,4      AND STORE.                                 1FD05760
+       TXI     *+1,2,-1                                                 1FD05770
+       PXA     0,2           TEST FOR END                               1FD05780
+       SUB     TEMP+3        OF DUMP PORTION.                           1FD05790
+       TZE     FINI                                                     1FD05800
+TSTP2  AXT     **,1          NOT END,                                   1FD05810
+       TRA     1,1           RETURN.                                    1FD05820
+ CNVT  SXA     CNVT9,1       THIS ROUTINE ACCEPTS THE MQ AS             1FD05830
+       AXT     36,1          INPUT, AND CONVERTS IT TO OCTAL            1FD05840
+       ALS     3             BY PRECEDING EACH THREE BITS WITH          1FD05850
+       LGL     3             THREE BINARY ZEROS.                        1FD05860
+       TIX     *-2,1,6       THE LEFT HALF OF THE CONVERTED             1FD05870
+       PAI                   WORD IS LEFT IN THE                        1FD05880
+       ALS     3             INDICATORS                                 1FD05890
+       LGL     3             AND THE RIGHT HALF IN                      1FD05900
+       TIX     *-2,1,1       THE LOGICAL AC.                            1FD05910
+ CNVT9 AXT     0,1                                                      1FD05920
+       TRA     1,1                                                      1FD05930
+ FINI  CAL     BLK                                                      1FD05940
+ FINI1 TNX     FINI2,4,3     IS DUMP PORTION ENDED, OR JUST A LINE.     1FD05950
+       SLW     BUF+24,4      DUMP PORTION IS ENDED.                     1FD05960
+       SLW     BUF+25,4      FILL REST OF LINE                          1FD05970
+       SLW     BUF+26,4      WITH BLANKS.                               1FD05980
+       TRA     FINI1                                                    1FD05990
+ FINI2 CAL     TEMP+4        LINE IS ENDED,                             1FD06000
+       LGR     15            CONVERT LOCATION                           1FD06010
+       CLM                   BEGINNING                                  1FD06020
+       LGR     3             THIS LINE                                  1FD06030
+       AXT     6,4           TO BCD.                                    1FD06040
+       ALS     3                                                        1FD06050
+       LGL     3                                                        1FD06060
+       TIX     *-2,4,1                                                  1FD06070
+       LXA     CNT,4         IS THIS                                    1FD06080
+       TXI     *+1,4,2       PAGE                                       1FD06090
+       TNX     *+2,4,PGMAX-2       FULL                              $5$1FD06100
+       ORA     HONE          YES, SET TO RESTORE.                       1FD06110
+ H     AXC     -1,1          PICK UP BUFFER INDEX                       1FD06120
+       SLW*    SWT+14,1      AND STORE LOCATION IN CURRENT BUFFER.      1FD06130
+       SXA     CNT,4                                                    1FD06140
+ PACK  SXA     PACK9,2       THIS ROUTINE PICKS UP THE CONVERTED        1FD06150
+       AXT     27,4          WORDS                                      1FD06160
+       AXT     0,2           AND STORES THEM                            1FD06170
+       CAL     BUF+27,4      IN THE CURRENT                             1FD06180
+       LDQ     BUF+28,4      OUTPUT BUFFER IN THE                       1FD06190
+       LGR     12            CORRECT OUTPUT POSITIONS.                  1FD06200
+       STQ*    SWT+1,1                                                  1FD06210
+       CAL     BUF+28,4                                                 1FD06220
+       LDQ     BUF+29,4                                                 1FD06230
+       LGR     12                                                       1FD06240
+       STQ*    SWT+2,1                                                  1FD06250
+       CAL     BUF+30,4                                                 1FD06260
+       LDQ     BUF+31,4                                                 1FD06270
+       LGR     12                                                       1FD06280
+       CAL     BUF+29,4                                                 1FD06290
+       LGR     12                                                       1FD06300
+       STQ*    SWT+5,1                                                  1FD06310
+       CAL     BUF+31,4                                                 1FD06320
+       LDQ     BUF+32,4                                                 1FD06330
+       LGL     12                                                       1FD06340
+       SLW*    SWT+6,1                                                  1FD06350
+       CAL     BUF+32,4                                                 1FD06360
+       LDQ     BUF+33,4                                                 1FD06370
+       RQL     24                                                       1FD06380
+       LGL     12                                                       1FD06390
+       SLW*    SWT+9,1                                                  1FD06400
+       TNX     *+6,4,9       IS THIS END OF LINE.                       1FD06410
+       CAL     BUF+25,4      NO.                                        1FD06420
+       SLW*    SWT+10,1                                                 1FD06430
+       CAL     BUF+26,4                                                 1FD06440
+       SLW*    SWT+13,1                                                 1FD06450
+       TXI     PACK+3,2,-7                                              1FD06460
+ PACK9 AXT     0,2           COMPLETE LINE IS IN BUFFER.                1FD06470
+       SXA     H,1                                                      1FD06480
+       REM *****                                                        1FD06490
+       PXA     0,1                                                      1FD06500
+       ARS     1                                                        1FD06510
+       TZE     *+6           XR1 EQUALS 1                               1FD06520
+       CLA     DSU2M                                                    1FD06530
+       STD     FINI4+1                                                  1FD06540
+       CLA     DSU2MH                                                   1FD06550
+       STD     FINI4+4                                                  1FD06560
+       TRA     *+5                                                      1FD06570
+       CLA     DSU2P                                                    1FD06580
+       STD     FINI4+1                                                  1FD06590
+       CLA     DSU2PH                                                   1FD06600
+       STD     FINI4+4                                                  1FD06610
+ FINI4 TSX     IOXRW,4       WRITE LINE OF DUMP                         1FD06620
+       MZE     SYUCB,1,**    OR MNEMONICS                               1FD06630
+       PZE     SERRR,,SERRR                                             1FD06640
+       NOP                                                              1FD06650
+       MZE     SYUCB,1,**                                               1FD06660
+       TSX     LNCNT,4       UPDATE OUTPUT LINE COUNT.                  1FD06670
+       LXA     TEMP+11,1     SET INDEX REG. TO FORMAT.                  1FD06680
+       TXL     J,1,2         TRANSFER IF NO MNEMONICS.                  1FD06690
+       ZET     TEMP+7        IS LINE OF MNEMONICS NEXT.                 1FD06700
+       TRA     J-1           NO.                                        1FD06710
+       REM                                                              1FD06720
+       REM   **** WITH MNEMONICS ****                                   1FD06730
+       REM                                                              1FD06740
+       STL     TEMP+7        YES, RESET MNEMONICS FLAG.                 1FD06750
+       SXA     AXT,2                                                    1FD06760
+       AXT     24,2                                                     1FD06770
+TYPA   PXA     ,0                                                       1FD06780
+       LDI     BUF+24,2      PICK UP CONVERTED                          1FD06790
+       LDQ     BUF+25,2      WORD.                                      1FD06800
+       TQP     *+2                                                      1FD06810
+       TRA     TYPB3                                                    1FD06820
+       CAQ     TBLA,0,1      IS THIS A PREFIX OPCODE.                   1FD06830
+       TZE     TYPB          NO.                                        1FD06840
+       RFT     20            YES, IS SIGN NEGATIVE.                     1FD06850
+       TRA     *+4           NO.                                        1FD06860
+       PXA     ,0            SIGN IS NEGATIVE, FIND MATCH               1FD06870
+       LDQ     BUF+25,2      IN NEG. TABLE.                             1FD06880
+       CAQ     TBLA+3,0,1    AND                                        1FD06890
+       SLW     BUF+25,2      SAVE MNEMONIC.                             1FD06900
+       CAL     BLK           FILL IN WITH                               1FD06910
+       TRA     TYPB3+2       BLANKS.                                    1FD06920
+ TYPB  AXT     TBLBM,1       PICK UP ADDRESS FOR NEGATIVE OPCODES.      1FD06930
+       RFT     20            IS WORD NEGATIVE.                          1FD06940
+       AXT     TBLBP,1       NO, RESET ADDRESS FOR POSITIVE OPCODES,    1FD06950
+       SXA     CAQ,1         AND STORE.                                 1FD06960
+ CAQ   CAQ     0,0,1         FIND RIGHT SUBTABLE                        1FD06970
+       STA     TYPB1         AND STORE ADDRESS.                         1FD06980
+       PDX     0,4           SET XR WITH WORD COUNT OF SUBTABLE.        1FD06990
+       PXD     0,0           STORE NUMERICAL                            1FD07000
+       LGL     12            OPCODE IN                                  1FD07010
+       STA     TYPB1+1       TEST FOR MATCH.                            1FD07020
+       COM                                                              1FD07030
+       ANA     TYPB2                                                    1FD07040
+       STA     TYPB1+3                                                  1FD07050
+       TXL     TYPB3-1,4,0   EXIT IF END OF SUBTABLE, NO MNEMONIC.      1FD07060
+TYPB1  LDI     **,4          PICK UP WORD FROM CORRECT SUBTABLE.        1FD07070
+       RNT     **            DOES THIS WORD MATCH.                      1FD07080
+       TXI     TYPB1-1,4,-1  NO, GO BACK FOR NEXT WORD.                 1FD07090
+       RFT     **            DOES WORD MATCH COMPLETELY.                1FD07100
+       TXI     TYPB1-1,4,-1  NO, GO BACK FOR NEXT WORD.                 1FD07110
+       NOP                   (DELETE PREVIOUS INSTRUCTION)           (4)1FD07120
+ TYPB2 PIA     511           MNEMONIC WAS FOUND, PLACE IN AC.           1FD07140
+       AXT     TBLEP,1                                                  1FD07150
+       LAS     PSE           IS IT PLUS SENSE.                          1FD07160
+       TRA     *+2           NO.                                        1FD07170
+       TRA     TYPE          YES.                                       1FD07180
+       AXT     TBLEM,1       NO, IS IT                                  1FD07190
+       LAS     MSE           MINUS SENSE.                               1FD07200
+       TRA     *+2           NO.                                        1FD07210
+       TRA     TYPE          YES.                                       1FD07220
+       ARS     12            NO, SHIFT OUT NUMERALS, FILL               1FD07230
+       ORA     2BLK          WITH BLANKS                                1FD07240
+       SLW     BUF+25,2      AND STORE.                                 1FD07250
+       RQL     3                                                        1FD07260
+       CAL     BLK                                                      1FD07270
+       TQP     TYPB3+2       TEST FOR INDIRECT                          1FD07280
+       RQL     1             BITS IN                                    1FD07290
+       TQP     TYPB3+2       WORD.                                      1FD07300
+       CAL     ASTR          INSTRUCTION IS INDIRECT, PUT               1FD07310
+       SLW     BUF+26,2      ASTERISK IN MNEMONIC.                      1FD07320
+       TRA     TYPB3+3                                                  1FD07330
+ TYPE  ARS     12            SHIFT OUT NUMERALS,                        1FD07340
+       ORA     2BLK          FILL WITH BLANKS,                          1FD07350
+       SLW     BUF+25,2      AND STORE.                                 1FD07360
+       LDQ     BUF+26,2      PICK UP SECOND HALF,                       1FD07370
+       CAL     BLK           STORE                                      1FD07380
+       SLW     BUF+24,2      BLANKS.                                    1FD07390
+       SLW     BUF+26,2                                                 1FD07400
+       RQL     11            PUT MIDDLE                                 1FD07410
+       CLM                   CHARACTERS IN                              1FD07420
+       LGL     13            AC.                                        1FD07430
+       TNZ     TYPB3+4       ARE THEY ZERO. IF NOT, TRANSFER.           1FD07440
+       SXA     *+1,1         YES,                                       1FD07450
+       CAL     0             PICK UP ADDRESS OF TBLEP OR TBLEM,         1FD07460
+       TRA     CAQ+1         AND GO BACK TO INTERPRET FURTHER.          1FD07470
+       TXL     TYPB3+4,1,TBLEM WAS THIS SENSE OPERATION.                1FD07480
+ TYPB3 CAL     BLK           NO. PICK UP BLANK.                         1FD07490
+       SLW     BUF+25,2                                                 1FD07500
+       SLW     BUF+26,2                                                 1FD07510
+       SLW     BUF+24,2                                                 1FD07520
+       TIX     TYPA,2,3      GO BACK FOR NEXT WORD.                     1FD07530
+ STEP  LXA     CNT,4         END OF LINE OF MNEMONICS.                  1FD07540
+       CAL     BLK                                                      1FD07550
+ AXT   AXT     0,2                                                      1FD07560
+       TXI     H,4,1         GO TO WRITE LINE OF MNEMONICS.             1FD07570
+       STZ     TEMP+7        INDICATE LINE OF DUMP NEXT .               1FD07580
+ J     PXA     0,2           TEST FOR END OF                            1FD07590
+       ERA     TEMP+3        DUMP PORTION.                              1FD07600
+       TNZ     DFA           NO, GO BACK FOR NEXT LINE.                 1FD07610
+       TRA     DUMP          YES, LOOK FOR NEXT PARAMETERS.             1FD07620
+*                                                                       1FD07630
+*              ERROR IN CALLING SEQUENCE                                1FD07640
+*                                                                       1FD07650
+*                                                                       1FD07660
+ FERR  TSX     IOXRW,4       WRITE ERROR                                1FD07670
+       MZE     SYUCB,1,ERR   MESSAGE                                    1FD07680
+       PZE     RSR,,RSR                                                 1FD07690
+       NOP                                                              1FD07700
+       MZE     SYUCB,1,ERRH                                             1FD07710
+       TSX     LNCNT,4       UPDATE OUTPUT LINE COUNT.                  1FD07720
+*                                                                       1FD07730
+*                                                                       1FD07740
+*                                                                       1FD07750
+*                                                                       1FD07760
+*                                                                       1FD07770
+*                                                                       1FD07780
+ RSR   NZT     TEMP+1        IS BUFFER RESTORED                         1FD07790
+       TRA     RSR1          YES                                        1FD07800
+       TSX     IOXRW,4       NO. RESTORE                                1FD07810
+       PZE     UCB,,IORT                                                1FD07820
+       PZE     ERRR,,ERRR                                               1FD07830
+       PZE     CPYP3,6,LIMIT-34                                         1FD07840
+       PZE     UCB,,IORTH                                               1FD07850
+       TSX     BS1R,4        REPOSITION SAVING TAPE                     1FD07860
+RSR1   NZT     LIMIT-32                                                 1FD07870
+       TRA     RSRT          TAPE                                       1FD07880
+       NZT     LIMIT-36                                                 1FD07890
+       TRA     LST           DISK                                       1FD07900
+       CAL     NOPH1         HYPER                                      1FD07910
+       SLW     IOXHND-2                                                 1FD07920
+       AXT     4,4                                                      1FD07930
+       CAL     NOPH2+4,4                                                1FD07940
+       SLW     SEH+6,4                                                  1FD07950
+       TIX     *-2,4,1                                                  1FD07960
+       CLA     RETX                                                     1FD07970
+       STA     FINLHY+7                                                 1FD07980
+       AXT     24,4                                                     1FD07990
+       CLA     FINLHY+24,4                                              1FD08000
+       STO     SELMDH+24,4                                              1FD08010
+       TIX     *-2,4,1                                                  1FD08020
+       TRA     TSXBSR                                                   1FD08030
+RSRT   LXD     SYSCOR,4      SYSORG TO IR4                           $5$1FD08031
+       TXI     *+1,4,SELMIN  COMPUTE LOC OF FINAL 729 SELECT         $5$1FD08032
+       SXD     SLSWTP,4      ROUTINE (.IOEXD) AND SAVE IN SEL SWITCH $5$1FD08033
+       TXI     *+1,4,RTNACT-SELMIN   COMPUTE IR4 SAVE ADDR (RTNACT)  $5$1FD08034
+       SXA     FINLTP,4             INITIALIZE IR4 SAVE LOCATION     $5$1FD08040
+       TXI     *+1,4,(CORE)-RTNACT  COMPUTE RELOCATED ADDRESSES OF   $5$1FD08050
+       SXA     IOXND-1,4            (CORE) AND IOLSTP.  MODIFY       $5$1FD08060
+       TXI     *+1,4,IOLSTP-(CORE)  TSX .ACTV,4.  INITIALIZE         $5$1FD08070
+       SXD     TSXBSR+2,4           CALL TO IOXRW DEPENDING          $5$1FD08080
+       LDC     SYSCOR,1             ON VALUE OF SYSORG-IOEXD.        $5$1FD08090
+       AXT     TPLGH,4              LOAD FINAL SELECT ROUTINE FOR    $5$1FD08100
+       CLA     FINLTP+TPLGH,4       729 TAPE INTO LOWER CORE.        $5$1FD08110
+       STO     SELMIN,1      (LOADS INTO 2664-2713 FOR 729 ASSEMBLED $5$1FD08120
+       TXI     *+1,1,-1      IBSYS, 3732-3761 FOR DISK ASSEM IBSYS.) $5$1FD08130
+       TIX     *-3,4,1       IR1=-SYSORG-TPLGH, USED IN SEL. ROUTINE $5$1FD08140
+       CLA     RETX                 INITIALIZE RETURN TO FDMP AND    $5$1FD08150
+       STA     FINTPX-TPLGH,1       SET SELECT SWITCH TO USE SELECT  $5$1FD08160
+       STP     SLSWTP               MINUS ROUTINE IN LOWER CORE.     $5$1FD08170
+TSXBSR TSX     BS1R,4        POSITION SAVING TAPE                       1FD08180
+       TSX     IOXRW,4       RESTORE UPPER CORE                         1FD08190
+       PZE     UCB,,RSRI                                                1FD08200
+       PZE     **,,**        NEVER ENCOUNTERED                          1FD08210
+       PZE     0                                                        1FD08220
+       PZE     UCB,,RSRIH                                               1FD08230
+*                                                                       1FD08240
+*              THIS ROUTINE BACKSPACES SYSUT4 1 RECORD                  1FD08250
+*                                                                       1FD08260
+ BS1R  SXA     BS1R1,4                                                  1FD08270
+       LAC     UCB,4                                                    1FD08280
+       ZET     1,4                                                      1FD08290
+       TRA     *-1                                                      1FD08300
+       TSX     .NDSEL,4                                                 1FD08310
+       PZE     UCB,,5                                                   1FD08320
+ BS1R1 AXT     **,4                                                     1FD08330
+       TRA     1,4                                                      1FD08340
+*                                                                       1FD08350
+*                                                                       1FD08360
+*                                                                       1FD08370
+*                                                                       1FD08380
+*                                                                       1FD08390
+*                                                                       1FD08400
+*                                                                       1FD08410
+       REM                                                              1FD08420
+       REM   **** INTEGER OUTPUT ****                                   1FD08430
+       REM                                                              1FD08440
+*              ****INTEGER OUTPUT****                                   1FD08450
+ INT   SXA     FINIS1+2,1    THIS ROUTINE CONVERTS                      1FD08460
+       CAL     BLK           A 36 BIT WORD TO                           1FD08470
+       XEC     7,1           DECIMAL INTEGERS WITH SIGN                 1FD08480
+       AXT     36,1                                                     1FD08490
+       STZ     WORD                                                     1FD08500
+       LDI     BLKZ                                                     1FD08510
+       TQP     BCVR1-1                                                  1FD08520
+       RIL     200000        SET SIGN MINUS IF S IS ON                  1FD08530
+       XCA                                                              1FD08540
+       SSP                                                              1FD08550
+       XCA                                                              1FD08560
+       STI     WORD+1                                                   1FD08570
+ BCVR1 PXD     0,0                                                      1FD08580
+       DVP     =10                                                      1FD08590
+       ALS     36,1                                                     1FD08600
+ THIS  ORS     WORD                                                     1FD08610
+       XCA                                                              1FD08620
+       TZE     FINIS         CONVERSION IS FINISHED                     1FD08630
+       XCA                                                              1FD08640
+       TXI     *+1,1,-6                                                 1FD08650
+       TXH     BCVR1,1,0                                                1FD08660
+ HERE  TXH     FINIS,0,0                                                1FD08670
+       CAL     THIS                                                     1FD08680
+       ADD     =1                                                       1FD08690
+       SLW     THIS                                                     1FD08700
+       CLA     HERE                                                     1FD08710
+       CHS                   SET TXH TO TXL                             1FD08720
+       STO     HERE                                                     1FD08730
+       AXT     30,1                                                     1FD08740
+       SXA     THIS-1,1                                                 1FD08750
+       TRA     BCVR1                                                    1FD08760
+ FINIS CLA     HERE                                                     1FD08770
+       TPL     FINIS1                                                   1FD08780
+       CAL     THIS                                                     1FD08790
+       SUB     =1                                                       1FD08800
+       SLW     THIS                                                     1FD08810
+       CLA     HERE                                                     1FD08820
+       CHS                                                              1FD08830
+       STO     HERE                                                     1FD08840
+       AXT     36,1                                                     1FD08850
+       SXA     THIS-1,1                                                 1FD08860
+FINIS1 LDI     WORD+1                                                   1FD08870
+       CAL     WORD                                                     1FD08880
+       AXT     **,1                                                     1FD08890
+       XEC     3,1                                                      1FD08900
+       TRA     9,1                                                      1FD08910
+*                                                                       1FD08920
+       REM                                                              1FD08930
+       REM   **** FLOATING POINT OUTPUT ****                            1FD08940
+       REM                                                              1FD08950
+ FPT   SXA     FPTLV,4 FLOATING POINT DUMPER                            1FD08960
+       SXA     FPTLV+1,2 IGNORES SIGN                                   1FD08970
+       SXA     FPTLV+2,1                                                1FD08980
+       LDI     FPTHP         PICK UP .0                                 1FD08990
+       TQP     *+2           IF FIRST WORD IS MINUS, SET                1FD09000
+       SIL     40000         1ST BIT ON IN CONVERTED WORD.              1FD09010
+       XCA                   AND                                        1FD09020
+       SSP                   REMOVE SIGN.                               1FD09030
+       LDQ     FPTPZ         PICK UP ZERO CHARACTERISTIC.               1FD09040
+       TZE     FPTLV-1       IS WORD ZERO.                              1FD09050
+       AXT     -DDFTB,2      NO, CONVERT IT                             1FD09060
+       AXT     2,4           TO FLOATING POINT.                         1FD09070
+ FPTSH TXI     *+1,4,-2                                                 1FD09080
+       CAS     38,2                                                     1FD09090
+       XEC     *+3,4                                                    1FD09100
+       TXI     FPTFD+2,2,1                                           $5$1FD09110
+       XEC     *+2,4                                                    1FD09120
+       TXI     FPTSH,2,7                                                1FD09130
+       TXI     FPTSH,2,-8                                               1FD09140
+       TXI     FPTSH,2,16                                               1FD09150
+       TXI     FPTSH,2,-16                                              1FD09160
+       TXI     FPTSH,2,8                                                1FD09170
+       TXI     FPTSH,2,-8                                               1FD09180
+       TXI     FPTSH,2,4                                                1FD09190
+       TXI     FPTSH,2,-4                                               1FD09200
+       TXI     FPTSH,2,2                                                1FD09210
+       TXI     FPTSH,2,-2                                               1FD09220
+       TXI     FPTSH,2,1                                                1FD09230
+       TXI     FPTSH,2,-1                                               1FD09240
+ FPTFD TXI     *+2,2,1                                                  1FD09250
+       TRA     *+1                                                      1FD09260
+       TXL     FPTNL,2,-30-DDFTB                                        1FD09270
+       FDP     46,2                                                  $5$1FD09280
+ FPTDD XCA                                                              1FD09290
+       FRN                                                              1FD09300
+       UFA     FPTFX                                                    1FD09310
+       RQL     9                                                        1FD09320
+       ANA     FPTMK                                                    1FD09330
+       LGL     8                                                        1FD09340
+       CAS     FPTBG                                                    1FD09350
+       NOP                                                              1FD09360
+       SUB     T1+1                                                     1FD09370
+       VDH     FPTOR,0,12                                               1FD09380
+       STO     FPTMP                                                    1FD09390
+       CLM                                                              1FD09400
+       RQL     24                                                       1FD09410
+       CAQ     T1+64,0,1                                                1FD09420
+       CAQ     T1,0,1                                                   1FD09430
+       CVR     T3,0,3                                                   1FD09440
+       LDQ     FPTMP                                                    1FD09450
+       SLW     FPTMP                                                    1FD09460
+       CLM                                                              1FD09470
+       CAQ     T1+192,0,1                                               1FD09480
+       CAQ     T1+128,0,1                                               1FD09490
+       CAQ     T1+64,0,1                                                1FD09500
+       CAQ     T1,0,1                                                   1FD09510
+       CVR     T3,0,6                                                   1FD09520
+       SLW     FPTMP+1                                                  1FD09530
+       PXA     0,2                                                      1FD09540
+       SUB     FPTSB                                                    1FD09550
+       LGR     12                                                       1FD09560
+       CAQ     T1+64,0,1                                                1FD09570
+       CAQ     T1,0,1                                                   1FD09580
+       CVR     T3,0,2                                                   1FD09590
+       XCL                                                              1FD09600
+       CLA     FPTPS                                                    1FD09610
+       TXH     *+2,2,-DDFTB-1                                           1FD09620
+       ADD     FPTPS                                                    1FD09630
+       LGR     6                                                        1FD09640
+       CAL     FPTMP+1                                                  1FD09650
+       LGR     18                                                       1FD09660
+       ACL     FPTMP                                                    1FD09670
+       OAI                   PLACE CONVERTED WORD IN INDICATORS,        1FD09680
+       XCL                   AND LOGICAL AC,                            1FD09690
+ FPTLV AXT     0,4           RESTORE                                    1FD09700
+       AXT     0,2           INDEX                                      1FD09710
+       AXT     0,1           REGISTERS,                                 1FD09720
+       TRA     2,1           AND RETURN.                                1FD09730
+ FPTNL XCA                                                              1FD09740
+       FMP     DDTTN                                                    1FD09750
+       FDP     37,2                                                  $5$1FD09760
+       TRA     FPTDD                                                    1FD09770
+ FPTBG DEC     1E8B35   DGP  OCT     000575360400                       1FD09780
+ FPTPZ BCI     1,000+00                                                 1FD09790
+ FPTFX OCT     243000000000                                             1FD09800
+ FPTMK OCT     777777777                                                1FD09810
+ FPTOR DEC     4096000000                                               1FD09820
+ FPTMP DEC     0,0                                                      1FD09830
+ FPTSB PZE     -DDFTB                                                   1FD09840
+ FPTPS OCT     20                                                       1FD09850
+ FPTHP BCI     1,.00000                                                 1FD09860
+DDFTB  DEC     1E38         TABLE OF POWERS OF TEN IN FLOATING POINT $5$1FD09870
+       DEC     1E37                                                     1FD09880
+       DEC     1E36                                                     1FD09890
+       DEC     1E35                                                     1FD09900
+       DEC     1E34                                                     1FD09910
+       DEC     1E33                                                     1FD09920
+       DEC     1E32                                                     1FD09930
+       DEC     1E31                                                     1FD09940
+       DEC     1E30                                                     1FD09950
+       DEC     1E29                                                     1FD09960
+       DEC     1E28                                                     1FD09970
+       DEC     1E27                                                     1FD09980
+       DEC     1E26                                                     1FD09990
+       DEC     1E25                                                     1FD10000
+       DEC     1E24                                                     1FD10010
+       DEC     1E23                                                     1FD10020
+       DEC     1E22                                                     1FD10030
+       DEC     1E21                                                     1FD10040
+       DEC     1E20                                                     1FD10050
+       DEC     1E19                                                     1FD10060
+       DEC     1E18                                                     1FD10070
+       DEC     1E17                                                     1FD10080
+       DEC     1E16                                                     1FD10090
+       DEC     1E15                                                     1FD10100
+       DEC     1E14                                                     1FD10110
+       DEC     1E13                                                     1FD10120
+       DEC     1E12                                                     1FD10130
+       DEC     1E11                                                     1FD10140
+       DEC     1E10                                                     1FD10150
+DDTTN  DEC     1E9                                                      1FD10160
+       DEC     1E8                                                      1FD10170
+       DEC     1E7                                                      1FD10180
+       DEC     1E6                                                      1FD10190
+       DEC     1E5                                                      1FD10200
+       DEC     1E4                                                      1FD10210
+       DEC     1E3                                                      1FD10220
+       DEC     1E2                                                      1FD10230
+       DEC     1E1                                                      1FD10240
+       DEC     1E0                                                      1FD10250
+       DEC     1E-1                                                     1FD10260
+       DEC     1E-2                                                     1FD10270
+       DEC     1E-3                                                     1FD10280
+       DEC     1E-4                                                     1FD10290
+       DEC     1E-5                                                     1FD10300
+       DEC     1E-6                                                     1FD10310
+       DEC     1E-7                                                     1FD10320
+       DEC     1E-8                                                     1FD10330
+       DEC     1E-9                                                     1FD10340
+       DEC     1E-10                                                    1FD10350
+       DEC     1E-11                                                    1FD10360
+       DEC     1E-12                                                    1FD10370
+       DEC     1E-13                                                    1FD10380
+       DEC     1E-14                                                    1FD10390
+       DEC     1E-15                                                    1FD10400
+       DEC     1E-16                                                    1FD10410
+       DEC     1E-17                                                    1FD10420
+       DEC     1E-18                                                    1FD10430
+       DEC     1E-19                                                    1FD10440
+       DEC     1E-20                                                    1FD10450
+       DEC     1E-21                                                    1FD10460
+       DEC     1E-22                                                    1FD10470
+       DEC     1E-23                                                    1FD10480
+       DEC     1E-24                                                    1FD10490
+       DEC     1E-25                                                    1FD10500
+       DEC     1E-26                                                    1FD10510
+       DEC     1E-27                                                    1FD10520
+       DEC     1E-28                                                    1FD10530
+       DEC     1E-29                                                    1FD10540
+       DEC     1E-30                                                    1FD10550
+       DEC     1E-31                                                    1FD10560
+       DEC     1E-32                                                    1FD10570
+       DEC     1E-33                                                    1FD10580
+       DEC     1E-34                                                    1FD10590
+       DEC     1E-35                                                    1FD10600
+       DEC     1E-36                                                    1FD10610
+       DEC     1E-37                                                    1FD10620
+       DEC     1E-38                                                    1FD10630
+ DDEFT DEC     0                                                        1FD10640
+       REM   **** T1   CONVERTS BINARY TO BCD  8 WORDS PER CARD ****    1FD10650
+ T1    BCI     8,000000000001000002000003000004000005000006000007       1FD10660
+       BCI     8,000008000009000010000011000012000013000014000015       1FD10670
+       BCI     8,000016000017000018000019000020000021000022000023       1FD10680
+       BCI     8,000024000025000026000027000028000029000030000031       1FD10690
+       BCI     8,000032000033000034000035000036000037000038000039       1FD10700
+       BCI     8,000040000041000042000043000044000045000046000047       1FD10710
+       BCI     8,000048000049000050000051000052000053000054000055       1FD10720
+       BCI     8,000056000057000058000059000060000061000062000063       1FD10730
+       BCI     8,000000000064000128000192000256000320000384000448       1FD10740
+       BCI     8,000512000576000640000704000768000832000896000960       1FD10750
+       BCI     8,001024001088001152001216001280001344001408001472       1FD10760
+       BCI     8,001536001600001664001728001792001856001920001984       1FD10770
+       BCI     8,002048002112002176002240002304002368002432002496       1FD10780
+       BCI     8,002560002624002688002752002816002880002944003008       1FD10790
+       BCI     8,003072003136003200003264003328003392003456003520       1FD10800
+       BCI     8,003584003648003712003776003840003904003968004032       1FD10810
+       BCI     8,000000004096008192012288016384020480024576028672       1FD10820
+       BCI     8,032768036864040960045056049152053248057344061440       1FD10830
+       BCI     8,065536069632073728077824081920086016090112094208       1FD10840
+       BCI     8,098304102400106496110592114688118784122880126976       1FD10850
+       BCI     8,131072135168139264143360147456151552155648159744       1FD10860
+       BCI     8,163840167936172032176128180224184320188416192512       1FD10870
+       BCI     8,196608200704204800208896212992217088221184225280       1FD10880
+       BCI     8,229376233472237568241664245760249856253952258048       1FD10890
+       BCI     8,000000262144524288786432048576310720572864835008       1FD10900
+       REM   **** T3   CONVERTS BCD ADDITION RESULT TO BCD ****         1FD10910
+ T3            T3                                                       1FD10920
+               T3,0,4096                                                1FD10930
+               T3,0,2*4096                                              1FD10940
+               T3,0,3*4096                                              1FD10950
+               T3,0,4*4096                                              1FD10960
+               T3,0,5*4096                                              1FD10970
+               T3,0,6*4096                                              1FD10980
+               T3,0,7*4096                                              1FD10990
+       PON     T3                                                       1FD11000
+       PON     T3,0,4096                                                1FD11010
+               T3+1                                                     1FD11020
+               T3+1,0,4096                                              1FD11030
+               T3+1,0,2*4096                                            1FD11040
+               T3+1,0,3*4096                                            1FD11050
+               T3+1,0,4*4096                                            1FD11060
+               T3+1,0,5*4096                                            1FD11070
+               T3+1,0,6*4096                                            1FD11080
+               T3+1,0,7*4096                                            1FD11090
+       PON     T3+1                                                     1FD11100
+       PON     T3+1,0,4096                                              1FD11110
+               T3+2                                                     1FD11120
+               T3+2,0,4096                                              1FD11130
+               T3+2,0,2*4096                                            1FD11140
+               T3+2,0,3*4096                                            1FD11150
+               T3+2,0,4*4096                                            1FD11160
+               T3+2,0,5*4096                                            1FD11170
+               T3+2,0,6*4096                                            1FD11180
+               T3+2,0,7*4096                                            1FD11190
+       PON     T3+2                                                     1FD11200
+       PON     T3+2,0,4096                                              1FD11210
+               T3+3                                                     1FD11220
+               T3+3,0,4096                                              1FD11230
+               T3+3,0,2*4096                                            1FD11240
+               T3+3,0,3*4096                                            1FD11250
+               T3+3,0,4*4096                                            1FD11260
+               T3+3,0,5*4096                                            1FD11270
+               T3+3,0,6*4096                                            1FD11280
+               T3+3,0,7*4096                                            1FD11290
+       PON     T3+3                                                     1FD11300
+       PON     T3+3,0,4096                                              1FD11310
+ HONE  PZE     0,0,4096                                                 1FD11320
+ HZR   BCI     3,0                                                      1FD11330
+OBLK   TNX     ,,0                                                      1FD11340
+ ON    BCI     1,    ON                                                 1FD11350
+ OFF   BCI     1,   OFF                                                 1FD11360
+ TEMP  DEC     0,0,0,0,0,0,0,0,0,0,0,0,0,0                              1FD11370
+ MINUS BCI     1,     -                                                 1FD11380
+IORTH  CPYD    SAVE,,SAVL                                               1FD11390
+       TCH     SYSTWT                                                   1FD11400
+ LBLK          48                                                       1FD11410
+ ERR   IOCP    RESTO,0,3                                                1FD11420
+       IORT    ERROR,0,9                                                1FD11430
+       IORT    BUF2,0,20                                                1FD11440
+ DSU2  IORT    DFBB,0,20                                                1FD11450
+       IORT    BUF1,0,20                                                1FD11460
+IORT   IORT    SAVE,,SAVL                                               1FD11470
+ SWT           BUF2+1,2                                                 1FD11480
+               BUF2+2,2                                                 1FD11490
+               BUF1+1,2                                                 1FD11500
+               BUF1+2,2                                                 1FD11510
+               BUF2+3,2                                                 1FD11520
+               BUF2+4,2                                                 1FD11530
+               BUF1+3,2                                                 1FD11540
+               BUF1+4,2                                                 1FD11550
+               BUF2+5,2                                                 1FD11560
+               BUF2+6,2                                                 1FD11570
+               BUF1+5,2                                                 1FD11580
+               BUF1+6,2                                                 1FD11590
+               BUF2+7,2                                                 1FD11600
+               BUF2                                                     1FD11610
+               BUF1+7,2                                                 1FD11620
+               BUF1                                                     1FD11630
+ ERROR BCI   9,     PLEASE SUPPLY CORRECT CALLING SEQUENCE FOR DUMP.    1FD11640
+ DUMP1 BCI     1,1LOC                                                   1FD11650
+       BCI     8, 00000            AC            QP                     1FD11660
+       BCI     8,MQ                            SI                       1FD11670
+       BCI     3,            KEYS                                       1FD11680
+ DUMP3 BCI     6,0       XR1               XR2                          1FD11690
+       BCI     6,        XR4               XR3                          1FD11700
+       BCI     8,        XR5               XR6               XR7        1FD11710
+ DUMP2 BCI     5,0 TRAP   DCT   IOT   OFL                               1FD11720
+       BCI     7,SENSE LIGHT      1     2     3     4                   1FD11730
+       BCI     8,SENSE SWITCH     1     2     3     4     5     6       1FD11740
+ DFBB  BCI     6,                                                       1FD11750
+       BCI     4,CELLS         TO                                       1FD11760
+       BCI     9,ALL CONTAIN                                            1FD11770
+ BLK   BCI     1,                                                       1FD11780
+       BCI     1,                                                       1FD11790
+       BCI     1,                                                       1FD11800
+ 2BLK  BCI     1,  0000                                                 1FD11810
+ ASTR  BCI     1,*                                                      1FD11820
+ TBLA          0                                                        1FD11830
+       BCI     1,   TXI                                                 1FD11840
+       BCI     1,   TIX                                                 1FD11850
+       BCI     1,   TXH                                                 1FD11860
+       BCI     1,   STR                                                 1FD11870
+       BCI     1,   TNX                                                 1FD11880
+       BCI     1,   TXL                                                 1FD11890
+ TBLEP         TBME,0,TBME-TBPE                                         1FD11900
+ TBLEM         TBP0,0,TBP0-TBME                                         1FD11910
+ TBLBP         TBP1,0,TBP1-TBP0                                         1FD11920
+               TBP2,0,TBP2-TBP1                                         1FD11930
+               TBP3,0,TBP3-TBP2                                         1FD11940
+               TBP4,0,TBP4-TBP3                                         1FD11950
+               TBP5,0,TBP5-TBP4                                         1FD11960
+               TBP6,0,TBP6-TBP5                                         1FD11970
+               TBP7,0,TBP7-TBP6                                         1FD11980
+               TBM0,0,TBM0-TBP7                                         1FD11990
+ TBLBM         TBM1,0,TBM1-TBM0                                         1FD12000
+               TBM2,0,TBM2-TBM1                                         1FD12010
+               TBM3,0,TBM3-TBM2                                         1FD12020
+               TBM4,0,TBM4-TBM3                                         1FD12030
+               TBM5,0,TBM5-TBM4                                         1FD12040
+               TBM6,0,TBM6-TBM5                                         1FD12050
+               TBM7,0,TBM7-TBM6                                         1FD12060
+               TBE,0,TBE-TBM7                                           1FD12070
+ TBPE  BCI     1, CLM00                                                 1FD12080
+       BCI     1, LBT01                                                 1FD12090
+       BCI     1, CHS02                                                 1FD12100
+       BCI     1, SSP03                                                 1FD12110
+       BCI     1, ENK04                                                 1FD12120
+       BCI     1, IOT05                                                 1FD12130
+       BCI     1, COM06                                                 1FD12140
+       BCI     1, ETM07                                                 1FD12150
+       BCI     1, RND10                                                 1FD12160
+       BCI     1, FRN11                                                 1FD12170
+       BCI     1, DCT12                                                 1FD12180
+       BCI     1, RCT14                                                 1FD12190
+       BCI     1,LMTM16                                                 1FD12200
+ TBME  BCI     1, PBT01                                                 1FD12210
+       BCI     1,EFTM02                                                 1FD12220
+       BCI     1, SSM03                                                 1FD12230
+       BCI     1,LFTM04                                                 1FD12240
+       BCI     1,ESTM05                                                 1FD12250
+       BCI     1,ECTM06                                                 1FD12260
+       BCI     1, LTM07                                                 1FD12270
+       BCI     1,LSNM10                                                 1FD12280
+       BCI     1, ETT11                                                 1FD12290
+       BCI     1, RTT12                                                 1FD12300
+       BCI     1,EMTM16                                                 1FD12310
+ TBP0  BCI     1, HTR00                                                 1FD12320
+       BCI     1, TRA20                                                 1FD12330
+       BCI     1, TTR21                                                 1FD12340
+       BCI     1,TRCA22                                                 1FD12350
+       BCI     1,TRCC24                                                 1FD12360
+       BCI     1,TRCE26                                                 1FD12370
+       BCI     1,TRCG27                                                 1FD12380
+       BCI     1,TEFA30                                                 1FD12390
+       BCI     1,TEFC31                                                 1FD12400
+       BCI     1,TEFE32                                                 1FD12410
+       BCI     1,TEFG33                                                 1FD12420
+ TBP04 BCI     1, TLQ40                                                 1FD12430
+       BCI     1, IIA41                                                 1FD12440
+       BCI     1, TIO42                                                 1FD12450
+       BCI     1, OAI43                                                 1FD12460
+       BCI     1, PAI44                                                 1FD12470
+       BCI     1, TIF46                                                 1FD12480
+       BCI     1, IIR51                                                 1FD12490
+       BCI     1, RFT54                                                 1FD12500
+       BCI     1, SIR55                                                 1FD12510
+       BCI     1, RNT56                                                 1FD12520
+       BCI     1, RIR57                                                 1FD12530
+       BCI     1,TCOA60                                                 1FD12540
+       BCI     1,TCOB61                                                 1FD12550
+       BCI     1,TCOC62                                                 1FD12560
+       BCI     1,TCOD63                                                 1FD12570
+       BCI     1,TCOE64                                                 1FD12580
+       BCI     1,TCOF65                                                 1FD12590
+       BCI     1,TCOG66                                                 1FD12600
+       BCI     1,TCOH67                                                 1FD12610
+       BCI     1, TSX74                                                 1FD12620
+ TBP1  BCI     1, TZE00                                                 1FD12630
+       BCI     1, CVR14                                                 1FD12640
+       BCI     1, TPL20                                                 1FD12650
+       BCI     1, XCA31                                                 1FD12660
+       BCI     1, TOV40                                                 1FD12670
+       BCI     1, TQO61                                                 1FD12680
+       BCI     1, TQP62                                                 1FD12690
+ TBP14 BCI     1, TOV40                                                 1FD12700
+       BCI     1, TQO61                                                 1FD12710
+       BCI     1, TQP62                                                 1FD12720
+ TBP2  BCI     1, MPY00                                                 1FD12730
+       BCI     1, VLM04                                                 1FD12740
+       BCI     1, DVH20                                                 1FD12750
+       BCI     1, DVP21                                                 1FD12760
+       BCI     1, VDH24                                                 1FD12770
+       BCI     1, VDP25                                                 1FD12780
+ TBP24 BCI     1, FDH40                                                 1FD12790
+       BCI     1, FDP41                                                 1FD12800
+       BCI     1, FMP60                                                 1FD12810
+       BCI     1,DFMP61                                                 1FD12820
+ TBP3  BCI     1, FAD00                                                 1FD12830
+       BCI     1,DFAD01                                                 1FD12840
+       BCI     1, FSB02                                                 1FD12850
+       BCI     1,DFSB03                                                 1FD12860
+       BCI     1, FAM04                                                 1FD12870
+       BCI     1,DFAM05                                                 1FD12880
+       BCI     1, FSM06                                                 1FD12890
+       BCI     1,DFSM07                                                 1FD12900
+       BCI     1, ANS20                                                 1FD12910
+       BCI     1, ERA22                                                 1FD12920
+ TBP34 BCI     1, CAS40                                                 1FD12930
+       BCI     1, ACL61                                                 1FD12940
+ TBP4  BCI     1, ADD00                                                 1FD12950
+       BCI     1, ADM01                                                 1FD12960
+       BCI     1, SUB02                                                 1FD12970
+       BCI     1, HPR20                                                 1FD12980
+ TBP44 BCI     1, IIS40                                                 1FD12990
+       BCI     1, LDI41                                                 1FD13000
+       BCI     1, OSI42                                                 1FD13010
+       BCI     1, DLD43                                                 1FD13020
+       BCI     1, OFT44                                                 1FD13030
+       BCI     1, RIS45                                                 1FD13040
+       BCI     1, ONT46                                                 1FD13050
+       BCI     1, LDA60                                                 1FD13060
+ TBP5  BCI     1, CLA00                                                 1FD13070
+       BCI     1, CLS02                                                 1FD13080
+       BCI     1, ZET20                                                 1FD13090
+       BCI     1, XEC22                                                 1FD13100
+       BCI     1, LXA34                                                 1FD13110
+       BCI     1, LAC35                                                 1FD13120
+ TBP54 BCI     1,RCHA40                                                 1FD13130
+       BCI     1,RCHC41                                                 1FD13140
+       BCI     1,RCHE42                                                 1FD13150
+       BCI     1,RCHG43                                                 1FD13160
+       BCI     1,LCHA44                                                 1FD13170
+       BCI     1,LCHC45                                                 1FD13180
+       BCI     1,LCHE46                                                 1FD13190
+       BCI     1,LCHG47                                                 1FD13200
+       BCI     1, LDQ60                                                 1FD13210
+       BCI     1, ENB64                                                 1FD13220
+ TBP6  BCI     1, STZ00                                                 1FD13230
+       BCI     1, STO01                                                 1FD13240
+       BCI     1, SLW02                                                 1FD13250
+       BCI     1, STI04                                                 1FD13260
+       BCI     1, STA21                                                 1FD13270
+       BCI     1, STD22                                                 1FD13280
+       BCI     1, STT25                                                 1FD13290
+       BCI     1, STP30                                                 1FD13300
+       BCI     1, SXA34                                                 1FD13310
+       BCI     1, SCA36                                                 1FD13320
+ TBP64 BCI     1,SCHA40                                                 1FD13330
+       BCI     1,SCHC41                                                 1FD13340
+       BCI     1,SCHE42                                                 1FD13350
+       BCI     1,SCHG43                                                 1FD13360
+ TBP7  BCI     1, CPY00                                                 1FD13370
+       BCI     1, CPY00                                                 1FD13380
+       BCI     1, PAX34                                                 1FD13390
+       BCI     1, PAC37                                                 1FD13400
+ TBP74 BCI     1, PXA54                                                 1FD13410
+       BCI     1, PCA56                                                 1FD13420
+ PSE   BCI     1, PSE60                                                 1FD13430
+       BCI     1, NOP61                                                 1FD13440
+       BCI     1, RDS62                                                 1FD13450
+       BCI     1, LLS63                                                 1FD13460
+       BCI     1, BSR64                                                 1FD13470
+       BCI     1, LRS65                                                 1FD13480
+       BCI     1, WRS66                                                 1FD13490
+       BCI     1, ALS67                                                 1FD13500
+       BCI     1, WEF70                                                 1FD13510
+       BCI     1, ARS71                                                 1FD13520
+       BCI     1, REW72                                                 1FD13530
+       BCI     1, AXT74                                                 1FD13540
+       BCI     1, SDN76                                                 1FD13550
+ TBM0  BCI     1,ESNT21                                                 1FD13560
+       BCI     1,TRCB22                                                 1FD13570
+       BCI     1,TRCD24                                                 1FD13580
+       BCI     1,TRCF26                                                 1FD13590
+       BCI     1,TRCH27                                                 1FD13600
+       BCI     1,TEFB30                                                 1FD13610
+       BCI     1,TEFD31                                                 1FD13620
+       BCI     1,TEFF32                                                 1FD13630
+       BCI     1,TEFH33                                                 1FD13640
+ TBM04 BCI     1, RIA42                                                 1FD13650
+       BCI     1, PIA46                                                 1FD13660
+       BCI     1, IIL51                                                 1FD13670
+       BCI     1, LFT54                                                 1FD13680
+       BCI     1, SIL55                                                 1FD13690
+       BCI     1, LNT56                                                 1FD13700
+       BCI     1, RIL57                                                 1FD13710
+       BCI     1,TCNA60                                                 1FD13720
+       BCI     1,TCNB61                                                 1FD13730
+       BCI     1,TCNC62                                                 1FD13740
+       BCI     1,TCND63                                                 1FD13750
+       BCI     1,TCNE64                                                 1FD13760
+       BCI     1,TCNF65                                                 1FD13770
+       BCI     1,TCNG66                                                 1FD13780
+       BCI     1,TCNH67                                                 1FD13790
+ TBM1  BCI     1, TNZ00                                                 1FD13800
+       BCI     1, CAQ14                                                 1FD13810
+       BCI     1, TMI20                                                 1FD13820
+       BCI     1, XCL30                                                 1FD13830
+ TBM14 BCI     1, TNO40                                                 1FD13840
+       BCI     1, CRQ54                                                 1FD13850
+ TBM2  BCI     1, MPR00                                                 1FD13860
+       BCI     1,DFDH40                                                 1FD13870
+       BCI     1,DFDP41                                                 1FD13880
+ TBM24 BCI     1, UFM60                                                 1FD13890
+       BCI     1,DUFM61                                                 1FD13900
+ TBM3  BCI     1, UFA00                                                 1FD13910
+       BCI     1,DUFA01                                                 1FD13920
+       BCI     1, UFS02                                                 1FD13930
+       BCI     1,DUFS03                                                 1FD13940
+       BCI     1, UAM04                                                 1FD13950
+       BCI     1,DUAM05                                                 1FD13960
+       BCI     1, USM06                                                 1FD13970
+       BCI     1,DUSM07                                                 1FD13980
+       BCI     1, ANA20                                                 1FD13990
+ TBM34 BCI     1, LAS40                                                 1FD14000
+ TBM4  BCI     1, SBM00                                                 1FD14010
+ TBM5  BCI     1, CAL00                                                 1FD14020
+       BCI     1, ORA01                                                 1FD14030
+       BCI     1, NZT20                                                 1FD14040
+       BCI     1, LXD34                                                 1FD14050
+       BCI     1, LDC35                                                 1FD14060
+ TBM54 BCI     1,RCHB40                                                 1FD14070
+       BCI     1,RCHD41                                                 1FD14080
+       BCI     1,RCHF42                                                 1FD14090
+       BCI     1,RCHH43                                                 1FD14100
+       BCI     1,LCHB44                                                 1FD14110
+       BCI     1,LCHD45                                                 1FD14120
+       BCI     1,LCHF46                                                 1FD14130
+       BCI     1,LCHH47                                                 1FD14140
+ TBM6  BCI     1, STQ00                                                 1FD14150
+       BCI     1, ORS02                                                 1FD14160
+       BCI     1, DST03                                                 1FD14170
+       BCI     1, SLQ20                                                 1FD14180
+       BCI     1, STL25                                                 1FD14190
+       BCI     1, SXD34                                                 1FD14200
+       BCI     1, SCD36                                                 1FD14210
+ TBM64 BCI     1,SCHB40                                                 1FD14220
+       BCI     1,SCHD41                                                 1FD14230
+       BCI     1,SCHF42                                                 1FD14240
+       BCI     1,SCHH43                                                 1FD14250
+ TBM7  BCI     1, CAD00                                                 1FD14260
+       BCI     1, PDX34                                                 1FD14270
+       BCI     1, PDC37                                                 1FD14280
+ TBM74 BCI     1, PXD54                                                 1FD14290
+       BCI     1, PCD56                                                 1FD14300
+ MSE   BCI     1, MSE60                                                 1FD14310
+       BCI     1, LGL63                                                 1FD14320
+       BCI     1, BSF64                                                 1FD14330
+       BCI     1, LGR65                                                 1FD14340
+       BCI     1, RUN72                                                 1FD14350
+       BCI     1, RQL73                                                 1FD14360
+       BCI     1, AXC74                                                 1FD14370
+TBE    NULL                                                          $5$1FD14380
+ RESTO BCI     3,1                                                      1FD14390
+       REM                                                              1FD14400
+*              CONSTANTS                                                1FD14410
+*                                                                       1FD14420
+       CPYD    BUF2,,20                                                 1FD14430
+       TCH     SYSTWT                                                   1FD14440
+DSU2H  CPYD    DFBB,,20                                                 1FD14450
+       TCH     SYSTWT                                                   1FD14460
+       CPYD    BUF1,,20                                                 1FD14470
+       TCH     SYSTWT                                                   1FD14480
+DSU2MH PZE     0,0,DSU2H+2                                              1FD14490
+DSU2PH PZE     0,0,DSU2H-2                                              1FD14500
+ DSU2M PZE     0,0,DSU2+1                                               1FD14510
+ DSU2P PZE     0,0,DSU2-1                                               1FD14520
+IOXSLH PZE     **,,SEH                                                  1FD14530
+IOSLIH PZE     0                                                        1FD14540
+HSEL   OCT     120600120100                                             1FD14550
+MASK1  OCT     777700777777                                             1FD14560
+MASK2  OCT     000017000000                                             1FD14570
+MASK3  OCT     007777000000                                             1FD14580
+REEDH  PZE     CTLRH                                                    1FD14590
+RITEH  PZE     CTLWH                                                    1FD14600
+LENDTH PZE     ENDTPH                                                   1FD14610
+LENDHY PZE     ENDHY                                                    1FD14620
+LEWA   PZE     EWAERR                                                   1FD14630
+LCZERO PZE     0                                                        1FD14640
+THRFV  PZE     0                                                        1FD14650
+THRSX  PZE     0                                                        1FD14660
+NOPH1  TRA     SELMDH                                                   1FD14730
+NOPH2  CLA     IOLSTH                                                   1FD14740
+NOPH3  STO     1,2                                                      1FD14750
+NOPH4  CLA     HSEL                                                     1FD14760
+NOPH5  STO     SELMDH+21                                                1FD14770
+ SYUCB PZE     **                                                       1FD14780
+*                                                                       1FD14820
+RSRIH  CPYD    ORGDP,,2278                                              1FD14830
+       TCH     SYSTWT                                                   1FD14840
+ RSRI  IORT    ORGDP,,2278    UP TO ACCOUNTING ROUTINES                 1FD14850
+WORD   BSS     2                                                     $5$1FD14851
+LIMIT  BES     38                                                       1FD14860
+ END   BSS     SIZE                                                     1FD14870
+ BLKZ  BCI     1, 00000                                                 1FD14880
+ BZB   BCI     1,  00                                                   1FD14890
+ DNINE PZE     9                                                        1FD14900
+ ENDD  PZE     END                                                      1FD14910
+NDIO   IORT    LIMIT-38,,SIZE+38                                        1FD14920
+NDIOH  CPYD    LIMIT-38,,SIZE+38                                        1FD14930
+       TCH     SYSTWT                                                   1FD14940
+ DSU   IORT    DUMP1,,20                                                1FD14950
+       IORT    BUF2,,20                                                 1FD14960
+       IORT    BUF3,,20                                                 1FD14970
+       IORT    DUMP3,,20                                                1FD14980
+       IORT    BUF4,,20                                                 1FD14990
+       IORT    BUF5,,20                                                 1FD15000
+       IORT    DUMP2,,20                                                1FD15010
+       IORT    BUF1,,20                                                 1FD15020
+       IORT    BLK,,3                                                   1FD15030
+DSUH   CPYD    DUMP1,,20                                                1FD15040
+       TCH     SYSTWT                                                   1FD15050
+       CPYD    BUF2,,20                                                 1FD15060
+       TCH     SYSTWT                                                   1FD15070
+       CPYD    BUF3,,20                                                 1FD15080
+       TCH     SYSTWT                                                   1FD15090
+       CPYD    DUMP3,,20                                                1FD15100
+       TCH     SYSTWT                                                   1FD15110
+       CPYD    BUF4,,20                                                 1FD15120
+       TCH     SYSTWT                                                   1FD15130
+       CPYD    BUF5,,20                                                 1FD15140
+       TCH     SYSTWT                                                   1FD15150
+       CPYD    DUMP2,,20                                                1FD15160
+       TCH     SYSTWT                                                   1FD15170
+       CPYD    BUF1,,20                                                 1FD15180
+       TCH     SYSTWT                                                   1FD15190
+       CPYD    BLK,,3                                                   1FD15200
+       TCH     SYSTWT                                                   1FD15210
+CPYP3  CPYD    SAVE,,465                                                1FD15220
+       TCH     SYSTWT                                                   1FD15230
+       CPYD    SAVE+465,,465                                            1FD15240
+       TCH     SYSTWT                                                   1FD15250
+       CPYD    SAVE+930,,465                                            1FD15260
+       TCH     SYSTWT                                                   1FD15270
+       CPYD    SAVE+1395,,465                                           1FD15280
+       TCH     SYSTWT                                                   1FD15290
+       CPYD    SAVE+1860,,465                                           1FD15300
+       TCH     SYSTWT                                                   1FD15310
+       CPYD    SAVE+2325,,465                                           1FD15320
+       TCH     SYSTWT                                                   1FD15330
+CPYP2  CPYD    LIMIT-38,,SIZE+38                                        1FD15340
+       TCH     SYSTWT                                                   1FD15350
+*                                                                       1FD15360
+*              I/O REDUNDANCY (OR EOF,EOT) ERROR                        1FD15370
+*                                                                       1FD15380
+ ERRR  TSX     IOXRW,4       OFF LINE MESSAGE                           1FD15390
+       MZE     SYUCB,1,STAT                                             1FD15400
+       PZE     *+3,,*+3                                                 1FD15410
+       NOP                                                              1FD15420
+       MZE     SYUCB,1,STATH                                            1FD15430
+       TRA     SYSRET                                                   1FD15470
+PRTMSD TSX     IOXRW,4       OFF LINE MESSAGE                           1FD15480
+       MZE     SYUCB,1,MSD                                              1FD15490
+       PZE     *+3,,*+3                                                 1FD15500
+       NOP                                                              1FD15510
+       MZE     0,,0                                                     1FD15520
+       TRA     ERRRX                                                    1FD15530
+ERRH   CPYP    RESTO,,3                                                 1FD15540
+       CPYD    ERROR,,9                                                 1FD15550
+       TCH     SYSTWT                                                   1FD15560
+ MSD   IOCP    MESSG,,5                                                 1FD15570
+       IOCT    MESSGD,,3                                                1FD15580
+MESSGD BCI     3,DISK ERROR.                                            1FD15590
+*                                                                       1FD15600
+ STAT  IOCT    MESSG,,8                                                 1FD15610
+*                                                                       1FD15620
+EWAERR CLA     MESGH                                                    1FD15630
+       STO     MESSGH                                                   1FD15640
+       CLA     MESGH+1                                                  1FD15650
+       STO     MESSGH+1                                                 1FD15660
+       TRA     ERRR                                                     1FD15670
+MESGH  BCI     2,EWA FLAG ON-                                           1FD15680
+ MESSG BCI     8,1EXECUTION TERMINATED BY DUMP-SYSUT4 REDUNDANCY.       1FD15690
+*                                                                       1FD15700
+MESSG1 BCI     1,SYSOU1                                                 1FD15710
+*                                                                       1FD15720
+STATH  CPYP    MESSG,,5                                                 1FD15730
+       CPYD    MESSGH,,3                                                1FD15740
+       TCH     SYSTWT                                                   1FD15750
+MESSGH BCI     3,UNUSUAL END-SYSUT4                                     1FD15760
+ SERRR CLA     MESSG1                                                   1FD15770
+       STO     MESSG+5                                                  1FD15780
+       STO     MESSGH+2                                                 1FD15790
+       TRA     ERRR                                                     1FD15800
+*                                                                       1FD15810
+ FDUMP PZE     -1,,0                                                    1FD15820
+(PGCT) OCT     000066000000                                             1FD15830
+ P     OCT     000000010000                                             1FD15840
+ Q     OCT     000001000000                                             1FD15850
+Q1     OCT     000002000000                                             1FD15860
+*                                                                       1FD15870
+ENDHY  AXT     33,4          INITIALIZE HYPERTAPE EOF                $5$1FD15980
+       SXD     PZE7,4                                                $5$1FD15990
+       AXT     28,4          INITIALIZE HYPER REWIND UNLOAD          $5$1FD16000
+       SXD     PZE4,4                                                $5$1FD16010
+ENDTPH LAC     SYUCB,2       WAIT FOR UNIT TO BE FREE                $5$1FD16020
+       ZET     1,2                                                      1FD16030
+       TRA     *-1                                                      1FD16040
+       TSX     .NDSEL,4      WRITE END OF FILE                          1FD16050
+PZE7   PZE     SYUCB,,7                                                 1FD16060
+       NOP                                                              1FD16070
+       ZET     1,2                                                      1FD16080
+       TRA     *-1                                                      1FD16090
+       TSX     .NDSEL,4      REWIND AND UNLOAD                          1FD16100
+PZE4   PZE     SYUCB,,4                                                 1FD16110
+       LAC     SYSUNI,4                                                 1FD16120
+       CLA     SYSOU2-1,4                                               1FD16130
+       ERA     SYUCB                                                    1FD16140
+       STA     LCZERO                                                   1FD16150
+       NZT     LCZERO        TEST FOR TAPE SWITCHING                    1FD16160
+       TRA     NOSWT         NO SWITCH                                  1FD16170
+       CLA     SYSOU2-1,4     SWITCH                                    1FD16180
+       LDQ     SYSOU1-1,4                                               1FD16190
+       STQ     SYSOU2-1,4                                               1FD16200
+       STO     SYSOU1-1,4                                               1FD16210
+       STO     SYUCB                                                    1FD16220
+       LDQ*    SYUCB                                                    1FD16230
+       TSX     .SYMUN,4                                              $5$1FD16240
+       STO     SWTMES+3                                                 1FD16250
+       TSX     .MWR,4                                                   1FD16260
+       PZE     1                                                        1FD16270
+       PZE     SWTMES,,4+512*4                                          1FD16280
+       TRA     ENDX4                                                    1FD16290
+NOSWT  LDQ*    SYUCB                                                    1FD16300
+       TSX     .SYMUN,4                                              $5$1FD16310
+       STO     NOSWMS+3                                                 1FD16320
+       TSX     .MWR,4                                                   1FD16330
+       PZE     1                                                        1FD16340
+       PZE     NOSWMS,,4+512*4                                          1FD16350
+       TSX     .PAUSE,4                                              $5$1FD16360
+ENDX4  AXT     **,4                                                     1FD16370
+       AXT     **,2                                                     1FD16380
+       STZ     IOXIN                                                 $5$1FD16390
+       TRA     0,4           RETURN--REPEAT WRITE OPERATION             1FD16400
+SWTMES BCI     4,SYSOU1 IS NOW                                          1FD16410
+NOSWMS BCI     4,MOUNT NEW TAPE ON                                      1FD16420
+ BUF2  EQU     ORGDP                                                    1FD16430
+ BUF4  EQU     BUF2+20                                                  1FD16440
+ BUF1  EQU     BUF4+20                                                  1FD16450
+ BUF3  EQU     BUF1+20                                                  1FD16460
+ BUF5  EQU     BUF3+20                                                  1FD16470
+ BUF   EQU     DUMP1                                                    1FD16480
+*                                                                       1FD16490
+IOXHYO CLA     LENDHY                                                   1FD16500
+       TRA     *+2                                                      1FD16510
+IOXHYU CLA     LEWA                                                     1FD16520
+       STA     EWALOC                                                   1FD16530
+IOXHYP SXA     IOXH4,4                                                  1FD16540
+       SXA     IOXH4+1,2                                                1FD16550
+       SXA     IOXH4+2,1                                                1FD16560
+       CLA     2,4                                                      1FD16570
+       STA     IOXH4-1                                                  1FD16580
+       CAL     4,4                                                      1FD16590
+       STA     IOXHND                                                   1FD16600
+       STT     IOXMD                                                    1FD16610
+       STP     IOXSLH                                                   1FD16620
+       STA     *+1                                                      1FD16630
+       LAC     **,1                                                     1FD16640
+       LDI     0,1                                                      1FD16650
+       RFT     400000                                                   1FD16660
+EWALOC TRA     **            EWA-MODIFIED FOR SYSOU1 OR SYSUT4          1FD16670
+       ARS     18                                                       1FD16680
+       STA     CTLRH+2       STORE LOCATION OF                          1FD16690
+       STA     CTLWH+2       I/O COMMANDS                               1FD16700
+       AXT     6,2                                                      1FD16710
+       ZET     IOXMD                                                    1FD16720
+       TXI     *+1,2,16      BUMP TO BCD MODE                           1FD16730
+       TMI     *+4                                                      1FD16740
+       SXA     CTLRH,2       READ                                       1FD16750
+       CLA     REEDH                                                    1FD16760
+       TRA     *+3                                                      1FD16770
+       SXA     CTLWH,2       WRITE                                      1FD16780
+       CLA     RITEH                                                    1FD16790
+       STA     IOXSLH                                                   1FD16800
+       LDI     0,1                                                      1FD16810
+       LNT     000040                                                   1FD16820
+       TRA     *+5                                                      1FD16830
+       CAL     =1                                                       1FD16840
+       ORS     CTLRH                                                    1FD16850
+       ORS     CTLWH          INTERFACE                                 1FD16860
+       ORS     IOXRW-7                                                  1FD16870
+       CLA     MASK1                                                    1FD16880
+       ANS     HSEL                                                     1FD16890
+       CLA     0,1                                                      1FD16900
+       ANA     MASK2                                                    1FD16910
+       ORS     HSEL          PLACE UNIT NO. IN 3RD BYTE OF COMMAND      1FD16920
+       CLA     IOXSLH                                                   1FD16930
+       ZET     1,1                                                      1FD16940
+       TRA     *-1                                                      1FD16950
+       STO     1,1                                                      1FD16960
+       NOP                   MODIFIED FOR FINAL SAVE                    1FD16970
+       TSX     .ACTV,4                                                  1FD16980
+IOXHND MZE     **                                                       1FD16990
+       ZET     1,1                                                      1FD17000
+       TRA     *-1                                                      1FD17010
+       LDI     IOSLIH                                                   1FD17020
+       LFT     001000                                                   1FD17030
+       TRA     **            ERROR RETURN-UNUSUAL END                   1FD17040
+IOXH4  AXT     **,4                                                     1FD17050
+       AXT     **,2                                                     1FD17060
+       AXT     **,1                                                     1FD17070
+       TRA     5,4           NORMAL RETURN                              1FD17080
+SEH    PAC     0,2           SEL(+)                                     1FD17090
+       TMI     SMH                                                      1FD17100
+       NOP                                                              1FD17110
+       NOP                   MODIFIED FOR FINAL SAVE                    1FD17120
+       NOP                                                              1FD17130
+       NOP                                                              1FD17140
+       CLA     1,2                                                      1FD17150
+       STA*    .RCHX                                                    1FD17160
+       XEC*    .RCHX                                                    1FD17170
+       TRA     1,4                                                      1FD17180
+SMH    STZ     1,2                                                      1FD17190
+       STI     IOSLIH                                                   1FD17200
+       TRA     1,4                                                      1FD17210
+CTLRH  SMS     6                                                        1FD17220
+       CTLR    HSEL                                                     1FD17230
+       TCH     **                                                       1FD17240
+CTLWH  SMS     6                                                        1FD17250
+       CTLW    HSEL                                                     1FD17260
+       TCH     **                                                       1FD17270
+FINLHY TSX     .ACTV,4                                                  1FD17280
+       MZE     SELMDH+22                                                1FD17290
+       ZET     1,1                                                      1FD17300
+       TRA     SELMDH+2                                                 1FD17310
+       LDI     SELMDH+23                                                1FD17320
+       LFT     001000                                                   1FD17330
+       TRA     ERRRX                                                    1FD17340
+       TRA     **            RET IN FDMP                                1FD17350
+*                                                                       1FD17360
+       PAC     0,2           SEL(+)                                     1FD17370
+       TMI     SELMDH+14                                                1FD17380
+       CLA     1,2                                                      1FD17390
+       STA*    .RCHX                                                    1FD17400
+       XEC*    .RCHX                                                    1FD17410
+       TRA     1,4                                                      1FD17420
+       STZ     1,2           SEL(-)                                     1FD17430
+       STI     SELMDH+23                                                1FD17440
+       TRA     1,4                                                      1FD17450
+       SMS     6                                                        1FD17460
+       CTLR    SELMDH+21                                                1FD17470
+       CPYD    ORGDP,,2278                                              1FD17480
+       TCH     SYSTWT                                                   1FD17490
+       PZE     **            HSEL ORDER                                 1FD17500
+       PZE     **            UCB                                        1FD17510
+       PZE     **            INDICATORS                                 1FD17520
+*              THIS ROUTINE PERFORMS AN IOEX READ                       1FD17530
+*              OR WRITE FROM TAPE OR DISK                               1FD17540
+*                                                                       1FD17550
+IOXRW  CAL     3,4                                                      1FD17560
+       ERA     ISIT                                                     1FD17570
+       SXA     ENDX4,4                                                  1FD17580
+       SXA     ENDX4+1,2                                                1FD17590
+       SXA     IOXND+5,1                                             $5$1FD17600
+       TNZ     *+4                                                      1FD17610
+       NZT     THRFV         TEST FOR SYSOU1                            1FD17620
+       TRA     IOXTPO                                                   1FD17630
+       TRA     IOXHYO                                                   1FD17640
+       NZT     THRTW         TEST FOR SYSUT4                            1FD17650
+       TRA     IOXTPU                                                   1FD17660
+       NZT     THRSX                                                    1FD17670
+       TRA     IOXDSK                                                   1FD17680
+       TRA     IOXHYU                                                   1FD17690
+IOXTPO CLA     LENDTH                                                   1FD17700
+       STA     IOXEFF                                                   1FD17710
+       TRA     *+2                                                      1FD17720
+IOXTPU CLA     2,4                                                      1FD17730
+       STA     IOXEF                                                    1FD17740
+ IOXTP SXA     IOXS4,4       SAVE IR4                                   1FD17750
+       CLA     2,4                                                      1FD17760
+       STA     IOXER         SET PERM. REDUNDANCY EXIT                  1FD17770
+       CAL     1,4           GET FIRST WORD OF CALL SEQUENCE            1FD17780
+       STT     IOXSLL        SAVE MODE FOR SELECT                       1FD17790
+       STP     IOXSLL        SAVE PREFIX FOR SELECT TYPE                1FD17800
+       STA     IOXND         PUT LOC IN ACTIV CALLING SEQUENCE          1FD17810
+       STA     *+1           SET TO PICK UP UCB                         1FD17820
+       LAC     **,2          -L(UCB)                                 $5$1FD17830
+       ARS     18            I/O COMMANDS LOC TO ADDRESS                1FD17840
+       STA     IOXSLL        PUT IN SELECT WORD                         1FD17850
+       ZET     1,2           TEST FOR THIS UNIT IN USE               $5$1FD17860
+       TRA     *-1           WAIT TILL THRU                          $5$1FD17870
+       CLA     IOXMD                                                 $5$1FD17880
+       TZE     *+4                                                   $5$1FD17890
+       LDI     IOXIN                                                 $5$1FD17900
+       LFT     200000                                                $5$1FD17910
+IOXEFF TRA     **                                                    $5$1FD17920
+       CLA     IOXSLL        GET SELECT WORD                         $5$1FD17930
+       STO     1,2           SIGNED CONTROL WORD TO UCB 2            $5$1FD17940
+       STZ     IOXIN                                                    1FD17950
+       TSX     .ACTV,4              ACTIVATE (MODIFIED FOR LAST SEL.)$5$1FD17970
+IOXND  PZE     **            UNIT                                       1FD17980
+       CLA     IOXMD          TEST FOR BCD WRITE.                       1FD17990
+       TZE     *+5           ON OUTPUT TAPE.                            1FD18000
+       LXA     ENDX4,4                                                  1FD18010
+       LXA     ENDX4+1,2                                                1FD18020
+       AXT     **,1                                                  $5$1FD18030
+       TRA     5,4           YES.  NORMAL RETURN,                       1FD18040
+       NZT     IOXIN         NO.                                        1FD18050
+       TRA     *-1                                                      1FD18060
+       LDI     IOXIN                                                    1FD18070
+ IOXS4 AXT     **,4          SET FOR EXIT                               1FD18080
+       LXA     ENDX4+1,2                                                1FD18090
+       LXA     IOXND+5,1                                             $5$1FD18100
+       LFT     200000        TEST EOF,EOT                               1FD18110
+ IOXEF TRA     **            EOF EXIT                                   1FD18120
+       LFT     100000        TEST FOR PERM. RTT                         1FD18130
+ IOXER TRA     **            YES, ERROR EXIT                            1FD18140
+       TRA     5,4            NORMAL RETURN                             1FD18150
+*                                                                       1FD18160
+IOXSLL PZE     0,,IOXSEL     LOCATION OF SELECT ROUTINE                 1FD18170
+ IOXMD PZE     **            MODE SWITCH                                1FD18180
+ IOXIN PZE     0                                                        1FD18190
+*                                                                       1FD18200
+*              IOXSEL--ENTERED TWICE BY IOEX                            1FD18210
+*                                                                       1FD18220
+IOXSEL SXA     IOXSS4,4      SAVE IR4                                   1FD18230
+       PAC     0,4           -L(UCB)                                    1FD18240
+       TMI     IOXPST        SEL(-)                                     1FD18250
+       CLA     0,4           UCB 1                                      1FD18260
+       PDX     0,2           UNIT TO IR2                                1FD18270
+       CLA     1,4           UCB 1                                      1FD18280
+       STA*    .RCHX         STORE LOC TO RCHX FROM                     1FD18290
+       STT     IOXMD         SAVE MODE FLAG                             1FD18300
+       NZT     IOXMD         TEST MODE                                  1FD18310
+       TXI     *+1,2,16      BINARY, BUMP TO BINARY MODE                1FD18320
+       ZET     IOXMD         IF BCD SELECT, MAKE                     $5$1FD18321
+       STZ     SYSJOB+2      MODSW ZERO FOR DC MODE                  $5$1FD18322
+       TMI     IOXWR         WRITE                                      1FD18330
+       SXA     *+2,2         INITIALIZE READ SELECT                  $5$1FD18340
+       ZET*    SYSJOB+1      BYPASS READ SELECT IF IN DC MODE        $5$1FD18350
+       RDS     **            READ SELECT                             $5$1FD18360
+       XEC*    .RCHX         RESET AND LOAD CHANNEL                  $5$1FD18370
+SLSWTP TXL     IOXSS4,0,**   TRANSFER IF NOT FINAL SELECT.           $5$1FD18380
+       CLA     SLSWTP        REINITIALIZE DECREMENT OF UCB 2         $5$1FD18390
+       STD     1,4           TO POINT TO FINAL SELECT ROUTINE.       $5$1FD18400
+       PXA     ,2            INITIALIZE READ SELECT IN               $5$1FD18410
+       LDC     SYSCOR,4      LOWER CORE WHERE EVER YOU ARE.          $5$1FD18411
+       STA     FINRDS,4                                              $5$1FD18412
+IOXSS4 AXT     **,4          RESTORE IR4                                1FD18420
+       TRA     1,4           AND EXIT IOXSEL                            1FD18430
+IOXWR  SXA     *+2,2         INITIALIZE WRITE SELECT                 $5$1FD18440
+       ZET*    SYSJOB+1      BYPASS WRITE SELECT IF IN DC MODE       $5$1FD18441
+       WRS     **            WRITE SELECT                               1FD18450
+       TRA     SLSWTP-1      GIVE CHANNEL COMMAND                    $5$1FD18460
+IOXPST STI     IOXIN         SAVE ERROR FLAGS, IF ANY                   1FD18470
+       STL     IOXIN         SET IN OPERATION WORD OFF                  1FD18480
+       STZ     1,4           SET UCB 2 ZERO                             1FD18490
+       TRA     IOXSS4        GO EXIT                                    1FD18500
+*                                                                       1FD18510
+*                                                                       1FD18520
+IOXDSK SXA     IOXD,4                                                   1FD18530
+       SXA     IOXD+1,2                                                 1FD18540
+       SXA     IOXD+2,1                                                 1FD18550
+       CLA     3,4           4TH WORD OF CALLING SEQUENCE               1FD18560
+       STT     NUMX          NO. TRACKS                                 1FD18570
+       TMI     *+4           TEST IF READ OR WRITE                      1FD18580
+       STA     CTLR+2        READ                                       1FD18590
+       CLA     REED                                                     1FD18600
+       TRA     *+3                                                      1FD18610
+       STA     CTLW+2        WRITE                                      1FD18620
+       CLA     RITE                                                     1FD18630
+       STA     9IOSL                                                    1FD18640
+       ADD     =2                                                       1FD18650
+       STA     RW            SAVE LOC OF COPY COMMANDS FOR UPDATE       1FD18660
+       STA     RW+2                                                     1FD18670
+       CLA     3,4                                                      1FD18680
+       ARS     18                                                       1FD18690
+       STA     A-2                                                      1FD18700
+       CLA     NUMX                                                     1FD18710
+       ALS     3                                                        1FD18720
+       STD     NUM                                                      1FD18730
+       LAC     UCB,1         -L(UCB) TO IR1                             1FD18740
+       CLA     **            SET TO WORD CONTAINING TRACK ADDRESS       1FD18750
+       STA     XLIMT                                                    1FD18760
+ A     ZET     1,1           TEST IF UNIT FREE                          1FD18770
+       TRA     *-1                                                      1FD18780
+       ENB     =0                                                       1FD18790
+       STA     3,1                                                      1FD18800
+       CLS     2,1           SET AF FLAG FOR IOEX TO DO SEEK            1FD18810
+       STO     2,1                                                      1FD18820
+       TSX     .ACTV,4       PERFORM SEEK                               1FD18830
+       PZE     UCB                                                      1FD18840
+ AA    CLA     XLIMT         PICK UP CURRENT BINARY ADDRESS             1FD18850
+       TSX     .DECVA,4                                              $5$1FD18860
+       LAC     UCB,4                                                    1FD18870
+       TSX     .FDAMT,2                                              $5$1FD18880
+       OCT     000000000006                                             1FD18890
+       PZE     DVTN          LOCATION OF ORDER TO BE COMPOSED           1FD18900
+       CLA     9IOSL                                                    1FD18910
+       STO     1,1           SET UCB 2 PRIORITY                         1FD18920
+       NOP                   MODIFIED FOR FINAL SAVE                    1FD18930
+       NOP                                                              1FD18940
+       TSX     .ACTV,4        PERFORM READ OR WRITE                     1FD18950
+       MZE     UCB                                                      1FD18960
+       ZET     1,1                                                      1FD18970
+       TRA     *-1           WAIT TILL DONE                             1FD18980
+       LDI     9IOSLI                                                   1FD18990
+       LFT     001000        WAS IT UNUSUAL END...                      1FD19000
+       TRA     PRTMSD        PRINT ERROR MESSAGE                        1FD19010
+       LXD     NUM,2                                                    1FD19020
+       TNX     IOXD,2,1      TRA IF THRU..OTHERWISE, UPDATE TRACK COUNT 1FD19030
+       SXD     NUM,2                                                    1FD19040
+ RW    LXA     **,2          ADDRESS OF TCH COMMAND IN READ OR WRITE    1FD19050
+       TXI     *+1,2,2                                                  1FD19060
+       SXA     **,2                                                     1FD19070
+       LXA     XLIMT,4                                                  1FD19080
+       TXI     *+1,4,1       UPDATE TRACK ADDRESS                       1FD19090
+       SXA     XLIMT,4                                                  1FD19100
+       PXA     0,4           DOES NEXT TRACK                            1FD19110
+       LRS     35            REQUIRE A                                  1FD19120
+       DVP     =40           SEEK                                       1FD19130
+       TNZ     AA            NO                                         1FD19140
+       PXA     0,4           YES                                        1FD19150
+       TRA     A+2                                                      1FD19160
+ IOXD  AXT     **,4                                                     1FD19170
+       AXT     **,2                                                     1FD19180
+       AXT     **,1                                                     1FD19190
+       TRA     5,4           NORMAL RETURN                              1FD19200
+*                                                                       1FD19210
+*                                                                       1FD19220
+ CTLR  SMS*    AA+4          READ COMMANDS                              1FD19230
+       CTLR    DVTN                                                     1FD19240
+       TCH     **                                                       1FD19250
+ CTLW  SMS*    AA+4          WRITE COMMANDS                             1FD19260
+       CTLW    DVTN                                                     1FD19270
+       TCH     **                                                       1FD19280
+*                                                                       1FD19290
+ 9IOSL PZE     **,,SE                                                   1FD19300
+XLIMT  PZE     0                                                        1FD19310
+ DVTN  DVTN    ,,,                                                      1FD19320
+9IOSLI PZE     0                                                        1FD19330
+ NUM   PZE     0                                                        1FD19340
+ NUMX  PZE     0                                                        1FD19350
+ ISIT  NOP                                                              1FD19360
+9IOLST PZE     SELMDH+16,,SELMDH+7                                      1FD19370
+IOLSTH PZE     SELMDH+17,,SELMDH+8                                      1FD19380
+ REED  PZE     CTLR                                                     1FD19390
+ RITE  PZE     CTLW                                                     1FD19400
+RETX   TXH     **,0,0        RETURN TO FDMP AND 729 SELECT SWITCH    $5$1FD19410
+ LIMT  PZE     0                                                        1FD19420
+THRTW  PZE     **                                                       1FD19430
+UCB    PZE     **                                                       1FD19440
+*                                                                       1FD19450
+ SE    PAC     0,2           -L(UCB 2)                                  1FD19460
+       TMI     SM            SELECT MINUS                               1FD19470
+       NOP                                                              1FD19480
+       NOP                   MODIFIED FOR                               1FD19490
+       NOP                   LAST                                       1FD19500
+       NOP                   SAVE                                       1FD19510
+       NOP                                                              1FD19520
+       NOP                                                              1FD19530
+       CLA     1,2                                                      1FD19540
+       STA*    .RCHX                                                    1FD19550
+       XEC*    .RCHX                                                    1FD19560
+       TRA     1,4           RETURN TO IOEX                             1FD19570
+ SM    STZ     1,2                                                      1FD19580
+       STI     9IOSLI        SAVE ERROR FLAGS, IF ANY                   1FD19590
+       TRA     1,4           RETURN TO IOEX                             1FD19600
+*                                                                       1FD19610
+*              SELEC(-) ROUTINE FOR FINAL SAVE--TAPE VERSION            1FD19620
+*                                                                       1FD19630
+FINLTP EQU     *             LOAD ADDRESS OF FINAL 729 SEL ROUTINE   $5$1FD19640
+       LOC     IOEXD         DEFIN LOC OF ROUTINE RELATIVE TO SYSORG $5$1FD19650
+SELMIN SXA     **,4          SAVE IR4 (INITIALIZE TO RTNACT)         $5$1FD19660
+       LDC     SYSCOR,4      FIND OUT WHERE WE ARE, IR4=-SYSORG      $5$1FD19670
+       PAC     0,2           LOCATE UCB                              $5$1FD19680
+       TMI     SELMN,4       SEL-                                    $5$1FD19690
+       CLA     1,2           INITIALIZE                              $5$1FD19700
+       STA*    .RCHX         RESET AND LOAD CHANNEL                  $5$1FD19710
+       ZET*    SYSJOB+1      BYPASS READ SELECT IF IN DC MODE        $5$1FD19720
+FINRDS RDS     **            READ SELECT                             $5$1FD19730
+       XEC*    .RCHX         RESET AND LOAD CHANNEL                  $5$1FD19740
+RTNACT AXT     **,4          RESTORE IR4                             $5$1FD19750
+       TRA     1,4           AND RETURN TO IOEX                      $5$1FD19760
+SELMN  STI     SVIND,4       SAVE INDICATORS                         $5$1FD19770
+       STZ     1,2           ZERO OUT UCB WORD 2 (UNIT FREE)         $5$1FD19780
+       TRA     RTNACT,4      RETURN TO IOEX                          $5$1FD19790
+(CORE) TSX     .ACTV,4       ACTIVATE SYSUT4 TO RESTORE UPPER CORE   $5$1FD19800
+       MZE     UCBFTP-TPLGH,1   POINTS TO L(UCB)  IR1=-SYSORG-TPLGH  $5$1FD19810
+       ZET     1,2           IS UNIT (SYSUT4) FREE  IR2=-UCB         $5$1FD19820
+       TRA     *-1-TPLGH,1   WAIT FOR TRAP                           $5$1FD19830
+       LDI     SVIND-TPLGH,1   PICK UP INDICATORS                    $5$1FD19840
+       LFT     300000        TEST FOR EOF OR PERM REDUN              $5$1FD19850
+       TRA     ERRRX         ERROR RETURN (TERMINATE EXECUTION)      $5$1FD19860
+FINTPX TRA     **            RETURN TO FDMP                          $5$1FD19870
+IOLSTP IORT    ORGDP,,2278   I/O LIST TO RESTORE UPPER CORE          $5$1FD19880
+UCBTP  EQU     *+FINLTP-IOEXD  LOAD ADDRESS OF 'UCBFTP'              $5$1FD19890
+UCBFTP PZE     **            ADDRESS OF UCB (SYSUT4)                 $5$1FD19891
+SVIND  EQU     *             INDICATORS SAVED AT SYSORG+SVIND        $5$1FD19892
+TPLGH  EQU     *-SELMIN      LENGTH OF FINAL 729 SELECT ROUTINE      $5$1FD19893
+       ORG     FINLTP+TPLGH  RESET LOCATION COUNTER                  $5$1FD19894
+*              SEL(-) ROUTINE FOR FINAL SAVE--DISK VERSION              1FD19900
+*                                                                       1FD19910
+FINLDK MZE     SELMDH+21                                                1FD19920
+       ZET     1,1                                                      1FD19930
+       TRA     SELMDH+1                                                 1FD19940
+       LDI     SELMDH+24                                                1FD19950
+       LFT     001000                                                   1FD19960
+       TRA     ERRRX         UNUSUAL END                                1FD19970
+       TRA     **            RET IN MONITOR DUMP                        1FD19980
+       PAC     0,2                                                      1FD19990
+       TMI     SELMDH+13                                                1FD20000
+       CLA     1,2           UCB 2                                      1FD20010
+       STA*    .RCHX                                                    1FD20020
+       XEC*    .RCHX                                                    1FD20030
+       TRA     1,4                                                      1FD20040
+       STZ     1,2                                                      1FD20050
+       STI     SELMDH+24                                                1FD20060
+       TRA     1,4                                                      1FD20070
+       SMS     6                                                        1FD20080
+       CTLR    SELMDH+19                                                1FD20090
+       TCH     SELMDH+22                                                1FD20100
+       PZE     **            DVTN                                       1FD20110
+       PZE     **            ORDER                                      1FD20120
+       PZE     **            UCB                                        1FD20130
+       CPYD    ORGDP+1860,,418                                          1FD20140
+       TCH     SYSTWT                                                   1FD20150
+       PZE     **            9IOSLI                                     1FD20160
+NOPD1  AXC     SELMDH-1,4    SIMULATE TSX .ACTV,4                       1FD20170
+NOPD11 TRA     .ACTV+1             FROM SELMDH-1                     $5$1FD20180
+NOPD2  CLA     DVTN                                                     1FD20190
+NOPD3  STO     SELMDH+19                                                1FD20200
+NOPD4  CLA     DVTN+1                                                   1FD20210
+NOPD5  STO     SELMDH+20                                                1FD20220
+NOPD6  CLA     9IOLST                                                   1FD20230
+NOPD7  STO     1,2                                                      1FD20240
+CPYP   CPYD    ORGDP,,465                                               1FD20250
+       TCH     SYSTWT                                                   1FD20260
+       CPYD    ORGDP+465,,465                                           1FD20270
+       TCH     SYSTWT                                                   1FD20280
+       CPYD    ORGDP+930,,465                                           1FD20290
+       TCH     SYSTWT                                                   1FD20300
+       CPYD    ORGDP+1395,,465                                          1FD20310
+       TCH     SYSTWT                                                   1FD20320
+CPYP4  CPYD    ORGDP+1860,,418     UP TO ACCOUNTING ROUTINES            1FD20330
+       TCH     SYSTWT                                                   1FD20340
+LST    TSX     IOXRW,4       RESTORE UPPER CORE                         1FD20350
+       PZE     0             FROM DISK                                  1FD20360
+       PZE     0                                                        1FD20370
+       PZE     CPYP,4,LIMIT-33                                          1FD20380
+       PZE     0                                                        1FD20390
+       CAL     NOPD1                                                    1FD20400
+       SLW     AA+8                                                     1FD20410
+       CAL     NOPD11                                                   1FD20420
+       SLW     AA+9                                                     1FD20430
+       AXT     6,4                                                      1FD20440
+       CAL     NOPD2+6,4                                                1FD20450
+       SLW     SE+8,4                                                   1FD20460
+       TIX     *-2,4,1                                                  1FD20470
+       CLA     RETX                                                     1FD20480
+       STA     FINLDK+6                                                 1FD20490
+       AXT     25,4                                                     1FD20500
+       CLA     FINLDK+25,4                                              1FD20510
+       STO     SELMDH+25,4                                              1FD20520
+       TIX     *-2,4,1                                                  1FD20530
+       TSX     IOXDSK,4                                              $5$1FD20540
+       PZE     0                                                        1FD20550
+       PZE     0                                                        1FD20560
+       PZE     CPYP4,1,LIMT                                             1FD20570
+       DETAIL                                                        $5$1FD20580
+       LORG                                                          $5$1FD20590
+WAIT   NZT     IOXIN         WAIT IN CASE LAST LINE OUT              (2)1FD20600
+       TRA     *-1           IS SAME MESSAGE.                        (2)1FD20610
+       TRA     DFF2A+8,1                                             (2)1FD20620
+       END                                                           $5$1FD99990

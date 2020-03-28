@@ -1,0 +1,1187 @@
+$*     7090-SV-801    IBJOB ASSEMBLY                                    1CJ00000
+$JOB           IBJOB VERSION 5    MAP ASSEMBLY                       $5$1CJ00010
+$* 7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801, VERSION 5, MOD. 1   (1)1CJ00020
+$* 7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801, VERSION 5, MOD. 2   (2)1CJ00021
+$* 7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801, VERSION 5, MOD. 3   (3)1CJ00022
+$* 7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801, VERSION 5, MOD. 4   (4)1CJ00023
+$* 7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801, VERSION 5, MOD. 5   (5)1CJ00024
+$* 7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801, VERSION 5, MOD. 6   (5)1CJ00025
+$* 7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801, VERSION 5, MOD. 7   (7)1CJ00026
+$* 7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801, VERSION 5, MOD. 8   (8)1CJ00027
+$* 7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801, VERSION 5, MOD. 9   (9)1CJ00028
+$EXECUTE       IBJOB                                                 $5$1CJ00030
+$IBJOB         NOGO                                                  $5$1CJ00040
+$TITLE         7090/7094 IBJOB MONITOR (IBJOB), 7090-SV-801, VERSION $5$1CJ00050
+$IBMAP IBJOB   1000,ABSMOD,MONSYM,()OK                               $5$1CJ00060
+*                                                                       1CJ00070
+*                                                                       1CJ00080
+*                                                                       1CJ00090
+       PCC     ON                                                       1CJ00100
+       LBL     IBJOB                                                 $5$1CJ00110
+       NOCRS                                                         $5$1CJ00120
+       TITLE                                                         $5$1CJ00130
+       PCC     OFF                                                      1CJ00140
+       TTL     JOB CONTROL - RECORD IBJOB.                              1CJ00150
+       REM     DEFINITIONS FOR COMPONENT SIZES                          1CJ00980
+       REM                                                              1CJ00990
+CH7909 EQU     0                                                        1CJ01000
+NOCH9  EQU     1-CH7909                                                 1CJ01010
+IBSIZ  EQU     1450+550*CH7909                                          1CJ01020
+IOCSZ  EQU     1468                                                  $5$1CJ01030
+JCSZ   EQU     28                                                    $5$1CJ01040
+ACTSZ  EQU     344                                                   $5$1CJ01050
+PCTSZ  EQU     2066                                                  $5$1CJ01060
+PCTBSZ EQU     628                                                   $5$1CJ01065
+PCNSZ  EQU     1372                                                  $5$1CJ01070
+EDSIZ  EQU     2132                                                  $5$1CJ01080
+JBCOMS EQU     75                                                       1CJ01090
+IOCOMS EQU     35                                                       1CJ01100
+COMSZ  EQU     JBCOMS+IOCOMS                                            1CJ01110
+       REM                                                              1CJ01120
+       REM     DEFINITIONS FOR COMPONENT ORIGINS                        1CJ01130
+       REM                                                              1CJ01140
+IOCORG EQU     IBSIZ                                                    1CJ01150
+IOCEND EQU     1450+IOCSZ                                               1CJ01160
+SUBSYS EQU     IOCEND+PCTSZ+ACTSZ+PCNSZ+EDSIZ+COMSZ+JCSZ                1CJ01170
+IOCS   EQU     SUBSYS-IOCOMS                                            1CJ01180
+IBJCOM EQU     IOCS-JBCOMS                                              1CJ01190
+PCBORG EQU     IBJCOM-PCTBSZ                                         $5$1CJ01195
+EDORG  EQU     PCBORG-EDSIZ                                          $5$1CJ01200
+PCNORG EQU     EDORG-PCNSZ                                           $5$1CJ01210
+ACTORG EQU     PCNORG-ACTSZ                                          $5$1CJ01220
+JCORG  EQU     ACTORG-JCSZ                                              1CJ01230
+PCTORG EQU     SUBSYS-NOCH9*SUBSYS+NOCH9*IOCEND                         1CJ01240
+       REM                                                              1CJ01250
+       REM     DEFINITIONS OF COMMUNICATION CELLS NEEDED BY SUBSYSTEMS. 1CJ01260
+       REM                                                              1CJ01270
+SSTRA  EQU     IBJCOM+15                                                1CJ01280
+ACTION EQU     SSTRA+1                                                  1CJ01290
+JOBIN  EQU     SSTRA+2                                                  1CJ01300
+JOBOU  EQU     SSTRA+3                                                  1CJ01310
+JOBPP  EQU     SSTRA+4                                                  1CJ01320
+IOEDIT EQU     SSTRA+5                                                  1CJ01330
+JREEL  EQU     SSTRA+6                                                  1CJ01340
+SUBSP  EQU     SSTRA+7                                                  1CJ01350
+PUNCH  EQU     SSTRA+8                                                  1CJ01360
+SYSSHD EQU     SSTRA+9                                                  1CJ01370
+LILDMP EQU     SSTRA+10                                                 1CJ01380
+IBSLB  EQU     SSTRA+11                                                 1CJ01390
+PRSW   EQU     SSTRA+12                                                 1CJ01400
+       REM                                                              1CJ01410
+       REM     DEFINITIONS OF CELLS USED BY IBJOB MONITOR.              1CJ01420
+       REM                                                              1CJ01430
+COMCEL EQU     SSTRA+15                                                 1CJ01440
+EOFPP  EQU     COMCEL+1                                                 1CJ01450
+CHECK  EQU     COMCEL+2                                                 1CJ01460
+JOBSTD EQU     COMCEL+3                                                 1CJ01470
+IEDSTD EQU     COMCEL+4                                                 1CJ01480
+OEDSTD EQU     COMCEL+5                                                 1CJ01490
+LDRSTD EQU     COMCEL+6                                                 1CJ01500
+DECK   EQU     COMCEL+7                                                 1CJ01510
+OUNIT  EQU     COMCEL+8                                                 1CJ01520
+INUNIT EQU     COMCEL+9                                                 1CJ01530
+LPUNI  EQU     COMCEL+10                                                1CJ01540
+GOUNIT EQU     COMCEL+11                                                1CJ01550
+PCINT  EQU     COMCEL+12                                                1CJ01560
+CCSCH  EQU     COMCEL+13                                                1CJ01570
+ERTES  EQU     COMCEL+14                                                1CJ01580
+PURC   EQU     COMCEL+15                                                1CJ01590
+SPACE  EQU     COMCEL+16                                                1CJ01600
+LIRC   EQU     COMCEL+17                                                1CJ01610
+PAGNO  EQU     COMCEL+18                                                1CJ01620
+JBNAM  EQU     COMCEL+19                                                1CJ01630
+DPOFL  EQU     COMCEL+20                                                1CJ01640
+PTOFL  EQU     COMCEL+21                                                1CJ01650
+FILES  EQU     COMCEL+22                                                1CJ01660
+INREC  EQU     COMCEL+23                                                1CJ01670
+INRDA  EQU     COMCEL+24                                                1CJ01680
+TYPOU  EQU     COMCEL+25                                                1CJ01690
+ALTRR  EQU     COMCEL+27                                                1CJ01700
+IBJDMP EQU     COMCEL+28                                                1CJ01710
+CELL   EQU     COMCEL+29                                                1CJ01720
+SYSTAP EQU     COMCEL+30                                                1CJ01730
+BOLDT  EQU     COMCEL+31                                                1CJ01740
+PATS   EQU     COMCEL+32                                                1CJ01750
+CPRPH  EQU     COMCEL+33                                                1CJ01760
+PTCH   EQU     COMCEL+34                                                1CJ01770
+IBLIB  EQU     COMCEL+35                                                1CJ01780
+PTCNT  EQU     COMCEL+36                                                1CJ01790
+DS.CNT EQU     COMCEL+37                                                1CJ01800
+DPLIM  EQU     COMCEL+38                                                1CJ01810
+JBCEL  EQU     COMCEL+39                                                1CJ01820
+P.C.   EQU     COMCEL+40                                                1CJ01830
+DEFINE EQU     IOCS                                                     1CJ01860
+JOIN   EQU     IOCS+2                                                   1CJ01870
+ATTACH EQU     IOCS+4                                                   1CJ01880
+CLOSE  EQU     IOCS+6                                                   1CJ01890
+OPEN   EQU     IOCS+8                                                   1CJ01900
+READ   EQU     IOCS+10                                                  1CJ01910
+WRITE  EQU     IOCS+12                                                  1CJ01920
+STASH  EQU     IOCS+14                                                  1CJ01930
+LFLBLK EQU     IOCS+17                                                  1CJ01940
+LTSX   EQU     IOCS+18                                                  1CJ01950
+XEOB   EQU     IOCS+19                                                  1CJ01960
+XEOF   EQU     IOCS+20                                                  1CJ01970
+XERR   EQU     IOCS+21                                                  1CJ01980
+LTRAD  EQU     IOCS+22                                                  1CJ01990
+TRANS  EQU     IOCS+23                                                  1CJ02000
+WDCT   EQU     IOCS+24                                                  1CJ02010
+IRS    EQU     IOCS+25                                                  1CJ02020
+SENSE  EQU     IOCS+26                                                  1CJ02030
+FCW    EQU     IOCS+27                                                  1CJ02040
+LUNBLK EQU     IOCS+28                                                  1CJ02050
+NDSEL  EQU     IOCS+29                                                  1CJ02060
+DBLSP  EQU     512*4                                                    1CJ02740
+SYSLB1 EQU     1                                                        1CJ02750
+SYSLB2 EQU     2                                                        1CJ02760
+SYSLB3 EQU     3                                                        1CJ02770
+SYSLB4 EQU     4                                                        1CJ02780
+SYSIN1 EQU     10                                                       1CJ02790
+SYSIN2 EQU     11                                                       1CJ02800
+SYSOU1 EQU     8                                                        1CJ02810
+SYSOU2 EQU     9                                                        1CJ02820
+SYSPP1 EQU     12                                                       1CJ02830
+SYSUT1 EQU     16                                                       1CJ02840
+SYSUT2 EQU     17                                                       1CJ02850
+SYSUT3 EQU     18                                                       1CJ02860
+SYSUT4 EQU     19                                                       1CJ02870
+       REM                                                              1CJ02880
+       REM     SPECIAL DEFINITIONS OF 7094 MACHINE INSTRUCTIONS      $5$1CJ02881
+       REM     TO CAUSE THEM TO ASSEMBLE IN 7090 MODE AS WELL        $5$1CJ02882
+EMTM   OPD     460066100016                                          $5$1CJ02883
+LMTM   OPD     460066000016                                          $5$1CJ02884
+DLDD   OPVFD   O6/43,O5/0,O7/105,O6/0,O12/0443  DLD FOR MTYPE TEST   $5$1CJ02885
+       REM                                                           $5$1CJ02886
+       ORG     SYSCUR                                                   1CJ02890
+       BCI     1,IBJOB                                                  1CJ02900
+       REM                                                              1CJ02910
+       ORG     IBJCOM                                                   1CJ02920
+       REM     IBJOB COMMUNICATIONS AREA.                               1CJ02930
+       REM                                                              1CJ02940
+       REM     'SYSLOC' IS SET WITH THE LOCATION OF THE LAST CALL.      1CJ02950
+SYSLOC PZE                                                              1CJ02960
+       REM     'SYSFAZ' IS SET WITH THE NAME OF THE LAST SYSTEM         1CJ02970
+       REM     RECORD READ BY ACTION.                                   1CJ02980
+SYSFAZ BCI     1,IBJOB                                                  1CJ02990
+       REM     'IBJCOR' IS SET WITH THE UPPER AND LOWER LIMITS OF       1CJ03000
+       REM     MEMORY AVAILABLE TO IBJOB, IN THE FORM                   1CJ03010
+       REM         PZE   TOP,,BOTTOM                                    1CJ03020
+       REM     INITIALLY, 'IBJCOR' IS SET WITH THE LIMITS FROM SYSCOR,  1CJ03030
+       REM     BUT MAY BE MODIFIED IF THE DUMP/PATCH PACKAGE IS IN      1CJ03040
+       REM     USE.  IBLDR MAY ALSO SET THE LOWER LIMIT TO INDICATE     1CJ03050
+       REM     THE LOWER LIMIT OF MEMORY AVAILABLE TO AN OBJECT         1CJ03060
+       REM     PROGRAM.                                                 1CJ03070
+IBJCOR PZE                                                              1CJ03080
+       REM     'IBJDAT' IS SET WITH THE DATE (FROM SYSDAT) IN THE FORM  1CJ03090
+       REM         YY DDD.                                              1CJ03100
+IBJDAT BCI     1,00 000                                                 1CJ03110
+       REM     '.JLDAT' IS SET WITH THE DATE (FROM SYSDAT) IN THE FORM  1CJ03120
+       REM            MM/DD/YY.                                         1CJ03130
+.JLDAT PZE                                                              1CJ03140
+       PZE                                                              1CJ03150
+       REM     '.JTYPE' IS SET NON-ZERO IF THIS SYSTEM IS RUNNING ON    1CJ03160
+       REM     A 7094, AND ZERO IF ON A 7090.                           1CJ03170
+.JTYPE PZE                                                              1CJ03180
+       REM     '.JLIN' CONTAINS A COUNT OF THE LINES OUTPUT             1CJ03190
+       REM     ON SYSOU DURING THE CURRENT JOB.                         1CJ03200
+.JLIN  PZE                                                              1CJ03210
+       REM     '.JVER' IS LOADED WITH THE VERSION NUMBER OF THIS        1CJ03220
+       REM     SYSTEM IN THE FORM      BCI      1,VERNNN   WHERE        1CJ03230
+       REM     NNN IS THE VERSION NUMBER.                               1CJ03240
+.JVER  PZE                                                              1CJ03250
+       REM     '.JKAPU' IS SET WITH AN ADDRESS TO WHICH CONTROL IS      1CJ03260
+       REM     TO RETURN FOLLOWING AN IBJOB POST-MORTEM DUMP. ANY       1CJ03270
+       REM     PART OF THE IBJOB PROCESSOR MAY SET THIS CELL.           1CJ03280
+.JKAPU PZE                                                              1CJ03290
+       REM     'SYSDSB' IS USED BY A VARIATION OF THE SAVE PSEUDO-      1CJ03300
+       REM     OPERATION, TO DISABLE TRAPS.                             1CJ03310
+SYSDSB ENB     L(0)                                                     1CJ03320
+L(0)   PZE                                                              1CJ03330
+       REM     '.FDPOS' IS SET WITH THE LOCATION OF THE FORTRAN         1CJ03340
+       REM     DUMP RECORD. PREFIX IX DEVICE TYPE (PZE IF 729,          1CJ03350
+       REM     MZE IF 1301, PTW IF 7340) - TAG IS SYSUNI INDEX          1CJ03360
+       REM     FOR THE UNIT, AND DECREMENT/ADDRESS IS FILE/RECORD       1CJ03370
+       REM     POSITION IF TAPE OR TRACK ADDRESS IN THE ADDRESS         1CJ03380
+       REM     IF DISK.                                                 1CJ03390
+.FDPOS PZE                                                              1CJ03400
+JDTRK  PZE                                                              1CJ03401
+       EJECT                                                            1CJ03410
+       QUAL    J.C.                                                  $5$1CJ03415
+       ORG     JCORG                                                    1CJ03420
+PRCTL  CALL    ACTION(LOC1)        CALL IN PROCESS CONTROL           $5$1CJ03440
+PRCT   CALL    P.C.          AND GO THERE.                              1CJ03450
+       TNZ     *+3           RETURN TO IBSYS IF AC = 0.                 1CJ03460
+       EMTM                  RESTORE MULTIPLE TAG MODE.                 1CJ03470
+       TRA     SYSRET                                                   1CJ03480
+       STO     ARG           IF AC IS NOT ZERO, STORE IN ARG            1CJ03490
+       CALL    ACTION(LOC2)        AND                               $5$1CJ03500
+       CALL    SSTRA(ARG)          CALL LOADER.                      $5$1CJ03510
+       TRA     PRCT          GO BACK TO P. C.                           1CJ03530
+LOC1   BCI     1,PCIOCS                                                 1CJ03540
+LOC2   BCI     1,IBLDRM                                                 1CJ03550
+ARG    PZE                                                              1CJ03570
+       PMC                                                              1CJ03580
+       BES     ACTORG-*            1CJ PATCH SPACE                   $5$1CJ03590
+       PMC                                                              1CJ03610
+       EJECT                                                            1CJ03620
+       ORG     IBJDMP                                                   1CJ03630
+       PZE                                                              1CJ03640
+       ORG     SYSTRA                                                   1CJ03650
+       TTR     REC1                                                     1CJ03660
+       ORG     SUBSYS+5000                                              1CJ03670
+REC1   LXA     SYSUNI,4           INITIALIZE                            1CJ03680
+       TXI     *+1,4,-1           ALL                                   1CJ03690
+       SXA     UNIBEG,4           INSTRUCTIONS                          1CJ03700
+       SXA     REC1A,4            THAT                                  1CJ03710
+       SXD     UCBBSF,4           REFERENCE                             1CJ03720
+       SXA     SAVE,4             THE                                   1CJ03730
+       SXA     UCB729,4           SYSUNI                                1CJ03740
+       SXD     UCBREW,4           TABLE.                                1CJ03750
+       SXA     CHTYPE,4                                                 1CJ03760
+       SXA     DEVTYP,4                                                 1CJ03770
+       XEC     XNRMT                                                    1CJ03780
+       TXI     *+1,4,5                                                  1CJ03790
+       SXA     RETURN+1,4                                               1CJ03800
+       LAC     SYSPOS,4           PICK UP SYSLB INDEX                   1CJ03810
+REC1A  CAL     **,4               PICK UP ADD OF UCW FOR UNIT ASSIGNED. 1CJ03820
+       PAC     0,4                PICK UP ADD OF UCW                    1CJ03830
+       LDI     0,4                PLACE 1ST WORD OF UCB IN SI           1CJ03840
+       CAL     0,4                PLACE 1ST WORD OF UCB IN AC.          1CJ03850
+       ANA     CHMASK             MASK OUT ALL BUT CHANNEL NO.          1CJ03860
+       STO     CHANEL             SAVE CHANNEL OF SYSPOS.               1CJ03870
+       LNT     020000             7909 CHANNEL                          1CJ03880
+       TRA     CONVD              NO                                    1CJ03890
+       LFT     000100             DISK                                  1CJ03900
+       TRA     *+3                YES                                   1CJ03910
+       STL     HYPRSW                                                   1CJ03920
+       TRA     CONVD                                                    1CJ03930
+       XEC     XDISK1             SET DISK SWITCH                       1CJ03940
+       LXD     SYSCOR,1           PICK UP SYSORG                        1CJ03950
+       TXI     *+1,1,SLTABL+107   END OF DISK LIMIT TABLE               1CJ03960
+       SXA     BEGIN,1                                                  1CJ03970
+       TXI     *+1,1,1                                                  1CJ03980
+       SXA     MATCH,1                                                  1CJ03990
+       AXT     SLTABL,1           SIZE OF SYSTEM RECORD TABLE           1CJ04000
+BEGIN  CAL     **,1               COMPARE TABLE AGAINST                 1CJ04010
+       XEC     XAC2               IBJOB ACTION TABLE                    1CJ04020
+       LAS     ENDTBL,2           AND INITIALIZE ACTION TABLE           1CJ04030
+       TRA     *+2                WITH TRACK ADDRESS                    1CJ04040
+       TRA     MATCH              MATCH FOUND                           1CJ04050
+       TIX     *-3,2,1                                                  1CJ04060
+NDSCAN TIX     BEGIN,1,2                                                1CJ04070
+       REM                                                              1CJ04080
+       REM     CONVERT DATE AABBCC TO YYBDDD                            1CJ04090
+CONVD  CAL     SYSDAT             PICK UP DATE                          1CJ04100
+       ANA     CLEAR              CLEAR OUT ALL BUT NUMERICAL INFO      1CJ04110
+       SLW     TEMPCM             SAVE                                  1CJ04120
+       XCL                                                              1CJ04130
+       RQL     24                 POSITION TO YEAR                      1CJ04140
+       AXT     12,2                                                     1CJ04150
+       TSX     BCONV,4            CONVERT TO BINARY                     1CJ04160
+       ANA     BG90               ZERO IF LEAP YEAR                     1CJ04170
+       SLW     TEMPCM+1           SET LEAP YEAR TEST                    1CJ04180
+       AXT     12,2                                                     1CJ04190
+       TSX     BCONV,4            CONVERT MONTH TO BINARY               1CJ04200
+       PAC     0,1                XR1= COMPL(MONTH)                     1CJ04210
+       TXL     DATERR,1,-13       ERROR, MONTH GREATER THAN 12          1CJ04220
+       AXT     12,2                                                     1CJ04230
+       TSX     BCONV,4            CONVERT DAY TO BINARY                 1CJ04240
+       ADD     MONTH,1            ADD BASE COUNT FOR MNTH TO DAY IN MNTH1CJ04250
+       TXH     *+3,1,-3           TRA IF MONTH IS JAN OR FEB            1CJ04260
+       NZT     TEMPCM+1           LEAP YEAR TEST, SKIP IF NOT           1CJ04270
+       ADD     ONE                HERE IF LEAP YEAR                     1CJ04280
+       XCL                                                              1CJ04290
+       TSX     BCVR,4             CONVERT DAY OF YEAR TO BCD            1CJ04300
+       LGR     24                                                       1CJ04310
+       CAL     TEMPCM             BRING IN BCD YEAR                     1CJ04320
+       LGR     12                                                       1CJ04330
+       XCL                                                              1CJ04340
+       ANA     CLEAR                                                    1CJ04350
+       ORS     IBJDAT        SAVE DATE-YYBDDD                           1CJ04360
+       LXA     SYSPOS,1           INITIALIZE REW                        1CJ04370
+       XEC     X1D10              BSF WITH SYSTEM                       1CJ04380
+UCBBSF TXI     *+1,1,**           UCB ADDRESS                           1CJ04390
+       XEC     XREW1                                                    1CJ04400
+       XEC     X1REW9                                                   1CJ04410
+       LAC     SYSPOS,4           LIBRARY TAPE                          1CJ04420
+SAVE   CAL     **,4                                                     1CJ04430
+       SLW     SYSTAP             SAVE                                  1CJ04440
+       LXD     SYSCOR,1           SYSORG, ORG OF SYSNAM TABLE.          1CJ04450
+       TXI     *+1,1,TBLSIZ+1     END OF SYSNAM TABLE                   1CJ04460
+       SXA     *+2,1                                                    1CJ04470
+       AXT     TBLSIZ,1           SCAN THRU                             1CJ04480
+SYSIND CAL     **,1               SYSNAM TABLE                          1CJ04490
+       ANA     TAGT                                                     1CJ04500
+       ALS     3                  PICKING UP ALL                        1CJ04510
+       PDC     0,4                SYSLB INDICES                      $5$1CJ04520
+       XEC     POS,4              USED BY THE                        $5$1CJ04530
+       XEC     LIBSW,4            SYSTEMS UNDER                      $5$1CJ04540
+       TIX     SYSIND,1,2         IBSYS.                                1CJ04550
+       AXT     LIBADD+1,1         TEMPORARILY SAVE IBJOB                1CJ04560
+       SXA     LIBADD,1           SYSLB INDICES IN LIBADD+1.            1CJ04570
+       XEC     XAC1               SCAN THRU                             1CJ04580
+FILIND XEC     XCEND1             TAPE POSITION TABLE                   1CJ04590
+       ARS     15                 PICKING UP ALL                        1CJ04600
+       PDC     0,4                SYSLB INDICES                         1CJ04610
+       XEC     POS,4              USED WITHIN                           1CJ04620
+       XEC     LIBSW,4            THE IBJOB                             1CJ04630
+       TIX     FILIND,1,1         SYSTEM.                               1CJ04640
+       AXT     0,2                                                      1CJ04650
+       AXT     4,1                                                      1CJ04660
+       CAL     LIBADD+1                                                 1CJ04670
+       ORS     IBSLB              INDICATES ALL SYSLB FUNCTIONS USED.   1CJ04680
+       ZET     HYPRSW             HYPERTAPE                             1CJ04690
+       TRA     HYPER              TRA IF SYSTEM (SYSPOS) IS ON HYPER.   1CJ04700
+       XEC     XDISK2             DISK.                                 1CJ04710
+       TRA     T729               NO                                    1CJ04720
+       XEC     T8            ARE THE IBLIB FILES                        1CJ04730
+       ARS     33                 ON THE SAME SYSLB                     1CJ04740
+       XEC     X2D10              AS THE SYSTEM (SYSPOS)                1CJ04750
+       TZE     RETURN             YES                                   1CJ04760
+       XEC     X3D10              CHECK TO SEE                          1CJ04770
+       PAC     0,4                IF IBLIB IS                           1CJ04780
+UCB729 LDI*    **,4                                                     1CJ04790
+       LFT     020000             729.                                  1CJ04800
+       TRA     RETURN             NO.                                   1CJ04810
+       CAL     CLEAR              SET                                   1CJ04820
+       XEC     XENDJ1             DISK SPLIT                            1CJ04830
+       STL     DSKSPL             SWITCH(ES).                           1CJ04840
+       XEC     T8                                                       1CJ04850
+       ACL     ONE                ADD ONE                               1CJ04860
+       XEC     XT8           TO RECORD NO.                              1CJ04870
+       XEC     T5            TO POSITION                                1CJ04880
+       ACL     ONE                LIBRARY AFTER                         1CJ04890
+       ARS     15                 INIT. REW OF IBLIB                    1CJ04910
+       PDX     0,4                BEFORE                                1CJ04920
+UCBREW TXI     *+1,4,**           EXECUTION.                            1CJ04930
+       XEC     XREW4                                                    1CJ04940
+       CAL     *                  CHANGE                                1CJ04950
+       XEC     XA21               PARAMETER                             1CJ04960
+       XEC     XA24               TO                                    1CJ04970
+       TRA     SPLIT                                                    1CJ04980
+T729   AXT     CH7909,4           IS THIS SYSTEM ASSEMBLED FOR DISK     1CJ04990
+       TXH     SV2-1,4,0          BUT RUNNING ON TAPE.                  1CJ05000
+       CLA     CHTYPE             NO.                                   1CJ05010
+       XEC     XENDJ2             SWITCH                                1CJ05020
+       CAL     LIBADD+1           CHECK TO SEE                          1CJ05030
+USED   XEC     HOWFEW,1           ONTO HOW MANY                         1CJ05040
+       ANA     TAGA                                                     1CJ05050
+       PAC     0,4                SYSLB TAPES THE SYSTEM HAS BEEN SPLIT 1CJ05060
+       TXL     NOUSE,4,0          TRA IF THIS SYSLB IS NOT USED.        1CJ05070
+       XEC     X2D10              INITIALIZE REWIND                     1CJ05080
+       TZE     CHTYPE             OF SECOND                             1CJ05090
+       XEC     X3D10              SYSTEM TAPE                           1CJ05100
+       ADD     UNIBEG             ON 729                                1CJ05110
+       XEC     XREW5              SPLIT SYSTEM                          1CJ05120
+CHTYPE CAL     **,4               CHECK TO SEE                          1CJ05130
+       PAC     0,4                IF THIS SYSLB IS                      1CJ05140
+       LDI     0,4                ASSIGNED TO                           1CJ05150
+       NZT     DSKSPL                                                   1CJ05160
+       TRA     *+2                                                      1CJ05170
+       TRA     NOUSE-1                                                  1CJ05180
+       LFT     020000                                                   1CJ05190
+       TRA     ONETAP                                                   1CJ05200
+SAMECH CAL     0,4                PLACE 1ST WORD OF UCB IN AC.          1CJ05210
+       ANA     CHMASK             MASK OUT ALL BUT CHANNEL.             1CJ05220
+       SUB     CHANEL             SYSLB ON SAME CH. AS SYSPOS SYSLB.    1CJ05230
+       TNZ     NXTJOB             NO, PRINT MESSAGE, PROCEED TO NEXT JOB1CJ05240
+       TXI     *+1,2,1            SYSLB COUNT                           1CJ05250
+NOUSE  TIX     USED-1,1,1                                               1CJ05260
+       TXL     ONETAP,2,1         TRA IF NO SPLIT                       1CJ05270
+       TXH     ONETAP,2,2         TRA IF MORE THAN 2-WAY SPLIT          1CJ05280
+       ZET     DSKSPL             DISK SPLIT                            1CJ05290
+       TRA     RETURN             YES.                                  1CJ05300
+       CAL     SPLBIT             SET 729-SPLIT                         1CJ05310
+       XEC     XENDJ3             BIT SWITCH                            1CJ05320
+       AXT     3,4                IS IBFTC,                             1CJ05330
+       CAL*    CMPMAP,4           IBCBC OR                              1CJ05340
+       ARS     33                 IBMAP ON THE                          1CJ05350
+       XEC     X2D10              SYSPOS TAPE                           1CJ05360
+       TZE     ONETAP             YES                                   1CJ05370
+       TIX     *-4,4,1                                                  1CJ05380
+       CLA     NOP                NO, THEREFORE NOP                     1CJ05390
+       XEC     XREW8              BSF ON THE                            1CJ05400
+       XEC     X2REW9             SYSPOS TAPE                           1CJ05410
+ONETAP XEC     XDISK3                                                   1CJ05420
+       TRA     RETURN                                                   1CJ05430
+       LAC     SYSTAP,4           PICK UP ADD OF UCW                    1CJ05440
+SV2    CLA     2,4           BRING IN FILE AND RECORD COUNT.            1CJ05450
+       ANA     CTMINS             RETAIN FILE COUNT ONLY                1CJ05460
+       STO     TEMPCM             SAVE                                  1CJ05470
+       LXA     CELL,4                                                   1CJ05480
+       SXA     UPDATE,4           ADDRESS OF TABLE                      1CJ05490
+       SXA     UPDATE+7,4                                               1CJ05500
+       LXD     CELL,4             LENGTH OF TABLE                       1CJ05510
+UPDATE CAL     **,4                                                     1CJ05520
+       LGR     15                                                       1CJ05530
+       ANA     TAGB                                                     1CJ05540
+       PDX     0,2                                                      1CJ05550
+       TXH     *+4,2,SYSLB1                                             1CJ05560
+       XEC     UPDATE                                                   1CJ05570
+       ACL     TEMPCM                                                   1CJ05580
+       SLW     **,4                                                     1CJ05590
+       TIX     UPDATE,4,1                                               1CJ05600
+RETURN AXT     4,4                                                      1CJ05610
+       CLA     **,4               CHECK ALL 4 SYSLB ASSMNTS.            1CJ05620
+       TZE     LIBEND             IS THIS SYSLB ATTACHED.               1CJ05630
+       PAC     0,2                YES, PICK UP ADDRESS OF UCB.          1CJ05640
+       CLA     0,2                PICK UP FIRST WORD OF UCB.            1CJ05650
+       ARS     27                 PICK UP CHANNEL NUMBER.               1CJ05660
+       ANA     CHBIT                                                    1CJ05670
+       SUB     ONE                                                      1CJ05680
+       XEC     XD5                                                      1CJ05690
+LIBEND TIX     RETURN+1,4,1                                             1CJ05700
+       CLA     SYSCOR                                                   1CJ05710
+       STA     IBJCOR                                                   1CJ05720
+       LXA     .CHXSP,1                                              $5$1CJ05730
+       XEC     XCT2A1                                                   1CJ05740
+       XEC     XCT2A3             INITIALIZE RETURN                     1CJ05750
+       SXA     SYSTRA,1           FROM SYSLDR                           1CJ05760
+       XEC     XACIN              SAVE TAPE POSITION OR DISK            1CJ05770
+       SLW     .FDPOS             LIMIT OF DMPREC                       1CJ05780
+       ARS     15                                                       1CJ05790
+       PDC     0,1                                                      1CJ05800
+       ARS     3                  SAVE SYSLB INDEX                      1CJ05810
+       STT     .FDPOS             IN TAG                                1CJ05820
+DEVTYP CAL     **,1                                                     1CJ05830
+       PAC     0,4                PICK UP FIRST WORD                    1CJ05840
+       LDI     0,4                OF UCB                                1CJ05850
+       LNT     020000             7909 CHANNEL                          1CJ05860
+       TRA     T7607              NO                                    1CJ05870
+       LFT     000100             DISK                                  1CJ05880
+       TRA     D7909              YES                                   1CJ05890
+       CAL     LIBEND             HYPERTAPE, PTW IN PREFIX              1CJ05900
+       TRA     STP                                                      1CJ05910
+T7607  CAL     L(0)               729 TAPE, PZE IN PREFIX               1CJ05920
+       TRA     STP                                                      1CJ05930
+D7909  CAL     *                  DISK, MZE IN PREFIX                   1CJ05940
+STP    STP     .FDPOS                                                   1CJ05950
+       CAL     IBLIB              SET LIBRARY                           1CJ05960
+       ARS     15            UNIT AS PARAMETER                          1CJ05970
+       STO     IBLIB         TO IBLDR.                                  1CJ05980
+       LMTM                                                             1CJ05990
+       LTM                   DISABLE TRANSFER                           1CJ06000
+       LFTM                  FLOATING POINT TRAPS.                      1CJ06010
+       ZAC                   IF THIS IS A 7094,                         1CJ06020
+       DLDD    */2+*/2             SET MTYPE NON-ZERO                $5$1CJ06030
+       TZE     *+2                                                      1CJ06040
+       STL     MTYPE                                                    1CJ06050
+       TRA     PRCTL                                                    1CJ06070
+       REM     DATE ERROR                                               1CJ06080
+DATERR TSX     .MWR,4                                                $5$1CJ06090
+       PZE     2                                                        1CJ06100
+       PZE     DTMS1,,8                                                 1CJ06110
+       PZE     DATMS2,,9+DBLSP                                          1CJ06120
+       HTR     *+1                                                      1CJ06130
+       ENK                                                              1CJ06140
+       STQ     SYSDAT                                                   1CJ06150
+       TRA     CONVD                                                    1CJ06160
+*                                                                       1CJ06170
+HYPER  CLA     REWAF-3       CHANGE TSX IOXRW,4                         1CJ06180
+       XEC     XPOFOF             TO TSX NDATA, 4                       1CJ06190
+       XEC     XPOFOR                                                   1CJ06200
+       CLA     NOP                NOP 2ND PARAMETER                     1CJ06210
+       XEC     XPFR2              OF TSX IOXRW,4                        1CJ06220
+       CLA     X2PFF2                                                   1CJ06230
+       XEC     XPFF2                                                    1CJ06240
+       CLA     INDEX         INITIALIZE DECREMENT                       1CJ06250
+       XEC     XPFR3              FOR CORRECT HYPERTAPE                 1CJ06260
+       ADD     L(1)D         NDATA                                      1CJ06270
+       XEC     XPFF4                                                    1CJ06280
+       ADD     L(1)D                                                    1CJ06290
+       XEC     XPFR1                                                    1CJ06300
+       ADD     L(1)D                                                    1CJ06310
+       XEC     X1PFF1                                                   1CJ06320
+       TRA     HYREW                                                    1CJ06330
+INDEX  PZE     SYSTAP,,34                                               1CJ06340
+*                                                                       1CJ06350
+MTYPE  SYN     .JTYPE                                                   1CJ06360
+       REM                                                              1CJ06370
+MATCH  CAL     **,1               STORE DISK LIMIT                      1CJ06380
+       XEC     XCEND2                                                   1CJ06390
+       TRA     NDSCAN                                                   1CJ06400
+SLTABL EQU     820                                                      1CJ06410
+       REM                                                              1CJ06420
+NOP    NOP                                                              1CJ06430
+       ARS     15                                                       1CJ06440
+       ARS     18                                                       1CJ06450
+       ARS     33                                                       1CJ06460
+HOWFEW BSS     0                                                        1CJ06470
+SPLBIT OCT     000000200000                                             1CJ06480
+POS    NOP                                                              1CJ06490
+       ALS     15                                                       1CJ06500
+       NOP                                                              1CJ06510
+       ARS     3                                                        1CJ06520
+       ARS     18                                                       1CJ06530
+LIBSW  NOP                                                              1CJ06540
+       STP*    LIBADD                                                   1CJ06550
+       STD*    LIBADD                                                   1CJ06560
+       STT*    LIBADD                                                   1CJ06570
+       STA*    LIBADD                                                   1CJ06580
+LIBADD PZE     IBSLB                                                    1CJ06590
+       PZE                                                              1CJ06600
+UNIBEG PZE                                                              1CJ06610
+       REM                                                              1CJ06620
+XNRMT  EQU     SUBSYS                                                   1CJ06630
+XDISK1 EQU     SUBSYS+1                                                 1CJ06640
+XAC2   EQU     SUBSYS+2                                                 1CJ06650
+X1D10  EQU     SUBSYS+3                                                 1CJ06660
+XREW1  EQU     SUBSYS+4                                                 1CJ06670
+X1REW9 EQU     SUBSYS+5                                                 1CJ06680
+XAC1   EQU     SUBSYS+6                                                 1CJ06690
+XCEND1 EQU     SUBSYS+7                                                 1CJ06700
+XDISK2 EQU     SUBSYS+8                                                 1CJ06710
+X2D10  EQU     SUBSYS+9                                                 1CJ06720
+X3D10  EQU     SUBSYS+10                                                1CJ06730
+XENDJ1 EQU     SUBSYS+11                                                1CJ06740
+XREW4  EQU     SUBSYS+12                                                1CJ06750
+XA21   EQU     SUBSYS+13                                                1CJ06760
+XA24   EQU     SUBSYS+14                                                1CJ06770
+XA26   EQU     SUBSYS+15                                                1CJ06780
+XENDJ2 EQU     SUBSYS+16                                                1CJ06790
+XREW5  EQU     SUBSYS+17                                                1CJ06800
+XENDJ3 EQU     SUBSYS+18                                                1CJ06810
+XREW8  EQU     SUBSYS+19                                                1CJ06820
+X2REW9 EQU     SUBSYS+20                                                1CJ06830
+XDISK3 EQU     SUBSYS+21                                                1CJ06840
+XD5    EQU     SUBSYS+22                                                1CJ06850
+XCT2A1 EQU     SUBSYS+23                                                1CJ06860
+XCT2A3 EQU     SUBSYS+24                                                1CJ06870
+XACIN  EQU     SUBSYS+25                                                1CJ06880
+XPOFOF EQU     SUBSYS+26                                                1CJ06890
+XPOFOR EQU     SUBSYS+27                                                1CJ06900
+XPFR2  EQU     SUBSYS+28                                                1CJ06910
+XPFF2  EQU     SUBSYS+29                                                1CJ06920
+XPFR3  EQU     SUBSYS+30                                                1CJ06930
+XPFF4  EQU     SUBSYS+31                                                1CJ06940
+XPFR1  EQU     SUBSYS+32                                                1CJ06950
+X1PFF1 EQU     SUBSYS+33                                                1CJ06960
+X2PFF2 EQU     SUBSYS+34                                                1CJ06970
+XCEND2 EQU     SUBSYS+35                                                1CJ06980
+T8     EQU     SUBSYS+36                                                1CJ06990
+XT8    EQU     SUBSYS+37                                                1CJ07000
+T5     EQU     SUBSYS+38                                                1CJ07010
+XT5    EQU     SUBSYS+39                                                1CJ07020
+CMPMAP EQU     SUBSYS+43                                                1CJ07030
+TBLSIZ EQU     100                                                      1CJ07040
+REWHYP EQU     SUBSYS+43                                                1CJ07045
+       REM                                                              1CJ07050
+RCDTBL BCI     1,JDUMP            J1                                    1CJ07060
+       BCI     1,DMPREC           J4                                    1CJ07070
+       BCI     1,IOCSB            CSPOS                                 1CJ07080
+       BCI     1,IBJOBB           PCPOS                                 1CJ07090
+       BCI     1,IBJOBC           PC2POS                                1CJ07100
+       BCI     1,IBCBCZ           CB1                                   1CJ07110
+       BCI     1,IBCBC9           CB11                                  1CJ07120
+       BCI     1,IBJOBY           J5                                    1CJ07130
+       BCI     1,IBFTCE           FCCPOS                                1CJ07140
+       BCI     1,IBFTCF           PH1POS                                1CJ07150
+       BCI     1,IBFTCG           SAPOS                                 1CJ07160
+       BCI     1,IBJOBI           J2                                    1CJ07180
+       BCI     1,IBMAPJ           MP1POS                                1CJ07190
+       BCI     1,IBMAPK           MP2POS                                1CJ07200
+       BCI     1,IBJOBL           J3                                    1CJ07210
+       BCI     1,IBLDRM           T2                                    1CJ07220
+       BCI     1,IBLDRN           T3                                    1CJ07230
+       BCI     1,IBLDRO           T4                                    1CJ07240
+       BCI     1,CIFSR            T5                                    1CJ07250
+       BCI     1,IBLDRP           T6                                    1CJ07260
+       BCI     1,IBLDRQ           T7                                    1CJ07270
+       BCI     1,TIFSR            T8                                    1CJ07280
+       BCI     1,IBLDRS           T13                                   1CJ07290
+       BCI     1,IBDBLV            J6                                   1CJ07291
+       BCI     1,IBDPPW      J7                                         1CJ07292
+       BCI     1,IBDPPX      J8                                         1CJ07293
+ENDTBL PZE                                                              1CJ07300
+       REM                                                              1CJ07320
+TAGT   OCT     700000                                                   1CJ07330
+TAGB   OCT     7000000                                                  1CJ07340
+TAGA   OCT     7                                                        1CJ07350
+LNXT   BCI     1,NEXTR                                                  1CJ07360
+*      BCD TO BINARY INTEGER CONVERSION                                 1CJ07370
+*                                                                       1CJ07380
+*      INPUT-                                                           1CJ07390
+*      1. N NUMERIC BCD CHARACTERS IN HIGH MQ. (N=6 OR LESS)            1CJ07400
+*      2. 6*N IN XR2                                                    1CJ07410
+*                                                                       1CJ07420
+*      OUTPUT-                                                          1CJ07430
+*      1. BINARY INTEGER IN LOGICAL ACCUMULATOR, B=35.                  1CJ07440
+*                                                                       1CJ07450
+BCONV  STZ     BN00                                                     1CJ07460
+       PXD     0,0                                                      1CJ07470
+BCON1  LGL     6                                                        1CJ07480
+       ACL     BN00                                                     1CJ07490
+       TNX     BCON2,2,6                                                1CJ07500
+       STQ     BN00+1                                                   1CJ07510
+       XCL                                                              1CJ07520
+       MPY     BTEN                                                     1CJ07530
+       STQ     BN00                                                     1CJ07540
+       LDQ     BN00+1                                                   1CJ07550
+       TRA     BCON1                                                    1CJ07560
+BCON2  TRA     1,4                                                      1CJ07570
+*                                                                       1CJ07580
+*      BINARY TO BCD INTEGER CONVERSION ROUTINE                         1CJ07590
+*                                                                       1CJ07600
+*      INPUT-                                                           1CJ07610
+*      UNSIGNED BINARY INTEGER (LESS THAN OR EQUAL TO 999999) IN MQ.    1CJ07620
+*                                                                       1CJ07630
+*      OUTPUT-                                                          1CJ07640
+*      BCD INTEGER IN AC, WITH LEADING BLANKS IF NECESSARY.             1CJ07650
+*                                                                       1CJ07660
+*      NOTES-                                                           1CJ07670
+*      1. ZERO CONVERTS TO ALL BLANKS.                                  1CJ07680
+*      2. THE MQ IS NORMALLY ZERO ON EXIT. IF INPUT INTEGER IS          1CJ07690
+*      GREATER THAN 999999, THE QUOTIENT, N/1000000, IS IN THE MQ.      1CJ07700
+*                                                                       1CJ07710
+ BCVR  SXA     BCVR4,4            SAVE XR4                              1CJ07720
+       AXT     36,4                                                     1CJ07730
+       STZ     BN00                                                     1CJ07740
+ BCVR1 PXD     0,0                                                      1CJ07750
+       DVP     BTEN               GET NEXT DIGIT                        1CJ07760
+       TZE     BCVR5              TRA WHEN NO REMAINDER                 1CJ07770
+       ALS     36,4                                                     1CJ07780
+       ORS     BN00               COMBINE WITH PREVIOUS DIGITS          1CJ07790
+ BCVR2 TXI     *+1,4,-6                                                 1CJ07800
+       TXH     BCVR1,4,0                                                1CJ07810
+ BCVR3 CAL     BLANKZ             FINISHED,BRING IN                     1CJ07820
+       ALS     36,4               HIGH ORDER BLANKS                     1CJ07830
+       ORA     BN00                                                     1CJ07840
+ BCVR4 AXT     **,4               RESTORE XR4                           1CJ07850
+       TRA     1,4                EXIT                                  1CJ07860
+ BCVR5 STQ     BN00+1                                                   1CJ07870
+       ZET     BN00+1             TRA IF CONVERSION FINISHED            1CJ07880
+       TRA     BCVR2              CONTINUE-NOT DONE                     1CJ07890
+       TRA     BCVR3              FINISHED                              1CJ07900
+NXTJOB TSX     .MWR,4                                                $5$1CJ07910
+       PZE     4                  BETWEEN TWO CHANNELS.                 1CJ07920
+       PZE     0,,512             PROCEED TO NEXT                       1CJ07930
+       PZE     TWOCH1,,5          JOB.                                  1CJ07940
+       PZE     TWOCH2,,4                                                1CJ07950
+       PZE     TWOCH3,,4+DBLSP                                          1CJ07960
+       CLA     IBSNXT                                                   1CJ07970
+       STO     SYSGET                                                   1CJ07980
+       TRA     SYSRET                                                   1CJ07990
+MONTH  EQU     *-1                                                      1CJ08000
+       PZE     0                  JANUARY                               1CJ08010
+       PZE     31                 FEBRUARY                              1CJ08020
+       PZE     59                 MARCH                                 1CJ08030
+       PZE     90                 APRIL                                 1CJ08040
+       PZE     120                MAY                                   1CJ08050
+       PZE     151                JUNE                                  1CJ08060
+       PZE     181                JULY                                  1CJ08070
+       PZE     212                AUGUST                                1CJ08080
+       PZE     243                SEPTEMBER                             1CJ08090
+       PZE     273                OCTOBER                               1CJ08100
+       PZE     304                NOVEMBER                              1CJ08110
+       PZE     334                DECEMBER                              1CJ08120
+BTEN   PZE     10                                                       1CJ08130
+DSKSPL PZE                                                              1CJ08140
+HYPRSW PZE                                                              1CJ08150
+CHANEL PZE                                                              1CJ08160
+CHMASK OCT     017000000000                                             1CJ08170
+CTMINS OCT     077777000000                                             1CJ08180
+ CLEAR OCT     171717171717                                             1CJ08190
+L(1)D  PZE     ,,1                                                      1CJ08200
+CHBIT  OCT     000000000017                                             1CJ08210
+BG90   OCT     3                                                        1CJ08220
+BLANKZ BCI     1,                                                       1CJ08230
+BN00   BSS     2                                                        1CJ08240
+TEMPCM BSS     2                                                        1CJ08250
+ONE    DEC     1                                                        1CJ08260
+IBSNXT BCI     1,IBSNXT                                                 1CJ08270
+DTMS1  BCI     8,ILLEGAL BCD DATE IN SYSTEM MONITOR DATE CELL.       $5$1CJ08280
+DATMS2 BCI     9,ENTER CURRENT DATE IN KEYS (MMDDYY) AND HIT START.     1CJ08290
+TWOCH1 BCI     5,IBJOB SYSTEM SPLIT BETWEEN                             1CJ08300
+TWOCH2 BCI     4,TWO CHANNELS IS ILLEGAL.                               1CJ08310
+TWOCH3 BCI     4,PROCEED TO NEXT JOB.                                   1CJ08320
+JC     SAVE    4                                                     $5$1CJ08330
+       TSX     .NDSEL,4                                              $5$1CJ08340
+       PZE                                                              1CJ08350
+       PZE                                                              1CJ08360
+REWAF  SYN     *                                                        1CJ08370
+ HYREW AXT     30,4                                                     1CJ08390
+       XEC     REWHYP                                                   1CJ08400
+       TRA     ONETAP                                                   1CJ08410
+ SPLIT XEC     XA26                                                     1CJ08420
+       TRA     T729+2                                                   1CJ08430
+       ENDQ    J.C.                                                  $5$1CJ08440
+       TTL     ACTION ROUTINE - RECORD IBJOB                            1CT00010
+       REM     DEFINITIONS OF COMMUNICATION CELLS NEEDED                1CT01190
+       REM     DURING EXECUTION.                                        1CT01200
+       REM                                                              1CT01210
+MODNO  EQU     .JVER               NO LONGER USED                    $5$1CT01290
+SKAPUT EQU     .JKAPU                                                $5$1CT01300
+CHEXI  EQU     SYSJOB+1                                              $5$1CT01370
+RCHXI  EQU     .RCHX                                                 $5$1CT01380
+       REM                                                              1CT02930
+       REM     THE FOLLOWING PARAMETERS SET THE SYSLB UNITS WHICH       1CT02940
+       REM     CONTAIN THE FILE INDICATED.  TO SET THE ACTION TABLE     1CT02950
+       REM     TO EXPECT AN IBJOB SUBSYSTEM ON LB1,LB2, LB3, OR LB4.    1CT02960
+       REM     CHANGE THE PROPER PARAMETER TO PON, PTW, PTH, OR FOR.    1CT02970
+       REM     THE TAPE POSITION TABLE MUST INDICATE ABSOLUTE           1CT02980
+       REM     POSITIONS FOR ANY SYSLB OTHER THAN SYSLB1.               1CT02990
+       REM                                                              1CT03000
+JBUNIT OPSYN   PON           IBJOB (MONITOR) UNIT                       1CT03010
+FTUNIT OPSYN   PON           IBFTC (COMPILER) UNIT                      1CT03020
+CBUNIT OPSYN   PON           IBCBC (COMPILER) UNIT                      1CT03030
+MPUNIT OPSYN   PON           IBMAP (ASSEMBLER) UNIT                     1CT03040
+LDUNIT OPSYN   PTW           IBLDR (LOADER) UNIT                        1CT03050
+LBUNIT OPSYN   PTW           IBLIB (LIBRARY) UNIT                       1CT03060
+       REM                                                              1CT03070
+       REM     THE FOLLOWING PARAMETERS DEFINE THE RELATIVE POSITIONS   1CT03080
+       REM     OF FILES OF IBJOB ON SYSLB1, IF SYSLB1 IS A 729 TAPE     1CT03090
+       REM     UNIT. THE DEFINITION IS RELATIVE TO THE FILE             1CT03100
+       REM     CONTAINING THE 'IBJOBA' RECORD. IF ANY FILES ARE         1CT03110
+       REM     PLACED ON A 729 TAPE UNIT OTHER THAN SYSLB1, THE         1CT03120
+       REM     DEFINITIONS MUST BE THE TRUE POSITION OF                 1CT03130
+       REM     THE FILES ON THAT TAPE UNIT.                             1CT03140
+       REM                                                              1CT03150
+JBFIL  EQU     0             IBJOB                                      1CT03160
+CBFIL  EQU     2             IBCBC                                      1CT03170
+FTFIL  EQU     1             IBFTC                                      1CT03180
+MPFIL  EQU     3             IBMAP                                      1CT03190
+LD1FIL EQU     0             IBLDR FILE 1                               1CT03200
+LD2FIL EQU     1             IBLDR FILE 2                               1CT03210
+LD3FIL EQU     2             IBLDR FILE 3                               1CT03220
+LB1FIL EQU     0             IBLIB FILE 1                               1CT03230
+LB2FIL EQU     1             IBLIB FILE 2                               1CT03240
+       REM                                                              1CT03250
+       ORG     IBLIB                                                    1CT03260
+       LBUNIT  0                                                        1CT03270
+       ORG     ACTION                                                   1CT03280
+       TTR     ACTRT                                                    1CT03290
+       ORG     CELL                                                     1CT03300
+       PZE     ACEND,,ACTL                                              1CT03310
+       ORG     ACTORG                                                   1CT03320
+       REM                                                              1CT03330
+       REM     ACTION IS CALLED, GIVING THE LOCATION OF A               1CT03340
+       REM     BCD LABEL AS AN ARGUMENT.  THIS LABEL IS USED TO         1CT03350
+       REM     FIND AN ENTRY IN THE ACTION TABLE.  THE TABLE            1CT03360
+       REM     ENTRY IS ONE WORD, PZE A OR MXX N,                       1CT03370
+       REM     WHERE A IS THE LOCATION OF A LIST, AND N IS THE          1CT03380
+       REM     LOCATION OF AN ENTRY IN THE TAPE POSITION TABLE.  IF     1CT03390
+       REM     PZE A IS USED, THE LIST AT A IS ONE OR MORE WORDS OF     1CT03400
+       REM     THE FORM                                                 1CT03410
+       REM                                                              1CT03420
+       REM          MZE  N                                              1CT03430
+       REM                                                              1CT03440
+       REM     WHICH MEANS POSITION TO THE POINT INDICATED IN           1CT03450
+       REM     CELL N, OR                                               1CT03460
+       REM                                                              1CT03470
+       REM          PON N                                               1CT03480
+       REM          MON N                                               1CT03490
+       REM                                                              1CT03500
+       REM     WHICH MEANS POSITION TO THE POINT INDICATED IN CELL N    1CT03510
+       REM     AND READ THE NEXT RECORD.  IF PON, ANOTHER               1CT03520
+       REM     ACTION FOLLOWS.                                          1CT03530
+       REM                                                              1CT03540
+ACTRT  SAVE    1,2,I                                                 $5$1CT03550
+       CAL*    3,4           GET LABEL                                  1CT03570
+       LAS     IBLDRR              IS THIS THE IBLDRR RECORD            1CT03580
+       TRA     *+2                 NO                                   1CT03590
+       TRA     LOAD2              YES, JUST REWIND                      1CT03600
+       AXT     ACTTBL-ACTBEG,2                                          1CT03610
+ACT2   LAS     ACTTBL,2      AND SEARCH ACTION TABLE                    1CT03620
+       TRA     *+2           FOR A MATCH.                               1CT03630
+       TRA     ACTF          FOUND.                                     1CT03640
+       TIX     *-3,2,2       NOT FOUND, ARE THERE MORE.                 1CT03650
+       REM                                                              1CT03660
+       ERA     IBLDRQ                                         (IBLDR.10)1CT03670
+       TNZ     NOTIN                                          (IBLDR.10)1CT03680
+       AXC     A3+1,1                                         (IBLDR.10)1CT03690
+       TRA     ACTF1                                          (IBLDR.10)1CT03700
+NOLAB  BCI     4,ACTION LABEL INCORRECT.                                1CT03710
+ACTF   LAS     IBMAPK              IS THIS TH EIBMAPKRECORD             1CT03720
+       TRA     *+2                NO                                    1CT03730
+       STA     ENDJOB             YES, SET SWITCH IN ADDRESS.           1CT03740
+       CAL     ACTTBL+1,2         GET ACTION TABLE WORD                 1CT03750
+       PBT                   IS THIS THE ACTION LIST.                   1CT03760
+       TRA     *+2           NO.                                        1CT03770
+       TRA     ACTF2         YES.                                       1CT03780
+       PAC     0,1                                                      1CT03790
+ACTF1  CAL     0,1                PICK UP ACTION WORD FROM ACTION LIST. 1CT03800
+       SXA     ACTF3,1                                                  1CT03810
+ACTF2  SLW     POSYSI                                                   1CT03820
+       PAC     0,4           GET TAPE POSITION WORD.                    1CT03830
+       CAL     0,4                                                      1CT03840
+       STP     NXTREC             SAVE CURRENT LIB. IND FOR NEXT REC.   1CT03850
+       STA     NEXT                                                     1CT03860
+NRMT   ARS     33                 LIBRARY UNIT INDEX                    1CT03870
+       PAC     0,1                                                      1CT03880
+       XEC     DISCK,1            INITIALIZE CHANNEL NUMBER             1CT03890
+       LDQ     **,1               PICK UP ADDRESS OF CURRENT UCB        1CT03900
+       STQ     SYSTAP             SAVE IN SYSTAP                        1CT03910
+       LXA     SYSTAP,1           SET CURRENT UCB                       1CT03920
+       SXD     SYSLDR,1           FOR SYSLDR                            1CT03930
+NEXT   AXT     **,1                                                     1CT03940
+       TXH     ACT2A,1,32766      IS THIS A REQUEST FOR NEXT RECORD.    1CT03950
+       ZET     DISCK              NO, DISCK OR NEED                     1CT03960
+       TRA     SPLITT                                                $5$1CT03970
+POSTAP CLA     0,4                                                      1CT03980
+       TSX     POSYST,1      GO POSITION SYSTEM TAPE.                   1CT03990
+LIB1   LDI     POSYSI                                                   1CT04000
+       LNT     100000             WAS THIS POSITION ONLY                1CT04010
+       TRA     ACTF3                                                 $5$1CT04020
+ACT2A  ZET     **,2               WAIT TILL CHANNEL ACTIVITY ENDS.      1CT04030
+       TRA     *-1                                                      1CT04040
+       TSX     SYSLDR,4           GO READ SYSTEM TAPE                   1CT04050
+       NZT     IBJDMP        IF DUMP/PATCH PACKAGE NOT                  1CT04060
+       TRA     ACTF3         IN, DON'T CHECK FOR ENTRIES.               1CT04070
+       TSX     PTCH,4        LOAD PATCHES.                              1CT04080
+       TSX     CPRPH,4       INSERT DUMPS.                              1CT04090
+ACTF3  AXT     **,1                                                     1CT04100
+       LDI     POSYSI                                                   1CT04110
+       LNT     400000        WAS THIS LAST ACTION.                      1CT04120
+       TXI     ACTF1,1,-1    NO, GO BACK FOR NEXT.                      1CT04130
+ACTF4  NZT     DISCK              DISK OR NEED                          1CT04140
+       TRA     LKAHED             NO, CHECK LOOK AHEAD                  1CT04150
+       LXA     SYSLOC,1            CHECK FOR 2ND                     $5$1CT04160
+       CLA     1,1                 PARAMETER IN CALL                 $5$1CT04170
+       PDX     0,2                TO ACTION                             1CT04180
+       TXL     LKAHED,2,1         TRA IF NONE                           1CT04190
+       CAL     SYSTCH             PICK UP DISK LIMIT                    1CT04200
+       ALS     5             AND STORE IN                               1CT04210
+       ARS     23            PARAMETER                                  1CT04220
+       STA*    4,1                ADDRESS                               1CT04230
+       RETURN  ACTORG                                                $5$1CT04240
+LKAHED LDI     ENDJOB                                                   1CT04250
+       RNT     400000             IS SYSTEM ON 729 UNIT(S)              1CT04260
+       RETURN  ACTORG                                                $5$1CT04270
+       LFT     100000             DISK AND IBLIB ON TAPE SPLIT          1CT04280
+       RETURN  ACTORG              YES                               $5$1CT04290
+       RNT     026060             IS THIS THE IBMAPK RECORD.            1CT04300
+OUT    RETURN  ACTORG              NO                                $5$1CT04310
+       ZSA     ENDJOB              YES, RESET MAP FLAG               $5$1CT04320
+       CLA     COMCEL                                                   1CT04330
+       STO     POSYSI                                                   1CT04340
+       STZ     COMCEL                                                   1CT04350
+       CALL    JOBIN              GET NEXT LINE INPUT                   1CT04360
+       TMI     OUT2               TRA OUT IF ABNORMAL                   1CT04370
+       PAC     0,4                GET FIRST WORD OF                     1CT04380
+       CAL     0,4                NEXT LINE OF INPUT                    1CT04390
+       AXT     3,4                IS IT $IBFTC,                         1CT04400
+       LAS     AHEAD,4            $IBCBC OR                             1CT04410
+       TRA     *+2                $IBMAP                                1CT04420
+       TRA     REWLBX             YES                                   1CT04430
+       TIX     *-3,4,1            LOOK AGAIN                            1CT04440
+OUT2   CALL    IOEDIT(ARG1)        NO, BACKSPACE OVER INPUT RECORD   $5$1CT04450
+OUT2A  CLA     POSYSI             RESET COMCEL                          1CT04460
+       STO     COMCEL                                                   1CT04470
+       RETURN  ACTRT               RETURN                            $5$1CT04480
+LOAD2  LDI     ENDJOB                                                $5$1CT04488
+       STL     LODERR                                                $5$1CT04489
+REWIND TSX     .NDSEL,4            REW SYSPOS LIB UNIT OR IF         $5$1CT04490
+       PZE     **,,3              SPLIT DISK REW IBLIB TAPE.            1CT04500
+REWLBX RNT     600000             729 SPLIT SYSTEM                      1CT04510
+       TRA     BSFSYS             NO                                    1CT04520
+       TSX     .NDSEL,4            REWINDS SECOND                    $5$1CT04530
+       PZE     **,,3              SYSTEM TAPE                           1CT04540
+BSFSYS ZET     LODERR              IBLDRR                               1CT04550
+       TRA     LOAD1               YES, FINISHED                     $5$1CT04560
+       TSX     .NDSEL,4            BSF ON IBJOB UNIT, NOP IF         $5$1CT04570
+       PZE     **,,6              CMPLRS + MAP ON NON-IBJOB UNIT        1CT04580
+       TRA     OUT2                                                     1CT04590
+ARG1   PZE     1                                                     $5$1CT04600
+       PZE     ,,13                                                     1CT04610
+       BCI     1,$IBCBC                                                 1CT04620
+       BCI     1,$IBFTC                                                 1CT04630
+       BCI     1,$IBMAP                                                 1CT04640
+AHEAD  BSS     0                                                        1CT04641
+LOAD1  STZ     LODERR                                                $5$1CT04650
+       RETURN  ACTRT                                                 $5$1CT04660
+       EJECT                                                         $5$1CT04661
+       REM     TAPE POSITIONER FOR SYSTEM TAPE                          1CT04680
+       REM     CALLING SEQUENCE                                         1CT04690
+       REM        TSX    POSYST,1                                       1CT04700
+       REM     WITH DESIRED TAPE POSITION IN AC.                        1CT04710
+       REM     IF POONCE = ZERO, POSYST HOLDS TILL POSITION IS REACHED. 1CT04720
+       REM               = NON-ZERO, EXIT IS MADE AFTER 1ST MOVEMENT    1CT04730
+       REM               HAS BEEN INITIATED                             1CT04740
+       REM                                                              1CT04750
+POSYST SXA     POSV4,4       SAVE IRS AND INDICATORS.                   1CT04760
+       SXA     POSV2,2                                                  1CT04770
+       ANA     POMSK                                                    1CT04780
+       SLW     POTMP         SAVE DESIRED TAPE POSITION                 1CT04790
+POLAC  LAC     SYSTAP,2      SYSTAP TAPE UCB                            1CT04800
+       CAL     2,2                GET PRESENT TAPE POSITION             1CT04810
+       ANA     POMSK         077777077777                               1CT04820
+       SUB     POTMP         MINUS DESIRED POSTION.                     1CT04830
+       TNZ     *+4           IS POSITIONING REQUIRED.                   1CT04840
+       NZT     1,2           APPARENTLY NOT, CHECK FURTHER.             1CT04850
+       TRA     POSV2              NO.                                   1CT04860
+       TRA     POLAC         POSSIBLY.                                  1CT04870
+       PDX     0,2           FILE DIFFERENCE                            1CT04880
+       TXL     POREC,2,0     NO FILE DIF, GO CHECK REC DIF              1CT04890
+POFOB  TMI     POFOF         IF -, GO POSITION FORWARD N FILES.         1CT04900
+POBOF  TSX     .NDSEL,4            BACKSPACE 1 FILE                  $5$1CT04910
+       PZE     SYSTAP,,6                                                1CT04920
+       TIX     POBOF,2,1     YES.                                       1CT04930
+       TRA     POLAC         GO DO RECORD POSITIONING.                  1CT04940
+POFEOF TNX     POLAC,2,1     FORWARD SPACE N FILES.                     1CT04950
+POFOF  TSX     IOXRW,4       FORWARD SPACE ONE FILE.                    1CT04960
+       PZE     POFF                                                     1CT04970
+       PZE     POFEOF,,POFOF                                            1CT04980
+POREC  PAX     0,2           PROB IN RIGHT FILE, GET REC DIF.           1CT04990
+       TXH     POFL1,2,16384 TEST FOR NEGATIVE RECORD COUNT.            1CT05000
+       TMI     POFOR         OK, IF -, FORWARD SPACE N RECORDS.         1CT05010
+       TSX     .NDSEL,4            BACKSPACE 1 RECORD                $5$1CT05020
+       PZE     SYSTAP,,5                                                1CT05030
+       TIX     *-2,2,1       DO N BACKSPACES.                           1CT05040
+       TRA     POLAC         GO (TEST) AND EXIT (TEMP)                  1CT05050
+POFOR  TSX     IOXRW,4       POSITION FORWARD ONE RECORD.               1CT05060
+       PZE     PORF                                                     1CT05070
+       PZE     POLAC,,*+1                                               1CT05080
+       TIX     POFOR,2,1     DO N RECORDS.                              1CT05090
+       TRA     POLAC         (TEMPORARY)                                1CT05100
+POSV2  AXT     **,2                                                     1CT05110
+POSV4  AXT     **,4                                                     1CT05120
+       TRA     1,1           AND EXIT                                   1CT05130
+POFL1  AXT     1,2           SET FOR ONE FILE                           1CT05140
+       TRA     POFOB         AND GO BACK TO FILE POSITIONING.           1CT05150
+POSYSI PZE     **            INDICATOR STORAGE.                         1CT05160
+POMSK  OCT     077777077777  FILE-RECORD POSITION MAXK                  1CT05170
+POTMP  PZE     **            DESIRED TAPE POSITION.                     1CT05180
+ENDJOB PZE     **                                                       1CT05190
+       REM                                                              1CT05200
+POFF   IOCPN   **,,-1        POSITION FORWARD 1 FILE.                   1CT05210
+       TCH     *-1                                                      1CT05220
+PORF   IORTN   **,,-1        POSITION FORWARD ONE RECORD.               1CT05230
+       REM                                                              1CT05240
+       EJECT                                                         $5$1CT05241
+       REM     CALLING SEQUENCE TO PERFORM EXECUTOR READ OR WRITE.      1CT05250
+       REM                                                              1CT05260
+       REM     TSX     IOXRW,4                                          1CT05270
+       REM     P       RCHSEQ                                           1CT05280
+       REM     PZE     EOF,,ERR                                         1CT05290
+       REM                                                              1CT05300
+       REM     WHERE                                                    1CT05310
+       REM     P                                                        1CT05320
+       REM     IF MINUS, WRITE.  IF PLUS, READ.                         1CT05330
+       REM     BIT 1.                                                   1CT05340
+       REM     IF ONE, NO MESSAGE.  IF ZERO, MESSAGE.                   1CT05350
+       REM     RCHSEQ=LOCATION OF IO COMMANDS TO BE EXECUTED.           1CT05360
+       REM     EOF=END OF FILE EXIT.                                    1CT05370
+       REM     ERR=ERROR EXIT.                                          1CT05380
+       REM                                                              1CT05390
+       REM     INDICATORS AND AC ARE DESTROYED, IRS ARE PRESERVED.      1CT05400
+       REM                                                              1CT05410
+IOXRW  SXA     IOXS4,4       SAVE IR4.                                  1CT05420
+       CLA     2,4                                                      1CT05430
+       STA     IOXEF         SAVE EOF EXIT.                             1CT05440
+       ARS     18                                                       1CT05450
+       STA     IOXER         SAVE ERROR EXIT.                           1CT05460
+       CAL     1,4           GET FIRST WORD OF C.S.                     1CT05470
+       LAC     SYSTAP,4           UCB COMP TO XR4                       1CT05480
+       STA     IOXSLL        PUT IN SELECT WORD.                        1CT05490
+       CLA     IOXSLL        GET SELECT WORD.                           1CT05500
+       ZET     1,4           TEST FOR OTHER USE OF UNIT.                1CT05510
+       TRA     *-1           WAIT UNTIL THROUGH.                        1CT05520
+       STO     1,4           SIGNED CONTROL WORD TO UCB+1.              1CT05530
+       STZ     IOXIN         SET IN OPERATION WORD ON.                  1CT05540
+       TSX     .ACTV,4             GO ACTIVATE                       $5$1CT05550
+IOXND  PZE     SYSTAP             UNIT                                  1CT05560
+       LDI     L(0)          CLEAR SI.                                  1CT05570
+       NZT     IOXIN         TEST FOR SELECT DONE.                      1CT05580
+       TRA     *-1           WAIT UNTIL DONE.                           1CT05590
+       LDI     IOXIN         PICK UP COMPLETION BITS.                   1CT05600
+IOXS4  AXT     **,4          SET FOR EXIT.                              1CT05610
+       LFT     200000        TEST FOR EOF.                              1CT05620
+IOXEF  TRA     **            GO TO EOF EXIT.                            1CT05630
+       LFT     100000        TEST FOR REDUNDANCY.                       1CT05640
+IOXER  TRA     **            YES, GO TO ERROR.                          1CT05650
+       TRA     3,4           NORMAL RETURN.                             1CT05660
+IOXSLL PZE     0,,IOXSL      READ, BIN, LOC OF SEL RTN + I/O COMMS.     1CT05670
+IOXIN  PZE     **            IN OPERATION CELL.                         1CT05680
+       REM     SELECT ROUTINE                                           1CT05690
+IOXSL  PAC     0,2                LOC OF UCB.                           1CT05700
+       TMI     IOXPST        POST ENTRY.                                1CT05710
+       CLA     1,2                GET UCB+1                             1CT05720
+       STA*    RCHXI              STORE LOC TO RCHX FROM                1CT05730
+       CLA     0,2                GET FIRST WORD OF UCB                 1CT05740
+       PDX     0,2                UNIT TO XR2                           1CT05750
+       TXI     *+1,2,16      BINARY, BUMP UNIT.                         1CT05760
+       SXA     *+2,2         READ, PUT UNIT IN SELECT                   1CT05770
+       ZET*    CHEXI                                                    1CT05771
+       RDS     **            SELECT                                     1CT05780
+       XEC*    RCHXI         RESET AND LOAD                             1CT05790
+IOXSS4 TRA     1,4                                                      1CT05800
+IOXPST STI     IOXIN         POST TIME, SAVE ERROR CONDITIONS.          1CT05810
+       STL     IOXIN         SET IN OPERATION WORD OFF.                 1CT05820
+       STZ     1,2                SET UCB+1 ZERO                        1CT05830
+       TRA     IOXSS4                                                   1CT05840
+       REM                                                              1CT05850
+       REM     ACTION TABLE                                             1CT05860
+       REM                                                              1CT05870
+ACTBEG BCI     1,PCIOCS                                                 1CT05880
+       PZE     PCINIT                                                   1CT05890
+       BCI     1,PC                                                     1CT05900
+       MZE     CSPOS                                                    1CT05910
+       BCI     1,PHA                                                 $5$1CT05920
+       MON     FCCPOS                                                   1CT05930
+       BCI     1,PHB                                                 $5$1CT05940
+       MON     PH1POS                                                   1CT05950
+       BCI     1,DIAGR                                               $5$1CT05960
+       MON     SAPOS                                                    1CT05970
+       BCI     1,IBJOBI      PROCESS CONTROL UTILITIES, AFTER IBFTC.    1CT06000
+       MON     J2            POSITION AND READ.                         1CT06010
+       BCI     1,MAP1                                                   1CT06020
+       MON     MP1POS                                                   1CT06030
+IBMAPK BCI     1,MAP2                                                   1CT06040
+       MON     MP2POS                                                   1CT06050
+       BCI     1,IBJOBL      PROCESS CONTROL UTILITIES, AFTER IBMAP.    1CT06060
+       MON     J3            POSITION AND READ.                         1CT06070
+       BCI     1,IBLDRM      IBLDR GETS CONTROL FROM IBJOB              1CT06080
+       MON     T2                 LOAD IBLDRM                           1CT06090
+       BCI     1,IBLDRN      IBLDR SECT -1                              1CT06100
+       MON     T3              LOAD IBLDRN                              1CT06110
+       BCI     1,IBLDRO      IBLDR SECT -2                              1CT06120
+       PZE     A2              SEE ACTION LIST                          1CT06130
+       BCI     1,IBLDRP      IBLDR SECT -3                              1CT06140
+       PZE     A3              SEE ACTION LIST.                         1CT06150
+       BCI     1,IBLDRQ      IBLDR SECT -4                      DGP     1CT06153
+       PZE     A3+1            SEE ACTION LIST.                         1CT06155
+       BCI     1,IBLDRS      LIBRARIAN                                  1CT06160
+       PZE     A4              SEE ACTION LIST                          1CT06170
+       BCI     1,TIFSR       LIBRARIAN CALLS ACTION TO                  1CT06180
+       MON     T8                 POSITION IN FRONT OF TIFSR.           1CT06190
+       BCI     1,JDUMP       PATCH/DUMP PACKAGE.                        1CT06200
+       MON     J1            POSITION AND READ.                         1CT06210
+       BCI     1,DMPREC      FORTRAN DUMP RECORD                        1CT06220
+       MON     J4            POSITION AND READ                          1CT06230
+       BCI     1,IBCBCZ                                                 1CT06240
+       MON     CB1                                                      1CT06250
+       BCI     1,IBCBC9                                                 1CT06260
+       MON     CB11                                                     1CT06270
+       BCI     1,IBJOBY                                                 1CT06280
+       MON     J5                                                       1CT06290
+       BCI     1,NEXTR       READ NEXT                                  1CT06300
+       MZE     NXTREC             RECORD.                               1CT06310
+       BCI     1,IBJOBC                                                 1CT06320
+       MON     PC2POS                                                   1CT06330
+       BCI     1,IBDBL       DEBUGGING COMPILER                         1CT06331
+       MON     J6                                                       1CT06332
+       BCI     1,POST1       DEBUGGING POST PROCESSOR                   1CT06333
+       MON     J7                                                       1CT06334
+       BCI     1,POST2                                                  1CT06335
+       MON     J8                                                       1CT06336
+ACTTBL BSS     0                                                        1CT06340
+IBLDRR BCI     1,IBLDRR                                                 1CT06360
+       REM                                                              1CT06370
+       REM     ACTION LISTS                                             1CT06380
+       REM                                                              1CT06390
+PCINIT PON     CSPOS                                                    1CT06400
+       PON     PCPOS                                                    1CT06410
+       MON     PC2POS                                                   1CT06420
+A2     PON     T4            LOAD IBLDRO                                1CT06430
+       MON     T5              LOAD CIFSR                     (IBLDR.10)1CT06440
+ A3    MON     T6            LOAD IBLDRP                      (IBLDR.10)1CT06450
+       PON     T7              LOAD IBLDRQ                              1CT06460
+       MON     T8                 LOAD TIFSR                            1CT06470
+A4     PON     T13           LOAD IBLDRS                                1CT06480
+       MON     T5                 LOAD CIFSR                            1CT06490
+       BSS     2             SPACE FOR MORE ENTRIES                     1CT06500
+       REM                                                              1CT06510
+       REM     TAPE POSITION TABLE                                      1CT06520
+       REM                                                              1CT06530
+ACINIT SYN     *                                                        1CT06540
+J1     JBUNIT  1,,JBFIL            IBJOB DUP/PATCH                   $5$1CT06550
+J4     JBUNIT  2,,JBFIL            FORTRAN DUMP RECORD               $5$1CT06560
+CSPOS  JBUNIT  3,,JBFIL            IOCS FOR SYSTEM                   $5$1CT06570
+PCPOS  JBUNIT  4,,JBFIL            PROCESS CONTROL                   $5$1CT06580
+PC2POS JBUNIT  5,,JBFIL            PROCESS CONTROL UTILITIES         $5$1CT06590
+CB1    CBUNIT  0,,CBFIL      IBCBC SUPERVISOR                           1CT06600
+CB11   CBUNIT  10,,CBFIL                                                1CT06610
+J5     CBUNIT  11,,CBFIL     PROCESS CONTROL UTILITIES                  1CT06620
+FCCPOS FTUNIT  0,,FTFIL      IBFTC CONTROL                              1CT06630
+PH1POS FTUNIT  1,,FTFIL      IBFTC, PHASE ONE                           1CT06640
+SAPOS  FTUNIT  2,,FTFIL      IBFTC, STORAGE ALLOCATOR                   1CT06650
+J2     FTUNIT  3,,FTFIL                                              $5$1CT06670
+MP1POS MPUNIT  0,,MPFIL      IBMAP, PASS ONE                            1CT06680
+MP2POS MPUNIT  1,,MPFIL      IBMAP, PASS TWO                            1CT06690
+J3     MPUNIT  2,,MPFIL      PROCESS CONTROL UTILITIES                  1CT06700
+T2     LDUNIT  0,,LD1FIL     IBLDR SUPERVISOR                           1CT06710
+T3     LDUNIT  1,,LD1FIL     IBLDR, SECTION ONE                         1CT06720
+T4     LDUNIT  2,,LD1FIL     IBLDR, SECTION TWO                         1CT06730
+T5     LBUNIT  3,,LB1FIL     CIFSR (IBLIB)                           $5$1CT06740
+T6     LDUNIT  0,,LD2FIL     IBLDR, S(CTION THREE                       1CT06750
+T7     LDUNIT  1,,LD2FIL     IBLDR, SECTION FOUR                        1CT06760
+T8     LBUNIT  2,,LB2FIL     TIFSR (IBLIB)                              1CT06770
+T13    LDUNIT  0,,LD3FIL           SBR LIBRARIAN                        1CT06780
+J6     JBUNIT  6,,JBFIL            IBDBL                             $5$1CT06781
+J7     JBUNIT  7,,JBFIL            DEBUG POST PROCESSOR              $5$1CT06782
+J8     JBUNIT  8,,JBFIL            DEBUG POST PROCESSOR II           $5$1CT06783
+ACEND  SYN     *                                                        1CT06790
+       BSS     6                                                     $5$1CT06800
+ACTL   EQU     ACEND-ACINIT  LENGTH OF TAPE POSITION TABLE.             1CT06810
+ACTS   EQU     ACTTBL-ACTBEG  LENGTH OF ACTION TABLE.                   1CT06820
+NXTREC JBUNIT  32767              NEXT RECORD                           1CT06830
+LODERR PZE                                                              1CT06840
+DISCK  PZE                                                              1CT06850
+       AXC     **,2                                                     1CT06860
+       AXC     **,2                                                     1CT06870
+       AXC     **,2                                                     1CT06880
+       AXC     **,2                                                     1CT06890
+CHAN   EQU     *                                                     $5$1CT06900
+SPLITT SUB     TEMP                IS THIS RECORD ON DISK W/ SYSTEM  $5$1CT06910
+       TNZ     POSTAP             NO, THIS REC SHOULD BE IBLIB ON TAPE. 1CT06920
+       CLA     0,4                SET DISK LIMIT                        1CT06930
+       STD     SYSTCH                                                   1CT06940
+       TRA     LIB1                                                     1CT06950
+TEMP   PZE                                                              1CT06960
+       LDIR                                                   (IBLDR.10)1CT06962
+IBLDRQ BCI     1,IBLDRQ                                       (IBLDR.10)1CT06964
+ NOTIN TSX     .MWR,4                                         (IBLDR.10)1CT06966
+       PZE     1                                              (IBLDR.10)1CT06968
+       PZE     NOLAB,,4                                       (IBLDR.10)1CT06970
+       STR                                                    (IBLDR.10)1CT06984
+       BES     PCNORG-*      ACTION ROUTINE PATCH AREA               $5$1CT06985
+       EJECT                                                            1CT07000
+       REM     TABLE OF INITIALIZING INSTRUCTIONS USED BY JOB           1CT07010
+       REM     CONTROL INITIALIZATION.                                  1CT07020
+       ORG     SUBSYS                                                   1CT07030
+       SXA     NRMT+3,4                                                 1CT07040
+       STL     DISCK                                                    1CT07050
+       AXT     ACEND-ACINIT,2                                           1CT07060
+       SXA     DISCK+10,1                                               1CT07070
+       SXA     REWIND+1,1                                               1CT07080
+       SXA     REWIND+9,1                                               1CT07090
+       AXT     ACEND-ACINIT,1                                           1CT07100
+       CAL     ACEND,1                                                  1CT07110
+       NZT     DISCK                                                    1CT07120
+       SUB     DISCK+10                                                 1CT07130
+       ADD     DISCK+10                                                 1CT07140
+       STP     ENDJOB                                                   1CT07150
+       SXA     REWIND+1,4                                               1CT07160
+       STP     A2+1                                                     1CT07170
+       STP     A2+4                                                     1CT07180
+       STP     A2+6                                                     1CT07190
+       STT     ENDJOB                                                   1CT07200
+       STA     REWIND+5                                                 1CT07210
+       ORS     ENDJOB                                                   1CT07220
+       STO     REWIND+8                                                 1CT07230
+       STO     REWIND+9                                                 1CT07240
+       ZET     DISCK                                                    1CT07250
+       STA     DISCK+5,4                                                1CT07260
+       SXA     ACT2A,1                                                  1CT07270
+       AXT     ACT2A+3,1                                                1CT07280
+       CAL     ACINIT+1                                                 1CT07290
+       STO     POFOF                                                    1CT07300
+       STO     POFOR                                                    1CT07310
+       STO     POFOR+2                                                  1CT07320
+       STO     POFOF+2                                                  1CT07330
+       STO     POFOR-3                                                  1CT07340
+       STO     POFOF-4                                                  1CT07350
+       STO     POFOR+1                                                  1CT07360
+       STO     POFOF+1                                                  1CT07370
+       TRA     POFOF-1                                                  1CT07380
+       STD     ACEND,2                                                  1CT07390
+       CAL     T8                                                       1CT07400
+       SLW     T8                                                       1CT07410
+       CAL     T5                                                       1CT07420
+       SLW     T5                                                       1CT07430
+       PZE     CB1                                                      1CT07440
+       PZE     FCCPOS                                                   1CT07450
+       PZE     MP1POS                                                   1CT07460
+       SXD     REWIND+1,4                                               1CT07461
+       TTL     VERSION NUMBER - RECORD VER004                           1CT07480
+       END                                                           $5$1CT99990
