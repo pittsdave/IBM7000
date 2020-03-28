@@ -1,0 +1,75 @@
+case 1:
+   value = Stkval(2); 
+   break;
+case 3:
+   value = Stkval(3) - Stkval(1); 
+   break;
+case 4:
+   value = Stkval(3) + Stkval(1); 
+   break;
+case 6:
+   value = Stkval(1); 
+   break;
+case 7:
+   value = - Stkval(1); 
+   break;
+case 8:
+   value = Stkval(3) * Stkval(1); 
+   break;
+case 9:
+   if (Stkval(1) == VALUEZERO)
+   			     /* Zero divide is treated as divide by 1 */
+   			     value = Stkval(3);
+   			  else
+   			     value = Stkval(3) / Stkval(1); 
+   break;
+case 11:
+   value = Stkval(1); 
+   break;
+case 12:
+   value = Stkval(1); 
+   break;
+case 13:
+   value = Stkval(1); 
+   break;
+case 14:
+   value = 0; 
+   break;
+case 15:
+   
+   			{
+   			   int xref;
+   			   SymNode *s;
+   			   char temp1[MAXSYMLEN+2];
+   
+   			   if (strlen(CStkval(1)) > MAXSYMLEN)
+   			   {
+   			      strncpy (temp1, CStkval(1), MAXSYMLEN);
+   			      temp1[MAXSYMLEN] = '\0';
+   			   }
+   			   else
+   			      strcpy (temp1, CStkval(1));
+   
+   			   xref = (((inpass & 070) == 010) && defer == FALSE)
+   				 ? FALSE : TRUE;
+   			   if ((s = symlookup (temp1, FALSE, xref)) != NULL)
+   			   {
+   			      if (retsize)
+   				 value = s->length;
+   			      else
+   			      {
+   				 value = s->value;
+   				 if (s->flags & EXTERNAL)
+   				    s->value = pc; 
+   			      }
+   			   }
+   			   else if (!defer)
+   			   {
+   			      char errtmp[120];
+   			      sprintf (errtmp, "Undefined symbol: %s", temp1);
+   			      logerror (errtmp);
+   			      value = 0;
+   			   }
+   		        }
+   		       
+   break;

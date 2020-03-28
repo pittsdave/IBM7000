@@ -1,0 +1,80 @@
+(* ASM7080 language expression BNF *)
+
+<GOAL> := <AEXPR> eos
+                       (# value = Stkval(2); #)
+     ;
+
+(* Arithmetic expressions *)
+
+<AEXPR> := <ATERM>
+     ! <AEXPR> "-" <ATERM>
+                       (# value = Stkval(3) - Stkval(1); #)
+     ! <AEXPR> "+" <ATERM> 
+                       (# value = Stkval(3) + Stkval(1); #)
+     ;
+
+<ATERM> := <ELEM>
+     ! "+" <ELEM>
+                       (# value = Stkval(1); #)
+     ! "-" <ELEM>
+                       (# value = - Stkval(1); #)
+     ! <ATERM> aster <ELEM>
+                       (# value = Stkval(3) * Stkval(1); #)
+     ! <ATERM> "/" <ELEM>
+                       (# if (Stkval(1) == VALUEZERO)
+			     /* Zero divide is treated as divide by 1 */
+			     value = Stkval(3);
+			  else
+			     value = Stkval(3) / Stkval(1); #)
+     ;
+
+<ELEM> := <VARBL>
+     ! octnum
+                       (# value = Stkval(1); #)
+     ! decnum
+                       (# value = Stkval(1); #)
+     ! aster (* pc *)
+                       (# value = Stkval(1); #)
+     ! nulsym
+                       (# value = 0; #)
+     ;
+
+<VARBL> := sym
+                       (#
+			{
+			   int xref;
+			   SymNode *s;
+			   char temp1[MAXSYMLEN+2];
+
+			   if (strlen(CStkval(1)) > MAXSYMLEN)
+			   {
+			      strncpy (temp1, CStkval(1), MAXSYMLEN);
+			      temp1[MAXSYMLEN] = '\0';
+			   }
+			   else
+			      strcpy (temp1, CStkval(1));
+
+			   xref = (((inpass & 070) == 010) && defer == FALSE)
+				 ? FALSE : TRUE;
+			   if ((s = symlookup (temp1, FALSE, xref)) != NULL)
+			   {
+			      if (retsize)
+				 value = s->length;
+			      else
+			      {
+				 value = s->value;
+				 if (s->flags & EXTERNAL)
+				    s->value = pc; 
+			      }
+			   }
+			   else if (!defer)
+			   {
+			      char errtmp[120];
+			      sprintf (errtmp, "Undefined symbol: %s", temp1);
+			      logerror (errtmp);
+			      value = 0;
+			   }
+		        }
+		       #)
+     ;
+

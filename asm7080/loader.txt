@@ -1,0 +1,30 @@
+Loader:
+0004    SEL     0100            20100
+0009    NOP     0018            A0018
+0014    SET 6   0002            B0 -2
+0019    SET 7   0004            B0 +4
+0024    RD      0080            Y0080
+0029    TRA     0079            I0079
+0034    LOD 6   0094            80 R4
+0039    TRZ 6   0099            N0 R9
+0044    UNL 6   0059            70 N9
+0049    RCV     0061            U0061
+0054    TMT 7   0089            90  9
+0059    SET 8   0000            B0-00
+0064    RCV     0000            U0000
+0069    TMT 8   0095            90-95
+0074    TR      0004            10004
+0079    HLT     100             J1000
+
+Olde card image:
+20100A0018B0 -2B0 +4Y0080I007980 R4N0 R970 N9U006190  9B0-00U000090-9510004J1000
+
+We substitute valid ASCII characters for BCD:
+20100A0018B0#!2B0#?4Y0080I007980#R4N0#R970#N9U006190#H9B0!00U000090!9510004J1000
+
+Card    Col
+        1-6     ID
+	7-9     SN
+        10-13   load address
+	14-15   # cols
+        16-80   data                

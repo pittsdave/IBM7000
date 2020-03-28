@@ -1,0 +1,69 @@
+case 1:
+   strcpy (errorstring, "Missing '+', '-', OCTNUM, DECNUM, ASTER, NULSYM, SYM, ");
+   break;
+case 2:
+   strcpy (errorstring, "Missing EOS, '-', '+', ");
+   break;
+case 3:
+   strcpy (errorstring, "Missing ASTER, '/', ");
+   break;
+case 4:
+   strcpy (errorstring, "Missing OCTNUM, DECNUM, ASTER, NULSYM, SYM, ");
+   break;
+case 5:
+   strcpy (errorstring, "Missing OCTNUM, DECNUM, ASTER, NULSYM, SYM, ");
+   break;
+case 6:
+   strcpy (errorstring, "Missing ");
+   break;
+case 7:
+   strcpy (errorstring, "Missing ");
+   break;
+case 8:
+   strcpy (errorstring, "Missing ");
+   break;
+case 9:
+   strcpy (errorstring, "Missing ");
+   break;
+case 10:
+   strcpy (errorstring, "Missing ");
+   break;
+case 11:
+   strcpy (errorstring, "Missing ");
+   break;
+case 12:
+   strcpy (errorstring, "Missing ");
+   break;
+case 13:
+   strcpy (errorstring, "Missing ");
+   break;
+case 14:
+   strcpy (errorstring, "Missing '+', '-', OCTNUM, DECNUM, ASTER, NULSYM, SYM, ");
+   break;
+case 15:
+   strcpy (errorstring, "Missing '+', '-', OCTNUM, DECNUM, ASTER, NULSYM, SYM, ");
+   break;
+case 16:
+   strcpy (errorstring, "Missing OCTNUM, DECNUM, ASTER, NULSYM, SYM, ");
+   break;
+case 17:
+   strcpy (errorstring, "Missing OCTNUM, DECNUM, ASTER, NULSYM, SYM, ");
+   break;
+case 18:
+   strcpy (errorstring, "Missing ");
+   break;
+case 19:
+   strcpy (errorstring, "Missing ");
+   break;
+case 20:
+   strcpy (errorstring, "Missing ASTER, '/', ");
+   break;
+case 21:
+   strcpy (errorstring, "Missing ASTER, '/', ");
+   break;
+case 22:
+   strcpy (errorstring, "Missing ");
+   break;
+case 23:
+   strcpy (errorstring, "Missing ");
+   break;

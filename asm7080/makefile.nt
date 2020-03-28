@@ -1,0 +1,32 @@
+CPU = i386
+MAKECPU = /D_X86_
+PCPU = /G3
+
+!include <ntwin32.mak>
+
+CFLAGS = /nologo /D_WIN32 /DWIN32 /W3 /Zi /MD $(PCPU) $(DEBUG)
+
+ASMOBJS = asm7080.obj asmpass0.obj asmpass1.obj asmpass2.obj asmoptab.obj \
+	asmsupt.obj parser.obj asmdmem.obj
+
+all: asm7080.exe
+
+asm7080.exe: $(ASMOBJS)
+	link $(ASMOBJS) $(LDEBUG) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+
+clean:
+	del $(ASMOBJS) asm7080.exe
+	del *.bin *.lst
+
+asm7080.obj: asm7080.c asmdef.h asm7080.tok asmdmem.h
+asmpass0.obj: asmpass0.c asmdef.h asm7080.tok asmdmem.h
+asmpass1.obj: asmpass1.c asmdef.h asm7080.tok
+asmpass2.obj: asmpass2.c asmdef.h asmbcd.h asm7080.tok
+asmoptab.obj: asmoptab.c asmdef.h asm7080.tok asmdmem.h
+asmsupt.obj: asmsupt.c asmdef.h asm7080.tok asmdmem.h
+parser.obj: parser.c errors.h stables.h scanner.h asmdef.h asm7080.ptb \
+	asm7080.sem asmdmem.h
+asmdmem.obj: asmdmem.c asmdef.h asmdmem.h

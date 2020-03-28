@@ -1,0 +1,6 @@
+#define EOS      3
+#define ASTER    8
+#define OCTNUM   11
+#define DECNUM   12
+#define NULSYM   13
+#define SYM      14
