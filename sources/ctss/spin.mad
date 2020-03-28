@@ -1,0 +1,8 @@
+          R SPIN TO TEST MULTIPROGRAM
+            VECTOR VALUES HELLO = $15H SPIN THE WORLD*$
+            INTEGER A
+            PRINT FORMAT HELLO
+            A=0
+LOOP        A=A+1
+            TRANSFER TO LOOP
+            END OF PROGRAM

@@ -1,0 +1,88 @@
+#!/bin/sh
+PATH=.:$PATH
+
+# Delete users from CTSS
+#
+# We leave behind the User's UFD and data.
+#
+
+usage()
+{
+   echo "deluserctss [options] programmername "
+   echo "  options:"
+   echo "   -p projectname"
+}
+
+projectname="M1416"
+
+# Process options.
+
+while getopts ":p:" opt; do
+   case $opt in
+   p)
+      projectname=`echo ${OPTARG} | tr [a-z] [A-Z]`
+      ;;
+   \? )
+      echo "option -${OPTARG} unknown"
+      usage
+      exit 1
+      ;;
+   :)
+      echo "option -${OPTARG} requires value"
+      usage
+      exit 1
+      ;;
+   esac
+done
+shift $(($OPTIND - 1))
+
+if [ $# -lt 1 ]; then
+   usage
+   exit
+fi
+
+# Get the current info.
+
+extractctss B uaccnt timacc m1416 cmfl02 uaccnt.bcd >deluserctss.log 2>&1
+if [ $? -ne 0 ]; then
+   echo "Error reading UACCNT file:"
+   cat deluserctss.log
+   exit 1
+fi
+bcd2txt uaccnt.bcd uaccnt.data 168 168
+
+extractctss B timusd timacc m1416 cmfl02 timusd.bcd >deluserctss.log 2>&1
+if [ $? -ne 0 ]; then
+   echo "Error reading TIMUSD file:"
+   cat deluserctss.log
+   exit 1
+fi
+bcd2txt timusd.bcd timusd.data 168 168
+rm -f deluserctss.log
+
+# Call the program to do the work.
+
+userdelctss $1 ${projectname} 
+if [ $? -ne 0 ]; then
+   exit 1
+fi
+
+obj2img -t -r 168 -f TIMUSD -e TIMACC -o timusd.img timusd.data
+obj2img -t -r 168 -f UACCNT -e TIMACC -o uaccnt.img uaccnt.data
+
+# Update.
+
+setupctss timusd.img >deluserctss.log 2>&1
+if [ $? -ne 0 ]; then
+   echo "Error updating TIMUSD file:"
+   cat deluserctss.log
+   exit 1
+fi
+setupctss uaccnt.img >deluserctss.log 2>&1
+if [ $? -ne 0 ]; then
+   echo "Error updating UACCNT file:"
+   cat deluserctss.log
+   exit 1
+fi
+
+rm -f timusd.* uaccnt.* deluserctss.log

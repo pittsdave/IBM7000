@@ -1,0 +1,21 @@
+#
+# This is the KIT Install Makefile for CTSS.
+#
+
+# Edit the following for your environment:
+TAPEDIR = YOUR_TAPE_DIR
+S709DIR = YOUR_S709_DIR
+
+SCRIPTS = cleanupctss diagctss dskedtctss extractctss installctss plotctss \
+	runctss setupctss salvagectss \
+	cleanupctss.cmd diagctss.cmd dskedtctss.cmd fmt.cmd fmtchk.cmd \
+	loader.cmd mfd.cmd runctss.cmd salvagectss.cmd utilctss.cmd
+
+TAPES = com1.tap com2.tap com3.tap comdata.tap quotas.tap com4.tap com5.tap \
+	ctss.tap setup.tap extract.tap util.tap clock.tap dsetup.tap \
+	hsdt1a.tap ld7750.tap dg7750.tap comlinks.tap fibmon.tap guest.tap \
+	cmfl01.tap loader.tap salv4.tap lisp.tap progs.tap dskedt.tap
+
+all install:
+	cp $(TAPES) $(TAPEDIR)
+	cp $(SCRIPTS) $(S709DIR)

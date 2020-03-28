@@ -1,0 +1,27 @@
+#!/bin/sh
+PATH=.:$PATH
+
+# Edit these to match your configuration
+TAPE=../tapes
+DASD=../dasd
+
+#
+# Run CTSS Salvager.
+#
+# Usage: salvagectss [s709options] [device assignments]
+
+touch cmd.txt
+txt2bcd cmd.txt cmd.bcd 80 80
+bcd2cbn cmd
+
+#
+# Run CTSS Salvager image
+#
+rm -f ${TAPE}/trace.bin
+s709 $2 -C8 -mCTSS -csalvagectss.cmd r=cmd p=print \
+	a1r=${TAPE}/salv4.tap a3=salvage.bcd a9=trace.bin $3 $4 $5 $6 $7 \
+	cd00=${DASD}/DISK1.BIN cn01=${DASD}/DRUM1.BIN cd42=${DASD}/DISK2.BIN \
+	gh00=${DASD}/DRUM2.BIN gh01=${DASD}/DRUM3.BIN
+#
+bcd2txt -p salvage.bcd salvage.lst
+rm -f cmd.txt cmd.bcd cmd.cbn salvage.bcd

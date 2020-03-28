@@ -1,0 +1,32 @@
+#!/bin/sh
+PATH=.:$PATH
+
+# Edit these to match your configuration
+TAPE=../tapes
+DASD=../dasd
+
+#
+# Run CTSS DSKEDT.
+#
+# Usage: dskedtctss [commands] [s709options] [device assignments]
+
+if [ "$1" = "" ]; then
+   echo "stop" >cmd.txt
+else
+   cp $1 cmd.txt
+fi
+txt2bcd cmd.txt cmd.bcd 80 80
+bcd2cbn cmd
+
+#
+# Run CTSS DSKREDT image
+#
+rm -f ${TAPE}/trace.bin
+s709 $2 -C8 -mCTSS -cdskedtctss.cmd r=cmd p=print \
+	a1r=${TAPE}/dskedt.tap a3=sysprint.bcd a9=trace.bin $3 $4 $5 $6 $7 \
+	b1=syscarry.bcd b2=syspunchid.bcd b4=syspunch.bcd \
+	cd00=${DASD}/DISK1.BIN cn01=${DASD}/DRUM1.BIN cd42=${DASD}/DISK2.BIN \
+	gh00=${DASD}/DRUM2.BIN gh01=${DASD}/DRUM3.BIN
+#
+#bcd2txt -p dskedt.bcd dskedt.lst
+rm -f cmd.txt cmd.bcd cmd.cbn

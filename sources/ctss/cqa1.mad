@@ -1,0 +1,106 @@
+          R..PLOTTER TEST PROGRAM
+          R.. TO COMPILE AND RUN:
+          R
+          R     MAD CQA1 (LIST)
+          R     LOADGO CQA1 (SYS) (LIBE) PLIBE
+          R
+           NORMAL MODE IS INTEGER
+           FLOATING POINT X, Y, THICK, PSI, WIDTH, TX
+           FLOATING PINT TSQR, WSQR, WX, XPOS, YPOS
+           VECTOR VALUES ICHR1 = $WIDTH (FT)$
+           VECTOR VALUES ICHR2 = $THICKNESS (IN)$
+           VECTOR VALUES ICHR3 = $PRESSURE (PSI)$
+           VECTOR VALUES ICHR4 = $THK= $
+           VECTOR VALUES ICHR5 = $ IN.$
+           VECTOR VALUES ICHR6 = $WTH= $
+           VECTOR VALUES ICHR7 = $ FT.$
+           VECTOR VALUES ICHR8 = $CRITICAL BUCKLING PRESSURE OF$
+           VECTOR VALUES ICHR9 = $HYPERBOLIC PARABOLOID SHELLS FOR$
+           VECTOR VALUES ICHR10 = $FIXED WIDTH VS VARYING THICKNESS$
+           VECTOR VALUES ICHR11 = $FIXED THICKNESS VS VARYING WIDTH$
+           VECTOR VALUES ICHR12 = $PREPARED ON A CALCOMP PLOTTER$
+          R
+           EXECUTE STRTPL.(1)
+          R..SET AN ORIGIN SO NEGATIVE VALUES UP TO -0.5 MAY BE USED
+           EXECUTE PLOT1.(0.5, 0.5, -3)
+          R..PLOT X-AXIS FOR WIDTH
+           X = 0.0
+           THROUGH L210, FOR I = 1, 1, I .G. 10
+             EXECUTE PLOT1.(X, 0.0, 3)
+             X = X + 1.0
+             EXECUTE PLOT1.(X, 0.0, 2)
+             EXECUTE PLOT1.(X, -.1, 2)
+L210         EXECUTE NUMBR1.(X, -0.25, 0.1, 5.0 * X, 0.0, 0)
+           IBCD = $+$
+           EXECUTE SYMBL5.(4.0, -0.40, 0.12, IBCD, 0.0, 1)
+           EXECUTE SYMBL5.(4.2, -0.45, -0.14, ICHR1, 0.0, 10)
+           EXECUTE PLOT1. (0.0, 0.5, -3)
+          R..PLOT X-AXIS FOR THICKNESS
+           X = 0.0
+           THROUGH L220, FOR I = 1, 1, I .G. 5
+             EXECUTE PLOT1.(X, 0.0, 3)
+             X = X + 1.0
+             EXECUTE PLOT1.(X, 0.0, 2)
+             EXECUTE PLOT1.(X, -.1, 2)
+             EXECUTE PLOT1.(X, 0.0, 2)
+             X = X + 1.0
+             EXECUTE PLOT1.(X, 0.0, 2)
+             EXECUTE PLOT1.(X, -.1, 2)
+L220         EXECUTE NUMBR1.(X, -0.25, 0.1, X, 0.0, 0)
+           IBCD = $*$
+           EXECUTE SYMBL5.(3.7, -0.40, 0.12, IBCD, 0.0, 1)
+           EXECUTE SYMBL5.(4.0, -0.45, -0.14, ICHR2, 0.0, 14)
+          R..PLOT Y-AXIS
+           Y = 0.0
+           THROUGH L230, FOR I = 1, 1, I .G. 9
+             EXECUTE PLOT1.(0.0, Y, 3)
+             Y = Y + 1.0
+             EXECUTE PLOT1.(0.0, Y, 2)
+             EXECUTE PLOT1.(-.1, Y, 2)
+L230         EXECUTE NUMBR1.(-.15, Y-.2, 0.1, 1000. * Y, 90.0, 0)
+           EXECUTE SYMBL5.(-0.30, 3.5, -0.14, ICHR3, 90.0, 14)
+          R..PLOT THE CURVES
+           THICK = 3.0
+           WIDTH = 25.0
+           THROUGH L260, FOR I = 1, 1, I .G. 3
+             TSQR = THICK * THICK
+             WSQR = WIDTH * WIDTH
+             PSI = 100.99 * TSQR
+             XPOS = 0.6
+             YPOS = PSI / 1000.0
+             EXECUTE SYMBL5.(XPOS, YPOS, 0.1, ICHR4, 0.0, 5)
+             XPOS = XPOS + (0.1 * 5.0)
+             EXECUTE NUMBR1.(XPOS, YPOS, 0.1, THICK, 0.0, 0)
+             XPOS = XPOS + (0.1 * 1.0)
+             EXECUTE SYMBL5.(XPOS, YPOS, 0.1, ICHR5, 0.0, 4)
+             IBCD = $*$
+             EXECUTE SYMBL5.(2.0, YPOS, 0.12, IBCD, 0.0, 1)
+             THROUGH L240, FOR J = 10, 1, J .G. 50
+               WX = J
+               PSI = 10099.0 * TSQR / (WX * WX)
+L240           EXECUTE PLOT1.(WX / 5.0, PSI / 1000.0, 2)
+             PSI = 10099.0 * 81.0 / WSQR
+             XPOS = 9.2
+             YPOS = PSI / 1000.0
+             EXECUTE SYMBL5.(XPOS, YPOS, 0.1, ICHR6, 0.0, 5)
+             XPOS = XPOS + (0.1 * 5.0)
+             EXECUTE NUMBR1.(XPOS, YPOS, 0.1, WIDTH, 0.0, 0)
+             XPOS = XPOS + (0.1 * 2.0)
+             EXECUTE SYMBL5.(XPOS, YPOS, 0.1, ICHR7, 0.0, 4)
+             IBCD = $+$
+             EXECUTE SYMBL5.(9.0, YPOS, 0.12, IBCD, 0.0, 1)
+             THROUGH L250, FOR J = 5, 1, J .G. 50
+               TX = J
+               TX = (50.0-TX) / 5.0
+               PSI = 10099.0 * TX * TX / WSQR
+L250           EXECUTE PLOT1.(TX, PSI / 1000.0, 2)
+             THICK = THICK + 3.0
+L260         WIDTH = WIDTH-5.0
+          R..PLOT THE ANNOTATIONS
+           EXECUTE SYMBL5.(3.3, 8.5, -.14, ICHR8, 0.0, 29)
+           EXECUTE SYMBL5.(3.1, 8.2, -.14, ICHR9, 0.0, 32)
+           EXECUTE SYMBL5.(3.1, 7.9, -.14, ICHR10, 0.0, 32)
+           EXECUTE SYMBL5.(3.1, 7.6, -.14, ICHR11, 0.0, 32)
+           EXECUTE SYMBL5.(3.3, 7.0, -.14, ICHR12, 0.0, 29)
+           EXECUTE ENDPL.
+           END OF PRGRAM

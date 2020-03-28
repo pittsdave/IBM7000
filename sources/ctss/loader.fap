@@ -1,0 +1,25 @@
+*
+* Tape loader
+* The tape format is defined in the:
+* IBSYS manual, C28-6248-7, Figure 19, page 42.
+*
+      ABS
+      ORG     -14
+*
+      IOCD    LD,0,LAST-LD      Read in loader to hi mem.
+      TCOA    1                   
+      TTR     LD
+*
+LD    RTBA    1                 Issue read for block.
+      RCHA    IO                Fire off the load.
+      TCOA    *                 Wait till complete.
+      TEFA    DONE              If EOF, no IOCT Done.
+      LXA     LOC,1             Get entry address.
+      SXA     DONE,1
+DONE  HTR     *                 Enter program on operator.
+*
+IO    IOCP    LOC,0,1           Read control word.
+LOC   PZE                       Read block.
+      TCH     IO                Get next block.
+LAST  SYN     *
+      END        
