@@ -1,0 +1,5 @@
+       LBL     BFCL
+       ENTRY   BFCLOS   
+       REM
+BFCLOS TRA     1,4
+       END  

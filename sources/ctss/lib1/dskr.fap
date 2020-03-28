@@ -1,0 +1,13 @@
+* DISK ERROR SUBROUTINE - CALLS PRNTER VIA NEXCOM.
+       REM
+       REM     REVISED 9/14/65 - NOEL I. MORRIS 
+       REM
+       NOLNK
+       LBL     DSKER
+       ENTRY   DSKER    
+       REM
+DSKER  CAL     =HPRNTER 
+       LDQ     =O-71    
+       TSX     $NEXCOM,4
+       REM
+       END  

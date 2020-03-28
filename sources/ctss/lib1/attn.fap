@@ -1,0 +1,4 @@
+       LBL     ATTN
+       ENTRY   ATTNAM   
+ATTNAM TIA     =HATTNAM 
+       END  

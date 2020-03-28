@@ -1,0 +1,6 @@
+       NOLNK
+       LBL     COMFIL
+*      SUBROUTINIZED ENTRIES TO CTSS SUPERVISOR - LP - DEC 63     
+       ENTRY   COMFIL   
+COMFIL TIA     =HCOMFIL 
+       END  

@@ -1,0 +1,7 @@
+       NOLNK
+       LBL     CHFL
+       ENTRY   CHFILE   
+       ENTRY   DELFIL   
+CHFILE TIA     =HCHFILE 
+DELFIL TIA     =HDELFIL 
+       END  
