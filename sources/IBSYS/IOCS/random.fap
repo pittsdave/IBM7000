@@ -1,0 +1,1551 @@
+$JOB           ASSEMBLE RANDOM
+$EXECUTE       IBSFAP
+*      FAP
+*              7090/7094  1301 RANDOM  IOCS   VERSION  6                IOR00000
+*    T H I S   I S   A   R E L O C A T A B L E   A S S E M B L Y        IOR00010
+*                                                                       IOR00020
+*                                                                       IOR00030
+*              IT HAS BEEN ASSEMBLED BY IBSFAP AND PLACED IN THE SYSTEM IOR00040
+*                 LIBRARY BY IBSYS EDITOR (IBSYS, VERSION 3) USING      IOR00050
+*                 THE FOLLOWING CONTROL CARDS                           IOR00060
+*                                                                       IOR00070
+*                 FILE  *AFTER   IOCS                                   IOR00080
+*                 TAPE  *INSERT  RANDOM                                 IOR00090
+*                       *INSERT  FILEMK                                 IOR00100
+*                                                                       IOR00110
+*                                                                       IOR00120
+*              THIS PROGRAM MAY BE REPLACED WITH A REASSEMBLY, USING    IOR00130
+*                 THE FOLLOWING CONTROL CARD                            IOR00140
+*                                                                       IOR00150
+*                 TAPE  *REPLACE RANDOM                                 IOR00160
+*                                                                       IOR00170
+*                                                                       IOR00180
+*    RANDOM IOCS IS THE FIRST RECORD OF THE THIRD FILE OF IOCS          IOR00190
+*                                                                       IOR00200
+*                                                                       IOR00210
+*                                                                       IOR00220
+       COUNT   800                                                      IOR00230
+       SST                                                              IOR00240
+       ENTRY   RANDEF                                                   IOR00250
+       ENTRY   RANREQ                                                   IOR00260
+       ENTRY   RANCLS                                                   IOR00270
+       ENTRY   RANRPL                                                   IOR00280
+       ENTRY   RANFLG                                                   IOR00290
+       ENTRY   RANCAV                                                   IOR00300
+       TITLE                                                            IOR00310
+       SPACE                                                            IOR00320
+*                      COMMUNICATION REGION                             IOR00330
+       SPACE                                                            IOR00340
+RANDEF STL     DEREJ                                                    IOR00350
+       TXL     ENTER,,RNDEF                                             IOR00360
+RANREQ STL     DEREJ                                                    IOR00370
+       TXL     ENTER,,RNREQ                                             IOR00380
+RANCLS STL     DEREJ                                                    IOR00390
+       TXL     ENTER,,RNCLS                                             IOR00400
+RANRPL TRA     RNRPL                                                    IOR00410
+RANFLG PZE                                                              IOR00420
+RANCAV PZE                                                              IOR00430
+       SPACE                                                            IOR00440
+*                      STORAGE CELLS                                    IOR00450
+       SPACE                                                            IOR00460
+PQUEUE PZE     **,2                QUEUE,2   QUEUE SEGMENT POINTER      IOR00470
+SQUEUE PZE                         QUEUE+S   QUEUE POOL CONTROL WORD    IOR00480
+L(S)   PZE                         S, REQUEST BUFFER COUNT              IOR00490
+L(R)   PZE                         R, BETA RECORD WORD COUNT            IOR00500
+PDRHA  PZE                         DRHA POOL CONTROL WORD               IOR00510
+RSENS  PZE                         SENSE INDICATORS STORAGE             IOR00520
+CLSFLG PZE                         CLOSE FLAG                           IOR00530
+RTNFLG PZE                         RETAIN FLAG                          IOR00540
+SENSW  PZE                         SENSE WORD AT SEL(-)                 IOR00550
+ERRFLG PZE                         ERROR FLAG                           IOR00560
+ERRIND PZE                         UNRECOVERABLE ERROR                  IOR00570
+       SPACE                                                            IOR00580
+*                      CONSTANTS AND MASKS                              IOR00590
+       SPACE                                                            IOR00600
+L(0)   PZE                                                              IOR00610
+L(1)   PZE     1                                                        IOR00620
+L(6)   PZE     6                                                        IOR00630
+ADDR   OCT     000000077777                                             IOR00640
+DECRE  OCT     077777000000                                             IOR00650
+1DECR  OCT     000001000000                                             IOR00660
+MSK1   OCT     600000606060                                             IOR00670
+MSK3   OCT     770777777777                                             IOR00680
+MSK2   OCT     200000000000        HEADER                               IOR00690
+MSK4   OCT     004000000000        SEEK AND READ WAITING                IOR00700
+MSK7   OCT     001000000000        PROCESSING WAITING                   IOR00710
+MSK8   OCT     000300000000                                             IOR00720
+MSK9   OCT     040000000000        COMMON BETA CHAIN HEADER             IOR00730
+MSK10  OCT     020000000000        MUTUAL DEPENDENCE                    IOR00740
+MSK11  OCT     000200000000        SEEK AND WRITE WAITING               IOR00750
+MSK12  OCT     770077777777                                             IOR00760
+MSK13  OCT     100600000000                                            *IOR00770
+MSK14  OCT     777777770000                                             IOR00780
+MSK15  OCT     000077777777                                             IOR00790
+MSK17  OCT     000100000000        SEEK AND WRITE ISSUED                IOR00800
+MSK19  OCT     000040000000        BETA BUFFER ASSIGNED                 IOR00810
+MSK20  OCT     400000000000                                             IOR00820
+MSK21  OCT     000000700000                                             IOR00830
+MSK23  OCT     000000200000        FULL TRACK WITH ADDRESSES            IOR00840
+MSK24  OCT     000000400000        XR4-INCOMPLETE BETA SET              IOR00850
+MSK25  OCT     000000000020        BCD MODE                             IOR00860
+MSK26  OCT     000000000014                                             IOR00870
+MSKI   OCT     000037000000        I NUMBER                             IOR00880
+       SPACE                                                            IOR00890
+*                      COMMON ENTRY ROUTINE                             IOR00900
+       SPACE                                                            IOR00910
+ENTER  ENB     L(0)                                                     IOR00920
+       SXA     SVXR4,4                                                  IOR00930
+       SXA     SVXR2,2             SAVE REGISTERS                       IOR00940
+       SXA     SVXR1,1                                                  IOR00950
+       STI     RSENS               AND SENSE INDICATORS                 IOR00960
+       CAL     ERRIND                                                   IOR00970
+       TNZ     RNSLM0              PERSISTENT ERROR - KILL THE JOB      IOR00980
+DEREJ  LDC     **,1                                                     IOR00990
+       TRA     0,1                 GO TO ROUTINE                        IOR01000
+       SPACE                                                            IOR01010
+*                      COMMON EXIT ROUTINE                              IOR01020
+       SPACE                                                            IOR01030
+RANDEX STZ     RANFLG              RESET RANFLG                         IOR01040
+       ZET     RANCAV              ANY REQUEST UNSERVICED               IOR01050
+       TRA     RRQ020-1            YES                                  IOR01060
+RNDX2  ENB*    (TRAPX                                                   IOR01070
+       NZT     RTNFLG              IF RETAIN REQUESTED                  IOR01080
+       TRA     RNDX3                                                    IOR01090
+       ZET     RANCAV              AND RANCAV IS NON ZERO               IOR01100
+       TRA     SCHED               RETURN TO SCHEDULER                  IOR01110
+       STZ     RTNFLG              OTHERWISE RESET RETAIN FLAG          IOR01120
+RNDX3  NZT     CLSFLG              IS THIS A CLOSE ENTRY                IOR01130
+       TRA     SVXR4               NO                                   IOR01140
+       AXT     0,2                 YES                                  IOR01150
+       ZET*    PQUEUE              ANY REQUESTS PENDING                 IOR01160
+       TRA     SCHED               YES, GO TO WORK                      IOR01170
+       STZ     CLSFLG              NO, RESET CLOSE FLAG                 IOR01180
+SVXR4  AXT     **,4                                                     IOR01190
+SVXR2  AXT     **,2                RESTORE REGISTERS                    IOR01200
+SVXR1  AXT     **,1                                                     IOR01210
+       LDI     RSENS               AND SENSE INDICATORS                 IOR01220
+       TRA     1,4                 EXIT                                 IOR01230
+       SPACE                                                            IOR01240
+*  TSX     RANCLS,4    CLOSE MICROROUTINE                               IOR01250
+*  RETURN                                                               IOR01260
+       SPACE                                                            IOR01270
+RNCLS  STL     CLSFLG              SET CLOSE FLAG                       IOR01280
+       TRA     SCHED               AND GO TO SCHEDULER                  IOR01290
+       SPACE                                                            IOR01300
+*  TSX     RANDEF,4    1. RESERVES AT QUEUE A PUSH UP LIST OF S WORDS.  IOR01310
+*  PZE     QUEUE,,DRHA 2. DEFINES AT QUEUE+S S BUFFERS OF 6 WORDS EACH  IOR01320
+*  PZE     ,,S         PLUS ONE BUFFER POOL CONTROL WORD.               IOR01330
+*  PZE     R,,N        3. DEFINES AT DRHA N BUFFERS OF SIZE R+1         IOR01340
+*  RETURN              PLUS ONE BUFFER POOL CONTROL WORD.               IOR01350
+*                      4. STORES ALL PARAMETERS.                        IOR01360
+       SPACE                                                            IOR01370
+RNDEF  CAL     3,4                                                      IOR01380
+       PDX     0,1                                                     $IOR01390
+       CAL     2,4                                                     $IOR01400
+       STD     *+1                                                     $IOR01410
+       TXL     *+3,1,**                                                $IOR01420
+       CAL     2,4                                                     $IOR01430
+       TRA     *+2                                                     $IOR01440
+       PXD     0,1                                                    $$IOR01450
+       STD     L(S)                SAVE S                              $IOR01460
+       ARS     18                                                      $IOR01470
+       ACL     1,4                                                      IOR01480
+       STA     SQUEUE              QUEUE+S                              IOR01490
+       ANA     ADDR                                                     IOR01500
+       XCL                                                              IOR01510
+       CAL     L(S)                SET PARAMETERS FOR QUEUE            $IOR01520
+       ACL     L(6)                                                     IOR01530
+       TSX     RNDF,1              AND GO TO RNDF                       IOR01540
+       CAL     1,4                                                      IOR01550
+       STA     PQUEUE              SAVE QUEUE                           IOR01560
+       ARS     18                                                       IOR01570
+       STA     PDRHA               SAVE DRHA                            IOR01580
+       XCL                                                              IOR01590
+       CAL     3,4                                                      IOR01600
+       STA     L(R)                SAVE R                               IOR01610
+       ACL     L(1)                                                     IOR01620
+       TSX     RNDF,1              AGAIN                                IOR01630
+       LDC     L(S),2                                                  $IOR01640
+       SXD     RRQ020+6,2                                               IOR01650
+       SXD     RNSLM9,2                                                 IOR01660
+       SXD     SCHD2,2                                                  IOR01670
+       SXD     SCHD3,2                                                  IOR01680
+       SXD     SCHD10,2                                                 IOR01690
+       SXD     CHCK3,2                                                  IOR01700
+       SXD     LKP015,2                                                 IOR01710
+       SXD     SCHD17,2                                                 IOR01720
+       SXD     PRC017,2                                                 IOR01730
+       SXD     RNRL5,2                                                  IOR01740
+       SXD     RPL04-1,2                                                IOR01750
+       SXD     LKP04+2,2                                                IOR01760
+       SXD     PREDY4,2                                                 IOR01770
+       SXD     RLQS2,2                                                  IOR01780
+       TXI     *+1,2,1                                                  IOR01790
+       STZ*    PQUEUE              CLEAR QUEUE AREA                     IOR01800
+       TXH     *-2,2,0                                                  IOR01810
+       TXI     *+1,4,-3                                                 IOR01820
+       STZ     ERRIND                                                   IOR01830
+       TRA     SVXR2               EXIT                                 IOR01840
+       SPACE                                                            IOR01850
+*  TSX     RNDF,1   1. DEFINES IN N*M+1 LOCATIONS STARTING AT POOL      IOR01860
+*  RETURN           N BUFFERS OF TOTAL SIZE M.                          IOR01870
+*                   2. UPON ENTRY, AC CONTAINS M,,N, MQ CONTAINS POOL.  IOR01880
+       SPACE                                                            IOR01890
+RNDF   STQ     RNDF3               SAVE L(POOL)                         IOR01900
+       STA     RNDF2               SAVE M                               IOR01910
+       PDX     0,2                 AND N                                IOR01920
+       CLS     RNDF3                                                    IOR01930
+       ACL     L(1)                L(POOL)+1                            IOR01940
+       STO*    RNDF3               TO L(POOL)                           IOR01950
+       STA     RNDF1                                                    IOR01960
+       ANA     ADDR                                                    $IOR01970
+       TNX     RNDF4,2,1                                                IOR01980
+       ACL     RNDF2               STORE POOL+XM+1                      IOR01990
+RNDF1  STO     **                  IN POOL+(X-1)M+1                    $IOR02000
+       STA     *-1                                                      IOR02010
+       TRA     RNDF1-2                                                  IOR02020
+RNDF4  CLA     RNDF3                                                    IOR02030
+       STO*    RNDF1               LAST BUFFER POINTS TO POOL          $IOR02040
+       TRA     1,1                 RETURN                               IOR02050
+RNDF2  PZE                         M                                    IOR02060
+RNDF3  PZE                         L(POOL)                              IOR02070
+       SPACE                                                            IOR02080
+*  TSX     RANREQ,4    1. THIS ROUTINE SETS UP THE REQUESTS ENTRIES,    IOR02090
+*  P       ALPHA,T,M   ONE PER BETA RECORD.                             IOR02100
+*  P       ERRET       2. WHEN NO MORE QUEUE SEGMENTS ARE AVAILABLE, IT IOR02110
+*  P       A,T,PROCES  RETAINS THE CALLING SEQUENCE.                    IOR02120
+*  P       PHYS. ADDR.                                                  IOR02130
+*  VERIFICATION ADDR.                                                   IOR02140
+*  -----------------                                                    IOR02150
+*  RETURN                                                               IOR02160
+       SPACE                                                            IOR02170
+RNREQ  LDI     1,4                                                      IOR02180
+       RFT     700000              IF REQUESTED                         IOR02190
+       STL     RTNFLG              SET RETAIN FLAG                      IOR02200
+       LFT     077777                                                   IOR02210
+       TRA     *+2                                                      IOR02220
+       TRA     RRQ070             IF BETA COUNT = 0    GO               IOR02230
+       STI     ALPHA                                                    IOR02240
+       PIA                                                              IOR02250
+       PDC     0,2                                                      IOR02260
+       SXD     RRQ010,2                                                 IOR02270
+       CLA     2,4                                                      IOR02280
+       STO     ERRET               SAVE ERROR RETURN                    IOR02290
+       SXA     SVRQ4,4                                                  IOR02300
+       ZET     RANCAV              IF RANCAV IS NON ZERO                IOR02310
+       TRA     RRQ080              GIVE ERROR MESSAGE                   IOR02320
+       AXT     3,1                                                      IOR02330
+RRQ010 TXI     *+1,4,**            COMPUTE AND SAVE                     IOR02340
+       TIX     *-1,1,1                                                  IOR02350
+       TXI     *+1,4,-2                                                 IOR02360
+       SXA     SVXR4,4             RETURN ADDRESS                       IOR02370
+       LXA     SVRQ4,4                                                  IOR02380
+RRQ020 ENB     L(0)                                                     IOR02390
+       AXT     0,2                                                      IOR02400
+       SXA     SVRQ4,4                                                  IOR02410
+       NZT*    PQUEUE              GET SEGMENT                          IOR02420
+       TRA     RRQ050                                                   IOR02430
+       TXI     *+1,2,-1                                                 IOR02440
+       TXH     RRQ020+3,2,**       TRY AGAIN                            IOR02450
+       CLA     ANTE                NONE AVAILABLE.  IF AT LEAST ONE BETAIOR02460
+       TZE     RRQ035              WAS ALREADY SERVICED                 IOR02470
+RRQ030 TXI     *+1,2,1             SET POINTER TO QUEUE+S-1             IOR02480
+       CAL*    PQUEUE              AND SET THE INCOMPLETE BETA SET FLAG IOR02490
+       ORA     MSK24               IN ALL BETA REQUESTS ALREADY SERVICEDIOR02500
+       SLW*    PQUEUE              IN THIS SET                          IOR02510
+       ANA     MSK2                                                     IOR02520
+       TNZ     *+2                                                      IOR02530
+       TRA     RRQ030                                                   IOR02540
+RRQ035 ZET     SLM060                                                   IOR02550
+       TRA     SCHED+1                                                  IOR02560
+       CAL     RANCAV              RUN OUT OF SEGMENTS                  IOR02570
+       TNZ     RNDX2               EARLIER, EXIT                        IOR02580
+       SXA     RANCAV,4            JUST NOW, SET RANCAV AND GO          IOR02590
+       TRA     SCHED                                                    IOR02600
+RRQ050 CLA*    SQUEUE              SEGMENT ADDRESS                      IOR02610
+       STA*    PQUEUE              TO POINTER                           IOR02620
+       STA     *+2                                                      IOR02630
+       PAC     0,1                 AND XR1                              IOR02640
+       LDQ     **                                                       IOR02650
+       XCA                                                              IOR02660
+       STA*    SQUEUE              UPDATE                               IOR02670
+       STQ*    *-3                 AVAILABILITY CHAIN                   IOR02680
+       CAL     ALPHA                                                    IOR02690
+       SUB     1DECR                                                    IOR02700
+       SLW     ALPHA               UPDATE BETA COUNT                    IOR02710
+       NZT     ANTE                IF FIRST BETA                        IOR02720
+       ORA     MSK2                SET HEADER FLAG                      IOR02730
+       STP*    PQUEUE              POINTER PREFIX                       IOR02740
+       ALS     18                                                       IOR02750
+       STD     0,1                 ALPHA RECORD                         IOR02760
+       CLA     ERRET                                                    IOR02770
+       STO     2,1                                                      IOR02780
+       CLA     3,4                                                      IOR02790
+       STT     0,1                 MODE                                 IOR02800
+       STD     2,1                 PROCES                               IOR02810
+       ARS     2                                                        IOR02820
+       TMI     *+4                 WRITE ONLY                           IOR02830
+       ANA     MSK10                                                    IOR02840
+       ORA     MSK4                                                     IOR02850
+       TRA     *+3                                                      IOR02860
+       ANA     MSK10                                                    IOR02870
+       ORA     MSK7                                                     IOR02880
+       STD*    PQUEUE              POINTER DECREMENT                    IOR02890
+       CLA     3,4                                                      IOR02900
+       STA     *+1                                                      IOR02910
+       CLA     **                                                       IOR02920
+       STA     1,1                 L(UCB)                               IOR02930
+       CAL     4,4                                                      IOR02940
+       SLW     3,1                 PHYSICAL ADDRESS                     IOR02950
+       LDI     5,4                                                      IOR02960
+       TSX     H2ZBCD,4            CONVERT ZEROS IN HA2                 IOR02970
+       STI     4,1                 VERIFICATION ADDRESS                 IOR02980
+       STZ     5,1                 CLEAR CHAIN WORD                     IOR02990
+       CAL     ANTE                                                     IOR03000
+       ADD     1DECR                                                    IOR03010
+       STD     ANTE                                                     IOR03020
+       ORS*    PQUEUE              BETA I NUMBER                        IOR03030
+       TSX     CHECK,4             CHECK FOR COMMON BETA RECORDS        IOR03040
+SVRQ4  AXT     **,4                                                     IOR03050
+       CAL     ALPHA                                                    IOR03060
+       ANA     DECRE               MORE BETA RECORDS                    IOR03070
+       TZE     *+2                 NO                                   IOR03080
+       TXI     RRQ020+2,4,-3       PROCESS NEXT BETA                    IOR03090
+       STZ     ANTE                KEEP HOUSE                           IOR03100
+       CLA     RANCAV                                                   IOR03110
+       TZE     SCHED                                                    IOR03120
+       STZ     RANCAV                                                   IOR03130
+RRQ060 LDI*    PQUEUE                                                   IOR03140
+       RIR     400000                                                   IOR03150
+       STI*    PQUEUE              RESET INCOMPLETE BETA FLAGS          IOR03160
+       LNT     200000                                                   IOR03170
+       TXI     RRQ060,2,1                                               IOR03180
+       ZET     SLM060              IF ENTERED FROM SEL(-)               IOR03190
+       TRA     SCHED+1             GO TO SCHEDULER                      IOR03200
+       TRA     RNDX2               OTHERWISE EXIT                       IOR03210
+RRQ070 TXI     *+1,4,-1            SET UP RETURN ADDRESS                IOR03220
+       SXA     SVXR4,4                                                  IOR03230
+       TRA     SCHED               GO TO SCHEDULER                      IOR03240
+RRQ080 TSX     (PROUT,4                                                 IOR03250
+       PZE     1                                                        IOR03260
+       PZE     MESSA,,5                                                 IOR03270
+       TRA     RNSLM7              KILL THE JOB                         IOR03280
+ALPHA  PZE                                                              IOR03290
+ANTE   PZE                                                              IOR03300
+ERRET  PZE                                                              IOR03310
+MESSA  BCI     5,BETA REQUEST(S) UNSERVICED                             IOR03320
+       SPACE                                                            IOR03330
+*                      MAIN SCHEDULING ROUTINE                          IOR03340
+*          DETERMINES THE STATUS OF THE REQUESTS                        IOR03350
+*          AND TAKES SUITABLE ACTION.                                   IOR03360
+       SPACE                                                            IOR03370
+SCHED  ENB*    (TRAPX              RESTORE TRAPS                        IOR03380
+       AXT     0,2                 WRITE SCAN                           IOR03390
+       ENB     L(0)                DISABLE TRAPS                        IOR03400
+SCHD1  NZT*    PQUEUE                                                   IOR03410
+       TRA     SCHD2+1             GO TO READ SCAN                      IOR03420
+       CAL     MSK11                                                    IOR03430
+       ANA*    PQUEUE              TEST FOR WRITE WAITING               IOR03440
+       TNZ     SCHD4               YES                                  IOR03450
+       TXI     *+1,2,-1                                                 IOR03460
+SCHD2  TXH     SCHD1,2,**          NO, REPEAT                           IOR03470
+       AXT     0,2                 READ SCAN                            IOR03480
+       NZT*    PQUEUE                                                   IOR03490
+       TRA     SCHD16              GO TO ERROR SCAN                     IOR03500
+       LDI*    PQUEUE                                                   IOR03510
+       LNT     044000              READ WAITING,SINGLE REQUEST          IOR03520
+       TRA     *+2                 OR BETA CHAIN HEADER                 IOR03530
+       TRA     SCHD4+2                                                  IOR03540
+       TXI     *+1,2,-1                                                 IOR03550
+SCHD3  TXH     SCHD2+2,2,**                                             IOR03560
+       TRA     SCHD16                                                   IOR03570
+SCHD4  AXT     SCHD2-1,1                                                IOR03580
+       TRA     *+2                                                      IOR03590
+       AXT     SCHD3-1,1                                                IOR03600
+       SXA     SCHD6,1                                                  IOR03610
+       CLA*    PQUEUE                                                   IOR03620
+       PAC     ,4                  QUEUE SEGMENT TO XR4                 IOR03630
+       CLA     1,4                                                      IOR03640
+       PAC     0,4                 L(UCB) TO XR4                        IOR03650
+       ZET     1,4                                                      IOR03660
+SCHD6  TRA     **                  UNIT BUSY, BACK TO SCANNER           IOR03670
+       TRA     ACT                 GO ACTIVATE                          IOR03680
+SCHD16 ZET     SLM060              IF ENTERED FROM SEL(-)               IOR03690
+       TRA     SLM050              RETURN THERE                         IOR03700
+       AXT     0,2                 ERROR SCAN                           IOR03710
+       NZT*    PQUEUE                                                   IOR03720
+       TRA     SCHD9               GO TO PROCESSING SCAN                IOR03730
+       LDI*    PQUEUE                                                   IOR03740
+       RFT     200000                                                   IOR03750
+       TRA     ERROR               GO TO ERROR ROUTINE                  IOR03760
+       TXI     *+1,2,-1                                                 IOR03770
+SCHD17 TXH     SCHD16+3,2,**                                            IOR03780
+SCHD9  AXT     0,2                 PROCESSING SCAN                      IOR03790
+       NZT*    PQUEUE                                                   IOR03800
+       TRA     RANDEX                                                   IOR03810
+       CAL     MSK7                                                     IOR03820
+       ANA*    PQUEUE                                                   IOR03830
+       TNZ     SCHD11              PROCESSING WAITING                   IOR03840
+       TXI     *+1,2,-1            NO                                   IOR03850
+SCHD10 TXH     SCHD9+1,2,**                                             IOR03860
+       TRA     RANDEX                                                   IOR03870
+SCHD11 CLA*    PQUEUE                                                   IOR03880
+       TPL     SCHD14              NOT FORCE SEQUENTIAL                 IOR03890
+       TXL     SCHD14,2,0          FORCE SEQUENT. BUT FIRST REQUEST     IOR03900
+       SXA     SCHD13,2            SAVE XR2                             IOR03910
+SCHD12 TXI     *+1,2,1             CHECK NEXT HIGHER REQUEST            IOR03920
+       CAL     MSK8                                                     IOR03930
+       ANA*    PQUEUE              IF REQUEST NOT AT SEEK+WRITE WAITING IOR03940
+       TZE     SCHD15              OR ISSUED RETURN TO SCANNER          IOR03950
+       TXH     SCHD12,2,0          HIT TOP OF QUEUE                     IOR03960
+SCHD13 AXT     **,2                RESTORE XR2                          IOR03970
+SCHD14 TSX     PREADY,1            IF THE OTHER MUT. DEP. REQUESTS      IOR03980
+       TRA     PROC                ARE READY GO PROCESSING              IOR03990
+       TRA     SCHD10-1                                                 IOR04000
+SCHD15 LXA     SCHD13,2                                                 IOR04010
+       TRA     SCHD10-1                                                 IOR04020
+       SPACE                                                            IOR04030
+*                      PRE-ACTIVATE ROUTINE                             IOR04040
+       SPACE                                                            IOR04050
+ACT    CLA*    PQUEUE                                                   IOR04060
+       PAC     0,1                                                      IOR04070
+       CLA     3,1                                                      IOR04080
+       TPL     ACT1                BINARY SEEK ADDRESS                  IOR04090
+       CAL     MSK14               BCD                                  IOR04100
+       ANS     2,4                 CLEAR TT IN UCB3                     IOR04110
+       LDQ     L(0)                CLEAR MQ                             IOR04120
+       CLA     3,1                                                      IOR04130
+       ANA     MSK15                                                    IOR04140
+       LGR     12                                                       IOR04150
+       ORS     2,4                 AND STORE TT                         IOR04160
+       XCA                                                              IOR04170
+       SSM                         SET TRACK FLAG                       IOR04180
+ACT1   STO     3,4                                                      IOR04190
+       CLS     2,4                                                      IOR04200
+       STO     2,4                 SET ACTIVITY FLAG                    IOR04210
+       CAL*    PQUEUE                                                   IOR04220
+       STA     1,4                 QUEUE SEGMENT TO UCB2                IOR04230
+       ANA     MSK11                                                    IOR04240
+       TZE     ACT3                READ                                 IOR04250
+       CLS     1,4                 SET WRITE FLAG                       IOR04260
+       STO     1,4                                                      IOR04270
+       CAL*    PQUEUE                                                   IOR04280
+       ANA     MSK12               CHANGE STATUS                        IOR04290
+       ORA     MSK17               SEEK+WRITE ISSUED                    IOR04300
+       SLW*    PQUEUE                                                   IOR04310
+       TRA     ACT4                                                     IOR04320
+ACT3   LDI*    PQUEUE                                                   IOR04330
+       RIL     004000              CHANGE STATUS TO S2                  IOR04340
+       SIL     002000                                                   IOR04350
+       STI*    PQUEUE                                                   IOR04360
+ACT4   AXT     RNSEL,2             SEL TO UCB2                          IOR04370
+       PXD     0,2                                                      IOR04380
+       STD     1,4                                                      IOR04390
+       TSX     (ACTIV,4            GO ACTIVATE                          IOR04400
+       PZE     1,1                                                      IOR04410
+       ZET     SLM060              ENTERED FROM SEL(-)                  IOR04420
+       TRA     SCHED+1                                                  IOR04430
+       TRA     SCHED                                                    IOR04440
+       SPACE                                                            IOR04450
+*                      SELECT (+) ROUTINE                               IOR04460
+       SPACE                                                            IOR04470
+RNSEL  SXA     SVSL1,1                                                  IOR04480
+       SXA     SVSL4,4                                                  IOR04490
+       PAC     0,4                 L(UCB) TO XR4                        IOR04500
+       TMI     RNSLM               GO TO SEL (-)                        IOR04510
+       NZT*    (URRXI              IF ATTEMPTING TO RECOVER             IOR04520
+       TRA     *+4                                                      IOR04530
+       CLA     0,4                                                      IOR04540
+       STA*    (RCHXI              GO STRAIGHT TO EXECUTE               IOR04550
+       TRA     RNSL07                                                   IOR04560
+       CLA     1,4                                                      IOR04570
+       TMI     RNSL01                                                   IOR04580
+       TSX     LOOKUP,1            IF READ                              IOR04590
+       CAL*    PQUEUE                                                   IOR04600
+       ANA     MSK19               AND NO BETA BUFFER ASSIGNED          IOR04610
+       TNZ     RNSL01-1                                                 IOR04620
+       TSX     GETBF,1             ASSIGN ONE                           IOR04630
+       TMI     RNSL06              IF NONE AVAILABLE, EXIT              IOR04640
+       LXA     SVSL1,1                                                  IOR04650
+RNSL01 AXT     0,2                                                      IOR04660
+       CLS     CMND,2              GET FREE COMMAND LIST                IOR04670
+       TMI     *+2                                                      IOR04680
+       TXI     *-2,2,-17                                                IOR04690
+       STO     CMND,2              SET IN USE FLAG                      IOR04700
+       LDQ     0,4                                                      IOR04710
+       STA*    (RCHXI              CMNDX TO RCHX VIA XR1                IOR04720
+       STA     0,4                 TO UCB                               IOR04730
+       PAC     0,2                 AND XR2                              IOR04740
+       XCA                                                              IOR04750
+       ALS     18                                                       IOR04760
+       STD     -1,2                SAVE CHAINING                        IOR04770
+       CLA     1,4                                                      IOR04780
+       PAC     0,1                 QUEUE SEGMENT TO XR1                 IOR04790
+       TMI     *+3                                                      IOR04800
+       CLA     CTLR                READ                                 IOR04810
+       TRA     *+2                                                      IOR04820
+       CLA     CTLW                WRITE                                IOR04830
+       STO     2,2                                                      IOR04840
+       CAL     MSK23                                                    IOR04850
+       ANA     0,1                                                      IOR04860
+       TNZ     RNSL02                                                   IOR04870
+       CLA     14,2                SINGLE RECORD                        IOR04880
+       TRA     *+2                                                      IOR04890
+RNSL02 CLA     15,2                OR FULL TRACK WITH ADDRESSES ORDER   IOR04900
+       STA     2,2                 TO CONTROL+READ OR WRITE COMMAND     IOR04910
+       CAL     1,1                                                      IOR04920
+       ARS     18                                                       IOR04930
+       ADD     L(1)                                                     IOR04940
+       STA     3,2                 BETA BUFFER ADDRESS                  IOR04950
+       CLA     L(R)                                                     IOR04960
+       ALS     18                  AND WORD COUNT                       IOR04970
+       STD     3,2                 TO CPYD                              IOR04980
+       LDQ     1,4                 DO NOT WRITE                        *IOR04990
+       TQP     *+3                 CHECK IF READING                    *IOR05000
+       CLA     2,1                                                      IOR05010
+       TMI     *+3                                                      IOR05020
+       PXD     0,0                                                      IOR05030
+       TRA     *+2                                                      IOR05040
+       CLA     L(1)                WRITE CHECK REQUESTED                IOR05050
+       STA     1,2                                                      IOR05060
+       LDQ     L(0)                CLEAR MQ                             IOR05070
+       CAL     4,1                                                      IOR05080
+       LGR     12                  SET UP FDAMT                         IOR05090
+       XCL                                                              IOR05100
+       ARS     12                                                       IOR05110
+       STO     RNSL03                                                   IOR05120
+       CLA     2,2                                                      IOR05130
+       STA     RNSL03+1                                                 IOR05140
+       CAL     MSK24                                                    IOR05150
+       ANA     0,1                                                      IOR05160
+       TZE     *+2                                                      IOR05170
+       CAL     MSK25               BCD MODE                             IOR05180
+       ORA     L(6)                AND INHIBIT ATTENTION BITS           IOR05190
+       ORS     RNSL03              TO SMS COMMAND                       IOR05200
+       SXA     RNSL04,2                                                 IOR05210
+       TSX     (FDAMT,2            SET UP DVSR OR DVTA                  IOR05220
+RNSL03 PZE                                                              IOR05230
+       PZE                                                              IOR05240
+RNSL04 AXT     **,2                                                     IOR05250
+       CLA     2,1                                                      IOR05260
+       TPL     RNSL05                                                   IOR05270
+       CLA     2,2                                                      IOR05280
+       PAC     0,4                 IF WRITE CHECK REQUESTED             IOR05290
+       CLA     0,4                                                      IOR05300
+       ANA     MSK15               SET UP DWRC                         *IOR05310
+       ORA     MSK13                                                   *IOR05320
+       SLW     12,2                                                    =IOR05330
+       CLA     1,4                                                      IOR05340
+       STO     13,2                                                    =IOR05350
+RNSL05 CLA     RNSL03                                                   IOR05360
+       STA     0,2                 SET UP SMS COMMAND                   IOR05370
+       LXA     SVSL1,1                                                  IOR05380
+RNSL07 LXA     SVSL4,4                                                  IOR05390
+       XEC*    (RCHXI              RESET AND START CHANNEL              IOR05400
+       TRA     1,4                 EXIT                                 IOR05410
+CTLR   CTLR    **                                                       IOR05420
+CTLW   CTLW    **                                                       IOR05430
+       PZE     ,,DSELM                                                  IOR05440
+       PZE     DCMND                                                    IOR05450
+RNSL06 CLA     *-1                 DUMMY COMMAND LIST                   IOR05460
+       LXA     SVSL1,1                                                  IOR05470
+       STA*    (RCHXI              TO RCHX                              IOR05480
+       CAL*    PQUEUE                                                   IOR05490
+       ANA     MSK12               CHANGE STATUS BACK TO 1              IOR05500
+       ORA     MSK4                                                     IOR05510
+       SLW*    PQUEUE                                                   IOR05520
+       CLA     0,4                                                      IOR05530
+       ARS     23                                                       IOR05540
+       ANA     L(1)                                                     IOR05550
+       ORA     MSK26               SET SMS                              IOR05560
+       STA     DCMND                                                    IOR05570
+       CLA     RNSL06-2            DUMMY SEL (-) TO UCB2                IOR05580
+       STD     1,4                                                      IOR05590
+       CLA     FLBITS              SET TOTAL EXCLUSION BITS             IOR05600
+       STO*    (RCTXI                                                   IOR05610
+       TRA     RNSL07                                                   IOR05620
+FLBITS PZE     *+1                                                      IOR05630
+       OCT     777777770000                                             IOR05640
+       SPACE                                                            IOR05650
+*                      SEL (-) ROUTINE                                  IOR05660
+       SPACE                                                            IOR05670
+RNSLM  CLA     0,4                                                      IOR05680
+       PAC     0,2                                                      IOR05690
+       CLS     -1,2                                                     IOR05700
+       STO     -1,2                RELEASE COMMAND LIST                 IOR05710
+       ARS     18                                                       IOR05720
+       STA     0,4                 RESTORE CHAINING                     IOR05730
+       CLA     1,4                                                      IOR05740
+       TSX     LOOKUP,1            GET POINTER                          IOR05750
+       CLA     1,4                                                      IOR05760
+       STZ     1,4                 CLEAR UCB2                           IOR05770
+       TPL     *+2                                                      IOR05780
+       SIL     000040              SET WRITE FLAG IN INDICATORS         IOR05790
+       STI     SENSW               SAVE SENSE DATA                      IOR05800
+       LFT     001000              IF UNUSUAL END                       IOR05810
+       TRA     RNSLM4              GO TO ERROR PROCEDURES               IOR05820
+       TMI     RNSLM1                                                   IOR05830
+       STL     RANFLG              SET RANFLG                          $IOR05840
+       LDI*    PQUEUE              READ COMPLETED                       IOR05850
+       RIL     002000                                                   IOR05860
+       SIL     001000                                                   IOR05870
+       STI*    PQUEUE              CHANGE S2 TO S3                      IOR05880
+       LNT     100000                                                   IOR05890
+       TRA     SLM025                                                   IOR05900
+       PIA                         IF IN BETA CHAIN                     IOR05910
+       STA     SLM010                                                   IOR05920
+SLM020 PAC     0,1                 CHANGE EQUALLY ALL OTHER REQUESTS    IOR05930
+       CAL     5,1                                                      IOR05940
+       LAS     SLM010                                                   IOR05950
+       TRA     *+2                                                      IOR05960
+       TRA     SLM025                                                   IOR05970
+       TSX     LOOKUP,1                                                 IOR05980
+       LDI*    PQUEUE                                                   IOR05990
+       PIA                                                              IOR06000
+       RIL     006000                                                   IOR06010
+       SIL     001000                                                   IOR06020
+       STI*    PQUEUE                                                   IOR06030
+       TRA     SLM020                                                   IOR06040
+RNSLM1 LDI*    PQUEUE                                                   IOR06050
+       LFT     100000              IF IN BETA CHAIN                     IOR06060
+       TSX     RELEM,4             REMOVE REQUEST                       IOR06070
+       TSX     RELBF,4             RELEASE BETA BUFFER                  IOR06080
+       TSX     RELQS,4             AND QUEUE SEGMENT, ZERO OUT POINTER  IOR06090
+SLM025 STL     SLM060                                                   IOR06100
+       ZET     RANCAV              START NEW CHANNEL ACTIVITY           IOR06110
+       TRA     RRQ020-1                                                 IOR06120
+       TRA     SCHED+1                                                  IOR06130
+SLM050 STZ     SLM060                                                   IOR06140
+SVSL4  AXT     **,4                                                     IOR06150
+SVSL1  AXT     **,1                RESTORE  REGISTERS                   IOR06160
+       TRA     1,4                 EXIT                                 IOR06170
+RNSLM3 LDI*    PQUEUE              ERROR FLAG TO POINTER                IOR06180
+       SIR     200000                                                   IOR06190
+       STI*    PQUEUE                                                   IOR06200
+       LNT     100000                                                   IOR06210
+       TRA     SLM025                                                   IOR06220
+       PIA                         COMMON BETA                          IOR06230
+       STA     SLM010                                                   IOR06240
+SLM030 PAC     0,1                                                      IOR06250
+       CAL     5,1                                                      IOR06260
+       LAS     SLM010                                                   IOR06270
+       TRA     *+2                                                      IOR06280
+       TRA     SLM025                                                   IOR06290
+       TSX     LOOKUP,1            SET ERROR FLAG                       IOR06300
+       LDI*    PQUEUE                                                   IOR06310
+       SIR     200000                                                   IOR06320
+       STI*    PQUEUE              IN ALL ELEMENTS OF CHAIN             IOR06330
+       PIA                                                              IOR06340
+       TRA     SLM030                                                   IOR06350
+RNSLM4 STL     RANFLG              SET RANFLG                          $IOR06360
+       RFT     763777              IF INVALID ADDRESS OR NO RECORD     $IOR06370
+       TRA     *+3                                                      IOR06380
+       LNT     000040              IN A READ                            IOR06390
+       TRA     RNSLM3              SET ERROR FLAG                       IOR06400
+       STI     ERRIND                                                   IOR06410
+       CLA*    PQUEUE                                                   IOR06420
+       PAC     0,1                                                      IOR06430
+       LDI     4,1                                                      IOR06440
+       TSX     H2BCDZ,4            CONVERT ZEROS                        IOR06450
+       STI     MESSB+4                                                  IOR06460
+       TRA     SVSL4                                                    IOR06470
+SLM060 PZE                                                              IOR06480
+RNSLM0 PAI                                                              IOR06490
+       TSX     (PROUT,4                                                 IOR06500
+       PZE     1                   FOR ALL OTHER ERRORS                 IOR06510
+       PZE     MESSB,,5            PRINT ERROR MESSAGE                  IOR06520
+       AXT     0,2                                                      IOR06530
+       ZET*    PQUEUE              IF NO REQUESTS WAITING               IOR06540
+       TRA     RNSLM6                                                   IOR06550
+       TSX     (PROUT,4            SAY IT SO                            IOR06560
+       PZE     1                                                        IOR06570
+       PZE     MESSC,,3                                                 IOR06580
+RNSLM5 TRA     SYSDMP              TERMINATE-UNSURMOUNTABLE ERROR      $IOR06590
+RNSLM6 RFT     000700                                                   IOR06600
+       TRA     *+2                                                      IOR06610
+       TRA     RNSLM7                                                   IOR06620
+       LNT     000040                                                   IOR06630
+       TRA     RNSLM7                                                   IOR06640
+       TSX     (PROUT,4            DATA CHECK WHILE WRITING             IOR06650
+       PZE     1                                                        IOR06660
+       PZE     MESSD,,6                                                 IOR06670
+RNSLM7 TSX     (PROUT,4                                                 IOR06680
+       PZE     2                                                        IOR06690
+       PZE     MESSE,,5+512*4      PREPARE TO LIST REQUESTS             IOR06700
+       PZE     MESSF,,6+512*4                                           IOR06710
+       STZ     COUNT2              RESET COUNTER                        IOR06720
+       AXT     0,2                                                      IOR06730
+RNSLM8 AXT     6,1                                                      IOR06740
+       LDQ*    PQUEUE                                                   IOR06750
+       RQL     6                                                        IOR06760
+       TQP     *+4                                                      IOR06770
+RNSLM2 CAL     STATUS+6,1          DETERMINE STATUS                     IOR06780
+       SLW     MESSG+5                                                  IOR06790
+       TRA     *+3                                                      IOR06800
+       RQL     1                                                        IOR06810
+       TIX     RNSLM2-1,1,1                                             IOR06820
+       CLA*    PQUEUE                                                   IOR06830
+       PAC     0,1                                                      IOR06840
+       LDI     4,1                                                      IOR06850
+       TSX     H2BCDZ,4                                                 IOR06860
+       STI     MESSG+3             VERIFICATION ADDRESS                 IOR06870
+       LDQ     0,1                                                      IOR06880
+       TSX     (BCD5R,4                                                 IOR06890
+       SLW     MESSG+1             ALPHA RECORD                         IOR06900
+       CAL     COUNT2                                                   IOR06910
+       ADD     L(1)                                                     IOR06920
+       STO     COUNT2                                                   IOR06930
+       TSX     (DECVA,4                                                 IOR06940
+       XCL                                                              IOR06950
+       ALS     24                                                       IOR06960
+       ARS     6                                                        IOR06970
+       ORA     MSK1                                                     IOR06980
+       SLW     MESSG               REQUEST NUMBER                       IOR06990
+       TSX     (PROUT,4                                                 IOR07000
+       PZE     1                                                        IOR07010
+       PZE     MESSG,,6                                                 IOR07020
+       TXI     *+1,2,-1                                                 IOR07030
+       ZET*    PQUEUE                                                   IOR07040
+RNSLM9 TXH     RNSLM8,2,**                                              IOR07050
+       TRA     RNSLM5                                                   IOR07060
+MESSB  BCI     5,PERSISTENT ERROR - BETA XXXXXX                         IOR07070
+MESSC  BCI     3,NO REQUESTS WAITING                                    IOR07080
+MESSD  BCI     6,DATA CHECK WHILE WRITING ON DISK                       IOR07090
+MESSE  BCI     5,STATUS OF REQUESTS FOLLOWS                             IOR07100
+MESSF  BCI     6,       ALPHA       BETA       STATUS                   IOR07110
+MESSG  BCI     6,                                                       IOR07120
+STATUS BCI     1,RDWAIT                                                 IOR07130
+       BCI     1,RDISSD                                                 IOR07140
+       BCI     1,PRWAIT                                                 IOR07150
+       BCI     1,PRISSD                                                 IOR07160
+       BCI     1,WRWAIT                                                 IOR07170
+       BCI     1,WRISSD                                                 IOR07180
+COUNT2 PZE                                                              IOR07190
+DSELM  PAC     0,2                 DUMMY SEL (-)                        IOR07200
+       STZ     1,2                                                      IOR07210
+       TRA     1,4                                                      IOR07220
+SLM010 PZE                                                              IOR07230
+       SPACE                                                            IOR07240
+*                      COMMAND LISTS                                    IOR07250
+       SPACE                                                            IOR07260
+CMND   PZE     *+1,,**                                                  IOR07270
+CMND1  SMS     **                                                       IOR07280
+       LCC     **                  ONE IF WRITE CHECK, ZERO OTHERWISE   IOR07290
+       PZE                         CTLR OR CTLW FROM DVSR OR DVTA       IOR07300
+       CPYD    **,,**                                                   IOR07310
+       TDC     *+2                 WRITE CHECK IF REQUESTED             IOR07320
+       TCH     SYSTWT                                                   IOR07330
+       CTLW    DWRC1               PREPARE TO WRITE CHECK               IOR07340
+       TCH     CMND1+3                                                  IOR07350
+       DVSR    ,,                                                       IOR07360
+       DVTA    ,,                                                       IOR07370
+DWRC1  DWRC    ,,                                                       IOR07380
+       PZE     *-6                                                      IOR07390
+       PZE     *-5                                                      IOR07400
+       PZE     *+1,,**                                                  IOR07410
+CMND2  SMS     **                                                       IOR07420
+       LCC     **                  ONE IF WRITE CHECK, ZERO OTHERWISE   IOR07430
+       PZE                         CTLR OR CTLW FROM DVSR OR DVTA       IOR07440
+       CPYD    **,,**                                                   IOR07450
+       TDC     *+2                 WRITE CHECK IF REQUESTED             IOR07460
+       TCH     SYSTWT                                                   IOR07470
+       CTLW    DWRC2               PREPARE TO WRITE CHECK               IOR07480
+       TCH     CMND2+3                                                  IOR07490
+       DVSR    ,,                                                       IOR07500
+       DVTA    ,,                                                       IOR07510
+DWRC2  DWRC    ,,                                                       IOR07520
+       PZE     *-6                                                      IOR07530
+       PZE     *-5                                                      IOR07540
+       PZE     *+1,,**                                                  IOR07550
+CMND3  SMS     **                                                       IOR07560
+       LCC     **                  ONE IF WRITE CHECK, ZERO OTHERWISE   IOR07570
+       PZE                         CTLR OR CTLW FROM DVSR OR DVTA       IOR07580
+       CPYD    **,,**                                                   IOR07590
+       TDC     *+2                 WRITE CHECK IF REQUESTED             IOR07600
+       TCH     SYSTWT                                                   IOR07610
+       CTLW    DWRC3               PREPARE TO WRITE CHECK               IOR07620
+       TCH     CMND3+3                                                  IOR07630
+       DVSR    ,,                                                       IOR07640
+       DVTA    ,,                                                       IOR07650
+DWRC3  DWRC    ,,                                                       IOR07660
+       PZE     *-6                                                      IOR07670
+       PZE     *-5                                                      IOR07680
+       PZE     *+1,,**                                                  IOR07690
+CMND4  SMS     **                                                       IOR07700
+       LCC     **                  ONE IF WRITE CHECK, ZERO OTHERWISE   IOR07710
+       PZE                         CTLR OR CTLW FROM DVSR OR DVTA       IOR07720
+       CPYD    **,,**                                                   IOR07730
+       TDC     *+2                 WRITE CHECK IF REQUESTED             IOR07740
+       TCH     SYSTWT                                                   IOR07750
+       CTLW    DWRC4               PREPARE TO WRITE CHECK               IOR07760
+       TCH     CMND4+3                                                  IOR07770
+       DVSR    ,,                                                       IOR07780
+       DVTA    ,,                                                       IOR07790
+DWRC4  DWRC    ,,                                                       IOR07800
+       PZE     *-6                                                      IOR07810
+       PZE     *-5                                                      IOR07820
+DCMND  SMS     **                  DUMMY COMMAND LIST                   IOR07830
+       CTLR    *+3                                                      IOR07840
+       CPYD    ,,                                                       IOR07850
+       TCH     SYSTWT                                                   IOR07860
+       OCT     100212121212                                             IOR07870
+       OCT     121212121212                                             IOR07880
+       SPACE                                                            IOR07890
+*  TSX     LOOKUP,1    1. ENTER LOOKUP WITH REQ IN AC OR TO LOOKUP -1   IOR07900
+*  RETURN              WITH REQ,,I IN AC.                               IOR07910
+*                      2. EXIT WITH QUEUE,2 = REQUEST POINTER.          IOR07920
+       SPACE                                                            IOR07930
+       STD     LKP07                                                    IOR07940
+LOOKUP AXT     0,2                 START AT QUEUE                       IOR07950
+       STA     LKP06                                                    IOR07960
+LKP01  CAL*    PQUEUE                                                   IOR07970
+       ANA     ADDR                                                     IOR07980
+       CAS     LKP06               COMPARE QUEUE SEGMENT ADDRESSES      IOR07990
+       TXI     *+3,2,-1                                                 IOR08000
+       TRA     LKP02               EQUAL                                IOR08010
+       TXI     *+1,2,-1            TRY AGAIN                            IOR08020
+LKP015 TXH     LKP01,2,**                                               IOR08030
+       TRA     ERRR1                                                    IOR08040
+LKP02  CLA     LKP07                                                    IOR08050
+       TZE     1,1                 EXIT                                 IOR08060
+       LDI*    PQUEUE                                                   IOR08070
+       LNT     200000              FIND HEADER                          IOR08080
+       TXI     *-2,2,1                                                  IOR08090
+LKP03  CAL*    PQUEUE              COMPARE I NUMBERS                    IOR08100
+       ANA     MSKI                                                     IOR08110
+       CAS     LKP07                                                    IOR08120
+       TXI     LKP04,2,-1                                               IOR08130
+       TRA     LKP05                                                    IOR08140
+       TXI     *+1,2,-1                                                 IOR08150
+LKP04  LDI*    PQUEUE                                                   IOR08160
+       LNT     200000              IF HEADER OR END OF                  IOR08170
+       TXH     LKP03,2,**          QUEUE                                IOR08180
+ERRR1  TSX     (PROUT,4                                                 IOR08190
+       PZE     1                   PRINT ERROR MESSAGE                  IOR08200
+       PZE     MESSH,,4                                                 IOR08210
+       TRA     RNSLM7              KILL THE JOB                         IOR08220
+LKP05  STZ     LKP07                                                    IOR08230
+       TRA     1,1                 EXIT                                 IOR08240
+LKP06  PZE                         REQ                                  IOR08250
+LKP07  PZE                         I NUMBER                             IOR08260
+MESSH  BCI     4,INVALID REQ IDENTIFIER                                 IOR08270
+       SPACE                                                            IOR08280
+*  TSX     PREADY,1    1. DETERMINES IF A GROUP OF MUTUALLY DEPENDENT   IOR08290
+*  READY RETURN        BETAS IS READY FOR FOR PROCESSING.               IOR08300
+*  NOT READY RETURN    2. ENTER WITH QUEUE,2 = REQUEST POINTER.         IOR08310
+       SPACE                                                            IOR08320
+PREADY SXA     SVRDY2,2                                                 IOR08330
+       LDI*    PQUEUE                                                   IOR08340
+       LNT     020000                                                   IOR08350
+       TRA     1,1                 INDEPENDENT REQUEST                  IOR08360
+       RFT     400000                                                   IOR08370
+       TRA     2,1                 INCOMPLETE BETA SET                  IOR08380
+       LFT     200000                                                   IOR08390
+       TRA     PREDY3                                                   IOR08400
+PREDY1 TXI     *+1,2,1             ARE THE OTHER MUTUALLY DEPENDENT     IOR08410
+       CAL     MSK10               REQUESTS IN PROCESSING WAITING STATUSIOR08420
+       ANA*    PQUEUE                                                   IOR08430
+       TZE     PREDY2              INDEPENDENT                          IOR08440
+       CAL     MSK7                                                     IOR08450
+       ANA*    PQUEUE                                                   IOR08460
+       TNZ     *+3                 DEPENDENT, PROCESSING WAITING        IOR08470
+SVRDY2 AXT     **,2                                                     IOR08480
+       TRA     2,1                 EXIT                                 IOR08490
+PREDY2 CAL     MSK2                                                     IOR08500
+       ANA*    PQUEUE                                                   IOR08510
+       TZE     PREDY1              NOT A HEADER                         IOR08520
+       LXA     SVRDY2,2                                                 IOR08530
+PREDY3 TXI     *+1,2,-1            NOW SCAN DOWN                        IOR08540
+       LDI*    PQUEUE                                                   IOR08550
+       LNT     200000              IS THIS A HEADER OR                  IOR08560
+PREDY4 TXH     *+3,2,**            END OF QUEUE                         IOR08570
+       LXA     SVRDY2,2            YES                                  IOR08580
+       TRA     1,1                 READY TO PROCESS                     IOR08590
+       CAL     MSK10               NO, CHECK FOR DEPENDENCE             IOR08600
+       ANA*    PQUEUE                                                   IOR08610
+       TZE     PREDY3              NO, CHECK NEXT                       IOR08620
+       CAL     MSK7                                                     IOR08630
+       ANA*    PQUEUE              YES, IS IT PROCESSING WAITING        IOR08640
+       TNZ     PREDY3              YES, CHECK NEXT                      IOR08650
+       TRA     SVRDY2              NO                                   IOR08660
+       SPACE                                                            IOR08670
+*          THIS ROUTINE SETS UP THE CALLING SEQUENCE FOR THE USERS      IOR08680
+*          PROCESSING ROUTINE AND TRANSFERS TO IT.                      IOR08690
+       SPACE                                                            IOR08700
+PROC   STZ     PRC040                                                   IOR08710
+       STZ     PROCCS                                                   IOR08720
+       CLA*    PQUEUE                                                   IOR08730
+       PAC     0,1                                                      IOR08740
+       STA     PROCCS              SET QUEUE SEGMENT, ALPHA RECORD      IOR08750
+       CLA     0,1                                                      IOR08760
+       STD     PROCCS                                                   IOR08770
+       CLA     2,1                 AND PROCESSING ROUTINE ADDRESSES     IOR08780
+       ARS     18                                                       IOR08790
+       STA     PRC070                                                   IOR08800
+       CAL     MSK10                                                    IOR08810
+       ANA*    PQUEUE              TEST FOR DEPENDENCE                  IOR08820
+       TZE     PRC050                                                   IOR08830
+PRC010 CAL     MSK2                                                     IOR08840
+       ANA*    PQUEUE                                                   IOR08850
+       TNZ     *+2                                                      IOR08860
+       TXI     PRC010,2,1          FIND HEADER                          IOR08870
+PRC015 CAL*    PQUEUE                                                   IOR08880
+       ANA     MSK10               DEPENDENCE                           IOR08890
+       TZE     *+2                                                      IOR08900
+       TSX     PRC020,4            SET I AND BETA ADDRESS               IOR08910
+       TXI     *+1,2,-1                                                 IOR08920
+       LDI*    PQUEUE                                                   IOR08930
+       LNT     200000                                                   IOR08940
+PRC017 TXH     PRC015,2,**         IF HEADER OR END OF QUEUE            IOR08950
+       TRA     PRC060              LEAVE                                IOR08960
+PRC020 SXA     PRC030,4                                                 IOR08970
+       LXA     PRC040,4                                                 IOR08980
+       TXI     *+1,4,-1                                                 IOR08990
+       STZ     PROCCS,4                                                 IOR09000
+       LDI*    PQUEUE                                                   IOR09010
+       RIL     001000              CHANGE STATUS                        IOR09020
+       SIL     000400                                                   IOR09030
+       STI*    PQUEUE              TO PROCESSING ISSUED                 IOR09040
+       LFT     100000                                                   IOR09050
+       TRA     PRC040+1            COMMON BETA                          IOR09060
+       LNT     000040                                                   IOR09070
+       TSX     GETBF,1             WRITE ONLY REQUEST                   IOR09080
+       PIA                                                              IOR09090
+PRC025 PAC     0,1                                                      IOR09100
+       CAL     1,1                                                      IOR09110
+       ARS     18                                                       IOR09120
+       ADD     L(1)                                                     IOR09130
+       STA     PROCCS,4            SET BETA ADDRESS                     IOR09140
+       RIL     777740                                                   IOR09150
+       PIA                                                              IOR09160
+       STD     PROCCS,4            AND I NUMBER                         IOR09170
+       SXA     PRC040,4            SAVE COUNT                           IOR09180
+PRC030 AXT     **,4                                                     IOR09190
+       TRA     1,4                                                      IOR09200
+PRC040 PZE                                                              IOR09210
+       SXA     SVPRC2,2                                                 IOR09220
+       PIA                                                              IOR09230
+       PAC     0,1                                                      IOR09240
+       STA     PRC048                                                   IOR09250
+PRC044 CAL     5,1                                                      IOR09260
+       LAS     PRC048                                                   IOR09270
+       TRA     *+2                                                      IOR09280
+       TRA     SVPRC2              END OF CHAIN                         IOR09290
+       TSX     LOOKUP,1                                                 IOR09300
+       LDI*    PQUEUE                                                   IOR09310
+       PIA                                                              IOR09320
+       PAC     0,1                                                      IOR09330
+       LNT     001000              ANY REQUEST IN S=3                   IOR09340
+       TRA     PRC044                                                   IOR09350
+       LDQ     1,1                 YES                                  IOR09360
+       LXA     SVPRC2,2                                                 IOR09370
+       TSX     GETBF,1             COPY INTO PROCESSING BUFFER          IOR09380
+       TSX     COPY,1                                                   IOR09390
+SVPRC2 AXT     **,2                                                     IOR09400
+       LDI*    PQUEUE                                                   IOR09410
+       TRA     PRC025-1                                                 IOR09420
+PRC048 PZE                                                              IOR09430
+PRC050 TSX     PRC020,4                                                 IOR09440
+PRC060 ENB*    (TRAPX              RESTORE TRAPS                        IOR09450
+       LXA     PRC040,4                                                 IOR09460
+       CLS     PROCCS,4            SET SIGN MINUS IN LAST WORD          IOR09470
+       STO     PROCCS,4            OF CALLING SEQUENCE                  IOR09480
+       AXC     PROCCS-1,4          SET XR4                              IOR09490
+PRC070 TSX     **,2                GO TO PROCESSING ROUTINE             IOR09500
+       SPACE                                                            IOR09510
+*          UPON RETURN FROM THE PROCESSING ROUTINE, BETA REQUESTS       IOR09520
+*          ARE PROCESSED AS SPECIFIED BY THE USER.                      IOR09530
+       SPACE                                                            IOR09540
+       CLA     PROCCS                                                   IOR09550
+       TMI     SCHED               RANRPL WAS ENTERED, NO ACTION NEEDED IOR09560
+       ENB     L(0)                DISABLE TRAPS                        IOR09570
+       TSX     LOOKUP,1            SEEK REQUEST POINTER                 IOR09580
+       STZ     COUNT               RESET PROCCS COUNTER                 IOR09590
+       CAL     MSK10                                                    IOR09600
+       ANA*    PQUEUE              MUTUALLY DEPENDENT                   IOR09610
+       TNZ     RNRL1                                                    IOR09620
+       TSX     RNRL4,1             NO, TAKE REQUIRED ACTION             IOR09630
+       TRA     SCHED               AND EXIT                             IOR09640
+RNRL1  LDI*    PQUEUE                                                   IOR09650
+       LNT     200000                                                   IOR09660
+       TXI     *-2,2,1                                                  IOR09670
+RNRL2  CAL     MSK10                                                    IOR09680
+       ANA*    PQUEUE              MUTUAL DEPENDENCE                    IOR09690
+       TZE     RNRL3                                                    IOR09700
+       TSX     RNRL4,1             PROCESS                              IOR09710
+RNRL3  TXI     *+1,2,-1            SEARCH NEXT                          IOR09720
+       LDI*    PQUEUE                                                   IOR09730
+       LNT     200000              UNLESS HEADER OR END OF QUEUE        IOR09740
+RNRL5  TXH     RNRL2,2,**          REPEAT                               IOR09750
+       TRA     SCHED                                                    IOR09760
+RNRL4  SXA     SVRL1,1                                                  IOR09770
+       SXA     SVRL2,2             SAVE XRS                             IOR09780
+       LXA     COUNT,4                                                  IOR09790
+       TXI     *+1,4,-1            INCREMENT COUNT                      IOR09800
+       SXA     COUNT,4                                                  IOR09810
+       CAL     PROCCS,4                                                 IOR09820
+       ANA     MSK21               SHOULD THIS RECORD BE WRITTEN        IOR09830
+       TNZ     RNRL9                                                    IOR09840
+       LDI*    PQUEUE                                                   IOR09850
+       RIL     010400                                                   IOR09860
+       SIL     000200                                                   IOR09870
+       STI*    PQUEUE                                                   IOR09880
+       LFT     100000                                                   IOR09890
+       TRA     RNRL10              COMMON BETA                          IOR09900
+SVRL1  AXT     **,1                                                     IOR09910
+SVRL2  AXT     **,2                RESTORE XRS                          IOR09920
+       TRA     1,1                 EXIT                                 IOR09930
+COUNT  PZE                                                              IOR09940
+RNRL9  LDI*    PQUEUE                                                   IOR09950
+       LFT     100000                                                   IOR09960
+       TRA     RNRL15                                                   IOR09970
+       TSX     RELBF,4             RELEASE BUFFER,                      IOR09980
+       TSX     RELQS,4             QUEUE SEGMENT AND POINTER            IOR09990
+       TRA     SVRL1                                                    IOR10000
+RNRL10 PIA                                                              IOR10010
+       STA     RNRL14              SAVE ADDRESS                         IOR10020
+       PAC     0,1                                                      IOR10030
+       CAL     5,1                                                      IOR10040
+       LAS     RNRL14                                                   IOR10050
+       TRA     *+2                                                      IOR10060
+       TRA     RNRL12                                                   IOR10070
+       TSX     LOOKUP,1                                                 IOR10080
+       LDI*    PQUEUE              ANY OTHER REQUEST IN S5              IOR10090
+       RIL     010000                                                   IOR10100
+       PIA                                                              IOR10110
+       LNT     000200                                                   IOR10120
+       TRA     RNRL10+2                                                 IOR10130
+       TSX     RELEM,4             YES - REMOVE REQUEST FROM CHAIN      IOR10140
+       TSX     RELBF,4             BETA BUFFER                          IOR10150
+       TSX     RELQS,4             AND QUEUE SEGMENT                    IOR10160
+       CLA     RNRL14                                                   IOR10170
+       TSX     LOOKUP,1                                                 IOR10180
+       SXA     SVRL2,2             NEW POINTER POSITION - RESTORE XR2   IOR10190
+RNRL12 LXA     SVRL2,2                                                  IOR10200
+       CLA*    PQUEUE                                                   IOR10210
+       PAC     0,1                                                      IOR10220
+       LDQ     1,1                 SAVE BETA BUFFER                     IOR10230
+RNRL13 CAL     5,1                                                      IOR10240
+       LAS     RNRL14              ANY REQUEST IN S3                    IOR10250
+       TRA     *+2                                                      IOR10260
+       TRA     SVRL1               NO                                   IOR10270
+       TSX     LOOKUP,1                                                 IOR10280
+       LDI*    PQUEUE                                                   IOR10290
+       RIL     010000                                                   IOR10300
+       PIA                                                              IOR10310
+       PAC     0,1                                                      IOR10320
+       LNT     001000                                                   IOR10330
+       TRA     RNRL13                                                   IOR10340
+       TSX     COPY,1              COPY RECORD INTO BACK-UP BUFFER      IOR10350
+       TRA     SVRL1                                                    IOR10360
+RNRL14 PZE                                                              IOR10370
+RNRL15 LFT     010000                                                   IOR10380
+       TRA     *+3                 UNLESS SPECIAL FLAG ON               IOR10390
+       TSX     RELEM,4             REMOVE FROM BETA CHAIN               IOR10400
+       TRA     RNRL9+3             AND RETURN                           IOR10410
+       STL     RNRL18                                                   IOR10420
+       PIA                                                              IOR10430
+       STA     RNRL14                                                   IOR10440
+RNRL16 PAC     0,1                                                      IOR10450
+       CAL     5,1                                                      IOR10460
+       LAS     RNRL14                                                   IOR10470
+       TRA     *+2                                                      IOR10480
+       TRA     RNRL17                                                   IOR10490
+       TSX     LOOKUP,1                                                 IOR10500
+       LDI*    PQUEUE                                                   IOR10510
+       PIA                                                              IOR10520
+       RIL     011000              RESET SPECIAL FLAG AND S3            IOR10530
+       SIL     040000              SET S1                               IOR10540
+       ZET     RNRL18                                                   IOR10550
+       SIL     040000              MAKE HEADER ONE OF THEM              IOR10560
+       STI*    PQUEUE                                                   IOR10570
+       STZ     RNRL18                                                   IOR10580
+       TRA     RNRL16                                                   IOR10590
+RNRL17 LXA     SVRL2,2                                                  IOR10600
+       TRA     RNRL15+2                                                $IOR10610
+RNRL18 PZE                                                              IOR10620
+       SPACE                                                            IOR10630
+*  TSX     RANRPL,4    1. REPLACES THE ADDRESS OF A BETA RECORD         IOR10640
+*  PZE     REQ,,I      ALREADY DELIVERED WITH A NEW ONE.                IOR10650
+*  PZE     A           2. CHANGES STATUS OF ALL REQUESTS IN THE GROUP.  IOR10660
+*  P       PHYS. ADDR. 3. SAVES XRS AND SENSE INDICATORS.               IOR10670
+*  VERIFICATION ADDRESS                                                 IOR10680
+*  RETURN                                                               IOR10690
+       SPACE                                                            IOR10700
+RNRPL  ENB     L(0)                DISABLE TRAPS                        IOR10710
+       SXA     SVRP1,1                                                  IOR10720
+       SXA     SVRP2,2             SAVE XRS                             IOR10730
+       SXA     SVRP4,4                                                  IOR10740
+       STI     SENSRP              AND SENSE INDIC                      IOR10750
+       CLA     1,4                                                      IOR10760
+       TSX     LOOKUP-1,1          MATCH REQ,,I                         IOR10770
+       CLA*    PQUEUE                                                   IOR10780
+       PAC     0,1                                                      IOR10790
+       CLA     2,4                                                      IOR10800
+       STA     *+1                                                      IOR10810
+       CLA     **                                                       IOR10820
+       STA     1,1                                                      IOR10830
+       CAL     3,4                 REPLACE ADDRESSES                    IOR10840
+       SLW     3,1                                                      IOR10850
+       LDI     4,4                                                      IOR10860
+       TSX     H2ZBCD,4            CONVERT ZEROS IN HA2                 IOR10870
+       STI     4,1                                                      IOR10880
+       LDI*    PQUEUE                                                   IOR10890
+       LFT     100000                                                   IOR10900
+       TRA     RPL06               REQUEST IN BETA CHAIN                IOR10910
+       TSX     RELBF,4             RELEASE BETA BUFFER                  IOR10920
+RPL01  RIL     142440                                                   IOR10930
+       SIL     004000              SET S1                               IOR10940
+       STI*    PQUEUE                                                   IOR10950
+       LNT     020000                                                   IOR10960
+       TRA     RPL05               INDEPENDENT BETA                     IOR10970
+       SXA     RPL04,2                                                  IOR10980
+       LDI*    PQUEUE                                                   IOR10990
+       LNT     200000                                                   IOR11000
+       TXI     *-2,2,1             FIND HEADER                          IOR11010
+RPL02  LNT     020400              IF MUTUAL DEPENDENT AND S=4          IOR11020
+       TRA     RPL03                                                    IOR11030
+       RIL     000400                                                   IOR11040
+       SIL     001000                                                   IOR11050
+       STI*    PQUEUE              CHANGE TO S3                         IOR11060
+       LFT     100000                                                   IOR11070
+       TRA     RPL07               REQUEST IN BETA CHAIN                IOR11080
+RPL03  TXI     *+1,2,-1                                                 IOR11090
+       LDI*    PQUEUE                                                   IOR11100
+       LNT     200000              IF HEADER OR END OF QUEUE            IOR11110
+       TXH     RPL02,2,**          PROCEED                              IOR11120
+RPL04  AXT     **,2                RESTORE XR2                          IOR11130
+RPL05  TSX     CHECK,4             CHECK FOR IDENTICAL BETAS            IOR11140
+SVRP4  AXT     **,4                                                     IOR11150
+       NZT     ERRFLG              IF ENTERED FROM ERRET                IOR11160
+       TRA     *+3                                                      IOR11170
+       STZ     ERRFLG              GO TO SCHEDULER                      IOR11180
+       TRA     SCHED                                                    IOR11190
+       CLA     PROCCS              IF ENTERED FROM PROCES               IOR11200
+       SSM                         SET FLAG                             IOR11210
+       STO     PROCCS              AND RETURN THERE                     IOR11220
+SVRP1  AXT     **,1                                                     IOR11230
+SVRP2  AXT     **,2                RESTORE XRS                          IOR11240
+       LDI     SENSRP              AND SENSE INDICATORS                 IOR11250
+       ENB*    (TRAPX              RESTORE TRAPS                        IOR11260
+       TRA     5,4                 EXIT                                 IOR11270
+RPL06  TSX     ERR05,4                                                  IOR11280
+       LDI*    PQUEUE                                                   IOR11290
+       TRA     RPL01                                                    IOR11300
+RPL07  SXA     RPL08,2                                                  IOR11310
+       PIA                                                              IOR11320
+       STA     RPL09                                                    IOR11330
+       PAC     0,1                                                      IOR11340
+       CAL     5,1                                                      IOR11350
+       LAS     RPL09               IF ANY OTHER REQUEST                 IOR11360
+       TRA     *+2                                                      IOR11370
+       TRA     RPL10                                                    IOR11380
+       TSX     LOOKUP,1            IN CHAIN IS IN S=3                   IOR11390
+       LDI*    PQUEUE                                                   IOR11400
+       PIA                                                              IOR11410
+       PAC     0,1                                                      IOR11420
+       LNT     001000                                                   IOR11430
+       TRA     RPL07+4                                                  IOR11440
+       LDI     1,1                                                      IOR11450
+RPL08  AXT     **,2                                                     IOR11460
+       TSX     RELBF,4             RELEASE BUFFER                       IOR11470
+       CLA*    PQUEUE                                                   IOR11480
+       PAC     0,1                 ASSIGN COMMON BACK-UP                IOR11490
+       PIA                                                              IOR11500
+       STD     1,1                                                      IOR11510
+RPL10  LXA     RPL08,2                                                  IOR11520
+       TRA     RPL03                                                    IOR11530
+RPL09  PZE                                                              IOR11540
+SENSRP PZE                                                              IOR11550
+       SPACE                                                            IOR11560
+*  TSX     CHECK,4     1. COMPARES BETA ADDRESS WITH ALL OTHERS.        IOR11570
+*  RETURN              2. CHAINS REQUESTS OF THE SAME BETA.             IOR11580
+*                      3. P IS THE REQUEST GENERATING THE TEST,         IOR11590
+*                      P(N) IS A REQUEST IN THE COMMON BETA CHAIN.      IOR11600
+*                      4. ENTER WITH QUEUE,2 = REQUEST POINTER.         IOR11610
+       SPACE                                                            IOR11620
+CHECK  SXA     SVCK4,4                                                  IOR11630
+       SXA     SVCK2,2             SAVE XRS                             IOR11640
+       AXT     0,2                 SCAN FROM TOP                        IOR11650
+       CLA     1,1                                                      IOR11660
+       STA     CHCK4               GET UCB                              IOR11670
+CHCK1  PXA     0,2                                                      IOR11680
+       ERA     SVCK2               IS THIS THE REQUEST                  IOR11690
+       TNZ     *+2                 PRODUCING THE CHECK                  IOR11700
+       TXI     *+1,2,-1            JUMP OVER IT                         IOR11710
+       CLA*    PQUEUE                                                   IOR11720
+       PAC     0,4                 NEW QUEUE SEGMENT TO XR4             IOR11730
+       CAL     1,4                                                      IOR11740
+       ANA     ADDR                                                     IOR11750
+       ERA     CHCK4               COMPARE  UCB'S                       IOR11760
+       TNZ     CHCK2                                                    IOR11770
+       CAL     4,4                                                      IOR11780
+       ERA     4,1                 COMPARE VERIF. ADDRESSES             IOR11790
+       TNZ     CHCK2                                                    IOR11800
+       CAL     3,4                                                      IOR11810
+       ERA     3,1                 COMPARE PHYSICAL ADDRESSES           IOR11820
+       TZE     CHCK6               EQUAL, GO TO CHAINING ROUTINE        IOR11830
+       CLA     3,4                                                      IOR11840
+       LDQ     3,1                                                      IOR11850
+       TMI     *+3                                                      IOR11860
+       TQP     CHCK2               BOTH ADDR. IN BINARY                 IOR11870
+       TRA     *+4                 AC BIN, MQ BCD                       IOR11880
+       TQP     *+2                 AC BCD, MQ BIN                       IOR11890
+       TRA     CHCK2               BOTH IN BCD                          IOR11900
+       XCA                                                              IOR11910
+       STQ     CHCK5                                                    IOR11920
+       SXA     SVCK44,4                                                 IOR11930
+       TSX     (DECVA,4            CONVERT TO BCD THE ONE IN BINARY     IOR11940
+SVCK44 AXT     **,4                                                     IOR11950
+       XCL                                                              IOR11960
+       ANA     MSK15                                                    IOR11970
+       ORA     MSK20                                                    IOR11980
+       ERA     CHCK5               COMPARE                              IOR11990
+       TZE     CHCK6               EQUAL                                IOR12000
+CHCK2  TXI     *+1,2,-1                                                 IOR12010
+       CLA*    PQUEUE                                                   IOR12020
+       TZE     *+2                                                      IOR12030
+CHCK3  TXH     CHCK1,2,**                                               IOR12040
+       LXA     SVCK2,2             UNIQUE REQUEST                       IOR12050
+       CAL     MSK9                FOR THIS BETA                        IOR12060
+       ORS*    PQUEUE                                                   IOR12070
+SVCK4  AXT     **,4                                                     IOR12080
+       TRA     1,4                 EXIT                                 IOR12090
+SVCK2  PZE                         XR2                                  IOR12100
+CHCK4  PZE                                                              IOR12110
+CHCK5  PZE                                                              IOR12120
+CHCK6  SXA     SVCK22,2                                                 IOR12130
+       CLA     CHCK12+2                                                 IOR12140
+       STA     CHCK75                                                   IOR12150
+       CLA*    PQUEUE                                                   IOR12160
+       PAC     0,1                 P(N) TO XR1                          IOR12170
+       LXA     SVCK2,2                                                  IOR12180
+       CLA*    PQUEUE                                                   IOR12190
+       PAC     0,4                 P TO XR4                             IOR12200
+       LDI     5,1                                                      IOR12210
+       STA     5,1                 P TO P(N)                            IOR12220
+SVCK22 AXT     **,2                                                     IOR12230
+       CLA*    PQUEUE                                                   IOR12240
+       RFT     077777                                                   IOR12250
+       TRA     *+3                                                      IOR12260
+       STA     5,4                 IF NEW CHAIN, STORE                  IOR12270
+       TRA     *+2                                                      IOR12280
+       STI     5,4                                                      IOR12290
+       LDI*    PQUEUE              RECIPROCAL ADDRESSES                 IOR12300
+       SIL     100000              COMMON BETA FLAG TO P(N)             IOR12310
+       STI*    PQUEUE                                                   IOR12320
+       LFT     007000              IS P(N) IN S=3 OR LESS               IOR12330
+       TRA     *+2                                                      IOR12340
+       TRA     CHCK8                                                    IOR12350
+       SXA     CHCK7,1             YES                                  IOR12360
+       LNT     010000                                                   IOR12370
+       TRA     *+3                                                      IOR12380
+       CLA     CHCK12+1            IF REQUIRED SET SPECIAL FLAG         IOR12390
+       STA     CHCK75                                                   IOR12400
+       LNT     000040              IF NO BUFFER ASSIGNED TO P(N)        IOR12410
+       TSX     GETBF,1             ASSIGN ONE                           IOR12420
+CHCK7  AXT     **,1                                                     IOR12430
+       LDQ     1,1                                                      IOR12440
+       LXA     SVCK2,2                                                  IOR12450
+       CAL     MSK3                SET NEW REQUEST                      IOR12460
+       ANA*    PQUEUE                                                   IOR12470
+       RIS     MSK3                                                     IOR12480
+       OAI                                                              IOR12490
+CHCK75 SIL     100040                                                   IOR12500
+       STI*    PQUEUE              IN THE SAME STATUS                   IOR12510
+       XCA                                                              IOR12520
+       STD     1,4                 AND ASSIGN THE SAME BUFFER           IOR12530
+       TRA     SVCK4                                                    IOR12540
+CHCK8  PIA                                                              IOR12550
+       STA     CHCK12              P(N) IS END OF CHAIN                 IOR12560
+       CAL     5,4                                                      IOR12570
+       LAS     CHCK12                                                   IOR12580
+       TRA     *+2                                                      IOR12590
+       TRA     CHCK9               ALL CHAIN SCANNED                    IOR12600
+       TSX     LOOKUP,1                                                 IOR12610
+       LDI*    PQUEUE                                                   IOR12620
+       PIA                                                              IOR12630
+       PAC     0,1                                                      IOR12640
+       LFT     007000              STATUS 3 OR LOWER                    IOR12650
+       TRA     CHCK7+1             YES                                  IOR12660
+       CAL     5,1                 NO, REPEAT                           IOR12670
+       TRA     CHCK8+3                                                  IOR12680
+CHCK9  LXA     SVCK22,2                                                 IOR12690
+       LDI*    PQUEUE                                                   IOR12700
+       LFT     000300              P(N) IN S = 5 OR 6                   IOR12710
+       TRA     *+2                 YES                                  IOR12720
+       TRA     CHCK10              NO, SEARCH                           IOR12730
+       PIA                                                              IOR12740
+       PAC     0,1                                                      IOR12750
+CHCK11 LDQ     1,1                 OLD REQUEST BUFFER                   IOR12760
+       LXA     SVCK2,2                                                  IOR12770
+       TSX     GETBF,1             GET ONE FOR NEW SEGMENT              IOR12780
+       TSX     COPY,1              AND COPY OLD ONE                     IOR12790
+       LDI*    PQUEUE                                                   IOR12800
+       RIL     004000                                                   IOR12810
+       SIL     101000              COMMON BETA AND S=3                  IOR12820
+       STI*    PQUEUE                                                   IOR12830
+       TRA     SVCK4                                                    IOR12840
+CHCK10 CAL     5,4                                                      IOR12850
+       LAS     CHCK12                                                   IOR12860
+       TRA     *+2                                                      IOR12870
+       TRA     CHCK13                                                   IOR12880
+       TSX     LOOKUP,1                                                 IOR12890
+       LDI*    PQUEUE                                                   IOR12900
+       PIA                                                              IOR12910
+       PAC     0,1                                                      IOR12920
+       LFT     000300              S = 5 OR 6                           IOR12930
+       TRA     CHCK11              YES                                  IOR12940
+       CAL     5,1                                                      IOR12950
+       TRA     CHCK10+1            KEEP SEARCHING                       IOR12960
+CHCK12 PZE                                                              IOR12970
+       OCT     000000010040                                             IOR12980
+       OCT     000000000040                                             IOR12990
+CHCK13 TSX     GETBF,1             WHOLE CHAIN IN S4                    IOR13000
+       LDI*    PQUEUE              ASSIGN BUFFER                        IOR13010
+       RIL     004000              AND SET NEW REQUEST                  IOR13020
+       SIL     111000              IN S3, COMMON BETA, SPECIAL FLAG     IOR13030
+CHCK14 STI*    PQUEUE                                                   IOR13040
+       PIA                                                              IOR13050
+       PAC     0,1                                                      IOR13060
+       CAL     5,1                                                      IOR13070
+       LAS     CHCK12                                                   IOR13080
+       TRA     *+2                                                      IOR13090
+       TRA     SVCK4                                                    IOR13100
+       TSX     LOOKUP,1            SET SPECIAL FLAG IN THE REMAINING    IOR13110
+       LDI*    PQUEUE                                                   IOR13120
+       SIL     010000              ELEMENTS OF THE CHAIN                IOR13130
+       TRA     CHCK14                                                   IOR13140
+       SPACE                                                            IOR13150
+*  TSX     RELBF,4   1. RELEASES BETA BUFFER, RESTORES                  IOR13160
+*  RETURN            AVAILABILITY CHAIN.                                IOR13170
+       SPACE                                                            IOR13180
+RELBF  CLA*    PQUEUE                                                   IOR13190
+       SXA     RELBSV,1                                                 IOR13200
+       PAC     0,1                                                      IOR13210
+       CAL     1,1                                                      IOR13220
+       PDC     0,1                                                      IOR13230
+       CLA     0,1                                                      IOR13240
+       LDQ*    PDRHA                                                    IOR13250
+       STA*    PDRHA                                                    IOR13260
+       XCA                                                              IOR13270
+       STA     0,1                                                      IOR13280
+RELBSV AXT     **,1                                                     IOR13290
+       TRA     1,4                                                      IOR13300
+       SPACE                                                            IOR13310
+*  TSX     RELQS,4   1. RELEASES QUEUE SEGMENT, RESTORES AVAILABILITY   IOR13320
+*  RETURN            CHAIN.  2. RESTORES REQUEST POINTER QUEUE.         IOR13330
+       SPACE                                                            IOR13340
+RELQS  CLA*    PQUEUE                                                   IOR13350
+       PAC     0,1                                                      IOR13360
+       CLA     0,1                 RESTORE AVAIL CHAIN                  IOR13370
+       LDQ*    SQUEUE                                                   IOR13380
+       STA*    SQUEUE                                                   IOR13390
+       XCA                                                              IOR13400
+       STA     0,1                                                      IOR13410
+       CAL*    PQUEUE              IS THIS THE HEADER                   IOR13420
+       STZ*    PQUEUE                                                   IOR13430
+       ANA     MSK2                                                     IOR13440
+       TXI     *+1,2,-1                                                 IOR13450
+       TZE     *+3                                                      IOR13460
+       ZET*    PQUEUE                                                   IOR13470
+       ORS*    PQUEUE                                                   IOR13480
+RLQS2  TXL     RLQS4,2,**          DONT GO TOO FAR                      IOR13490
+       CLA*    PQUEUE                                                   IOR13500
+       TZE     1,4                                                      IOR13510
+       STZ*    PQUEUE                                                   IOR13520
+       TXI     *+1,2,1             RESTORE QUEUE                        IOR13530
+       STO*    PQUEUE                                                   IOR13540
+       TXI     RLQS2,2,-2                                               IOR13550
+RLQS4  TRA     1,4                                                      IOR13560
+       SPACE                                                            IOR13570
+*  TSX     GETBF,1     1. FINDS AN AVAILABLE BUFFER IN DRHA, AND STORES IOR13580
+*  RETURN              ITS ADDRESS IN THE QUEUE SEGMENT.                IOR13590
+*                      2. IF NO BUFFER IS AVAILABLE, RETURNS            IOR13600
+*                      WITH THE AC NEGATIVE.                            IOR13610
+       SPACE                                                            IOR13620
+GETBF  SXA     SVGBF1,1                                                 IOR13630
+       CLA*    PDRHA                                                    IOR13640
+       STA     *+1                                                      IOR13650
+GTBF1  CLA     **                                                       IOR13660
+       TMI     1,1                 NONE AVAILABLE, EXIT                 IOR13670
+       STA*    PDRHA                                                    IOR13680
+       CLA     GTBF1               UPDATE AVAIL CHAIN                   IOR13690
+       STA*    GTBF1                                                    IOR13700
+       CLA*    PQUEUE                                                   IOR13710
+       PAC     0,1                                                      IOR13720
+       CLA     GTBF1                                                    IOR13730
+       ALS     18                  STORE BUFFER ADDRESS                 IOR13740
+       STD     1,1                 IN QUEUE SEGMENT                     IOR13750
+       CAL     MSK19                                                    IOR13760
+       ORS*    PQUEUE              AND SET BUFFER ASSIGNED FLAG         IOR13770
+SVGBF1 AXT     **,1                                                     IOR13780
+       TRA     1,1                                                      IOR13790
+       SPACE                                                            IOR13800
+*  TSX     RELEM,4     1. RELEASES REQUEST FROM COMMON BETA CHAIN.      IOR13810
+*  RETURN              2. ENTER WITH QUEUE,2 = REQUEST POINTER.         IOR13820
+       SPACE                                                            IOR13830
+RELEM  CLA*    PQUEUE                                                   IOR13840
+       STA     RELM2                                                    IOR13850
+       PAC     0,1                                                      IOR13860
+       LDQ     5,1                 NEXT ELEMENT ADDRESS                 IOR13870
+RELM1  CAL     5,1                 GET CHAIN WORD                       IOR13880
+       LAS     RELM2               COMPARE                              IOR13890
+       TRA     *+2                                                      IOR13900
+       TRA     *+3                 EQUAL                                IOR13910
+       PAC     0,1                                                      IOR13920
+       TRA     RELM1                                                    IOR13930
+       XCL                                                              IOR13940
+       STA     5,1                 HEALED IS THE WOUND                  IOR13950
+       TRA     1,4                 EXIT                                 IOR13960
+RELM2  PZE                                                              IOR13970
+       SPACE                                                            IOR13980
+*  TSX     COPY,1      1.INTO A BUFFER ATTACHED TO REQUEST QUEUE,2      IOR13990
+*  RETURN              COPY ANOTHER ONE WHOSE ADDRESS IS GIVEN          IOR14000
+*                      BY THE MQ DECREMENT.                             IOR14010
+       SPACE                                                            IOR14020
+COPY   SXA     SVCPY1,1                                                 IOR14030
+       XCL                                                              IOR14040
+       ARS     18                                                       IOR14050
+       ADD     L(1)                                                     IOR14060
+       STA     CPY1                                                     IOR14070
+       CLA*    PQUEUE                                                   IOR14080
+       PAC     0,1                                                      IOR14090
+       CAL     1,1                                                      IOR14100
+       ARS     18                                                       IOR14110
+       ADD     L(1)                                                     IOR14120
+       STA     CPY1+1                                                   IOR14130
+       LAC     L(R),1                                                   IOR14140
+       TXI     *+1,1,1                                                  IOR14150
+CPY1   CAL     **,1                                                     IOR14160
+       SLW     **,1                                                     IOR14170
+       TXH     CPY1-1,1,0                                               IOR14180
+SVCPY1 AXT     **,1                                                     IOR14190
+       TRA     1,1                                                      IOR14200
+       SPACE                                                            IOR14210
+*  TSX     H2BCDZ,4    CONVERTS BCD 12S TO ZEROS IN HA2.                IOR14220
+       SPACE                                                            IOR14230
+H2BCDZ RNT     001200                                                   IOR14240
+       TRA     *+4                                                      IOR14250
+       RFT     006500                                                   IOR14260
+       TRA     *+2                                                      IOR14270
+       RIR     007700                                                   IOR14280
+       RNT     000012                                                   IOR14290
+       TRA     1,4                                                      IOR14300
+       RFT     000065                                                   IOR14310
+       TRA     1,4                                                      IOR14320
+       RIR     000077                                                   IOR14330
+       TRA     1,4                                                      IOR14340
+       SPACE                                                            IOR14350
+*  TSX     H2ZBCD,4    CONVERTS ZEROS TO BCD 12S IN HA2.                IOR14360
+       SPACE                                                            IOR14370
+H2ZBCD RFT     007700                                                   IOR14380
+       TRA     *+2                                                      IOR14390
+       SIR     001200                                                   IOR14400
+       RFT     000077                                                   IOR14410
+       TRA     *+2                                                      IOR14420
+       SIR     000012                                                   IOR14430
+       TRA     1,4                                                      IOR14440
+       SPACE                                                            IOR14450
+*  THIS ERROR ROUTINE DEALS WITH NO RECORD FOUND AND INVALID ADDRESS    IOR14460
+*     ERROR CONDITIONS.                                                 IOR14470
+       SPACE                                                            IOR14480
+ERROR  CAL*    PQUEUE                                                   IOR14490
+       PAC     0,4                                                      IOR14500
+       STA     ERR01+2             SET REQ,,I                           IOR14510
+       ANA     MSKI                                                     IOR14520
+       STD     ERR01+2                                                  IOR14530
+       CLA     0,4                                                      IOR14540
+       ARS     18                  ALPHA AND ERRET                      IOR14550
+       STA     ERR01+1                                                  IOR14560
+       CLA     2,4                                                      IOR14570
+       STA     ERR01                                                    IOR14580
+       LDI*    PQUEUE                                                   IOR14590
+       RIR     200000                                                   IOR14600
+       STI*    PQUEUE                                                   IOR14610
+       STL     ERRFLG                                                   IOR14620
+       ENB*    (TRAPX                                                   IOR14630
+ERR01  TSX     **,4                GO TO USERS ERROR ROUTINE            IOR14640
+       PZE                                                              IOR14650
+       PZE                                                              IOR14660
+       TRA     ERR03                                                    IOR14670
+       ENB     L(0)                                                     IOR14680
+       CLA     ERR01+2                                                  IOR14690
+       TSX     LOOKUP,1                                                 IOR14700
+       LDI*    PQUEUE                                                   IOR14710
+       LNT     200000                                                   IOR14720
+       TXI     *-2,2,1                                                  IOR14730
+ERR02  LNT     100000                                                   IOR14740
+       TRA     *+3                                                      IOR14750
+       TSX     ERR05,4             COMMON BETA                          IOR14760
+       TRA     *+2                                                      IOR14770
+       TSX     RELBF,4             RELEASE BETA BUFFERS                 IOR14780
+       SXA     *+2,2                                                    IOR14790
+       TSX     RELQS,4             AND QUEUE SEGMENTS                   IOR14800
+       AXT     **,2                FOR THE WHOLE SET                    IOR14810
+       LDI*    PQUEUE                                                   IOR14820
+       ZET*    PQUEUE                                                   IOR14830
+       LFT     200000                                                   IOR14840
+       TRA     ERR04                                                    IOR14850
+       TRA     ERR02                                                    IOR14860
+ERR03  ENB     L(0)                                                     IOR14870
+       CLA     ERR01+2                                                  IOR14880
+       TSX     LOOKUP-1,1                                               IOR14890
+       LDI*    PQUEUE                                                   IOR14900
+       LNT     100000                                                   IOR14910
+       TRA     *+3                                                      IOR14920
+       TSX     ERR05,4                                                  IOR14930
+       TRA     *+2                                                      IOR14940
+       TSX     RELBF,4             RELEASE BETA BUFFER                  IOR14950
+       TSX     RELQS,4             AND QUEUE SEGMENT                    IOR14960
+ERR04  STZ     ERRFLG              RESET ERROR FLAG                     IOR14970
+       TRA     SCHED               RETURN TO SCHEDULER                  IOR14980
+ERR05  SXA     SVERR2,2                                                 IOR14990
+       SXA     ERR06,4                                                  IOR15000
+       STL     ERR11                                                    IOR15010
+       LDI*    PQUEUE              IS REQUEST IN S2                     IOR15020
+       LFT     002000                                                   IOR15030
+       TRA     ERR06+2             YES - RANRPL ENTERED FROM ERRET      IOR15040
+       LFT     010000                                                  $IOR15050
+       TRA     ERR10                                                   $IOR15060
+       TSX     RELBF,4                                                  IOR15070
+       TSX     RELEM,4                                                  IOR15080
+ERR06  AXT     **,4                                                     IOR15090
+       TRA     1,4                                                      IOR15100
+       PIA                                                              IOR15110
+       STA     ERR09                                                    IOR15120
+ERR07  PAC     0,1                                                      IOR15130
+       CAL     5,1                                                      IOR15140
+       LAS     ERR09               SEARCH FOR OTHER REQUESTS IN S2      IOR15150
+       TRA     *+2                                                      IOR15160
+       TRA     ERR08                                                    IOR15170
+       TSX     LOOKUP,1                                                 IOR15180
+       LDI*    PQUEUE              TO DETERMINE IF BUFFER               IOR15190
+       PIA                                                              IOR15200
+       LNT     002000                                                   IOR15210
+       TRA     ERR07               SHOULD BE RELEASED                   IOR15220
+SVERR2 AXT     **,2                                                     IOR15230
+       TRA     ERR06-1                                                  IOR15240
+ERR08  LXA     SVERR2,2                                                 IOR15250
+       TRA     ERR06-2                                                  IOR15260
+ERR09  PZE                                                              IOR15270
+ERR10  PIA                                                             $IOR15280
+       STA     ERR09                                                   $IOR15290
+       PAC     0,1                                                     $IOR15300
+       CAL     5,1                                                      IOR15310
+       LAS     ERR09                                                    IOR15320
+       TRA     *+2                                                      IOR15330
+       TRA     ERR08                                                    IOR15340
+       TSX     LOOKUP,1                                                 IOR15350
+       LDI*    PQUEUE                                                   IOR15360
+       PIA                                                              IOR15370
+       RIL     011000              RESET SPECIAL FLAG AND S3            IOR15380
+       SIL     004000              SET S1                               IOR15390
+       ZET     ERR11                                                    IOR15400
+       SIL     040000              MAKE HEADER ONE OF THEM              IOR15410
+       STI*    PQUEUE                                                   IOR15420
+       STZ     ERR11                                                    IOR15430
+       TRA     ERR10                                                    IOR15440
+ERR11  PZE                                                              IOR15450
+PROCCS BSS     10                  PROCESSING ROUTINE CALL. SEQ. AREA   IOR15460
+       END                                                              IOR15470
