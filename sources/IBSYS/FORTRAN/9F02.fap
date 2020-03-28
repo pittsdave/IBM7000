@@ -1,0 +1,1335 @@
+$JOB   ASSEMBLY OF MONITOR, COMPILER SECTIONS 1 THROUGH 6 OF           $00000010
+$*     FORTRAN II PROCESSOR, 7090-FO-928                                00000020
+$*     VERSION 3, MODIFICATION LEVEL 35                             (35)00000030
+$EXECUTE       IBSFAP                                                  $00000050
+*      FORTRAN II MONITOR              DUMP RECORD                      F0B00000
+*      FAP                                                              F0B00020
+*      FORTRAN II MONITOR              DUMP RECORD                      F0B00030
+       COUNT   1300                                                     F0B00040
+       LBL     9F02,M                                                   F0B00050
+       REM                                                              F0B00060
+       SST     FORTRAN                                                 $F0B00070
+       REM                                                              F0B00080
+       ABS                                                              F0B00090
+       REM                                                              F0B00100
+       ORG     SYSCUR                                                   F0B00110
+       BCI     1,9F0200                                                 F0B00120
+       ORG     (LODR)                                                   F0B00130
+       TXI     START,,20                                                F0B00140
+       TITLE                                                           $F0B00150
+SAVTAP SYN     FINTAP                                                   F0B00160
+OUTTAP SYN     MLSTAP                                                   F0B00170
+ORGDP  EQU     BOTIOP-1600                                              F0B00180
+  SAVL EQU     -ORGDP                                                  $F0B00190
+SAVE   EQU     ORGDP-SAVL                                               F0B00200
+SIZE   EQU     31                                                   (22)F0B00210
+       REM                                                              F0B00220
+       ORG     ORGDP+7                                                 *F0B00230
+       REM                                                              F0B00240
+       REM                                                              F0B00250
+       REM   **** PANEL SAVE ****                                       F0B00260
+       REM                                                              F0B00270
+ START LXD     (PGCT),1       SET FOR RIGHT NUMBER                     *F0B00280
+       TXI     *+1,1,2       OF LINES                                  *F0B00290
+       SXD     H-2,1         PER PAGE.                                 *F0B00300
+       SXD     CNT+3,1                                                 *F0B00310
+       LXD     BOTTOM-6,1                                               F0B00320
+       SXD     LIMIT-19,1         SAVE X1                              $F0B00330
+       AXT     ,0                                                   (22)F0B00340
+       LXA     BOTTOM-8,2                                               F0B00350
+       SXD     LIMIT-18,2         SAVE X2                              $F0B00360
+       LXD     BOTTOM-8,4                                               F0B00370
+       TRA     PCH3               TEST TAG MODE.                       $F0B00380
+       LDQ     BOTTOM-10                                                F0B00390
+       STQ     LIMIT-7                                                  F0B00400
+       LDI     BOTTOM-11                                                F0B00410
+       STI     LIMIT-4                                                  F0B00420
+       LDI     BOTTOM-5                                             (22)F0B00430
+       ENK                                                              F0B00440
+       STQ     LIMIT-1       PANEL KEYS                                 F0B00450
+       AXT     4,1                                                      F0B00460
+       STZ     LIMIT-8,1     LIMIT-9 SET NONZERO IF OVERFLOW IND ON.    F0B00470
+       XEC   GARBG,1         LIMIT-10 SET NONZERO IF I/O CHECK ON,      F0B00480
+       STL     LIMIT-8,1     LIMIT-11 SET NONZERO IF DIVIDE CHECK ON,   F0B00490
+ LDTIX TIX     *-3,1,1       LIMIT-12 SET NONZERO IF IN TRAPPING MODE.  F0B00500
+       TRA     PANEL         DUMP THE PANEL                         (22)F0B00510
+       LFT     10            TRAP MODE                              (22)F0B00520
+       LFT     4             DIVIDE CHECK                           (22)F0B00530
+       LFT     2             I/O CHECK                              (22)F0B00540
+       LFT     1             OVERFLOW                               (22)F0B00550
+ GARBG BSS     0                                                        F0B00560
+       REM                                                              F0B00570
+       REM   **** SET UP PANEL ****                                     F0B00580
+       REM                                                              F0B00590
+ PANEL BSS   0                                                          F0B00600
+       LDQ     BOTTOM-9       SIGN AND BITS 1 35 IN MQ.                 F0B00610
+       CAL     BOTTOM-8       JUNK IN BIT P, Q IN 1 , P IN 2            F0B00620
+       LLS     0              PUT SIGN OF AC IN SIGN OF AC.             F0B00630
+       ALS     1              JUNK IN Q, Q IN P, P IN 1.                F0B00640
+       LDI     MNSO                                                     F0B00650
+       PBT                    TEST Q BIT IN P.                          F0B00660
+       LDI     MNSZ                                                     F0B00670
+       TMI     *+2            TEST SIGN                                 F0B00680
+       OSI     PLUS                                                     F0B00690
+       STI     BUF2          SET FOR OUTPUT.                            F0B00700
+       ARS     34             JUNK IN 33, Q IN 34, P IN 35.             F0B00710
+       LLS     35             SHIFT INTO THE AC FROM THE MQ            $F0B00720
+       SLW     LIMIT-3                                                  F0B00730
+       LRS     2                                                        F0B00740
+       STO     LIMIT-2                                                  F0B00750
+       LLS     2                                                        F0B00760
+       XCL                                                              F0B00770
+       TSX     CNVT,1        GO CONVERT TO BCD.                         F0B00780
+       STI     BUF2+1        ACCUMULATOR.                               F0B00790
+       SLW     BUF2+2                                                   F0B00800
+       AXT     9,4                                                      F0B00810
+ A     LDQ     LIMIT+2,4                                                F0B00820
+       TSX     CNVT,1        CONVERT MQ, SENSE INDICATORS, AND          F0B00830
+       SLW     BUF2+14,4     PANEL KEYS TO BCD. STORE RIGHT HALF.       F0B00840
+       CAL     MINUS         PICK UP BCD MINUS.                         F0B00850
+       LNT     40000         IS S BIT ON.                               F0B00860
+       ORA     BLK           NO, SET AC TO BLANK.                       F0B00870
+       SLW     BUF2+12,4     YES, STORE MINUS.                          F0B00880
+       RIL     40000         REMOVE S BIT.                              F0B00890
+       STI     BUF2+13,4     STORE LEFT HALF.                           F0B00900
+       TIX     A,4,3                                                    F0B00910
+       TSX     (TAPE),4           WRITE OUT FIRST LINE                 $F0B00920
+       PZE     DSU1,,(WDNC)       TO GAIN BUFFER SPACE.                $F0B00930
+       PZE     ,,OUTTAP           .                                    $F0B00940
+       AXT     20,4               .                                    $F0B00950
+       LDI     BLK                BLANK                                $F0B00960
+       STI     BUF+20,4           THIS AND                             $F0B00970
+       STI     BUF1+20,4          ANOTHER BUFFER.                      $F0B00980
+       TIX     *-2,4,1            .                                    $F0B00990
+ ICV   AXT     7,2                CONVERT                              $F0B01000
+       AXT     8,4                INDEX                                $F0B01010
+ ICV1  CAL     LIMIT-12,2         REGISTERS                            $F0B01020
+ ICV2  PDX     0,1                STRAIGHT AND COMPLEMENTED.           $F0B01030
+       PXD     0,1                .                                    $F0B01040
+       XCL                        .                                    $F0B01050
+       AXT     6,1                .                                    $F0B01060
+       ALS     3                  .                                    $F0B01070
+       LGL     3                  .                                    $F0B01080
+       TIX     *-2,1,1            .                                    $F0B01090
+ ICV3  AXT     4,1                SET BUFFER POINTER,                  $F0B01100
+       STI*    PCH5+4,1           STORE BLANK AND                      $F0B01110
+       TXI     PTCH4,4,-1         MOVE TO NEW FRONTIERS...             $F0B01120
+       AXT     4,1                                                      F0B01130
+       AXT     4,2                                                      F0B01140
+ C     CAL     OFF                                                      F0B01150
+       ZET     LIMIT-8,1     ON-OFF TRAPPING MODE, DIVIDE CHECK,        F0B01160
+       CAL     ON            I/O CHECK, OVERFLOW.                       F0B01170
+       SLW     BUF1+4,1                                                 F0B01180
+       TIX     C,1,1                                                    F0B01190
+ D     CAL     OFF                                                      F0B01200
+       SLT     5,2           STATUS OF SENSE LIGHTS AND TURN ON AGAIN   F0B01210
+       TRA     *+3           IF THEY WERE ON.                           F0B01220
+       CAL     ON                                                       F0B01230
+       SLN     5,2                                                      F0B01240
+       SLW     BUF1+8,2           .                                    $F0B01250
+       TIX     D,2,1                                                    F0B01260
+       AXT     6,1                                                      F0B01270
+ E     CAL     ON            STATUS OF SENSE SWITCHES.                  F0B01280
+       PSE     119,1                                                    F0B01290
+       CAL     OFF                                                      F0B01300
+       SLW     BUF1+14,1          .                                    $F0B01310
+       TIX     E,1,1                                                    F0B01320
+       AXT     2,4                SET SL2 FOR ERROR RECORD.            $F0B01330
+       AXT     6,1                .                                    $F0B01340
+       STI     BUF3+12,1          BLANK OUT REMAINDER.                 $F0B01350
+       TIX     *-1,1,1                                                  F0B01360
+       LDQ     LIMIT-3                                                  F0B01370
+       CLA     LIMIT-2                                                  F0B01380
+       LRS     0                                                        F0B01390
+       AXT     6,2                                                      F0B01400
+ FAQ   TSX     FPT,1         FLOATING POINT ACCUMULATOR AND MQ.         F0B01410
+               0                                                        F0B01420
+       SLW     BUF3+8,2                                                 F0B01430
+       CAL     MINUS                                                    F0B01440
+       LNT     40000                                                    F0B01450
+       ORA     BLK                                                      F0B01460
+       SLW     BUF3+6,2                                                 F0B01470
+       RIL     40000                                                    F0B01480
+       STI     BUF3+7,2                                                 F0B01490
+       LDQ     LIMIT-7                                                  F0B01500
+       TIX     FAQ,2,3                                                  F0B01510
+       TRA     RETRN-1                                              (22)F0B01520
+PTCH4  SSM                        ...PREPARE NEGATIVE WORD             $F0B01530
+       TXL     *+2,1,2            FOR COMPLEMENTED INDEX REGISTER,     $F0B01540
+       ORA     OBLK               OR POSITIVE WORD,                    $F0B01550
+       STO*    PCH5+4,1           AND + REQUIESCANT IN PACEM +         $F0B01560
+ ICV4  TXH     *+3,2,**           .                                    $F0B01570
+       TXH     *+2,2,4            IF COMPUTER IS IN MULT. TAG          $F0B01580
+       STI*    PCH5+4,1           MODE, STORE BLANKS FOR ADDED IR*S,   $F0B01590
+       TIX     PCH4+2,4,1         PROCEED AGAIN                        $F0B01600
+       TXI     PCH4,1,-1          TO MORE PATCH SPACE, AND ...         $F0B01610
+ DSU1  IORT    DUMP1,,20          .                                    $F0B01620
+       PZE                        NOT USED                             $F0B01630
+       LXD     LIMIT-16,3                                           (22)F0B01640
+RETRN  SXA     (MSLN),4           MACHINE ERROR RECORD.             (22)F0B01650
+       REM                                                              F0B01660
+       REM   **** WRITE PANEL AND EXAMINE CONTROL WORDS ****            F0B01670
+       REM                                                              F0B01680
+       CLA*    (LNCT)        UPDATE COUNT OF                        (22)F0B01690
+       ADD     L(5)          LINES OF OUTPUT                        (22)F0B01700
+       STO*    (LNCT)                                               (22)F0B01710
+       TRA     *+2                                                  (22)F0B01720
+       PZE                   NOT USED                               (22)F0B01730
+       REM *****                                                        F0B01740
+ WRPAN TRA     PCH2           GO WRITE OUT PANEL                       $F0B01750
+       LDI     BLK                TO GIVE LINE                         $F0B01760
+       STI     BUF+24             A CHARMING LOOK.                     $F0B01770
+       CAL     FDUMP                                                    F0B01780
+       SLW     TEMP                                                     F0B01790
+       REM *****                                                        F0B01800
+       CLA     BOTTOM-8       PICK UP SIGN BIT TO FIND IF CALL IS       F0B01810
+       TMI     PDUMP+1        COMING FROM DUMP OR PDUMP.                F0B01820
+ PDUMP STL     TEMP+6         SET PDUMP FLAG.                           F0B01830
+       REM *****                                                        F0B01840
+       TSX     (TAPE),4      SPACE SAVING TAPE                          F0B01850
+       PZE     BS1R,,(SKBP)  TO PARAMETER RECORD.                       F0B01860
+       PZE     ,,SAVTAP                                                 F0B01870
+       REM *****                                                        F0B01880
+       TSX     (TAPE),4      READ                                       F0B01890
+       PZE     NDIO,,(RBNP)  PARAMETERS.                                F0B01900
+       PZE     ,,SAVTAP                                                 F0B01910
+       REM *****                                                        F0B01920
+       TSX     (TAPE),4      REPOSITION                                 F0B01930
+       PZE     BS1R,,(SKBP)  SAVING TAPE.                               F0B01940
+       PZE     ,,SAVTAP                                                 F0B01950
+ DUMP  LXA     TEMP+5,2      GET INDEX FOR NEXT PARAMETERS.             F0B01960
+       TXL     *+3,2,0       IS THIS FIRST SET.                         F0B01970
+       LXD     CNT+3,4       SET TO RESTORE PAGE FOR NEXT DUMP PORTION  F0B01980
+       SXA     CNT,4                                                    F0B01990
+       ZET     TEMP+9        IS THERE ANOTHER DUMP PORTION.             F0B02000
+       TRA     RSR           NO, NO MORE DUMPING.                       F0B02010
+       TXI     *+1,2,1       YES.                                       F0B02020
+       CLA     END,2         SELECT FIRST LIMIT OF DUMP PORTION.        F0B02030
+       SXA     TEMP+5,2                                                 F0B02040
+       TZE     TRSR          IS 1ST LIMIT ZERO.                         F0B02050
+       STL     TEMP+10       NO, SET INDICATOR TO LOOK FOR MORE.        F0B02060
+       XCL                   PARAMETERS AND SAVE LIMIT IN MQ.           F0B02070
+       TXI     *+1,2,1                                                  F0B02080
+       CLA     END,2         SELECT SECOND LIMIT OF DUMP PORTION.       F0B02090
+       TZE   FERR            BAD CALLING SEQUENCE.                      F0B02100
+       TLQ     *+2           PUT LOWER LIMIT                            F0B02110
+       TRA     *+2           IN AC,                                     F0B02120
+       XCL                   UPPER IN MQ,                               F0B02130
+       RQL     18            AND THEN LOWER IN DECREMENT AND            F0B02140
+       LGL     18            UPPER IN ADDRESS                           F0B02150
+       SLW     TEMP          OF TEMP.                                   F0B02160
+       TXI     *+1,2,1                                                  F0B02170
+       CLA     END,2         SELECT FORMAT-SPECIFYING ARGUMENT.         F0B02180
+       TNZ     *+2           3RD ARGUMENT CAN BE MISSING ONLY ON        F0B02190
+       STL     TEMP+9        LAST DUMP PORTION SO SET SENTINEL FOR NO   F0B02200
+       PAX     0,4           MORE AFTER THIS.                           F0B02210
+       TXL     GON,4,3                                                  F0B02220
+       PDX     0,4           FORTRAN PUTS FIXED POINT NO. IN DECR.      F0B02230
+       TXH     FERR,4,3      ILLEGAL FORMAT SPECIFIER.                  F0B02240
+ GON   SXA     TEMP+11,4     SAVE FORMAT NUMBER.                        F0B02250
+       SXA     TEMP+5,2                                                 F0B02260
+       REM                                                              F0B02270
+       REM   **** SET UP FOR NEXT GROUP AND CHECK FOR IDENTICAL WORDS***F0B02280
+       REM                                                              F0B02290
+ CONT  CAL     TEMP                                                     F0B02300
+       PAC     0,2           COMPLIMENT UPPER LIMIT,                    F0B02310
+       TXI     *+1,2,-1      BUMP DOWN,                                 F0B02320
+       SXA     TEMP+3,2      AND SAVE.                                  F0B02330
+       PDC     0,2           COMPLIMENT LOWER LIMIT,                    F0B02340
+ DFA   SXA     *+1,2         RECOMPLIMENT                               F0B02350
+       AXC     0,1           INTO XRA,                                  F0B02360
+       SXD     DFF2,1        SET DECREMENT,                             F0B02370
+       SXA     TEMP+4,1      AND SAVE.                                  F0B02380
+       SXD     DFF2A,2       SET DECR WITH COMPLIMENT OF LOWER LIMIT.   F0B02390
+DFA1   TXH     *+3,2,0       IS LOWER LIMIT ZERO.                       F0B02400
+       CAL     0,2           YES, PICK UP FIRST WORD OF DUMP,           F0B02410
+       TRA     DFA2+1        AND GO AROUND OTHER TESTS.                 F0B02420
+       TXL     DFC3,2,-ORGDP IS LOWER LIMIT IN DUMP RECORD AREA.        F0B02430
+       CAL     0,2           NO, PICK UP FIRST WORD OF DUMP.            F0B02440
+DFA2   TXL     DFB,2,-SAVE   IS LOWER LIMIT IN BUFFER.                  F0B02450
+       ERA     0,2           NO, TEST FOR DUPLICATE WORDS.              F0B02460
+       TNZ     DFF           IF NOT DUPLICATE, TRANSFER.                F0B02470
+       PXA     0,2           IS THIS LAST                               F0B02480
+       SUB     TEMP+3        WORD OF DUMP PORTION.                      F0B02490
+       TZE     DFF                                                      F0B02500
+       CAL     0,2           NO, PICK UP NEXT WORD                      F0B02510
+       TXI     DFA2,2,-1     AND GO BACK.                               F0B02520
+ DFB   NZT     TEMP+1        IS UPPER CORE IN BUFFER.                   F0B02530
+       TRA     DFB1-1        NO.                                        F0B02540
+       REM *****                                                        F0B02550
+       TSX     (TAPE),4      YES, RESTORE                               F0B02560
+       PZE     IORT,,(RBNP)  BUFFER.                                    F0B02570
+       PZE     S2L,,SAVTAP                                              F0B02580
+       REM *****                                                        F0B02590
+       TSX     (TAPE),4      REPOSITION                                 F0B02600
+       PZE     BS1R,,(SKBP)  SAVING TAPE.                               F0B02610
+       PZE     ,,SAVTAP                                                 F0B02620
+       STZ     TEMP+1        INDICATE BUFFER IS RESTORED.               F0B02630
+DFB1   TXL     DFC,2,-ORGDP  IS IT IN DUMP RECORD AREA.                 F0B02640
+       ERA     0,2           NO, TEST FOR DUPLICATE WORDS.              F0B02650
+       TNZ     DFF           TRA IF NO DUPLICATES.                      F0B02660
+       PXA     0,2           IS THIS LAST                               F0B02670
+       SUB     TEMP+3        WORD OF                                    F0B02680
+       TZE     DFF           DUMP PORTION.                              F0B02690
+       CAL     0,2           NO, PICK UP NEXT WORD                      F0B02700
+       TXI     DFB1,2,-1     AND GO BACK.                               F0B02710
+DFC3   CAL     ORGDP,2       PICK UP NEXT WORD.                         F0B02720
+ DFC   ZET     TEMP+8        IS BUFFER ON SAVING TAPE.                  F0B02730
+       TRA     DFC1          YES.                                       F0B02740
+       REM *****                                                        F0B02750
+       TSX     (TAPE),4      NO, SAVE BUFFER.                           F0B02760
+       PZE     IORT,,(WBNP)                                             F0B02770
+       PZE     S2L,,SAVTAP                                              F0B02780
+       REM *****                                                        F0B02790
+       TSX     (TAPE),4      REPOSITION                                 F0B02800
+       PZE     BS1R,,(SKBP)  SAVING TAPE.                               F0B02810
+       PZE     ,,SAVTAP                                                 F0B02820
+       STL     TEMP+8        INDICATE BUFFER HAS BEEN SAVED.            F0B02830
+ DFC1  ZET     TEMP+1        IS UPPER CORE IN BUFFER.                   F0B02840
+       TRA     DFC2          YES.                                       F0B02850
+       REM *****                                                        F0B02860
+       TSX     (TAPE),4      NO, POSITION                               F0B02870
+       PZE     BS1R,,(SKBP)  SAVING TAPE                                F0B02880
+       PZE     ,,SAVTAP      AND                                        F0B02890
+       REM *****                                                        F0B02900
+       TSX     (TAPE),4      READ 1ST SAVING DUMP                       F0B02910
+       PZE     IORT,,(RBNC)  (UPPER CORE) INTO                          F0B02920
+       PZE     ,,SAVTAP      BUFFER.                                    F0B02930
+       STL     TEMP+1        INDICATE UPPER CORE IS IN BUFFER.          F0B02940
+DFC2   TXH     *+2,2,0       IS THIS END CORE.                          F0B02950
+       TXI     DFE,2,1       YES, RESET XR AND GO TO WRITE DUPES.       F0B02960
+       ERA     -SAVL,2        TEST FOR DUPE WORDS                      *F0B02970
+       TNZ     DFE1          TRA IF NOT DUPES.                          F0B02980
+       PXA     0,2           IS THIS LAST                               F0B02990
+       SUB     TEMP+3        WORD OF THIS                               F0B03000
+       TZE     DFE           DUMP PORTION.                              F0B03010
+       CAL     -SAVL,2        NO, PICK UP NEXT WORD                    *F0B03020
+       TXI     DFC2,2,-1     AND GO BACK.                               F0B03030
+ DFE   CLA     -SAVL-1,2      PICK UP LAST DUPE WORD  BELOW DUMP RECORD*F0B03040
+       TRA     DFF1                                                     F0B03050
+ DFE1  ERA     -SAVL,2        RESTORE AC TO LAST DUPE WORD             *F0B03060
+       XCL                   AND SAVE IN MQ.                            F0B03070
+       TRA     DFF2                                                     F0B03080
+ DFF   CLA     -1,2          PICK UP LAST DUPE WORD (BELOW DUMP RECORD).F0B03090
+ DFF1  XCA                   SAVE IN MQ.                                F0B03100
+DFF2   TXI     *+1,2,0       SUB LOWER LIMIT FROM CURRENT INDEX (DECR   F0B03110
+       REM                   HAS INDEX OF LOC STARTED WITH FOR THIS TESTF0B03120
+       SXA     *+1,2                                                    F0B03130
+       AXC     0,2           COMPLIMENT TO GET TRUE DUPE WORD COUNT.    F0B03140
+       PXA     0,2                                                      F0B03150
+       ARS     3             DIVIDE WORD COUNT                          F0B03160
+       ALS     3             BY EIGHT.                                  F0B03170
+       PAC     0,2           PICK UP COMPLIMENT OF HIGHEST NO. OF       F0B03180
+       REM                   DUPES DIVISIBLE BY EIGHT.                  F0B03190
+DFF2A  TXI     *+1,2,0       ADD LOWER LIMIT TO GET LAST LOC (COMPL).   F0B03200
+       TZE     TEST          IS NO. OF DUPE WORDS MORE THAN 7.          F0B03210
+       AXT     36,4          YES.                                       F0B03220
+       LXA     TEMP+11,1     PICK UP FORMAT PARAM (0 IS OCTAL           F0B03230
+       TRA     *+4,1         WITHOUT MNEMONICS, 1 OS FLOATING PT., 2 IS F0B03240
+       TRA     *+3           DECIMAL INTEGER -DECREMENT ONLY, AND 3     F0B03250
+       TSX     INT,1         IS OCTAL WITH MNEMONICS), AND              F0B03260
+       TSX     FPT,1         CONVERT ACCORDINGLY.                       F0B03270
+       TSX     CNVT,1                                                   F0B03280
+       SLW     DFBB+14                                                  F0B03290
+       CAL     MINUS         IF BIT ONE WAS NOT ZERO,                   F0B03300
+       LNT     40000         SET THE CONVERTED WORD                     F0B03310
+       ORA     LBLK          TO MINUS.                                  F0B03320
+       SLW     DFBB+12                                                  F0B03330
+       RIL     40000         TAKE OUT BIT ONE.                          F0B03340
+       STI     DFBB+13                                                  F0B03350
+       CAL     TEMP+4        PICK UP BEGINNING LOC FOR THIS             F0B03360
+       LGR     15            SET OF DUPE WORDS.                         F0B03370
+       CLM                   CONVERT                                    F0B03380
+       LGR     3             TO                                         F0B03390
+       ALS     3             BCD                                        F0B03400
+       LGL     3             AND                                        F0B03410
+       TIX     *-2,4,6       STORE.                                     F0B03420
+       ORA     OBLK                                                     F0B03430
+       SLW     DFBB+7                                                   F0B03440
+       PXA     0,2           GET TRUE                                   F0B03450
+       PAC     0,1           LOCATION  OF                               F0B03460
+       TXI     *+1,1,-1      LAST DUPE                                  F0B03470
+       PXA     0,1           WORD,                                      F0B03480
+       LGR     15            CONVERT TO                                 F0B03490
+       CLM                   BCD                                        F0B03500
+       LGR     3             AND                                        F0B03510
+       ALS     3             STORE.                                     F0B03520
+       LGL     3                                                        F0B03530
+       TIX     *-2,4,1                                                  F0B03540
+       LGL     6                                                        F0B03550
+       ORA     LBLK                                                     F0B03560
+       SLW     DFBB+9                                                   F0B03570
+ CNT   AXT     8,4           TEST TO SEE IF                             F0B03580
+       TXI     *+1,4,2       CURRENT                                    F0B03590
+       CAL     HZR           PAGE                                       F0B03600
+       TNX     *+2,4,60      IS FULL.                                   F0B03610
+       ORA     HONE          YES, SET TO RESTORE.                       F0B03620
+       SLW     DFBB                                                     F0B03630
+       SXA     CNT,4                                                    F0B03640
+       REM *****                                                        F0B03650
+DFF3   TSX     (TAPE),4      WRITE GROUP                                F0B03660
+       PZE     DSU2,,(WDNC)  OF DUPLICATES (ONE LINE) .                *F0B03670
+       PZE     ,,OUTTAP                                                 F0B03680
+       CLA*    (LNCT)        UPDATE COUNT                               F0B03690
+       ADD   ONE             OF LINES                                   F0B03700
+       STO*    (LNCT)        OF OUTPUT.                                 F0B03710
+ DFG   PXA     0,2                                                      F0B03720
+       SUB     TEMP+3                                                   F0B03730
+       TNZ     DFA           MORE TO GO ON THIS PORTION OF DUMP.        F0B03740
+       TRA     DUMP          FINISHED. GO SEE IF MORE BLOCKS TO DUMP.   F0B03750
+       REM                                                              F0B03760
+       REM   **** PREPARE 8 WORDS TO BE DUMPED ****                     F0B03770
+       REM                                                              F0B03780
+TEST   AXT     24,4                                                     F0B03790
+       TNX     LOW+1,2,0     IF INDEX IS ZERO, GO AROUND TESTS.         F0B03800
+       TXH     LOW,2,-SAVE   IS LOCATION BELOW BUFFER.                  F0B03810
+       TXH     MED,2,-ORGDP  NO, IS IT BELOW DUMP RECORD.               F0B03820
+HIGH   ZET     TEMP+8        NO, IT IS IN DUMP RECORD AREA. IS BUFFER   F0B03830
+       TRA     HIGH2         ON TAPE.  YES.                             F0B03840
+       SXA     HIGH1,4       NO,                                        F0B03850
+       REM *****                                                        F0B03860
+       TSX     (TAPE),4      SAVE BUFFER.                               F0B03870
+       PZE     IORT,,(WBNP)                                             F0B03880
+       PZE     S2L,,SAVTAP                                              F0B03890
+       REM *****                                                        F0B03900
+       TSX     (TAPE),4      REPOSITION                                 F0B03910
+       PZE     BS1R,,(SKBP)  SAVING TAPE.                               F0B03920
+       PZE     ,,SAVTAP                                                 F0B03930
+HIGH1  AXT     **,4                                                     F0B03940
+       STL     TEMP+8        INDICATE BUFFER IS ON TAPE.                F0B03950
+HIGH2  ZET     TEMP+1        IS UPPER CORE IN BUFFER.                   F0B03960
+       TRA     HIGH4         YES.                                       F0B03970
+       SXA     HIGH3,4       NO,                                        F0B03980
+       REM *****                                                        F0B03990
+       TSX     (TAPE),4      POSITION                                   F0B04000
+       PZE     BS1R,,(SKBP)  SAVING TAPE                                F0B04010
+       PZE     ,,SAVTAP      AND                                        F0B04020
+       REM *****                                                        F0B04030
+       TSX     (TAPE),4      READ UPPER CORE                            F0B04040
+       PZE     IORT,,(RBNC)  INTO BUFFER.                               F0B04050
+       PZE     ,,SAVTAP                                                 F0B04060
+HIGH3  AXT     **,4                                                     F0B04070
+       STL     TEMP+1        INDICATE UPPER CORE IN BUFFER.             F0B04080
+HIGH4  TNX     LOW,2,0       IS LOCATION ZERO.                          F0B04090
+       LDQ     -SAVL,2        NO, PICK UP NEXT WORD                    *F0B04100
+       TSX     TESTP,1       CONVERT.                                   F0B04110
+       TIX     HIGH4,4,3     IF LINE FINISHED, GO BACK.                 F0B04120
+       TRA     FINI          LINE OF OUTPUT IS FINISHED.                F0B04130
+MED    NZT     TEMP+1        IS UPPER CORE IN BUFFER.                   F0B04140
+       TRA     MED2          NO.                                        F0B04150
+       SXA     MED1,4        YES,                                       F0B04160
+       REM *****                                                        F0B04170
+       TSX     (TAPE),4      RESTORE                                    F0B04180
+       PZE     IORT,,(RBNP)  BUFFER.                                    F0B04190
+       PZE     S2L,,SAVTAP                                              F0B04200
+       REM *****                                                        F0B04210
+       TSX     (TAPE),4      REPOSITION                                 F0B04220
+       PZE     BS1R,,(SKBP)  SAVING TAPE.                               F0B04230
+       PZE     ,,SAVTAP                                                 F0B04240
+MED1   AXT     **,4                                                     F0B04250
+       STZ     TEMP+1        INDICATE UPPER CORE NOT IN BUFFER.         F0B04260
+MED2   TXL     HIGH,2,-ORGDP IS WORD IN UPPER CORE.                     F0B04270
+       LDQ     0,2           NO, PICK UP NEXT WORD,                     F0B04280
+       TSX     TESTP,1       CONVERT,                                   F0B04290
+       TIX     MED2,4,3      AND GO BACK IF LINE UNFINISHED.            F0B04300
+       TRA     FINI          LINE OF OUTPUT IS COMPLETE.                F0B04310
+LOW    TXL     MED,2,-SAVE   IS WORD IN BUFFER.                         F0B04320
+       LDQ     0,2           NO, PICK UP NEXT WORD,                     F0B04330
+       TSX     TESTP,1       CONVERT, AND                               F0B04340
+       TIX     LOW,4,3       GO BACK IF LINE UNFINISHED.                F0B04350
+       TRA     FINI          LINE OF OUTPUT IS COMPLETE.                F0B04360
+TESTP  SXA     TSTP2,1                                                  F0B04370
+       LXA     TEMP+11,1     PICK UP FORMAT AND                         F0B04380
+       TRA     *+4,1         CONVERT( 0 IS OCTAL, 1 IS FLOATING POINT, 2F0B04390
+       TRA     *+3           IS DECIMAL INTEGER -DECR ONLY, AND 3 IS    F0B04400
+       TSX     INT,1         OCTAL WITH MNEMONICS.)                     F0B04410
+       TSX     FPT,1                                                    F0B04420
+       TSX     CNVT,1                                                   F0B04430
+       SLW     BUF+26,4                                                 F0B04440
+       CAL     MINUS         IF BIT ONE IS 1,                           F0B04450
+       LNT     40000         MAKE CONVERTED WORD NEGATIVE               F0B04460
+       ORA     BLK           AND                                        F0B04470
+       SLW     BUF+24,4      STORE.                                     F0B04480
+       RIL     40000         RESET BIT ONE TO ZERO                      F0B04490
+       STI     BUF+25,4      AND STORE.                                 F0B04500
+       TXI     *+1,2,-1                                                 F0B04510
+       PXA     0,2           TEST FOR END                               F0B04520
+       SUB     TEMP+3        OF DUMP PORTION.                           F0B04530
+       TZE     FINI                                                     F0B04540
+TSTP2  AXT     **,1          NOT END,                                   F0B04550
+       TRA     1,1           RETURN.                                    F0B04560
+ CNVT  SXA     CNVT9,1       THIS ROUTINE ACCEPTS THE MQ AS             F0B04570
+       AXT     36,1          INPUT, AND CONVERTS IT TO OCTAL            F0B04580
+       ALS     3             BY PRECEDING EACH THREE BITS WITH          F0B04590
+       LGL     3             THREE BINARY ZEROS.                        F0B04600
+       TIX     *-2,1,6       THE LEFT HALF OF THE CONVERTED             F0B04610
+       PAI                   WORD IS LEFT IN THE                        F0B04620
+       ALS     3             INDICATORS                                 F0B04630
+       LGL     3             AND THE RIGHT HALF IN                      F0B04640
+       TIX     *-2,1,1       THE LOGICAL AC.                            F0B04650
+ CNVT9 AXT     0,1                                                      F0B04660
+       TRA     1,1                                                      F0B04670
+ FINI  CAL     BLK                                                      F0B04680
+ FINI1 TNX     FINI2,4,3     IS DUMP PORTION ENDED, OR JUST A LINE.     F0B04690
+       SLW     BUF+24,4      DUMP PORTION IS ENDED.                     F0B04700
+       SLW     BUF+25,4      FILL REST OF LINE                          F0B04710
+       SLW     BUF+26,4      WITH BLANKS.                               F0B04720
+       TRA     FINI1                                                    F0B04730
+ FINI2 CAL     TEMP+4        LINE IS ENDED,                             F0B04740
+       LGR     15            CONVERT LOCATION                           F0B04750
+       CLM                   BEGINNING                                  F0B04760
+       LGR     3             THIS LINE                                  F0B04770
+       AXT     6,4           TO BCD.                                    F0B04780
+       ALS     3                                                        F0B04790
+       LGL     3                                                        F0B04800
+       TIX     *-2,4,1                                                  F0B04810
+       LXA     CNT,4         IS THIS                                    F0B04820
+       TXI     *+1,4,2       PAGE                                       F0B04830
+       TNX     *+2,4,60      FULL.                                      F0B04840
+       ORA     HONE          YES, SET TO RESTORE.                       F0B04850
+ H     AXC     -1,1          PICK UP BUFFER INDEX                       F0B04860
+       SLW*    SWT+14,1      AND STORE LOCATION IN CURRENT BUFFER.      F0B04870
+       SXA     CNT,4                                                    F0B04880
+ PACK  SXA     PACK9,2       THIS ROUTINE PICKS UP THE CONVERTED        F0B04890
+       AXT     27,4          WORDS                                      F0B04900
+       AXT     0,2           AND STORES THEM                            F0B04910
+       CAL     BUF+27,4      IN THE CURRENT                             F0B04920
+       LDQ     BUF+28,4      OUTPUT BUFFER IN THE                       F0B04930
+       LGR     12            CORRECT OUTPUT POSITIONS.                  F0B04940
+       STQ*    SWT+1,1                                                  F0B04950
+       CAL     BUF+28,4                                                 F0B04960
+       LDQ     BUF+29,4                                                 F0B04970
+       LGR     12                                                       F0B04980
+       STQ*    SWT+2,1                                                  F0B04990
+       CAL     BUF+30,4                                                 F0B05000
+       LDQ     BUF+31,4                                                 F0B05010
+       LGR     12                                                       F0B05020
+       CAL     BUF+29,4                                                 F0B05030
+       LGR     12                                                       F0B05040
+       STQ*    SWT+5,1                                                  F0B05050
+       CAL     BUF+31,4                                                 F0B05060
+       LDQ     BUF+32,4                                                 F0B05070
+       LGL     12                                                       F0B05080
+       SLW*    SWT+6,1                                                  F0B05090
+       CAL     BUF+32,4                                                 F0B05100
+       LDQ     BUF+33,4                                                 F0B05110
+       RQL     24                                                       F0B05120
+       LGL     12                                                       F0B05130
+       SLW*    SWT+9,1                                                  F0B05140
+       TNX     *+6,4,9       IS THIS END OF LINE.                       F0B05150
+       CAL     BUF+25,4      NO.                                        F0B05160
+       SLW*    SWT+10,1                                                 F0B05170
+       CAL     BUF+26,4                                                 F0B05180
+       SLW*    SWT+13,1                                                 F0B05190
+       TXI     PACK+3,2,-7                                              F0B05200
+ PACK9 AXT     0,2           COMPLETE LINE IS IN BUFFER.                F0B05210
+       SXA     H,1                                                      F0B05220
+       REM *****                                                        F0B05230
+FINI4  TSX     (TAPE),4      WRITE LINE OF DUMP OR                      F0B05240
+       PZE     DSU2,1,(WDNP) MNEMONICS.                                 F0B05250
+       PZE     ,,OUTTAP                                                 F0B05260
+       CLA*    (LNCT)        UPDATE COUNT OF                            F0B05270
+       ADD     ONE           LINES                                      F0B05280
+       STO*    (LNCT)        OF OUTPUT.                                 F0B05290
+       LXA     TEMP+11,1     SET INDEX REG. TO FORMAT.                  F0B05300
+       TXL     J,1,2         TRANSFER IF NO MNEMONICS.                  F0B05310
+       ZET     TEMP+7        IS LINE OF MNEMONICS NEXT.                 F0B05320
+       TRA     J-1           NO.                                        F0B05330
+       REM                                                              F0B05340
+       REM   **** WITH MNEMONICS ****                                   F0B05350
+       REM                                                              F0B05360
+       STL     TEMP+7        YES, RESET MNEMONICS FLAG.                 F0B05370
+       SXA     AXT,2                                                    F0B05380
+       AXT     24,2                                                     F0B05390
+TYPA   PXA     ,0                                                       F0B05400
+       LDI     BUF+24,2      PICK UP CONVERTED                          F0B05410
+       LDQ     BUF+25,2      WORD.                                      F0B05420
+       TQP     *+2                                                      F0B05430
+       TRA     TYPB3                                                    F0B05440
+       CAQ     TBLA,0,1      IS THIS A PREFIX OPCODE.                   F0B05450
+       TZE     TYPB          NO.                                        F0B05460
+       RFT     20            YES, IS SIGN NEGATIVE.                     F0B05470
+       TRA     *+4           NO.                                        F0B05480
+       PXA     ,0            SIGN IS NEGATIVE, FIND MATCH               F0B05490
+       LDQ     BUF+25,2      IN NEG. TABLE.                             F0B05500
+       CAQ     TBLA+3,0,1    AND                                        F0B05510
+       SLW     BUF+25,2      SAVE MNEMONIC.                             F0B05520
+       CAL     BLK           FILL IN WITH                               F0B05530
+       TRA     TYPB3+2       BLANKS.                                    F0B05540
+ TYPB  AXT     TBLBM,1       PICK UP ADDRESS FOR NEGATIVE OPCODES.      F0B05550
+       RFT     20            IS WORD NEGATIVE.                          F0B05560
+       AXT     TBLBP,1       NO, RESET ADDRESS FOR POSITIVE OPCODES,    F0B05570
+       SXA     CAQ,1         AND STORE.                                 F0B05580
+ CAQ   CAQ     0,0,1         FIND RIGHT SUBTABLE                        F0B05590
+       STA     TYPB1         AND STORE ADDRESS.                         F0B05600
+       PDX     0,4           SET XR WITH WORD COUNT OF SUBTABLE.        F0B05610
+       CLM                                                              F0B05620
+       LGL     12            STORE NUMERICAL OPCODE IN                  F0B05630
+       STA     TYPB1+1       TEST FOR MATCH.                            F0B05640
+       COM                                                              F0B05650
+       ANA     TYPB2                                                    F0B05660
+       STA     TYPB1+3                                                  F0B05670
+ TYPB1 LDI     0,4           PICK UP WORD FROM CORRECT SUBTABLE.        F0B05680
+       RNT     0             DOES THIS WORD MATCH.                      F0B05690
+       TIX     *-2,4,1       NO, GO BACK FOR NEXT WORD, IF ANY.         F0B05700
+       RFT     0             WORD MATCHES OR END OF SUBTABLE. ARE OTHER F0B05710
+       TIX     *-4,4,1       YES, GO BACK FOR NEXT WORD, IF ANY.        F0B05720
+       XEC     *-4           WORD MATCHES OR END OF SUBTABLE.           F0B05730
+       TRA     TYPB3-1       NO MATCHING MNEMONIC.                      F0B05740
+       XEC     *-4           MAYBE, CHECK AGAIN.                        F0B05750
+       TRA     TYPB3-1       END OF SUBTABLE, NO MNEMONIC.              F0B05760
+ TYPB2 PIA     511           MNEMONIC WAS FOUND, PLACE IN AC.           F0B05770
+       AXT     TBLEP,1                                                  F0B05780
+       LAS     PSE           IS IT PLUS SENSE.                          F0B05790
+       TRA     *+2           NO.                                        F0B05800
+       TRA     TYPE          YES.                                       F0B05810
+       AXT     TBLEM,1       NO, IS IT                                  F0B05820
+       LAS     MSE           MINUS SENSE.                               F0B05830
+       TRA     *+2           NO.                                        F0B05840
+       TRA     TYPE          YES.                                       F0B05850
+       ARS     12            NO, SHIFT OUT NUMERALS, FILL               F0B05860
+       ORA     2BLK          WITH BLANKS                                F0B05870
+       SLW     BUF+25,2      AND STORE.                                 F0B05880
+       RQL     3                                                        F0B05890
+       CAL     BLK                                                      F0B05900
+       TQP     TYPB3+2       TEST FOR INDIRECT                          F0B05910
+       RQL     1             BITS IN                                    F0B05920
+       TQP     TYPB3+2       WORD.                                      F0B05930
+       CAL     ASTR          INSTRUCTION IS INDIRECT, PUT               F0B05940
+       SLW     BUF+26,2      ASTERISK IN MNEMONIC.                      F0B05950
+       TRA     TYPB3+3                                                  F0B05960
+ TYPE  ARS     12            SHIFT OUT NUMERALS,                        F0B05970
+       ORA     2BLK          FILL WITH BLANKS,                          F0B05980
+       SLW     BUF+25,2      AND STORE.                                 F0B05990
+       LDQ     BUF+26,2      PICK UP SECOND HALF,                       F0B06000
+       CAL     BLK           STORE                                      F0B06010
+       SLW     BUF+24,2      BLANKS.                                    F0B06020
+       SLW     BUF+26,2                                                 F0B06030
+       RQL     12            PUT MIDDLE                                 F0B06040
+       CLM                   CHARACTERS IN                              F0B06050
+       LGL     12            AC.                                        F0B06060
+       TNZ     TYPB3+4       ARE THEY ZERO. IF NOT, TRANSFER.           F0B06070
+       SXA     *+1,1         YES,                                       F0B06080
+       CAL     0             PICK UP ADDRESS OF TBLEP OR TBLEM,         F0B06090
+       TRA     CAQ+1         AND GO BACK TO INTERPRET FURTHER.          F0B06100
+       TXL     TYPB3+4,1,TBLEM WAS THIS SENSE OPERATION.                F0B06110
+ TYPB3 CAL     BLK           NO. PICK UP BLANK.                         F0B06120
+       SLW     BUF+25,2                                                 F0B06130
+       SLW     BUF+26,2                                                 F0B06140
+       SLW     BUF+24,2                                                 F0B06150
+       TIX     TYPA,2,3      GO BACK FOR NEXT WORD.                     F0B06160
+ STEP  LXA     CNT,4         END OF LINE OF MNEMONICS.                  F0B06170
+       CAL     BLK                                                      F0B06180
+ AXT   AXT     0,2                                                      F0B06190
+       TXI     H,4,1         GO TO WRITE LINE OF MNEMONICS.             F0B06200
+       STZ     TEMP+7        INDICATE LINE OF DUMP NEXT .               F0B06210
+ J     PXA     0,2           TEST FOR END OF                            F0B06220
+       ERA     TEMP+3        DUMP PORTION.                              F0B06230
+       TNZ     DFA           NO, GO BACK FOR NEXT LINE.                 F0B06240
+       TRA     DUMP          YES, LOOK FOR NEXT PARAMETERS.             F0B06250
+       REM                                                              F0B06260
+       REM   **** ERROR IN CALLING SEQUENCE ****                        F0B06270
+       REM                                                              F0B06280
+       REM *****                                                        F0B06290
+ FERR  TRA     PCH1           GO WRITE ERR MESSAGE                     $F0B06300
+       CLA*    (LNCT)                                               (22)F0B06310
+       ADD     ONE           UPDATE LINE COUNT                      (22)F0B06320
+       STO*    (LNCT)                                               (22)F0B06330
+RSR    ZET     TEMP+6        IS THIS DUMP OR PDUMP...               (22)F0B06340
+       TRA     PRSR          PDUMP. RETURN TO PROGRAM               (22)F0B06350
+       TSX     (LOAD),4,1    DUMP. GO TO SIGN-ON                    (22)F0B06360
+       BCI     1,9F0300                                             (22)F0B06370
+TRSR   ZET     TEMP+10       1ST LIMIT IS ZERO, IS IT FIRST DUMP    (22)F0B06380
+       TRA     RSR           NO, END OF DUMP                        (22)F0B06390
+       STL     TEMP+9        NO FURTHER DUMPS                       (22)F0B06400
+       TRA     CONT          PROCEED                                (22)F0B06410
+PRSR   NZT     TEMP+1        IS BUFFER RESTORED                     (22)F0B06420
+       TRA     RSR1          YES                                    (22)F0B06430
+       TSX     (TAPE),4      NO, RESTORE IT                         (22)F0B06440
+       PZE     IORT,,(RBNP)                                         (22)F0B06450
+       PZE     S2L,,SAVTAP                                          (22)F0B06460
+       TSX     (TAPE),4      REPOSITION SAVE TAPE                   (22)F0B06470
+       PZE     BS1R,,(SKBP)                                         (22)F0B06475
+       PZE     ,,SAVTAP                                             (22)F0B06480
+RSR1   TSX     (TAPE),4      SAVE LOWER MEMORY FOR READ ROUTINE     (22)F0B06485
+       PZE     IOBOT,,(WBNP)                                        (22)F0B06490
+       PZE     ,,SAVTAP                                             (22)F0B06495
+       TSX     (TAPE),4      REPOSITION TAPE TO READ                (22)F0B06500
+       PZE     BS2R,,(SKBP)  SAVED UPPER CORE                       (22)F0B06505
+       PZE     ,,SAVTAP                                             (22)F0B06510
+       AXT     SELEND-SELBEG,4           MOVE SELECT ROUTINE        (22)F0B06520
+       CLA     SELOC+SELEND-SELBEG,4     TO LOWER CORE(RESTORED     (22)F0B06530
+       STO     SELEND,4                  BY PDUMP)                  (22)F0B06540
+       TIX     *-2,4,1                                              (22)F0B06550
+       TRA     SELBEG                                               (22)F0B06560
+SELOC  EQU     *             SELECT ROUTINE LOADED HERE             (22)F0B06570
+       LOC     BOTTOM        MOVED HERE                             (22)F0B06580
+SELBEG LAC     SYSUT3,2      UCB FOR SAVTAP                         (22)F0B06590
+       CLA     IOXSLL        LOC OF SELECT                          (22)F0B06600
+       ZET     1,2           TEST TAPE IN USE                       (22)F0B06610
+       TRA     *-1           YES, WAIT                              (22)F0B06620
+       STO     1,2           LOCATE SELECT                          (22)F0B06630
+       TSX     (ACTIV,4      START UNIT                             (22)F0B06640
+       PZE     SYSUT3                                               (22)F0B06650
+       ZET     1,2           IS READ COMPLETE...                    (22)F0B06660
+       TRA     *-1           NO, WAIT                               (22)F0B06670
+       LDI     IOXSLL        ERROR INDICATION                       (22)F0B06680
+       LFT     300000        WAS READ SUCCESSFUL                    (22)F0B06690
+       TRA     *+2           NO. BOMB OUT                           (22)F0B06700
+       TRA     BOTTOM-5      YES. RETURN TO PDUMP                   (22)F0B06710
+       TSX     (PROUT,4      INFORM OPERATOR, SINCE                 (22)F0B06720
+       PZE     1             WE HAVE NO MEANS OF                    (22)F0B06730
+       PZE     M,,7          WRITING OFFLINE                        (22)F0B06740
+       CLA     1B17          SET IBSYS BOMB BIT                     (22)F0B06750
+       ORS     SYSJOB                                               (22)F0B06760
+       CLA     IBSXEC        TO LOOK FOR NEXT SEGMENT               (22)F0B06770
+       STO     SYSGET                                               (22)F0B06780
+       TRA     SYSRET        RETURN TO IBSYS                        (22)F0B06790
+1B17   DEC     1B17                                                 (22)F0B06800
+IBSXEC BCI     1,IBSXEC                                             (22)F0B06810
+M      BCI     7, CANNOT RESTORE AFTER PDUMP. JOB ENDED.            (22)F0B06820
+R      IORT    ORGDP,,SYSEND+1-ORGDP                                (30)F0B06830
+IOXSLL         R,,*+1                                               (22)F0B06840
+       TMI     PST           SELECT PLUS OR MINUS...                (22)F0B06850
+       CLA*    SYSUT3        UCB FOR SAVTAP                         (22)F0B06860
+       PDX     ,2            DECIMAL UNIT ADDRESS                   (22)F0B06870
+       TXI     *+1,2,16      BINARY UNIT ADDRESS                    (22)F0B06880
+       SXA     *+3,2         TO SELECT                              (22)F0B06890
+       CLA     IOXSLL        I/O COMMAND LOCATION                   (22)F0B06900
+       STA*    (RCHXI        TO RCH                                 (22)F0B06910
+       RDS     **            SELECT                                 (22)F0B06920
+       XEC*    (RCHXI        LOAD CHANNEL                           (22)F0B06930
+       TRA     1,4           RETURN                                 (22)F0B06940
+PST    PAC     0,2           SELECT MINUS                           (22)F0B06950
+       STZ     1,2           SET UNIT FREE                          (22)F0B06960
+       STI     IOXSLL        SAVE ERRORS                            (22)F0B06970
+       TRA     1,4           RETURN                                 (22)F0B06980
+SELEND EQU     *             END OF LOW CORE CODING                 (22)F0B06990
+       LOC                   RETURN TO NORMAL LOCATIONS             (22)F0B07000
+S2L    BCI     1,SAVE2       LABEL FOR SAVTAP                       (22)F0B07010
+       REM                                                              F0B07170
+       REM   **** INTEGER OUTPUT ****                                   F0B07180
+       REM                                                              F0B07190
+ INT   LDI     3BLK          THIS ROUTINE TRANSLATES THE DECREMENTS     F0B07200
+       TQP     *+2           OF WORDS TO DECIMAL INTEGERS. WORD IS IN MQF0B07210
+       RIL     20            SET MINUS SIGN IF S IS ON.                 F0B07220
+       LGL     3             CLEAR                                      F0B07230
+       CLM                   OUT                                        F0B07240
+       LGR     3             PREFIX.                                    F0B07250
+       CAQ     T1+128,0,1    CONVERT                                    F0B07260
+       CAQ     T1+64,0,1     THE                                        F0B07270
+       CAQ     T1,0,1        BINARY DECREMENT                           F0B07280
+       CVR     T3,0,6        TO DECIMAL.                                F0B07290
+       LDQ     BLK           FILL OUT WORDS                             F0B07300
+       LGR     12            WITH BLANKS.                               F0B07310
+       OAI                   PUT FIRST HALF OF WORD IN INDICATORS,      F0B07320
+       XCL                   2ND HALF IN LOGICAL AC, AND                F0B07330
+       TRA     3,1           RETURN.                                    F0B07340
+       REM                                                              F0B07350
+       REM   **** FLOATING POINT OUTPUT ****                            F0B07360
+       REM                                                              F0B07370
+ FPT   SXA     FPTLV,4 FLOATING POINT DUMPER                            F0B07380
+       SXA     FPTLV+1,2 IGNORES SIGN                                   F0B07390
+       SXA     FPTLV+2,1                                                F0B07400
+       LDI     FPTHP         PICK UP .0                                 F0B07410
+       TQP     *+2           IF FIRST WORD IS MINUS, SET                F0B07420
+       SIL     40000         1ST BIT ON IN CONVERTED WORD.              F0B07430
+       XCA                   AND                                        F0B07440
+       SSP                   REMOVE SIGN.                               F0B07450
+       LDQ     FPTPZ         PICK UP ZERO CHARACTERISTIC.               F0B07460
+       TZE     FPTLV-1       IS WORD ZERO.                              F0B07470
+       AXT     -DDFTB,2      NO, CONVERT IT                             F0B07480
+       AXT     2,4           TO FLOATING POINT.                         F0B07490
+ FPTSH TXI     *+1,4,-2                                                 F0B07500
+       CAS     38,2                                                     F0B07510
+       XEC     *+3,4                                                    F0B07520
+       TXI     FPTFD+2,2,1   EQUAL SET INDEX FOR NEXT HIGHER POWER     $F0B07530
+       XEC     *+2,4                                                    F0B07540
+       TXI     FPTSH,2,7                                                F0B07550
+       TXI     FPTSH,2,-8                                               F0B07560
+       TXI     FPTSH,2,16                                               F0B07570
+       TXI     FPTSH,2,-16                                              F0B07580
+       TXI     FPTSH,2,8                                                F0B07590
+       TXI     FPTSH,2,-8                                               F0B07600
+       TXI     FPTSH,2,4                                                F0B07610
+       TXI     FPTSH,2,-4                                               F0B07620
+       TXI     FPTSH,2,2                                                F0B07630
+       TXI     FPTSH,2,-2                                               F0B07640
+       TXI     FPTSH,2,1                                                F0B07650
+       TXI     FPTSH,2,-1                                               F0B07660
+ FPTFD TXI     *+2,2,1                                                  F0B07670
+       TRA     *+1                                                      F0B07680
+       TXL     FPTNL,2,-30-DDFTB                                        F0B07690
+       FDP     46,2          DIVIDE BY POWER OF TEN 8 LESS THAN NO.    $F0B07700
+ FPTDD XCA                                                              F0B07710
+       FRN                                                              F0B07720
+       UFA     FPTFX                                                    F0B07730
+       RQL     9                                                        F0B07740
+       ANA     FPTMK                                                    F0B07750
+       LGL     8                                                        F0B07760
+       CAS     FPTBG                                                    F0B07770
+       NOP                                                              F0B07780
+       SUB     T1+1                                                     F0B07790
+       VDH     FPTOR,0,12                                               F0B07800
+       STO     FPTMP                                                    F0B07810
+       CLM                                                              F0B07820
+       RQL     24                                                       F0B07830
+       CAQ     T1+64,0,1                                                F0B07840
+       CAQ     T1,0,1                                                   F0B07850
+       CVR     T3,0,3                                                   F0B07860
+       LDQ     FPTMP                                                    F0B07870
+       SLW     FPTMP                                                    F0B07880
+       CLM                                                              F0B07890
+       CAQ     T1+192,0,1                                               F0B07900
+       CAQ     T1+128,0,1                                               F0B07910
+       CAQ     T1+64,0,1                                                F0B07920
+       CAQ     T1,0,1                                                   F0B07930
+       CVR     T3,0,6                                                   F0B07940
+       SLW     FPTMP+1                                                  F0B07950
+       PXA     0,2                                                      F0B07960
+       SUB     FPTSB                                                    F0B07970
+       LGR     12                                                       F0B07980
+       CAQ     T1+64,0,1                                                F0B07990
+       CAQ     T1,0,1                                                   F0B08000
+       CVR     T3,0,2                                                   F0B08010
+       XCL                                                              F0B08020
+       CLA     FPTPS                                                    F0B08030
+       TXH     *+2,2,-DDFTB-1                                           F0B08040
+       ADD     FPTPS                                                    F0B08050
+       LGR     6                                                        F0B08060
+       CAL     FPTMP+1                                                  F0B08070
+       LGR     18                                                       F0B08080
+       ACL     FPTMP                                                    F0B08090
+       OAI                   PLACE CONVERTED WORD IN INDICATORS,        F0B08100
+       XCL                   AND LOGICAL AC,                            F0B08110
+ FPTLV AXT     0,4           RESTORE                                    F0B08120
+       AXT     0,2           INDEX                                      F0B08130
+       AXT     0,1           REGISTERS,                                 F0B08140
+       TRA     2,1           AND RETURN.                                F0B08150
+ FPTNL XCA                                                              F0B08160
+       FMP     DDTTN                                                    F0B08170
+       FDP     37,2          DIVIDE TO GET QUOTIENT BETWEEN 1E7 + 1E8  $F0B08180
+       TRA     FPTDD                                                    F0B08190
+ FPTBG DEC     1E8B35     DGP   OCT     000575360400                    F0B08200
+ FPTPZ BCI     1,000+00                                                 F0B08210
+ FPTFX OCT     243000000000                                             F0B08220
+ FPTMK OCT     777777777                                                F0B08230
+ FPTOR DEC     4096000000                                               F0B08240
+ FPTMP DEC     0,0                                                      F0B08250
+ FPTSB PZE     -DDFTB                                                   F0B08260
+ FPTPS OCT     20                                                       F0B08270
+ FPTHP BCI     1,.00000                                                 F0B08280
+DDFTB  DEC     1E38          TABLE OF POWERS OF 10 IN FLOATING POINT   $F0B08290
+       DEC     1E37                                                     F0B08300
+       DEC     1E36                                                     F0B08310
+       DEC     1E35                                                     F0B08320
+       DEC     1E34                                                     F0B08330
+       DEC     1E33                                                     F0B08340
+       DEC     1E32                                                     F0B08350
+       DEC     1E31                                                     F0B08360
+       DEC     1E30                                                     F0B08370
+       DEC     1E29                                                     F0B08380
+       DEC     1E28                                                     F0B08390
+       DEC     1E27                                                     F0B08400
+       DEC     1E26                                                     F0B08410
+       DEC     1E25                                                     F0B08420
+       DEC     1E24                                                     F0B08430
+       DEC     1E23                                                     F0B08440
+       DEC     1E22                                                     F0B08450
+       DEC     1E21                                                     F0B08460
+       DEC     1E20                                                     F0B08470
+       DEC     1E19                                                     F0B08480
+       DEC     1E18                                                     F0B08490
+       DEC     1E17                                                     F0B08500
+       DEC     1E16                                                     F0B08510
+       DEC     1E15                                                     F0B08520
+       DEC     1E14                                                     F0B08530
+       DEC     1E13                                                     F0B08540
+       DEC     1E12                                                     F0B08550
+       DEC     1E11                                                     F0B08560
+       DEC     1E10                                                     F0B08570
+ DDTTN DEC     1E9                                                      F0B08580
+       DEC     1E8                                                      F0B08590
+       DEC     1E7                                                      F0B08600
+       DEC     1E6                                                      F0B08610
+       DEC     1E5                                                      F0B08620
+       DEC     1E4                                                      F0B08630
+       DEC     1E3                                                      F0B08640
+       DEC     1E2                                                      F0B08650
+       DEC     1E1                                                      F0B08660
+       DEC     1E0                                                      F0B08670
+       DEC     1E-1                                                     F0B08680
+       DEC     1E-2                                                     F0B08690
+       DEC     1E-3                                                     F0B08700
+       DEC     1E-4                                                     F0B08710
+       DEC     1E-5                                                     F0B08720
+       DEC     1E-6                                                     F0B08730
+       DEC     1E-7                                                     F0B08740
+       DEC     1E-8                                                     F0B08750
+       DEC     1E-9                                                     F0B08760
+       DEC     1E-10                                                    F0B08770
+       DEC     1E-11                                                    F0B08780
+       DEC     1E-12                                                    F0B08790
+       DEC     1E-13                                                    F0B08800
+       DEC     1E-14                                                    F0B08810
+       DEC     1E-15                                                    F0B08820
+       DEC     1E-16                                                    F0B08830
+       DEC     1E-17                                                    F0B08840
+       DEC     1E-18                                                    F0B08850
+       DEC     1E-19                                                    F0B08860
+       DEC     1E-20                                                    F0B08870
+       DEC     1E-21                                                    F0B08880
+       DEC     1E-22                                                    F0B08890
+       DEC     1E-23                                                    F0B08900
+       DEC     1E-24                                                    F0B08910
+       DEC     1E-25                                                    F0B08920
+       DEC     1E-26                                                    F0B08930
+       DEC     1E-27                                                    F0B08940
+       DEC     1E-28                                                    F0B08950
+       DEC     1E-29                                                    F0B08960
+       DEC     1E-30                                                    F0B08970
+       DEC     1E-31                                                    F0B08980
+       DEC     1E-32                                                    F0B08990
+       DEC     1E-33                                                    F0B09000
+       DEC     1E-34                                                    F0B09010
+       DEC     1E-35                                                    F0B09020
+       DEC     1E-36                                                    F0B09030
+       DEC     1E-37                                                    F0B09040
+       DEC     1E-38                                                    F0B09050
+ DDEFT DEC     0                                                        F0B09060
+       REM   **** T1   CONVERTS BINARY TO BCD  8 WORDS PER CARD ****    F0B09070
+ T1    BCI     8,000000000001000002000003000004000005000006000007       F0B09080
+       BCI     8,000008000009000010000011000012000013000014000015       F0B09090
+       BCI     8,000016000017000018000019000020000021000022000023       F0B09100
+       BCI     8,000024000025000026000027000028000029000030000031       F0B09110
+       BCI     8,000032000033000034000035000036000037000038000039       F0B09120
+       BCI     8,000040000041000042000043000044000045000046000047       F0B09130
+       BCI     8,000048000049000050000051000052000053000054000055       F0B09140
+       BCI     8,000056000057000058000059000060000061000062000063       F0B09150
+       BCI     8,000000000064000128000192000256000320000384000448       F0B09160
+       BCI     8,000512000576000640000704000768000832000896000960       F0B09170
+       BCI     8,001024001088001152001216001280001344001408001472       F0B09180
+       BCI     8,001536001600001664001728001792001856001920001984       F0B09190
+       BCI     8,002048002112002176002240002304002368002432002496       F0B09200
+       BCI     8,002560002624002688002752002816002880002944003008       F0B09210
+       BCI     8,003072003136003200003264003328003392003456003520       F0B09220
+       BCI     8,003584003648003712003776003840003904003968004032       F0B09230
+       BCI     8,000000004096008192012288016384020480024576028672       F0B09240
+       BCI     8,032768036864040960045056049152053248057344061440       F0B09250
+       BCI     8,065536069632073728077824081920086016090112094208       F0B09260
+       BCI     8,098304102400106496110592114688118784122880126976       F0B09270
+       BCI     8,131072135168139264143360147456151552155648159744       F0B09280
+       BCI     8,163840167936172032176128180224184320188416192512       F0B09290
+       BCI     8,196608200704204800208896212992217088221184225280       F0B09300
+       BCI     8,229376233472237568241664245760249856253952258048       F0B09310
+       BCI     8,000000262144524288786432048576310720572864835008       F0B09320
+       REM   **** T3   CONVERTS BCD ADDITION RESULT TO BCD ****         F0B09330
+ T3            T3                                                       F0B09340
+               T3,0,4096                                                F0B09350
+               T3,0,2*4096                                              F0B09360
+               T3,0,3*4096                                              F0B09370
+               T3,0,4*4096                                              F0B09380
+               T3,0,5*4096                                              F0B09390
+               T3,0,6*4096                                              F0B09400
+               T3,0,7*4096                                              F0B09410
+       PON     T3                                                       F0B09420
+       PON     T3,0,4096                                                F0B09430
+               T3+1                                                     F0B09440
+               T3+1,0,4096                                              F0B09450
+               T3+1,0,2*4096                                            F0B09460
+               T3+1,0,3*4096                                            F0B09470
+               T3+1,0,4*4096                                            F0B09480
+               T3+1,0,5*4096                                            F0B09490
+               T3+1,0,6*4096                                            F0B09500
+               T3+1,0,7*4096                                            F0B09510
+       PON     T3+1                                                     F0B09520
+       PON     T3+1,0,4096                                              F0B09530
+               T3+2                                                     F0B09540
+               T3+2,0,4096                                              F0B09550
+               T3+2,0,2*4096                                            F0B09560
+               T3+2,0,3*4096                                            F0B09570
+               T3+2,0,4*4096                                            F0B09580
+               T3+2,0,5*4096                                            F0B09590
+               T3+2,0,6*4096                                            F0B09600
+               T3+2,0,7*4096                                            F0B09610
+       PON     T3+2                                                     F0B09620
+       PON     T3+2,0,4096                                              F0B09630
+               T3+3                                                     F0B09640
+               T3+3,0,4096                                              F0B09650
+               T3+3,0,2*4096                                            F0B09660
+               T3+3,0,3*4096                                            F0B09670
+               T3+3,0,4*4096                                            F0B09680
+               T3+3,0,5*4096                                            F0B09690
+               T3+3,0,6*4096                                            F0B09700
+               T3+3,0,7*4096                                            F0B09710
+       PON     T3+3                                                     F0B09720
+       PON     T3+3,0,4096                                              F0B09730
+ FDUMP PZE     -1                                                      $F0B09740
+ HONE  PZE     0,0,4096                                                 F0B09750
+       TCOH    0                                                        F0B09760
+       TCOG    0                                                        F0B09770
+       TCOF    0                                                        F0B09780
+       TCOE    0                                                        F0B09790
+       TCOD    0                                                        F0B09800
+       TCOC    0                                                        F0B09810
+       TCOB    0                                                        F0B09820
+       TCOA    0                                                        F0B09830
+TCOX   SYN     *                                                        F0B09840
+       SCHH    TEMP+6                                                   F0B09850
+       SCHG    TEMP+6                                                   F0B09860
+       SCHF    TEMP+6                                                   F0B09870
+       SCHE    TEMP+6                                                   F0B09880
+       SCHD    TEMP+6                                                   F0B09890
+       SCHC    TEMP+6                                                   F0B09900
+       SCHB    TEMP+6                                                   F0B09910
+       SCHA    TEMP+6                                                   F0B09920
+SCHX   SYN     *                                                        F0B09930
+ HZR   BCI     1,0                                                      F0B09940
+ ONE           1                                                        F0B09950
+OBLK   TNX     ,,0                                                      F0B09960
+ ON    BCI     1,    ON                                                 F0B09970
+ OFF   BCI     1,   OFF                                                 F0B09980
+ MNSZ  BCI     1,    -                                                  F0B09990
+ MNSO  BCI     1,    -1                                                 F0B10000
+ PLUS  BCI     1,    +0                                                 F0B10010
+ TEMP  DEC     0,0,0,0,0,0,0,0,0,0,0,0,0,0                              F0B10020
+ MINUS BCI     1,     -                                                 F0B10030
+ LBLK          48                                                       F0B10040
+ ERR   IORT    RESTO,0,1                                               $F0B10050
+       IORT    ERROR,0,9                                               $F0B10060
+       IORT  HZR,,1                                                     F0B10070
+  NDIO IOCP    BOTTOM,,50                                              $F0B10080
+       IOCT    END-SIZE,,SIZE                                          $F0B10090
+ DSU   IORT    BUF2,,20           .                                    $F0B10100
+       IORT    BUF3,,20           .                                    $F0B10110
+       IORT    DUMP2,,20          .                                    $F0B10120
+       IORT    BUF1,,20           .                                    $F0B10130
+       IORT    BUF,,20            .                                    $F0B10140
+  IOCD IOCT    BLK,0,1                                                  F0B10150
+       IORT    BUF2,0,20                                                F0B10160
+ DSU2  IORT    DFBB,0,20                                                F0B10170
+       IORT    BUF1,0,20                                                F0B10180
+  IORT IORT    SAVE,,SAVL                                              $F0B10190
+ SWT           BUF2+1,2                                                 F0B10200
+               BUF2+2,2                                                 F0B10210
+               BUF1+1,2                                                 F0B10220
+               BUF1+2,2                                                 F0B10230
+               BUF2+3,2                                                 F0B10240
+               BUF2+4,2                                                 F0B10250
+               BUF1+3,2                                                 F0B10260
+               BUF1+4,2                                                 F0B10270
+               BUF2+5,2                                                 F0B10280
+               BUF2+6,2                                                 F0B10290
+               BUF1+5,2                                                 F0B10300
+               BUF1+6,2                                                 F0B10310
+               BUF2+7,2                                                 F0B10320
+               BUF2                                                     F0B10330
+               BUF1+7,2                                                 F0B10340
+               BUF1                                                     F0B10350
+ ERROR BCI   9,     PLEASE SUPPLY CORRECT CALLING SEQUENCE FOR DUMP.    F0B10360
+ DUMP1 BCI     2,1                                                      F0B10370
+       BCI     9,AC                MQ                SI                 F0B10380
+       BCI     2,KEYS                                                   F0B10390
+       BCI     7,  XR1         XR2         XR4         XR3             $F0B10400
+ DUMP2 BCI     4,0 TRAP   DCT   IOT   OFL                              $F0B10410
+       BCI     4,   SL1   SL2   SL3   SL4                              $F0B10420
+       BCI     6,   SW1   SW2   SW3   SW4   SW5   SW6                  $F0B10430
+       BCI     6,        XR5         XR6         XR7                   $F0B10435
+ DFBB  BCI     6,                                                       F0B10440
+       BCI     4,CELLS         TO                                       F0B10450
+       BCI     9,ALL CONTAIN                                            F0B10460
+ BLK   BCI     1,                                                       F0B10470
+ 2BLK  BCI     1,  0000                                                 F0B10480
+ 3BLK  BCI     1,   000                                                 F0B10490
+ ASTR  BCI     1,*                                                      F0B10500
+ TBLA          0                                                        F0B10510
+       BCI     1,   TXI                                                 F0B10520
+       BCI     1,   TIX                                                 F0B10530
+       BCI     1,   TXH                                                 F0B10540
+       BCI     1,   STR                                                 F0B10550
+       BCI     1,   TNX                                                 F0B10560
+       BCI     1,   TXL                                                 F0B10570
+ TBLEP         TBME,0,TBME-TBPE                                         F0B10580
+ TBLEM         TBP0,0,TBP0-TBME                                         F0B10590
+ TBLBP         TBP1,0,TBP1-TBP0                                         F0B10600
+               TBP2,0,TBP2-TBP1                                         F0B10610
+               TBP3,0,TBP3-TBP2                                         F0B10620
+               TBP4,0,TBP4-TBP3                                         F0B10630
+               TBP5,0,TBP5-TBP4                                         F0B10640
+               TBP6,0,TBP6-TBP5                                         F0B10650
+               TBP7,0,TBP7-TBP6                                         F0B10660
+               TBM0,0,TBM0-TBP7                                         F0B10670
+ TBLBM         TBM1,0,TBM1-TBM0                                         F0B10680
+               TBM2,0,TBM2-TBM1                                         F0B10690
+               TBM3,0,TBM3-TBM2                                         F0B10700
+               TBM4,0,TBM4-TBM3                                         F0B10710
+               TBM5,0,TBM5-TBM4                                         F0B10720
+               TBM6,0,TBM6-TBM5                                         F0B10730
+               TBM7,0,TBM7-TBM6                                         F0B10740
+               TBE,0,TBE-TBM7                                           F0B10750
+ TBPE  BCI     1, CLM00                                                 F0B10760
+       BCI     1, LBT01                                                 F0B10770
+       BCI     1, CHS02                                                 F0B10780
+       BCI     1, SSP03                                                 F0B10790
+       BCI     1, ENK04                                                 F0B10800
+       BCI     1, IOT05                                                 F0B10810
+       BCI     1, COM06                                                 F0B10820
+       BCI     1, ETM07                                                 F0B10830
+       BCI     1, RND10                                                 F0B10840
+       BCI     1, FRN11                                                 F0B10850
+       BCI     1, DCT12                                                 F0B10860
+       BCI     1, RCT14                                                *F0B10870
+ TBME  BCI     1, PBT01                                                 F0B10880
+       BCI     1,EFTM02                                                 F0B10890
+       BCI     1, SSM03                                                 F0B10900
+       BCI     1,LFTM04                                                 F0B10910
+       BCI     1,ESTM05                                                 F0B10920
+       BCI     1,ECTM06                                                 F0B10930
+       BCI     1, LTM07                                                 F0B10940
+       BCI     1,LSNM10                                                 F0B10950
+       BCI     1, ETT11                                                 F0B10960
+       BCI     1, RTT12                                                 F0B10970
+ TBP0  BCI     1, HTR00                                                 F0B10980
+       BCI     1, TRA20                                                 F0B10990
+       BCI     1, TTR21                                                 F0B11000
+       BCI     1,TRCA22                                                 F0B11010
+       BCI     1,TRCC24                                                 F0B11020
+       BCI     1,TRCE26                                                 F0B11030
+       BCI     1,TRCG27                                                 F0B11040
+       BCI     1,TEFA30                                                 F0B11050
+       BCI     1,TEFC31                                                 F0B11060
+       BCI     1,TEFE32                                                 F0B11070
+       BCI     1,TEFG33                                                 F0B11080
+ TBP04 BCI     1, TLQ40                                                 F0B11090
+       BCI     1, IIA41                                                 F0B11100
+       BCI     1, TIO42                                                 F0B11110
+       BCI     1, OAI43                                                 F0B11120
+       BCI     1, PAI44                                                 F0B11130
+       BCI     1, TIF46                                                 F0B11140
+       BCI     1, IIR51                                                 F0B11150
+       BCI     1, RFT54                                                 F0B11160
+       BCI     1, SIR55                                                 F0B11170
+       BCI     1, RNT56                                                 F0B11180
+       BCI     1, RIR57                                                 F0B11190
+       BCI     1,TCOA60                                                 F0B11200
+       BCI     1,TCOB61                                                 F0B11210
+       BCI     1,TCOC62                                                 F0B11220
+       BCI     1,TCOD63                                                 F0B11230
+       BCI     1,TCOE64                                                 F0B11240
+       BCI     1,TCOF65                                                 F0B11250
+       BCI     1,TCOG66                                                 F0B11260
+       BCI     1,TCOH67                                                 F0B11270
+       BCI     1, TSX74                                                 F0B11280
+ TBP1  BCI     1, TZE00                                                 F0B11290
+       BCI     1, CVR14                                                 F0B11300
+       BCI     1, TPL20                                                 F0B11310
+       BCI     1, XCA31                                                 F0B11320
+       BCI     1, TOV40                                                 F0B11330
+       BCI     1, TQO61                                                 F0B11340
+       BCI     1, TQP62                                                 F0B11350
+ TBP14 BCI     1, TOV40                                                 F0B11360
+       BCI     1, TQO61                                                 F0B11370
+       BCI     1, TQP62                                                 F0B11380
+ TBP2  BCI     1, MPY00                                                 F0B11390
+       BCI     1, VLM04                                                 F0B11400
+       BCI     1, DVH20                                                 F0B11410
+       BCI     1, DVP21                                                 F0B11420
+       BCI     1, VDH24                                                 F0B11430
+       BCI     1, VDP25                                                 F0B11440
+ TBP24 BCI     1, FDH40                                                 F0B11450
+       BCI     1, FDP41                                                 F0B11460
+       BCI     1, FMP60                                                 F0B11470
+ TBP3  BCI     1, FAD00                                                 F0B11480
+       BCI     1, FSB02                                                 F0B11490
+       BCI     1, FAM04                                                 F0B11500
+       BCI     1, FSM06                                                 F0B11510
+       BCI     1, ANS20                                                 F0B11520
+       BCI     1, ERA22                                                 F0B11530
+ TBP34 BCI     1, CAS40                                                 F0B11540
+       BCI     1, ACL61                                                 F0B11550
+ TBP4  BCI     1, ADD00                                                 F0B11560
+       BCI     1, ADM01                                                 F0B11570
+       BCI     1, SUB02                                                 F0B11580
+       BCI     1, HPR20                                                 F0B11590
+ TBP44 BCI     1, IIS40                                                 F0B11600
+       BCI     1, LDI41                                                 F0B11610
+       BCI     1, OSI42                                                 F0B11620
+       BCI     1, OFT44                                                 F0B11630
+       BCI     1, RIS45                                                 F0B11640
+       BCI     1, ONT46                                                 F0B11650
+       BCI     1, LDA60                                                 F0B11660
+ TBP5  BCI     1, CLA00                                                 F0B11670
+       BCI     1, CLS02                                                 F0B11680
+       BCI     1, ZET20                                                 F0B11690
+       BCI     1, XEC22                                                 F0B11700
+       BCI     1, LXA34                                                 F0B11710
+       BCI     1, LAC35                                                 F0B11720
+ TBP54 BCI     1,RCHA40                                                 F0B11730
+       BCI     1,RCHC41                                                 F0B11740
+       BCI     1,RCHE42                                                 F0B11750
+       BCI     1,RCHG43                                                 F0B11760
+       BCI     1,LCHA44                                                 F0B11770
+       BCI     1,LCHC45                                                 F0B11780
+       BCI     1,LCHE46                                                 F0B11790
+       BCI     1,LCHG47                                                 F0B11800
+       BCI     1, LDQ60                                                 F0B11810
+       BCI     1, ENB64                                                 F0B11820
+ TBP6  BCI     1, STZ00                                                 F0B11830
+       BCI     1, STO01                                                 F0B11840
+       BCI     1, SLW02                                                 F0B11850
+       BCI     1, STI04                                                 F0B11860
+       BCI     1, STA21                                                 F0B11870
+       BCI     1, STD22                                                 F0B11880
+       BCI     1, STT25                                                 F0B11890
+       BCI     1, SXA34                                                 F0B11900
+ TBP64 BCI     1,SCHA40                                                 F0B11910
+       BCI     1,SCHC41                                                 F0B11920
+       BCI     1,SCHE42                                                 F0B11930
+       BCI     1,SCHG43                                                 F0B11940
+ TBP7  BCI     1, CPY00                                                 F0B11950
+       BCI     1, CPY00                                                 F0B11960
+       BCI     1, PAX34                                                 F0B11970
+       BCI     1, PAC37                                                 F0B11980
+ TBP74 BCI     1, PXA54                                                 F0B11990
+ PSE   BCI     1, PSE60                                                 F0B12000
+       BCI     1, NOP61                                                 F0B12010
+       BCI     1, RDS62                                                 F0B12020
+       BCI     1, LLS63                                                 F0B12030
+       BCI     1, BSR64                                                 F0B12040
+       BCI     1, LRS65                                                 F0B12050
+       BCI     1, WRS66                                                 F0B12060
+       BCI     1, ALS67                                                 F0B12070
+       BCI     1, WEF70                                                 F0B12080
+       BCI     1, ARS71                                                 F0B12090
+       BCI     1, REW72                                                 F0B12100
+       BCI     1, AXT74                                                 F0B12110
+       BCI     1, SDN76                                                 F0B12120
+ TBM0  BCI     1,ESNT21                                                 F0B12130
+       BCI     1,TRCB22                                                 F0B12140
+       BCI     1,TRCD24                                                 F0B12150
+       BCI     1,TRCF26                                                 F0B12160
+       BCI     1,TRCH27                                                 F0B12170
+       BCI     1,TEFB30                                                 F0B12180
+       BCI     1,TEFD31                                                 F0B12190
+       BCI     1,TEFF32                                                 F0B12200
+       BCI     1,TEFH33                                                 F0B12210
+ TBM04 BCI     1, RIA42                                                 F0B12220
+       BCI     1, PIA46                                                 F0B12230
+       BCI     1, IIL51                                                 F0B12240
+       BCI     1, LFT54                                                 F0B12250
+       BCI     1, SIL55                                                 F0B12260
+       BCI     1, LNT56                                                 F0B12270
+       BCI     1, RIL57                                                 F0B12280
+       BCI     1,TCNA60                                             (34)F0B12290
+       BCI     1,TCNB61                                                 F0B12300
+       BCI     1,TCNC62                                                 F0B12310
+       BCI     1,TCND63                                                 F0B12320
+       BCI     1,TCNE64                                                 F0B12330
+       BCI     1,TCNF65                                                 F0B12340
+       BCI     1,TCNG66                                                 F0B12350
+       BCI     1,TCNH67                                                 F0B12360
+ TBM1  BCI     1, TNZ00                                                 F0B12370
+       BCI     1, CAQ14                                                 F0B12380
+       BCI     1, TMI20                                                 F0B12390
+       BCI     1, XCL30                                                 F0B12400
+ TBM14 BCI     1, TNO40                                                 F0B12410
+       BCI     1, CRQ54                                                 F0B12420
+ TBM2  BCI     1, MPR00                                                 F0B12430
+ TBM24 BCI     1, UFM60                                                 F0B12440
+ TBM3  BCI     1, UFA00                                                 F0B12450
+       BCI     1, UFS02                                                 F0B12460
+       BCI     1, UAM04                                                 F0B12470
+       BCI     1, USM06                                                 F0B12480
+       BCI     1, ANA20                                                 F0B12490
+ TBM34 BCI     1, LAS40                                                 F0B12500
+ TBM4  BCI     1, SBM00                                                 F0B12510
+ TBM5  BCI     1, CAL00                                                 F0B12520
+       BCI     1, ORA01                                                 F0B12530
+       BCI     1, NZT20                                                 F0B12540
+       BCI     1, LXD34                                                 F0B12550
+       BCI     1, LDC35                                                 F0B12560
+ TBM54 BCI     1,RCHB40                                                 F0B12570
+       BCI     1,RCHD41                                                 F0B12580
+       BCI     1,RCHF42                                                 F0B12590
+       BCI     1,RCHH43                                                 F0B12600
+       BCI     1,LCHB44                                                 F0B12610
+       BCI     1,LCHD45                                                 F0B12620
+       BCI     1,LCHF46                                                 F0B12630
+       BCI     1,LCHH47                                                 F0B12640
+ TBM6  BCI     1, STQ00                                                 F0B12650
+       BCI     1, ORS02                                                 F0B12660
+       BCI     1, SLQ20                                                 F0B12670
+       BCI     1, STL25                                                 F0B12680
+       BCI     1, SXD34                                                 F0B12690
+ TBM64 BCI     1,SCHB40                                                 F0B12700
+       BCI     1,SCHD41                                                 F0B12710
+       BCI     1,SCHF42                                                 F0B12720
+       BCI     1,SCHH43                                                 F0B12730
+ TBM7  BCI     1, CAD00                                                 F0B12740
+       BCI     1, PDX34                                                 F0B12750
+       BCI     1, PDC37                                                 F0B12760
+ TBM74 BCI     1, PXD54                                                 F0B12770
+ MSE   BCI     1, MSE60                                                 F0B12780
+       BCI     1, LGL63                                                 F0B12790
+       BCI     1, BSF64                                                 F0B12800
+       BCI     1, LGR65                                                 F0B12810
+       BCI     1, RUN72                                                *F0B12820
+       BCI     1, RQL73                                                 F0B12830
+       BCI     1, AXC74                                                 F0B12840
+ TBE   BES     0                                                        F0B12850
+ RESTO BCI   1,1                                                        F0B12860
+BS2R   MZE     2                                                    (22)F0B12870
+BS1R   MZE     1,,0                                                     F0B12880
+ PCH6  CLA     BOTTOM-7      RESTORE LOCATION 0                     (25)F0B12881
+       STO     0                                                    (25)F0B12882
+       TRA     START+11                                             (25)F0B12883
+       BSS     27            PATCH SPACE                            (25)F0B12885
+END    BES     SIZE                                                     F0B12890
+       DUP     1,17                                                     F0B12900
+       PZE                                                              F0B12910
+ LIMIT PZE                                                              F0B12920
+       BSS     0           *** PATCH AREA ***                          $F0B12921
+ PCH1  AXT     3,1            WRITE ERROR MESSAGE                      $F0B12922
+       TSX     (TAPE),4                                                $F0B12923
+       PZE     ERR+3,1,(WDNP)                                          $F0B12924
+       PZE     ,,OUTTAP                                                $F0B12925
+       TIX     *-3,1,1                                                 $F0B12926
+       TRA     FERR+1                                               (22)F0B12927
+ PCH2  AXT     6,1            WRITE OUT PANEL                          $F0B12928
+       TSX     (TAPE),4                                                $F0B12929
+       PZE     DSU+6,1,(WDNC)                                          $F0B1292A
+       PZE     ,,OUTTAP                                                $F0B1292B
+       TIX     *-3,1,1                                                 $F0B1292C
+       TRA     WRPAN+1            TO STORE.                            $F0B1292D
+       REM                                                              F0B12930
+PCH3   SXD     LIMIT-17,4         SAVE ALL POSSIBLE IR*S               $F0B12931
+       SXD     LIMIT-16,3         IN SEQUENCE                          $F0B12932
+       SXD     LIMIT-15,5         X1,X2,X4,X3,X5,X6,X7.                $F0B12933
+       SXD     LIMIT-14,6         .                                    $F0B12934
+       SXD     LIMIT-13,7         .                                    $F0B12935
+       AXT     0,3                LOAD IR*S TO                         $F0B12936
+       AXT     7,1                TEST TAG MODE WE ARE IN              $F0B12937
+       SXD     ICV4,3             .                                    $F0B12938
+       TRA     PCH6          GO TO RESTORE LOC. 0                   (25)F0B12939
+PCH4   SXA     ICV3,1             ... SET BUFFER POINTER.              $F0B1293B
+       AXT     6,4                SET CAPACITY AND                     $F0B1293C
+       TIX     ICV1,2,1           CONTINUE ON NEW BUFFER.              $F0B1293D
+       AXT     PDC,2              FOR COMPLEMENT                       $F0B1293E
+       SXD     ICV2,2             ALTER INSTRUCTION                    $F0B1293F
+       TXH     ICV,1,0            AND PROCEED AS ALWAYS.               $F0B1293G
+       TRA     ICV3+3             GO AND MATCH ORIGINAL CREATION.      $F0B1293H
+PCH5   PZE     BUF2+20,4          BUFFER POINTERS                      $F0B1293I
+       PZE     BUF1+20,4          .                                    $F0B1293J
+       PZE     BUF3+20,4          .                                    $F0B1293K
+       PZE     BUF+20,4                                                $F0B1293L
+       PZE                   PATCH SPACE                            (22)F0B1293M
+       PZE                                                          (22)F0B1293N
+IOBOT  IORT    BOTTOM,,50                                           (22)F0B1293O
+L(5)   PZE     5                                                    (22)F0B1293P
+       BSS     BOTIOP-*           PATCH SPACE                          $F0B1293Q
+ PDC   SYN     BOTIOP+64                                               $F0B1293R
+ BUF2  SYN     ORGDP+1                                                  F0B12940
+ BUF1  EQU     BUF2+20                                                  F0B12950
+  BUF3 EQU     BUF1+20                                                  F0B12960
+ BUF   EQU     DUMP1                                                    F0B12970
+       END     -1                                                       F0B12980

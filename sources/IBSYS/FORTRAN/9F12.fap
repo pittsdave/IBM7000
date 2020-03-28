@@ -1,0 +1,27 @@
+$JOB   ASSEMBLY OF MONITOR, COMPILER SECTIONS 1 THROUGH 6 OF           $00000010
+$*     FORTRAN II PROCESSOR, 7090-FO-928                                00000020
+$*     VERSION 3, MODIFICATION LEVEL 35                             (35)00000030
+$EXECUTE       IBSFAP                                                  $00000050
+*      32K 709/7090 FORTRAN MONITOR   DUMMY RECORD                      F0L00000
+*      FAP                                                              F0L00020
+       COUNT   16                                                       F0L00030
+*      32K 709/7090 FORTRAN MONITOR   DUMMY RECORD (RECORD 12)          F0L00040
+       SST     FORTRAN                                                 $F0L00050
+       REF                                                              F0L00060
+       LBL     9F12,A                                                   F0L00070
+       REM                                                              F0L00080
+       ABS                                                             $F0L00081
+       ORG     SYSCUR                                                  $F0L00090
+       BCI     1,9F1200                                                $F0L00100
+       ORG     (LODR)                                                  $F0L00101
+       TXI     BOTTOM,,120                                              F0L00110
+       REM                                                              F0L00120
+       ABS                                                              F0L00130
+       ORG     BOTTOM                                                   F0L00140
+       TSX     (TAPE),4      RECORD SHOULD NOT BE READ.  PRINT THAT     F0L00150
+       PZE     ONING,,(TPER) TAPE POSITIONING ERROR HAS OCCURRED AND    F0L00160
+       PZE     POSITI,,SYSTAP GO TO MACHINE ERROR RECORD.               F0L00170
+POSITI BCI     1,POSITI                                                 F0L00180
+ONING  BCI     1,ONING                                                  F0L00190
+Z      PZE                   LAST LOCATION                              F0L00200
+       END     -1                                                       F0L00210

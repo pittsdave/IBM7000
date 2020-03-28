@@ -1,0 +1,52 @@
+$JOB   ASSEMBLY OF MONITOR, COMPILER SECTIONS 1 THROUGH 6 OF           $00000010
+$*     FORTRAN II PROCESSOR, 7090-FO-928                                00000020
+$*     VERSION 3, MODIFICATION LEVEL 35                             (35)00000030
+$EXECUTE       IBSFAP                                                  $00000050
+*      FORTRAN II MONITOR              TAPE POSITIONING RECORD          F0A00000
+*      FAP                                                              F0A00020
+*      FORTRAN II MONITOR              TAPE POSITIONING RECORD          F0A00030
+       ABS                                                              F0A00040
+       COUNT   25                                                       F0A00050
+       SST     FORTRAN                                                 $F0A00060
+       REF                                                             $F0A00061
+       LBL     9F01,X                                                   F0A00070
+       ORG     SYSCUR                                                   F0A00080
+       BCI     1,9F0100                                                 F0A00090
+       ORG     (LODR)                                                   F0A00100
+       TXI     ENTRY,,10      IOP TRANSFER WORD.                        F0A00110
+       ORG     BOTTOM                                                   F0A00120
+       REM                                                              F0A00130
+ ENTRY LDI*    (FGBX)         LOAD INDICATORS TO DETERMINE SPACING.     F0A00140
+       CLA     LBL           SET TO DUMP INITIALLY.                     F0A00150
+       LFT     40            IF DUMP BIT IS ON,                         F0A00160
+       TRA     LOAD           GO TO GET DUMP RECORD                     F0A00170
+       CLA     SYSDMP         RESET LOCATION 2 TO ITS PROPER            F0A00180
+       STO     2              VALUE IN CASE ITS BEEN DESTROYED.         F0A00190
+       LFT     70            NOT CALL FOR DUMP, CHECK FOR SIGNON.       F0A00200
+       TRA     RREC          NO, FOR AN ERROR RECORD.                   F0A00210
+       CLA     SGNON                                                    F0A00220
+  SKIP TSX     (TAPE),4      SPACE OVER RECORDS.                        F0A00230
+       MZE     IOCOM,,(SKBC)                                            F0A00240
+       MZE     ,,SYSTAP                                                 F0A00250
+       MZE     *+1                                                      F0A00260
+  LOAD RIL     70             ZERO OUT THE SPACING BITS                 F0A00270
+       STI*    (FGBX)         IN FLAGBOX                                F0A00280
+       STO     LBL                                                      F0A00290
+       TSX     (LOAD),4,1                                               F0A00300
+   LBL BCI     1,9F0200                                                 F0A00310
+       REM                                                              F0A00320
+  RREC AXT     0,4           SET INDEX TO ZERO.                         F0A00330
+       LNT     20            TEST FOR MACHINE OR SOURCE ERROR RECORD    F0A00340
+       TXI     *+1,4,1       SET INDEX WITH PROPER                      F0A00350
+       TXI     *+1,4,8       SKIP LENGTH, THEN INITIALIZE               F0A00360
+       SXA     IOCOM,4       THE SKIP COMMAND                           F0A00370
+       CLA     MCHER                                                    F0A00380
+       TXL     SKIP,4,8                                                 F0A00390
+       CLA     SRCER                                                    F0A00400
+       TRA     SKIP          AND GO TO GET PROPER RECORD.               F0A00410
+       REM                                                              F0A00420
+ SGNON BCI     1,9F0300                                                 F0A00430
+ MCHER BCI     1,9F1000                                                 F0A00440
+ SRCER BCI     1,9F1100                                                 F0A00450
+ IOCOM PZE     1                                                        F0A00460
+       END     -1                                                       F0A00470

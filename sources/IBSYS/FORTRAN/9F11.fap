@@ -1,0 +1,236 @@
+$JOB   ASSEMBLY OF MONITOR, COMPILER SECTIONS 1 THROUGH 6 OF           $00000010
+$*     FORTRAN II PROCESSOR, 7090-FO-928                                00000020
+$*     VERSION 3, MODIFICATION LEVEL 35                             (35)00000030
+$EXECUTE       IBSFAP                                                  $00000050
+*      32K 709/7090 FORTRAN MONITOR   SOURCE ERROR RECORD               F0K00010
+*      FAP                                                              F0K00030
+*      32K 709/7090 FORTRAN MONITOR   SOURCE ERROR RECORD               F0K00040
+       COUNT   200                                                      F0K00050
+       SST     FORTRAN                                                 $F0K00060
+       ABS                                                             $F0K00070
+       LBL     9F11,A                                                   F0K00080
+       TITLE                                                           $F0K00085
+       ORG     SYSCUR                                                  $F0K00090
+       BCI     1,9F1100                                                $F0K00100
+       ORG     (LODR)                                                  $F0K00101
+       TXI     BOTTOM,,110                                              F0K00110
+       REM                                                              F0K00120
+       ORG     BOTTOM                                                   F0K00140
+ SRCER CAL     NOGOBT        SET NOGO BIT IN SPSJOB                    $F0K00150
+       ORS     SYSJOB        TO BOMB OUT LATER SEGMENTS                $F0K00160
+       TRA     QTEST         GO TEST FOR CALL FROM EXEM                $F0K00170
+       LDI*    (FGBX)                                                   F0K00180
+       SLT     1             TEST FOR CALL FROM FAP.                    F0K00210
+       TRA     *+2                                                      F0K00220
+       TRA     FAP                                                      F0K00230
+       RFT     100000        IS THE BSS CONTROL BIT ON.                 F0K00240
+       TRA     SICOM         YES, SEE IF COMPILER CALLED.               F0K00250
+       LFT     1                                                       $F0K00251
+       TRA     SINON                                                   $F0K00252
+       SLT     2             TEST FOR MONITOR, SECT. 1, OR GEN. DIAG.   F0K00260
+       TRA     GDIAG         SECT. 1 OR GEN. DIAGNOSTIC CALLED.         F0K00270
+       TRA     MON           MONITOR CALLED.  GO TO SCAN.               F0K00280
+SCAN   TSX     (TAPE),4      WRITE -FAILED- CARD ON OUTPUT TAPE.        F0K00290
+       MZE     FAILD,,(WROW)                                            F0K00300
+       MZE     ,,MBNTAP                                                 F0K00310
+       PZE     *+1                                                      F0K00320
+MON    LDI*    (FGBX)        WAS EXECUTION ON.                          F0K00330
+       RNT     200                                                      F0K00340
+       TRA     RIS           NO.                                        F0K00350
+       TSX     (PRNT),4      YES.  PRINT -EXECUTION DELETED-.           F0K00360
+       PZE     EXDEL,,4                                                 F0K00370
+       TSX     (TAPE),4      WRITE -EXECUTION DELETED-.                 F0K00380
+       PZE     WOTED,,(WDNC)                                            F0K00390
+       MZE     ,,MLSTAP                                                 F0K00400
+       RIR     200           TURN OFF EXECUTION BIT.                    F0K00410
+       STI*    (FGBX)                                                   F0K00420
+RIS    TSX     (TAPE),4      POSITION SYSTEM TAPE TO SCAN.              F0K00430
+       MZE     SK6REC,,(SKBP)                                           F0K00440
+       MZE     ,,SYSTAP                                                 F0K00450
+       TSX     (LOAD),4,1                                              $F0K00460
+       BCI     1,9F0600                                                $F0K00461
+GDIAG  TSX     (TAPE),4                                                 F0K00500
+       PZE     CMENT,,(WDNC)                                            F0K00510
+       MZE     ,,MLSTAP                                                 F0K00520
+       TSX     (PRNT),4                                                 F0K00530
+       PZE     MSSG,,8                                                  F0K00540
+       TRA     SCAN                                                     F0K00550
+FAP    TSX     (TAPE),4      WRITE  -ASSEMBLY DELETED-                  F0K00560
+       PZE     ME4I3,,(WDNC) ON OUTPUT TAPE.                            F0K00570
+       MZE     ,,MLSTAP                                                 F0K00580
+       TSX     (TAPE),4                                                 F0K00590
+       PZE     IOCM1,,(WDNC)                                            F0K00600
+       MZE     ,,MLSTAP                                                 F0K00610
+       TSX     (PRNT),4      ALSO PRINT ON-LINE.                        F0K00620
+       PZE     COM14,,9                                                 F0K00630
+       TSX     (PRNT),4                                                 F0K00640
+       PZE     COM11,,3                                                 F0K00650
+       TSX     (TAPE),4      DELETE ASSEMBLY BY                         F0K00660
+       MZE     BSR1,,(SKDP)                                             F0K00670
+       MZE     ,,MINTAP                                                 F0K00680
+ME4SP  TSX     (TAPE),4      SCANNING TO FAP END CARD OR EOF OR BINARY  F0K00690
+       MZE     ME4I4,,(RDNC) RECORD ON INPUT TAPE.                      F0K00700
+       MZE     ,,MINTAP                                                 F0K00710
+       MZE     TAPERR                                                   F0K00720
+       LDQ     ME4WD                                                    F0K00730
+       ZAC                                                              F0K00740
+       LGL     6                                                        F0K00750
+       SUB     ME4AS                                                    F0K00760
+       TZE     ME4SP         END CARD MUST NOT HAVE * IN C.C. 1.        F0K00770
+       CAL     ME4WD+1                                                  F0K00780
+       ERA     ME4EN                                                    F0K00790
+       ANA     ME4MS                                                    F0K00800
+       TNZ     ME4SP                                                    F0K00810
+       TRA     SCAN                                                     F0K00820
+ME4BI  TSX     (TAPE),4      TRY ONCE IN BINARY MODE.                   F0K00830
+       MZE     ME4I4,,(RBNC)                                            F0K00840
+       MZE     ,,MINTAP                                                 F0K00850
+       MZE     SK1R          IF BAD, SKIP RECORD AND CONTINUE SEARCH.   F0K00860
+ME4EJ  TSX     (TAPE),4      BACKSPACE ONCE, THEN                       F0K00870
+       MZE     BSR1,,(SKDP)  CALL IN MONITOR SCAN                       F0K00880
+       MZE     ,,MINTAP                                                 F0K00890
+       TRA     SCAN                                                     F0K00900
+TAPERR CAL     (SCHU)        TAPE ERROR.  IS IT REDUNDANCY.             F0K00910
+       ANA     REDUN                                                    F0K00920
+       TNZ     ME4BI                                                    F0K00930
+       CAL     (SCHU)        IS IT END OF FILE.                         F0K00940
+       ANA     EOF                                                      F0K00950
+       TNZ     SCAN          YES, GO TO MONITOR SCAN                (26)F0K00960
+SK1R   TSX     (TAPE),4      SKIP ONE RECORD.                           F0K00970
+       MZE     L(1),,(SKDP)                                             F0K00980
+       MZE     ,,MINTAP                                                 F0K00990
+       MZE     *+1           ELIMINATE ON-LINE MESSAGE.                 F0K01000
+       TRA     ME4SP                                                    F0K01010
+SICOM  SLT     4             HAS COMPILER CALLED.                       F0K01020
+       TRA     SINON         NO, GO TO SIGN ON.                         F0K01030
+       CLA     *-1           YES, WRITE AND PRINT -SOURCE PROGRAM ERROR-F0K01040
+       STO     RIS           ALSO, -EXECUTION DELETED-.                *F0K01050
+       TRA     GDIAG                                                    F0K01060
+ XEM   CAL     BOTTOM-11      PUT ERROR IN FORM TO COMPARE             $F0K01090
+       ANA     MASK1          WITH TABLE OF                             F0K01100
+       LRS     3              SOURCE ERROR CODES.                       F0K01110
+       ARS     12                                                       F0K01120
+       LLS     3                                                        F0K01130
+       SUB     TBL+10                                                  $F0K01140
+       TZE     EXER4          HPR(0,6) STOP. ILLEGAL UNIT.              F0K01150
+       ADD     TBL+10                                                  $F0K01160
+       AXT     15,1                                                     F0K01170
+       AXT     0,2                                                      F0K01180
+ EXER2 SUB     TBL,2                                                    F0K01190
+       TZE     EXER3          ERROR CODE FOUND.                         F0K01200
+       ADD     TBL,2                                                    F0K01210
+       TXI     *+1,2,-1                                                 F0K01220
+       TIX     EXER2,1,1                                                F0K01230
+       TRA     DLETE          ERROR CODE NOT FOUND IN TABLE.            F0K01240
+ EXER3 TSX     (TAPE),4      WRITE REASON FOR JOB TERMINATION.          F0K01250
+       PZE     CMT,2,(WDNC)                                             F0K01260
+       MZE     ,,MLSTAP                                                 F0K01270
+       TSX     (PRNT),4      PRINT  -EXECUTION TERMINATED- .            F0K01280
+       PZE     COM1,,5                                                  F0K01290
+       TSX     (PRNT),4                                                 F0K01300
+       PZE     COM11,,3                                                $F0K01310
+       CLA*    (LNCT)                                                   F0K01320
+       ADD     L(2)                                                     F0K01330
+       STO*    (LNCT)                                                   F0K01340
+DLETE  TSX     (TAPE),4      WRITE  -EXECUTION TERMINATED- .            F0K01350
+       PZE     COM,,(WDNC)                                              F0K01360
+       MZE     ,,MLSTAP                                                 F0K01370
+SINON  TSX     (TAPE),4      POSITION SYSTEM TAPE TO SIGN ON.           F0K01380
+       MZE     BSR9,,(SKBP)                                             F0K01390
+       MZE     ,,SYSTAP                                                 F0K01400
+       TSX     (LOAD),4,1    READ SIGN ON.                             $F0K01410
+       BCI     1,9F0300                                                $F0K01411
+ EXER4 LXD     BOTTOM-10,1    GET ILLEGAL TAPE NUMBER.                 $F0K01420
+       PXA     0,1                                                      F0K01430
+       TSX     CNVT,4         CONVERT TO BCD.                           F0K01440
+       SLW     COM6+8         SET ILLEGAL TAPE NUMBER IN COMMENT.       F0K01450
+       TSX     (TAPE),4                                                 F0K01460
+       PZE     CMT+10,,(WDNC)                                          $F0K01470
+       MZE     ,,MLSTAP                                                 F0K01480
+       TRA     EXER3+3                                                  F0K01490
+ CNVT  ANA     ADMSK                                                    F0K01500
+       XCA                                                              F0K01510
+       AXT     0,1                                                      F0K01520
+       STZ     TEMP1                                                    F0K01530
+ CNVT1 PXA     0,0                                                      F0K01540
+       DVP     L(10)                                                    F0K01550
+       ALS     0,1                                                      F0K01560
+       ORS     TEMP1                                                    F0K01570
+       CLA     L(1)                                                     F0K01580
+       TLQ     *+2                                                      F0K01590
+       TXI     CNVT1,1,-6                                               F0K01600
+       CAL     BLK                                                      F0K01610
+       ALS     6,1                                                      F0K01620
+       ORA     TEMP1                                                    F0K01630
+       TRA     1,4                                                      F0K01640
+COM1   BCI     5,0EXECUTION TERMINATED BY EXEM.                         F0K01650
+ COM2  BCI     7,0ILLEGAL CHARACTER IN FORMAT STATEMENT.               $F0K01660
+       BCI     4,                                                      $F0K01670
+ COM3  BCI     8,0ILLEGAL CHARACTER IN DATA ABOVE OR BAD FORMAT.        F0K01680
+ COM4  BCI     6,0ILLEGAL CHARACTER ON DATA CARD.                       F0K01690
+ COM5  BCI     5,0END OF FILE AT CARD READER.                           F0K01700
+ COM6  BCI     6,0UNIT ADDRESS NOT FOUND IN IOU FOR L                   F0K01710
+       BCI     4,OGICAL UNIT       .                                    F0K01720
+ COM7  BCI     6,0NOT STANDARD ERROR STOP IN EXEM.                      F0K01730
+ COM8  BCI     6,0EXPONENT EXCEEDS RANGE OF DEXP.                       F0K01740
+ COM9  BCI     7,0NEGATIVE ARGUMENT ILLEGAL FOR DSQRT.                  F0K01750
+ COM10 BCI     8,0ZERO OR NEGATIVE ARGUMENT ILLEGAL FOR DLOG.           F0K01760
+ IND   PZE                                                              F0K01770
+ SMQ   PZE                                                              F0K01780
+ MASK1 PZE     -1,7                                                     F0K01790
+TBL    DEC     8,9,10,11,12,13,16,17,33,34,48,49,57,58,59               F0K01800
+ CMT   IORT    COM2,,11                                                 F0K01810
+       IORT    COM3,,8                                                  F0K01820
+       IORT    COM3,,8                                                  F0K01830
+       IORT    COM3,,8                                                  F0K01840
+       IORT    COM3,,8                                                  F0K01850
+       IORT    COM3,,8                                                  F0K01860
+       IORT    COM4,,6                                                  F0K01870
+       IORT    COM5,,5                                                  F0K01880
+       IORT    COM12,,7                                                 F0K01890
+       IORT    COM13,,6                                                 F0K01900
+       IORT    COM6,,10                                                 F0K01910
+       IORT    COM7,,6                                                  F0K01920
+       IORT    COM8,,6                                                  F0K01930
+       IORT    COM9,,7                                                  F0K01940
+       IORT    COM10,,8                                                 F0K01950
+ L(1)  PZE     1                                                        F0K01960
+ L(2)  PZE     2                                                        F0K01970
+ L(10) PZE     10                                                       F0K01980
+ ADMSK PZE     -1                                                       F0K01990
+ TEMP1 PZE                                                              F0K02000
+COM    IORT    COM1,,5                                                  F0K02020
+BSR1   MZE     1                                                        F0K02030
+BSR9   MZE     9                                                        F0K02040
+SK6REC MZE     6                                                        F0K02050
+IOCM1  IORT    COM14,,9                                                 F0K02060
+ME4I3  IORT    COM11,,3                                                 F0K02070
+CMENT  IORT    MSSG,,8                                                  F0K02080
+COM11  BCI     3,0                                                      F0K02090
+COM12  BCI     7,0PHYSICAL RECORD SIZE EXCEEDS BUFFER SIZE.             F0K02100
+COM13  BCI     6,0LIST EXCEEDS LOGICAL RECORD LENGTH.                   F0K02110
+COM14  BCI     9,0     ASSEMBLY DELETED BECAUSE OF SOURCE PROGRAM ERROR F0K02120
+MSSG   BCI     8,0     SOURCE PROGRAM ERROR.  NO COMPILATION.           F0K02130
+WOTED  IORT    EXDEL,,4                                                 F0K02140
+EXDEL  BCI     4,0EXECUTION DELETED.                                    F0K02150
+FAILD  IORT    *+1,,24       FAILED CARD.                               F0K02160
+       OCT     ,,,,,                                                    F0K02170
+       OCT     200020040140,377437743760,200020040140,200020002010      F0K02180
+       OCT     200020040140,200020002004,374037740140,200037402004      F0K02190
+       OCT     200010100140,200020002010,377407600140,200037743760      F0K02200
+       OCT     ,,,,,                                                    F0K02210
+BLK    BCI     1,                                                       F0K02220
+ ME4WD OCT     ,,                                                   (26)F0K02230
+ME4AS  BCI     1,00000*                                                 F0K02250
+ME4EN  BCI     1,0END 0                                                 F0K02260
+ME4MS  OCT     7777777700                                               F0K02270
+EOF    OCT     4                                                        F0K02280
+REDUN  OCT     10                                                       F0K02290
+ QTEST SLT     3             WAS THIS EXEM                             $F0K02291
+       TRA     SRCER+3       NO,TRY FAP                                $F0K02292
+       TRA     XEM           YES,FIND OUT WHICH ONE                    $F0K02293
+NOGOBT DEC     1B17          NOGO BIT FOR SYSJOB                       $F0K02294
+ ME4I4 IORT    ME4WD,,3                                             (26)F0K02300
+       BSS     45            PATCH SPACE                            (26)F0K02305
+ ENDEX BSS     0                                                        F0K02310
+       END     -1                                                       F0K02320

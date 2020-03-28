@@ -1,0 +1,503 @@
+$JOB   ASSEMBLY OF MONITOR, COMPILER SECTIONS 1 THROUGH 6 OF           $00000010
+$*     FORTRAN II PROCESSOR, 7090-FO-928                                00000020
+$*     VERSION 3, MODIFICATION LEVEL 35                             (35)00000030
+$EXECUTE       IBSFAP                                                  $00000050
+*      32K 709/7090 FORTRAN MONITOR   MACHINE ERROR RECORD              F0J00010
+*      FAP                                                              F0J00030
+*      32K 709/7090 FORTRAN MONITOR   MACHINE ERROR RECORD              F0J00040
+       COUNT   475                                                      F0J00050
+       LBL     9F10,A                                                   F0J00060
+       ABS                                                             $F0J00070
+       SST     FORTRAN                                                 $F0J00071
+       ORG     SYSCUR                                                  $F0J00080
+       BCI     1,9F1000                                                $F0J00090
+       ORG     (LODR)                                                  $F0J00091
+       TXI     BOTTOM,,100                                              F0J00100
+       TITLE                                                           $F0J00110
+       ORG     BOTTOM                                                   F0J00130
+       LDI*    (FGBX)                                                  $F0J00170
+       TRA     SNORTY                                               (26)F0J00180
+       PZE                   NOT USED                                  $F0J00190
+       SLT     2             IS THIS MONITOR.                           F0J00200
+       TRA     *+2           NO.                                        F0J00210
+       TRA     MON           YES.                                       F0J00220
+       SLT     3             IS THIS XEM.                               F0J00230
+       TRA     *+2           NO.                                        F0J00240
+       TRA     XEM           YES.                                       F0J00250
+ ME713 TSX     (PRNT),4      PRINT OPTION TO RERUN.                 (26)F0J00300
+       PZE     COM3,,10      RESTORE, OR DELETE.                        F0J00310
+       TSX     (PRNT),4                                                 F0J00320
+       PZE     COM3A,,20                                                F0J00330
+       TSX     (PRNT),4                                             (31)F0J00340
+       PZE     COM4,,12                                             (31)F0J00350
+       TSX     (PRNT),4      RESTORE PRINTER PAGE.                      F0J00360
+       PZE     RESTO,,3                                                 F0J00370
+       TSX     (PAUSE,4      SYSTEM PAUSE                              $F0J00380
+       ENK                    IS RESTORE MEMORY                     (31)F0J00390
+       XCA                    INDICATED.                            (31)F0J00400
+       PAX     ,1                                                   (31)F0J00410
+       TXL     ME13,1,-2      NO                                    (31)F0J00420
+ ME7   TSX     (DGLD),4       YES RESTORE MEMORY AND HALT.          (31)F0J00430
+ME10   TSX     (TAPE),4      NO, RETRY.                                 F0J00550
+       MZE     SK1FL,,(SKBP)                                            F0J00560
+       MZE     ,,SYSTAP                                                 F0J00570
+       TSX     (LOAD),4,1    READ IN SECTION ONE.                      $F0J00580
+       BCI     1,9F1300                                                $F0J00590
+FAP    SLN     1             TURN ON SENSE LIGHT 1 FOR LATER SIGNAL.    F0J00600
+       TSX     (PRNT),4      PRINT OPTION TO RETRY.                     F0J00610
+       PZE     COM13,,10     ASSEMBLY OR TO DELETE IT.                  F0J00620
+       TSX     (PRNT),4                                                 F0J00630
+       PZE     COM13+10,,10                                             F0J00640
+       TSX     (PRNT),4                                                 F0J00650
+       PZE     COM13+20,,13                                             F0J00660
+       TSX     (PRNT),4      RESTORE PRINTER PAGE.                      F0J00670
+       PZE     RESTO,,3                                                 F0J00680
+       TSX     (PAUSE,4      SYSTEM PAUSE                              $F0J00690
+       ENK                   CHECK OPTION CHOSEN.                       F0J00700
+       TQP     ME4RT         RETRY.                                     F0J00710
+ MEDL  TSX     (TAPE),4      WRITE  -ASSEMBLY DELETED-              (26)F0J00720
+       PZE     ME4I3,,(WDNC) ON OUTPUT TAPE.                            F0J00730
+       MZE     ,,MLSTAP                                                 F0J00740
+       TSX     (TAPE),4                                                 F0J00750
+       PZE     IOCM1,,(WDNC)                                            F0J00760
+       MZE     ,,MLSTAP                                                 F0J00770
+       TSX     (PRNT),4      ALSO PRINT ON-LINE.                        F0J00780
+       PZE     COM14,,3                                                 F0J00790
+       TRA     PATCH1        ERROR MAY BE AT 1ST RECORD AFTER FAP CARD *F0J00800
+       NOP                                                             *F0J00810
+ME4DA  TSX     (TAPE),4      DELETE ASSEMBLY BY                         F0J00820
+       MZE     BSR1,,(SKDP)                                             F0J00830
+       MZE     ,,MINTAP                                                 F0J00840
+ME4SP  TSX     (TAPE),4      SCANNING TO FAP END CARD OR EOF OR BINARY  F0J00850
+       MZE     ME4I4,,(RDNC) RECORD ON INPUT TAPE.                      F0J00860
+       MZE     ,,MINTAP                                                 F0J00870
+       MZE     TAER                                                     F0J00880
+       LDQ     ME4WD                                                    F0J00890
+       ZAC                                                              F0J00900
+       LGL     6                                                        F0J00910
+       SUB     ME4AS                                                    F0J00920
+       TZE     ME4SP         END CARD MUST NOT HAVE * IN C.C. 1.        F0J00930
+       CAL     ME4WD+1                                                  F0J00940
+       ERA     ME4EN                                                    F0J00950
+       ANA     ME4MS                                                    F0J00960
+       TNZ     ME4SP                                                    F0J00970
+       TRA     SCAN                                                     F0J00980
+ME4BI  TSX     (TAPE),4      TRY ONCE IN BINARY MODE.                   F0J00990
+       MZE     ME4I4,,(RBNC)                                            F0J01000
+       MZE     ,,MINTAP                                                 F0J01010
+       MZE     SK1R          IF BAD, SKIP RECORD AND CONTINUE SEARCH.   F0J01020
+ME4EJ  TSX     (TAPE),4      BACKSPACE ONCE, THEN                       F0J01030
+       MZE     BSR1,,(SKDP)  CALL IN MONITOR SCAN                       F0J01040
+       MZE     ,,MINTAP                                                 F0J01050
+SCAN   SLT     1             IS THIS FAP.                               F0J01060
+       TRA     NOFAP         NO.                                        F0J01070
+       CLA*    BINT          YES, REPOSITION MONITOR BINARY OUTPUT TAPE*F0J01080
+       STA     IOCOM1                                                   F0J01090
+       TSX     (TAPE),4                                                 F0J01100
+       MZE     IOCOM1,,(SKBP)                                           F0J01110
+       MZE     ,,MBNTAP                                                 F0J01120
+NOFAP  TSX     (TAPE),4      WRITE -FAILED- CARD ON OUTPUT TAPE.        F0J01130
+       MZE     FAILD,,(WROW)                                            F0J01140
+       MZE     ,,MBNTAP                                                 F0J01150
+       LDI*    (FGBX)        WAS EXECUTION ON.                          F0J01160
+       RNT     200                                                      F0J01170
+       TRA     RIS           NO.                                        F0J01180
+       TSX     (PRNT),4      YES.  PRINT -EXECUTION DELETED-.           F0J01190
+       PZE     EXDEL,,4                                                 F0J01200
+       TSX     (TAPE),4      WRITE -EXECUTION DELETED-.                 F0J01210
+       PZE     WOTED,,(WDNC)                                            F0J01220
+       MZE     ,,MLSTAP                                                 F0J01230
+       RIR     200           TURN OFF EXECUTION BIT.                    F0J01240
+       STI*    (FGBX)                                                   F0J01250
+RIS    TSX     (TAPE),4      POSITION SYSTEM TAPE TO SCAN.              F0J01260
+       MZE     BSR5,,(SKBP)                                             F0J01270
+       MZE     ,,SYSTAP                                                 F0J01280
+       TSX     (LOAD),4,1    READ IN SCAN.                             $F0J01290
+       BCI     1,9F0600                                                $F0J01291
+TAER   CAL     (SCHU)        TAPE ERROR.  IS IT REDUNDANCY.             F0J01300
+       ANA     REDUN                                                    F0J01310
+       TNZ     ME4BI                                                    F0J01320
+       CAL     (SCHU)        IS IT END OF FILE.                         F0J01330
+       ANA     EOF                                                      F0J01340
+       TNZ     ME4EJ                                                    F0J01350
+SK1R   TSX     (TAPE),4      SKIP ONE RECORD.                           F0J01360
+       MZE     L(1),,(SKDP)                                             F0J01370
+       MZE     ,,MINTAP                                                 F0J01380
+       MZE     *+1           ELIMINATE ON-LINE MESSAGE.                 F0J01390
+       TRA     ME4SP                                                    F0J01400
+ME4RT  TSX     (PRNT),4      RETRY ASSEMBLY.                            F0J01410
+       PZE     COM15,,3                                                 F0J01420
+       TSX     (PRNT),4      DOUBLE SPACE ON PRINTER.                   F0J01430
+       PZE     COM9,,3                                                  F0J01440
+       TSX     (PRNT),4      DOUBLE SPACE ON PRINTER.                   F0J01450
+       PZE     COM9,,3                                                  F0J01460
+       TSX     (TAPE),4      WRITE -ASSEMBLY RETRIED-.                 *F0J01470
+       MZE     ME4I6,,(WDNC)                                            F0J01480
+       MZE     ,,MLSTAP                                                 F0J01490
+       TSX     (TAPE),4                                                 F0J01500
+       MZE     ME4F,,(WDNC)                                             F0J01510
+       MZE     ,,MLSTAP                                                 F0J01520
+       TSX     (TAPE),4                                                 F0J01530
+       MZE     ME5F,,(WDNC)                                             F0J01540
+       MZE     ,,MLSTAP                                                 F0J01550
+       LDQ     JOBSAV        RESTORE SYSJOB SINCE THERE IS             $F0J01560
+       STQ     SYSJOB        A NEGLIGIBLE CHANCE OF SUCCESS            $F0J01561
+       TRA     GET1-2                                                  $F0J01562
+ ME27  LDQ     JOBSAV        RESTORE SYSJOB BEFORE                     $F0J01563
+       STQ     SYSJOB        RETRYING FORTRAN JOB                      $F0J01564
+       TRA     ME27A                                                   $F0J01565
+       LXD     BOTTOM-7,2    PICK UP NO. OF TAPES TO BE REPOSITIONED.  $F0J01566
+       TXL     INPTA,2,2                                                F0J01570
+GET1   CLA*    ENDPAR        PICK UP PARAMETERS (NO. RECS.,,LOG. TAPE)  F0J01580
+       TZE     PARM1+1                                                  F0J01590
+       STA     IOCOM1                                                   F0J01600
+       STD     PARM1                                                    F0J01610
+       TSX     (TAPE),4                                                 F0J01620
+       MZE     IOCOM1,,(SKDP)                                           F0J01630
+PARM1  MZE     ,,**                                                     F0J01640
+       TXI     GET1-1,2,-1                                              F0J01650
+INPTA  CLA*    ENDPAR                                                   F0J01660
+       STA     IOCOM1                                                   F0J01670
+       TSX     (TAPE),4      REPOSITION MONITOR BINARY OUTPUT TAPE.     F0J01680
+       MZE     IOCOM1,,(SKBP)                                           F0J01690
+       MZE     ,,MBNTAP                                                 F0J01700
+       TXI     *+1,2,-1                                                 F0J01710
+       CLA*    ENDPAR                                                   F0J01720
+       ANA     MASK                                                     F0J01730
+       LAS     LARGE                                                    F0J01740
+       TRA     SKFOR         INPUT TAPE IS POSITIONED BEFORE FAP CARD.  F0J01750
+       TRA     *+1                                                      F0J01760
+       STA     IOCOM1        TAPE IS AFTER *FAP CARD.  BACKSPACE UNTIL  F0J01770
+       TSX     (TAPE),4      IT IS IN FRONT OF THE *FAP CARD.           F0J01780
+       MZE     IOCOM1,,(SKDP)                                           F0J01790
+       MZE     ,,MINTAP                                                 F0J01800
+       AXT     25,2                                                     F0J01810
+READX  TXL     ENCT,2,0      DO NOT SEARCH MORE THAN 25 EXTRA RECORDS.  F0J01820
+       TSX     (TAPE),4      READ MONITOR INPUT TAPE FOR CONTROL        F0J01830
+       MZE     ICOM2,,(RDNC)  CARDS, ONE CARD AT A TIME.                F0J01840
+       MZE     ,,MINTAP                                                 F0J01850
+       MZE     *+1                                                      F0J01860
+       LDQ     BUFF          IS CARD AN * CARD.                         F0J01870
+       ZAC                                                              F0J01880
+       LGL     6                                                        F0J01890
+       SUB     ASTER                                                    F0J01900
+       TZE     MONCC          AN *-CARD IS FOUND.                       F0J01910
+       TXI     READIN,2,-1    A NON-* CARD, TRY NEXT CARD.              F0J01920
+MONCC  AXT     11,4                                                     F0J01930
+WORD   LDQ     BUFF+12,4                                                F0J01940
+       AXT     6,1           SET UP INDEXING FOR SIX CHARACTER SCAN.    F0J01950
+CHAR   ZAC                                                              F0J01960
+       LGL     6                                                        F0J01970
+       LAS     BLANK                                                    F0J01980
+       TRA     *+2                                                      F0J01990
+       TRA     BLNK                                                     F0J02000
+       ZET     FCELL         HAS AN 'F' BEEN FOUND.                     F0J02010
+       TRA     TRYA           YES.                                      F0J02020
+       LAS     F                                                        F0J02030
+       TXI     READIN,2,-1                                              F0J02040
+       TRA     FFOUND        'F' HAS BEEN FOUND.                        F0J02050
+       TXI     READIN,2,-1                                              F0J02060
+TRYA   ZET     ACELL                                                    F0J02070
+       TRA     TRYP                                                     F0J02080
+       LAS     A                                                        F0J02090
+       TXI     READIN,2,-1                                              F0J02100
+       TRA     AFOUND        'A' HAS BEEN FOUND.                        F0J02110
+       TXI     READIN,2,-1                                              F0J02120
+TRYP   LAS     P                                                        F0J02130
+       TXI     READIN,2,-1                                              F0J02140
+       TRA     POSSYS                                                   F0J02150
+       TXI     READIN,2,-1                                              F0J02160
+BLNK   TIX     CHAR,1,1      TRY NEXT CHARACTER.                        F0J02170
+       TIX     WORD,4,1      TRY NEXT WORD.                             F0J02180
+       TXI     READIN,2,-1   TRY NEXT WORD.                             F0J02190
+POSSYS TSX     (TAPE),4      POSITION SYSTEM TAPE TO FAP, RECORD 4.     F0J02200
+       MZE     BS7R,,(SKBP)                                             F0J02210
+       MZE     ,,SYSTAP                                                 F0J02220
+       TSX     (LOAD),4,1    READ IN FAP .                             $F0J02230
+       BCI     1,9F0400                                                $F0J02231
+ENCT   TSX     (TAPE),4      CAN NOT FIND ANY * CARDS.  DELETE ASSEMBLY.F0J02240
+       MZE     TAPERR,,(WDNC)                                           F0J02250
+       MZE     ,,MLSTAP                                                 F0J02260
+       TSX     (PRNT),4                                                 F0J02270
+       PZE     TPERR,,11                                                F0J02280
+       TRA     ME4DA                                                    F0J02290
+READIN TSX     (TAPE),4      BACKSPACE OVER THE MONITOR INPUT TAPE      F0J02300
+       MZE     IOCOM3,,(SKDP) TWO RECORDS.                              F0J02310
+       MZE     ,,MINTAP                                                 F0J02320
+       STZ     FCELL         INITIALIZE CELLS FOR *FAP CARD SEARCH.     F0J02330
+       STZ     ACELL                                                    F0J02340
+       TRA     READX                                                    F0J02350
+SKFOR  TSX     (TAPE),4                                                 F0J02360
+       MZE     FRDSKP,,(SKDP)                                           F0J02370
+       MZE     ,,MINTAP                                                 F0J02380
+       TRA     READX-1                                                  F0J02390
+       REM                                                              F0J02400
+MON    CAL     DLETEX        ERROR IN MONITOR.                          F0J02410
+       LDI*    (FGBX)                                                   F0J02420
+       ANS*    (FGBX)        DELETE EXECUTION.                          F0J02430
+       RNT     200           WAS EXECUTION ON.                          F0J02440
+       TRA     ME26          NO.                                        F0J02450
+       TSX     (PRNT),4      YES, PRINT -EXECUTION DELETED-.            F0J02460
+       PZE     COM2,,10                                                 F0J02470
+ME26   TSX     (PRNT),4      PRINT RETRY OPTION.                        F0J02480
+       PZE     COM20,,8                                                 F0J02490
+       TSX     (PRNT),4      PRINT CONTINUE OPTION.                     F0J02500
+       PZE     COM21,,10                                                F0J02510
+       TSX     (PRNT),4      PRINT DELETE OPTION.                       F0J02520
+       PZE     COM22,,10                                                F0J02530
+       TSX     (PRNT),4      RESTORE PRINTER PAGE.                      F0J02540
+       PZE     RESTO,,3                                                 F0J02550
+       TSX     (PAUSE,4      SYSTEM PAUSE                              $F0J02560
+       ENK                   CHECK OPTION CHOSEN.                       F0J02570
+       NOP                                                             *F0J02580
+       TQP     ME27          MQ PLUS MEANS RETRY.                       F0J02590
+       LGL     2             BIT TWO PLUS MEANS                         F0J02600
+       TQP     ME23B         CONTINUE SAME JOB.                         F0J02610
+       TRA     ME28          OTHERWISE DELETE JOB.                      F0J02620
+ ME27A TSX     (TAPE),4      BACKSPACE FILE ON INPUT TAPE              $F0J02630
+       MZE     BSF,,(SKBP)                                              F0J02640
+       MZE     ,,MINTAP                                                 F0J02650
+ME28   TSX     (TAPE),4      POSITION SYSTEM TAPE TO SIGN ON.           F0J02660
+       MZE     BSR8,,(SKBP)                                             F0J02670
+       MZE     ,,SYSTAP                                                 F0J02680
+       TSX     (LOAD),4,1    READ IN SIGN ON.                          $F0J02690
+       BCI     1,9F0300                                                $F0J02691
+ME13   ENK                   IS DELETE INDICATED.                       F0J02700
+       TQP     NOGOQ         NO,RETRY                                  $F0J02710
+       TSX     (TAPE),4      WRITE DELETION MESSAGE ON TAPE.            F0J02720
+       PZE     COMDL,,(WDNC)                                            F0J02730
+       MZE     ,,MLSTAP                                                $F0J02740
+       TSX     (PRNT),4                                                 F0J02750
+       PZE     COM23,,8                                                 F0J02760
+ME23B  LDI*    (FGBX)                                                   F0J02770
+       RFT     100000        IS THE BSS CONTROL BIT ON.                 F0J02780
+       TRA     ME28          YES, GO TO SIGN ON.                        F0J02790
+       LFT     1                                                       $F0J02791
+       TRA     ME28                                                    $F0J02792
+       TRA     SCAN          NO, GO TO SCAN.                            F0J02800
+       REM                                                              F0J02810
+XEM    CAL     BOTTOM-11      ENTRY FROM XEM.  PUT                     $F0J03030
+       ANA     MASK1          ERROR                                     F0J03040
+       LRS     3              CODE                                      F0J03050
+       ARS     12             IN                                        F0J03060
+       LLS     3              FORM                                      F0J03070
+       AXT     7,1            TO                                       $F0J03080
+       AXT     0,2            COMPARE WITH TABLE                        F0J03090
+ EX1   SUB     TBL,2          OF MACHINE ERROR CODES.                   F0J03100
+       TZE     EX2            FOUND.                                    F0J03110
+       ADD     TBL,2                                                    F0J03120
+       TXI     *+1,2,-1                                                 F0J03130
+       TIX     EX1,1,1                                                  F0J03140
+       TRA     ME28           ERROR CODE NOT FOUND IN TABLE.            F0J03150
+ EX2   CLA     CMT,2          SET RELEVANT COMMENT                      F0J03160
+       STO     MSG2           FOR OFF-LINE WRITE                        F0J03170
+       CLA     PRT,2          AND                                       F0J03180
+       STO     EX3            ON-LINE PRINT.                            F0J03190
+       CLA     BOTTOM-10      CONVERT BINARY TAPE NUMBER               $F0J03200
+       LRS     9              TO BCD.                                   F0J03210
+       SUB     L(1)                                                     F0J03220
+       PAC     0,1                                                      F0J03230
+       LLS     5                                                        F0J03240
+       PXA     0,0                                                      F0J03250
+       PAI                                                              F0J03260
+       LLS     4                                                        F0J03270
+       SUB     L(1)                                                     F0J03280
+       PAC     0,2                                                      F0J03290
+       CAL     LET,1                                                    F0J03300
+       OAI                                                              F0J03310
+       CAL     NUM,2                                                    F0J03320
+       OAI                                                              F0J03330
+       STI     EXCOM2+10      STORE PHYSICAL                            F0J03340
+       STI     EXCOM3+7       TAPE NUMBER                               F0J03350
+       STI     EXCOM4+11      IN                                        F0J03360
+       STI     EXCOM5+5       RELEVANT MESSAGES.                        F0J03370
+       TSX     (TAPE),4       WRITE EXECUTION DELETED                   F0J03380
+       MZE     MSG1,,(WDNC)  AND REASON FOR DELETION.                   F0J03390
+       MZE     ,,MLSTAP                                                 F0J03400
+       TSX     (TAPE),4                                                 F0J03410
+       MZE     MSG2,,(WDNC)                                             F0J03420
+       MZE     ,,MLSTAP                                                 F0J03430
+       TSX     (TAPE),4                                                 F0J03440
+       MZE     MSG3,,(WDNC)                                             F0J03450
+       MZE     ,,MLSTAP                                                 F0J03460
+       CLA*    (LNCT)                                                   F0J03470
+       ADD     L(2)                                                     F0J03480
+       STO*    (LNCT)                                                   F0J03490
+       TSX     (PRNT),4      PRINT ON-LINE TOO.                         F0J03500
+ EX3   PZE                                                              F0J03510
+       TSX     (PRNT),4      PRINT -EXECUTION TERMINATED...-.           F0J03520
+       PZE     EXCOM1,,4                                                F0J03530
+       TSX     (PRNT),4      DOUBLE SPACE ON PRINTER.                   F0J03540
+       PZE     COM9,,3                                                  F0J03550
+ EX35  TSX     (PRNT),4      PRINT OPTIONS                          (26)F0J03560
+       PZE     EXCOM7,,6     TO RETRY                                   F0J03570
+       TSX     (PRNT),4      OR DELETE.                                 F0J03580
+       PZE     EXCOM8,,9                                                F0J03590
+       TSX     (PRNT),4      RESTORE PRINTER PAGE.                      F0J03600
+       PZE     RESTO,,3                                                 F0J03610
+       TSX     (PAUSE,4      SYSTEM PAUSE                              $F0J03620
+       ENK                                                              F0J03630
+       TQP     ME27           RETRY.                                    F0J03640
+       TRA     ME28           DELETE.                                   F0J03650
+ MASK1 PZE     -1,7                                                     F0J03680
+ TBL   DEC     24,25,40,41,42,49,50                                    $F0J03690
+ L(2)  PZE     2                                                        F0J03700
+ LET   BCI     8,A00000B00000C00000D00000E00000F00000G00000H00000       F0J03710
+ NUM   BCI     9,0 1   0 2   0 3   0 4   0 5   0 6   0 7   0 8   0 9    F0J03720
+       BCI     1,010                                                    F0J03730
+CMT    IORT    EXCOM2,,12                                               F0J03740
+       IORT    EXCOM3,,9                                                F0J03750
+       IORT    EXCOM4,,13                                               F0J03760
+       IORT    EXCOM5,,7                                                F0J03770
+       IORT    EXCOM5,,7                                                F0J03780
+       IORT    EXCOM6,,9                                               $F0J03781
+       IORT    EXCOM9,,4                                               $F0J03782
+PRT    PZE     EXCOM2,,12                                               F0J03790
+       PZE     EXCOM3,,9                                                F0J03800
+       PZE     EXCOM4,,13                                               F0J03810
+       PZE     EXCOM5,,7                                                F0J03820
+       PZE     EXCOM5,,7                                                F0J03830
+       PZE     EXCOM6,,9                                               $F0J03831
+       PZE     EXCOM9,,4                                               $F0J03832
+MSG1   IORT    COM9,,3                                                  F0J03840
+MSG2   PZE                                                              F0J03850
+MSG3   IORT    EXCOM1,,4                                                F0J03860
+EXCOM1 BCI     4, EXECUTION TERMINATED.                                 F0J03870
+EXCOM2 BCI     9, I/O CHECK LIGHT TURNED ON BY LAST READ INSTRUCTION ON F0J03880
+       BCI     3, TAPE       .                                          F0J03890
+EXCOM3 BCI     9,   REDUNDANCY ENCOUNTERED IN READING TAPE       .      F0J03900
+EXCOM4 BCI     9,      I/O CHECK LIGHT TURNED ON BY LAST WRITE INSTRUCT F0J03910
+       BCI     4,ION ON TAPE       .                                    F0J03920
+EXCOM5 BCI     7,      REDUNDANCY WRITING TAPE       .                  F0J03930
+EXCOM6 BCI     9, SYSUNI OR SYSUAV FUNCTION NOT ASSIGNED AN I/O UNIT.  $F0J03931
+EXCOM7 BCI     6, TO RETRY THIS JOB, PUSH START.                        F0J03940
+EXCOM8 BCI     9, TO GO TO NEXT JOB, DEPRESS SIGN KEY AND PUSH START.   F0J03950
+EXCOM9 BCI     4, ILLEGAL UNIT ASSIGNED.                               $F0J03951
+COM2   BCD     EXECUTION DELETED BECAUSE OF MACHINE ERROR.              F0J03960
+COM3   BCD     TO RETRY THIS COMPILATION, PUSH START.                   F0J03970
+COM3A  BCD     TO DELETE THIS COMPILATION AND CONTINUE JOB, DEPRESS SIGNF0J03980
+       BCD   KEY AND PUSH START.                                        F0J03990
+COM4   BCI     6,   TO RESTORE MEMORY AND HALT, DEPRE               (31)F0J04000
+       BCI     6,SS ALL ADDRESS KEYS AND PUSH START.                (31)F0J04010
+       DUP     1,8                                                  (31)F0J04013
+       PZE                   (NOT USED)                             (31)F0J04016
+COM9   BCI     3,0                                                      F0J04020
+COM13  BCD     ASSEMBLY DELETED BECAUSE OF MACHINE ERROR                F0J04030
+       BCD     TO RETRY THIS ASSEMBLY, PUSH START                       F0J04040
+       BCD     TO DELETE THIS ASSEMBLY AND CONTINUE JOB, DEPRESS SIGN KEF0J04050
+       BCI     3,Y AND PUSH START                                       F0J04060
+COM14  BCI     3,0ASSEMBLY DELETED                                      F0J04070
+COM15  BCI     3,0ASSEMBLY RETRIED                                      F0J04080
+COM16  BCI     4,BECAUSE OF MACHINE ERROR                               F0J04090
+ COM20 BCI     8, TO RETRY JOB, PUT ALL KEYS UP AND PUSH START.         F0J04100
+ COM21 BCI     5, TO CONTINUE SAME JOB, DEPRESS                         F0J04110
+       BCI     5, SIGN KEY ONLY AND PUSH START.                         F0J04120
+ COM22 BCI     5, TO DELETE THIS JOB DEPRESS AL                         F0J04130
+       BCI     5,L PREFIX KEYS AND PUSH START.                          F0J04140
+COM23  BCI     8, COMPILATION DELETED BECAUSE OF MACHINE ERROR.         F0J04150
+ME4I3  IORT    COM9,,3                                                  F0J04160
+IOCM1  IOCP    COM14,,3                                                 F0J04170
+       IORT    COM16,,4                                                 F0J04180
+RESTO  BCI     3,1                                                      F0J04190
+EOF    OCT     4                                                        F0J04200
+REDUN  OCT     10                                                       F0J04210
+BSR1   MZE     1                                                        F0J04220
+BSR5   MZE     5                                                        F0J04230
+ENDPAR PZE     **,2          USED TO PICK UP FAP TAPE PARAMETERS.      $F0J04240
+TAPERR IORT    TPERR,,11                                                F0J04250
+TPERR  BCI ,0BEGINNING OF ASSEMBLY NOT FOUND ON INPUT TAPE.  ASSEMBLY DEF0J04260
+       BCI     1,LETED.                                                 F0J04270
+FFOUND STL     FCELL                                                    F0J04280
+       TRA     BLNK                                                     F0J04290
+AFOUND STL     ACELL                                                    F0J04300
+       TRA     BLNK                                                     F0J04310
+FCELL  PZE                                                              F0J04320
+ACELL  PZE                                                              F0J04330
+LARGE  PZE     -6                                                       F0J04340
+MASK   PZE     -1                                                       F0J04350
+F      OCT     26                                                       F0J04360
+A      OCT     21                                                       F0J04370
+P      OCT     47                                                       F0J04380
+BLANK  OCT     60                                                       F0J04390
+ASTER  OCT     54                                                       F0J04400
+FRDSKP PZE     1                                                        F0J04410
+IOCOM1 MZE                                                              F0J04420
+ICOM2  IORT    BUFF,,14      COMMAND TO READ IN ONE BCD CARD            F0J04430
+IOCOM3 MZE     2                                                        F0J04440
+BS7R   MZE     7                                                        F0J04450
+       DUP     1,14                                                     F0J04460
+BUFF   PZE                                                              F0J04470
+ME4I4  IORT    ME4WD,,4      TO ELIMINATE NOISE RECORDS                $F0J04480
+ME4I6  IORT    COM9,,3                                                  F0J04490
+ME4F   IORT    COM15,,7                                                 F0J04500
+ME5F   IORT    RESTO,,3                                                 F0J04510
+ NOGOB DEC     1B17          NOGO BIT                               (26)F0J04520
+       PZE                   NOT USED                                  $F0J04521
+ME4EN  BCI     1,0END 0                                                 F0J04530
+ME4MS  OCT     7777777700                                               F0J04540
+ME4AS  BCI     1,00000*                                                 F0J04550
+DLETEX OCT     777777777577                                             F0J04560
+L(1)   OCT     1                                                        F0J04570
+REW    PZE     ,,-1                                                     F0J04580
+SK1FL  PZE     ,,1                                                      F0J04600
+BSF    MZE     ,,1                                                      F0J04610
+BSR8   MZE     8                                                        F0J04620
+WOTED  IORT    EXDEL,,4                                                 F0J04690
+EXDEL  BCI     4,0EXECUTION DELETED.                                    F0J04700
+COMDL  IORT    COM23,,8                                                 F0J04710
+FAILD  IORT    *+1,,24       FAILED CARD.                               F0J04720
+       OCT     ,,,,,                                                    F0J04730
+       OCT     200020040140,377437743760,200020040140,200020002010      F0J04740
+       OCT     200020040140,200020002004,374037740140,200037402004      F0J04750
+       OCT     200010100140,200020002010,377407600140,200037743760      F0J04760
+       OCT     ,,,,,                                                    F0J04770
+PATCH1 TSX     (PRNT),4      SPACE PRINTER.                            *F0J04780
+       PZE     COM9,,3                                                 *F0J04790
+       CLA*    INPT          PICK UP NO. OF RECS. READ FROM INPUT TAPE *F0J04800
+       PAX     ,4                                                      *F0J04810
+       TXL     ME4DA,4,-6    IS INPUT TAPE BEFORE *FAP CARD.           *F0J04820
+       TSX     (TAPE),4      YES, SKIP ONE RECORD FORWARD.             *F0J04830
+       MZE     FRDSKP,,(SKDP)                                          *F0J04840
+       MZE     ,,MINTAP                                                *F0J04850
+       TRA     ME4DA                                                   *F0J04860
+INPT   PZE     **            ADDRESS OF FAP PARAMETER FOR INPUT TAPE.  $F0J04880
+BINT   PZE     **            ADDRESS OF BINARY OUTPUT TAPE PARAMETER   $F0J04890
+PATCH2 SLT     1             IS THIS FAP                               $F0J04900
+       TRA     PATCH2+11     NO                                        $F0J04901
+       LXA     BOTTOM-7,4    YES PICK UP PARAMETERS                    $F0J04902
+       SXA     ENDPAR,4      BACKSPACE LIST                            $F0J04903
+       TXI     *+1,4,-1                                                $F0J04904
+       SXA     INPT,4        INPUT TAPE                                $F0J04905
+       TXI     *+1,4,-1                                                $F0J04906
+       SXA     BINT,4        BINARY OUTPUT TAPE                        $F0J04907
+       RFT     4             IBSFAP                                    $F0J04908
+       TRA     FAP           YES, TAKE REGULAR PROCEDURE            (25)F0J04909
+       TRA     FAP           NO                                        $F0J04910
+       RFT     4             NOT FROM FAP, IS IT IBSFAP                $F0J04911
+       TRA     SCAN          YES                                       $F0J04912
+       TRA     BOTTOM+3      NO                                        $F0J04913
+ME4WD  BSS     4             BUFFER FOR INPUT TAPE DELETE OPTION       $F0J04914
+       REM                                                             *F0J04920
+ NOGOP LDQ     SYSJOB        SAVE SYSJOB FOR POSSIBLE                  $F0J04921
+       STQ     JOBSAV        RETRY.                                    $F0J04922
+       CAL     NOGOB         SET NOGO BIT IN SYSJOB                    $F0J04923
+       ORS     SYSJOB                                                  $F0J04924
+       TRA     PATCH2        GO TEST FOR FAP                           $F0J04925
+JOBSAV                       SYSJOB ON ENTRY                           $F0J04926
+ NOGOQ LDQ     JOBSAV        COMPILATION WILL BE RETRIED            (26)F0J04927
+       STQ     SYSJOB        RESTORE SYSJOB,                        (26)F0J04928
+       TRA     ME10          AND DO SO                              (26)F0J04929
+SNORTY LNT     10000         WAS JOB PRECEDED BY AN EOF             (26)F0J04930
+       TRA     NOGOP         YES                                    (26)F0J04931
+       AXT     4,4           NO, CIRCUMVENT RETRY OPTION AND        (26)F0J04932
+       CLA     REPLC+4,4     MACHINE STOP.                          (26)F0J04933
+       ARS     18                                                   (26)F0J04934
+       STA*    REPLC+4,4                                            (26)F0J04935
+       TIX     *-3,4,1                                              (26)F0J04936
+       TRA     NOGOP                                                (26)F0J04937
+ REPLC PZE     ME713,,ME13+2                                        (26)F0J04938
+       PZE     FAP+1,,MEDL                                          (26)F0J04939
+       PZE     EX35,,ME28                                           (26)F0J0493A
+       PZE     ME26,,ME28                                           (26)F0J0493B
+ENDEX  BSS     0             END OF ASSEMBLY                           $F0J04940
+       END     -1                                                       F0J04950

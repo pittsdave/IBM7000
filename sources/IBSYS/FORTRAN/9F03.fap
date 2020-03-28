@@ -1,0 +1,1434 @@
+$JOB   ASSEMBLY OF MONITOR, COMPILER SECTIONS 1 THROUGH 6 OF           $00000010
+$*     FORTRAN II PROCESSOR, 7090-FO-928                                00000020
+$*     VERSION 3, MODIFICATION LEVEL 35                             (35)00000030
+$EXECUTE       IBSFAP                                                  $00000050
+*      32K 709/7090 FORTRAN MONITOR  -  SIGN-ON RECORD.                 F0C00000
+*      FAP                                                              F0C00020
+*      32K 709/7090 FORTRAN MONITOR  -  SIGN-ON RECORD.                 F0C00030
+       COUNT   1200                                                     F0C00050
+       SST     FORTRAN                                                 $F0C00060
+       LBL     9F03,N                                                   F0C00070
+       ABS                                                             $F0C00071
+       ORG     SYSCUR                                                  $F0C00080
+       BCI     1,9F0300                                                $F0C00090
+       ORG     (LODR)                                                  $F0C00100
+       TXI     BEGSO,,30                                                F0C00120
+TOPTAB SYN     BOTIOP-1                                                 F0C00140
+       TITLE                                                           $F0C00145
+     1 TTL     MAIN PROGRAM                                             F0C00150
+       ORG     BOTTOM                                                   F0C00160
+ BEGSO LXD     (PGCT),4      SET PAGE LINE COUNTER TO FULL PAGE         F0C00170
+       SXA     JECT,4        TO CONTROL LINES PER PAGE.                 F0C00180
+       TXI     *+1,4,-1      REDUCE TO ONE LESS THAN THE MAXIMUM        F0C00190
+       SXD     TESTS,4       AND SAVE THIS RESULT FOR A LATER TEST.     F0C00200
+       CLA     TTRDMP        MAKE SURE CELL 2 WILL DO DUMP             $F0C00202
+       STO     2                                                       $F0C00203
+       EMTM                  IN CASE USER NEEDS IT                     $F0C00205
+       SLN     0             MAKES SURE ALL SENSE LIGHTS ARE OFF.       F0C00210
+       AXT     2,2           SET MONITOR INDICATOR IN CASE END          F0C00220
+       SXA     (MSLN),2      UP IN SOURCE OR MACHINE ERROR RECORDS.     F0C00230
+       STZ     (SNCT)        RESET THE SNAP COUNTER TO ZERO             F0C00240
+  MVDT CLA     SYSDAT        PICK UP DATE FROM PERMANENT LOCATION      $F0C00390
+       STO     (DATE)        AND MOVE IT TO THE IO PACKAGE              F0C00400
+ FCONE LDI*    (FGBX)        SET THE INDICATORS FROM THE FLAG CELL      F0C00410
+       CAL     FGMSK         CLEANSE FLAGBOX FOR NEW JOB--RETAIN BITS  $F0C00420
+       REM     TO INDICATE PROPER SIGN OF SYSJOB, WHICH MODE WE WERE   $F0C00421
+       REM     OPERATING IN, I.E., IBSFAP OR FORTRA,                   $F0C00422
+       ANA*    (FGBX)        SYSTEM IS ON DISCS IF BIT IN FGBX IS ON AN$F0C00425
+       SLW*    (FGBX)        THIS IS A MONITOR JOB JUST BEGINNING.      F0C00430
+       RFT     2             ARE THERE SNAPS TO PROCESS                 F0C00440
+       TRA     DMPSNP        BIT 34=1, TRANSFER TO SNAPS PROCESSING     F0C00450
+ FCTEN RNT     1             BIT 34=0, NO SNAPS, ARE TAPE STATISTICS OK.F0C00460
+       TRA     HTPSTS        BIT 35=0, TAPE STATISTICS MUST BE DONE     F0C00470
+ FCTWO CLA*    (LNCT)        BIT 35=1 TAPE STATISTICS HAVE BEEN DONE.   F0C00480
+       STZ*    (LNCT)        RESET LINE COUNT CELL TO ZERO.             F0C00490
+       TSX     CNVT,4        GO TO SUBROUTINE TO GET DECIMAL LINECOUNT. F0C00500
+       SLW     COM1+1        SET UP TO PRINT OUT LINE COUNT.            F0C00510
+       SLN     4             SET SENSE LITE TO INDICATE MESSAGE GOES    F0C00520
+  TONP SLN     3           $ ON + OFF LINE, AT TOP OF PAGE OFF LINE.    F0C00530
+       REM                                                              F0C00540
+       REM     $  BEFORE ANY COMMENTS FIELD INDICATES A VARIABLE SWITCH.F0C00550
+       REM                                                              F0C00560
+       CLA     IOCOM         PICK UP COMMAND THAT WRITES LINE COUNT     F0C00570
+       TSX     COMNT,4       ON TOP OF NEW PAGE ON LISTING TAPE.        F0C00580
+ FRTRA STZ     IDOK          SET CELL=ID EXPECTED                      $F0C00590
+       STZ     JOBOK         SET CELL=JOB DEFINED BY EOFS              $F0C00600
+       LDI*    (FGBX)                                                  $F0C00610
+       RFT     4             IS THIS IBSFAP                            $F0C00620
+       TRA     FCFIV+3       YES,GO SET CELL=NOID EXPECTED             $F0C00630
+FC3TEN TSX     BOTP,2        NO, FORTRAN                               $F0C00640
+       MZE     BKSOR,,(SKBC) CHECK FOR BOF ON SYSPP1                   $F0C00650
+       CLA     (SCHU)                                                  $F0C00660
+       ANA     BOF           BIT28=1 INDICATES BEGINNING               $F0C00670
+       TNZ     FCFOUR        OF FILE                                   $F0C00680
+       TSX     BOTP,2        NOT BEGINNING WRITE EOF                   $F0C00690
+       MZE     ,,(WEFC)                                                $F0C00700
+FCFOUR TSX     FITP,2        CHECK FOR BOF ON SYSIN1                   $F0C00710
+       MZE     BKSOR,,(SKDC)                                           $F0C00720
+       CLA     (SCHU)                                                  $F0C00730
+       ANA     BOF                                                     $F0C00740
+       TNZ     RDCD          YES,AT BEGIN. OF FILE                     $F0C00750
+       TSX     FITP,2        NO, BACK ONE RECORD                       $F0C00760
+       MZE     BKSPC,,(SKDC) CHECK AGAIN                               $F0C00770
+       CLA     (SCHU)                                                  $F0C00780
+       ANA     BOF                                                     $F0C00790
+       TNZ     RDCD          YES, BOF                                  $F0C00810
+ TEFA2 TSX     (TAPE),4      NO, WHAT IS THIS RECORD                   $F0C00820
+       MZE     RCDA2,,(RDEC)                                           $F0C00830
+       PZE     ,,MINTAP                                                $F0C00840
+       MZE     SKIP          IGNORE ERRORS WHEN SKIPPING ON MINTAP     $F0C00850
+       LDQ     BUFF          IS THIS A$ CARD                           $F0C00878
+       ZAC                                                             $F0C00880
+       LGL     6                                                       $F0C00882
+       SUB     DOLSN                                                   $F0C00884
+       STL     JOBOK         CELL=JOB NOT DEFINED BY EOFS              $F0C00886
+       TZE     IBCARD        YES                                       $F0C00888
+       ZET     (SCHU)+MINTAP DID WE HIT EOF                            $F0C00890
+       TRA     TEFA2         NO,SKIP FOR CONTROL                       $F0C00894
+ RDCD  SLN     3             PUT SENSE LIGHT ON TO                     $F0C00897
+       REM                   CAUSE EJECT FOR NEW JOB                   $F0C00900
+       STZ     JOBOK         I.E., HAS AN EOF AT BEGINNING             $F0C00910
+FCNINE TSX     (TAPE),4      READ A CARD                               $F0C00920
+       PZE     RCDA2,,(RDEC)                                           $F0C00930
+       PZE     ,,MINTAP                                                 F0C00940
+       PZE     ERROR         ERROR RETURN                              $F0C00950
+       NZT     (SCHU)+MINTAP  WAS EOF SENSED..                         $F0C00951
+       TRA     EOFLT         YES                                       $F0C00952
+       CAL     BUFF+13       PICK UP WORD 14 OF CARD IMAGE.             F0C00960
+       ANA     FRSVNS        SAVE CHARACTERS 79 +80, ZERO OUT THE REST. F0C00970
+       ORA     FRBNKS        THEN PUT BLANKS IN THE LAST FOUR LOCATIONS.F0C00980
+       SLW     BUFF+13       RESTORE CLEANED UP WORD TO THE BUFFER.     F0C00990
+       LDQ     BUFF          PICK UP FIRST SIX CHARACTERS               F0C01000
+       PXD     0,0           OF CARD, ZERO THE ACCUMULATOR              F0C01010
+       LGL     6             SHIFT COLUMN ONE OF CARD INTO AC           F0C01020
+       SUB     DOLSN         IS IT A DOLLAR SIGN                       $F0C01030
+       TZE     IBCARD        YES                                       $F0C01032
+ IDTES ZET     IDOK          IS ID CARD EXPECTED                       $F0C01034
+       TRA     SCAN          NO, GO TO SCAN                            $F0C01036
+       SUB     L(1)          YES,CHECK FOR*IN COL 1                    $F0C01038
+       TNZ     NOID          NO ID CARD FOR FORTRAN                    $F0C01040
+       AXT     0,2           TREAT * CARD                              $F0C01050
+       CLA     SWST61        MAKE CERTAIN SWITCH IS SET CORRECTLY.      F0C01060
+       STA     SWTCH         TO TEST FOR DATE CARD FIRST.               F0C01070
+       AXT     6,1           LOAD ROUTINE CHECKING CHARACTERS TO TEST   F0C01080
+       SXA     NNBL1,1       6 CHARACTERS PER WORD.                     F0C01090
+       AXT     14,1          SET THIS ROUTINE TO READ 14 WORDS FOR      F0C01100
+       SXA     NNBL2,1       CHARACTERS.                                F0C01110
+       TXI     *+1,1,-4      REDUCEI.R.1 TO 10 TO TEST D ON TABLES FIRSTF0C01120
+ GTCHR TSX     NNBL,4        GO TO GET NEXT NON BLANK CHARACTER         F0C01130
+       TRA     FCATE         ARE NO MORE, NOT CARD BEING TESTED, ID CARDF0C01140
+       SUB     TBLS,1        IS CHARACTER PROPER ONE FOR THIS WORD.     F0C01150
+ SWTCH TZE     FCSIX       $ VARIABLE, TESTS SUCCESSIVE CHARACTERS.     F0C01160
+       TNX     FCATE,1,9     IS THIS FIRST FAILURE, NO IS ILLEGAL LETTERF0C01170
+       TXI     *+1,1,6       YES RESTORE I.R. ONE TO TRY ENDTAPE.       F0C01180
+       SUB     L(1)          IF ENDTAPE IS POSSIBLE CARD, AC=1          F0C01190
+       TZE     FCSVN         IF AC=0, COULD BE ENDTAPE CARD, GO TEST IT.F0C01200
+ FCATE AXT     14,2          I.D. CARD TREATMENT, WRITE CARD ON TAPE B4 F0C01210
+       AXC     CDIM-25,4     LOAD INDEX REGISTERS 2 AND 4               F0C01220
+  HBC1 LDQ     BUFFZ,2       WITH CARD WORD COUNT AND STORAGE LOCATION  F0C01230
+       PXD     0,0           PICK UP 1ST WORD AND ZERO ACCUMULATOR.     F0C01240
+       CAQ     HBC2,,1       THE FIRST SIX BITS OF THIS BINARY CODED    F0C01250
+       ALS     12            INFORMATION ARE CONVERTED TO BINARY FORM   F0C01260
+       CAQ     HBC2,,1       UP TO 12 BITS IN LENGTH, SHIFTED LEFT 12   F0C01270
+       ALS     12            THEN THE SAME PROCESS IS REPEATED          F0C01280
+       CAQ     HBC2,,1       FOR THE 2ND AND 3RD GROUPS OF 6 BITS.      F0C01290
+       SLW     0,4           AFTER WHICH THE CONVERTED WORD IS SAVED    F0C01300
+       PXD     0,0           AC IS AGAIN CLEARED                        F0C01310
+       CAQ     HBC2,,1       THEN THE FOURTH BIT GROUP IS               F0C01320
+       ALS     12            CONVERTED FOLLOWED                         F0C01330
+       CAQ     HBC2,,1       BY THE FIFTH                               F0C01340
+       ALS     12                                                       F0C01350
+       CAQ     HBC2,,1       AND THE LAST BIT GROUP                     F0C01360
+       SLW     1,4           THE LAST GROUPS IN CONVERTED FORM ARE SAVEDF0C01370
+       TXI     *+1,4,-2      MODIFY INDEX REGISTER TO STORE PROPERLY.   F0C01380
+       TIX     HBC1,2,1      AND THE NEXT WORD IS PROCESSED IF ANY.     F0C01390
+       REM                                                              F0C01400
+   NOP NOP                   IN THE EVENT THIS CONVERSION IS DESIRED AS F0C01410
+       REM     A SUBROUTINE, A TRANSFER ON INDEX REGISTER ONE MAY BE IN-F0C01420
+       REM     SERTED HERE TO RETURN CONTROL PROPERLY. ONE SHOULD BE    F0C01430
+       REM     USED FOR THE TSX TO THIS ROUTINE AND ANY IR SAVING OR IN-F0C01440
+       REM     ITIALIZING MUST BE DONE BEFORE ENTRY.                    F0C01450
+       TSX     BOTP,2        WRITE I.D. CARD OR END TAPE                F0C01460
+       MZE     W1REC,,(WBNC) CARD ON TAPE B4                            F0C01470
+       TSX     BOTP,2        WRITE AN END OF FILE ON                    F0C01480
+       MZE     0,0,(WEFC)    TAPE B4                                    F0C01490
+ FCFIV SLN     4             FOR ON + OFF LINE                         $F0C01500
+       CLA     CDMGE         WRITE ID CARD                             $F0C01510
+       TSX     COMNT,4                                                 $F0C01520
+       STL     IDOK          CELL=NO ID EXPECTED                       $F0C01525
+FC5OUT TRA     FCNINE        $RESETS FOR ENDTAPE AND NOID              $F0C01530
+ FCSVN TXH     SKPJNK,2,0    TEST IF INITIALIZING ENDTAPE ROUTINE IS SETF0C01540
+       CLA     SWST61        NO, DO NECESSARY INITIALIZING.             F0C01550
+       ARS     18            GET LOCATION OF FCSVN + USE IT TO          F0C01560
+       STA     SWTCH         SET SWITCH TO CHECK FOR ENDTAPE            F0C01570
+       AXT     7,2           SET I.R.2 TO PROCESS REST OF WORD.         F0C01580
+SKPJNK TIX     GTCHR,1,1     GO TO TEST NEXT CHARACTER IN ENDTAPE       F0C01590
+       CLA     FC7BAK        ENDTAPE CARD, SET RETURN IN FC FIVE        F0C01600
+       STA     FC5OUT        TO RETURN HERE + NOT GO TO SCAN            F0C01610
+       TRA     FCATE         THEN GO TO TREAT AS ID. CARD.              F0C01620
+ FCSIX TXH     BYINIT,2,0    AFTER I.R.2 HAS BEEN LOADED, AVOIDS RELOAD.F0C01730
+       AXT     4,2           LOADS I.R.2 TO TEST FOR DATE               F0C01740
+BYINIT TXI     *+1,1,-1      REDUCES I.R. 1 TO COMPARE PROPER CHARACTER.F0C01750
+       TIX     GTCHR,2,1     GOES BACK TO TEST NEXT CHARACTER IF NEEDED.F0C01760
+       AXT     2,1           FIRST FOUR CHARACTERS ARE DATE TEST REST OFF0C01770
+       AXT     2,2           CARD FOR PROPER DATE FORMAT.               F0C01780
+   CD3 TSX     NNBL,4        PICK UP NEXT NON BLANK CHARACTER           F0C01790
+       TRA     FCATE         IF NONE REMAIN, TREAT AS ID CARD.          F0C01800
+       CAS     SLASH         TEST FOR SLASH TO SEPARATE MONTH AND DAY   F0C01810
+       TRA     *+2           AND LATER TO SEPARATE DAY AND YEAR.        F0C01820
+       TRA     CD4           CHARACTER IS A SLASH                       F0C01830
+       ORA     MONTH+2,1     PLACE THE AC IN STORAGE CELL PROPER        F0C01840
+       ALS     6             FOR THIS CHARACTER + SHIFT TO MAKE ROOM    F0C01850
+       SLW     MONTH+2,1     FOR NEXT CHARACTER IF ANY IN STORAGE.      F0C01860
+       TRA     CD3           GET NEXT CHARACTER.                        F0C01870
+   CD4 TIX     CD3,1,1       FIRST SLASH HAS BEEN HIT. SHIFT STORAGE.   F0C01880
+   CD5 TSX     NNBL,4        MONTH AND DAY PAST, NOW FOR YEAR.          F0C01890
+       TRA     FCATE         NO YEAR, TREAT AS ID CARD.                 F0C01900
+       ORA     MONTH+1       PLACE YEAR IN AC WITH DATE.                F0C01910
+       TNX     CD6,2,1       IF FIRST CHARACTER CONTINUE, 2ND DONE      F0C01920
+       ALS     6             MAKE ROOM FOR LAST CHARACTER               F0C01930
+       SLW     MONTH+1       AND SAVE THE DATE THUS FAR.                F0C01940
+       TRA     CD5           GO GET LAST CHARACTER OF YEAR              F0C01950
+   CD6 SLW     (DATE)        OVERWRITE DATE IN IO PACKAGE               F0C01960
+       CAL     MONTH         PICK UP THE MONTH                          F0C01970
+       ALS     18            MOVE IT TO PROPER LOCATION                 F0C01980
+       ORS     (DATE)        AND INSERT THE MONTH PROPERLY INTO THE DATEF0C01990
+       CAL     BLNKS         LOAD THE AC WITH BLANKS.                   F0C02000
+       ANA     (DATE)        CHECK THAT NO 1=S ARE IN DATE WHICH ARE OUTF0C02010
+       TZE     OKDATE        OF LAST FOUR NUMERIC POSITIONS OF THE WORD.F0C02020
+       CLA     SYSDAT        DATE IS NOT PROPER, REPLACE IT WITH       $F0C02030
+       STO     (DATE)        DATE OF COMPILATION                        F0C02040
+       TRA     FCATE         THEN GO TREAT DATE CARD AS ID CARD         F0C02050
+OKDATE CLA     CDMGE         PICK UP THE COMMAND TO OUTPUT              F0C02060
+       SLN     4             THE DATE CARD. TURN ON SENSE LIGHT 4 TO IN-F0C02070
+       TSX     COMNT,4       DICATE ON +OFF LINE. THEN GO WRITE MESSAGE.F0C02080
+       TRA     FCNINE        THEN GO TO READ NEXT CARD IN FOR PROCESSINGF0C02090
+ SCAN  TSX     FITP,2        BACK 1 RECORD ON SYSIN1                   $F0C02100
+       MZE     BKSPC,,(SKDC)                                           $F0C02110
+       NZT     JOBOK         IS FORTRAN JOB DEFINED BY EOFS            $F0C02112
+       TRA     SCAND         YES                                       $F0C02114
+       LDI*    (FGBX)        PICK UP FLAGBOX                        (26)F0C02116
+       SIL     10000         SET BIT FOR NO EOF                     (26)F0C02118
+       STI*    (FGBX)                                               (26)F0C02120
+       TRA     *+1                                                  (26)F0C02122
+ SCAND TSX     (TAPE),4      SKIP OVER FAP 1+2                         $F0C02124
+       PZE     SKP2,,(SKBC)                                            $F0C02126
+       PZE     ,,SYSTAP                                                $F0C02128
+       TSX     (LOAD),4,1    GO TO SCAN                                $F0C02130
+       BCI     1,9F0600                                                $F0C02132
+ NOID  TSX     (PRNT),4      *NO ID CARD FOR THIS JOB                  $F0C02134
+       PZE     COM3-1,,15                                              $F0C02136
+       TSX     (PRNT),4      SIGN KEY DOWN CONTINUE WITH               $F0C02138
+       PZE     COM4,,13      *NO ID CARD AS ID CARD                    $F0C02140
+       TSX     (PRNT),4      SIGN KEY UP SKIP JOB                      $F0C02142
+       PZE     COM5,,10                                                $F0C02144
+       TSX     (PAUSE,4                                                $F0C02146
+       ENK                   ENTER KEYS                                $F0C02148
+       TQP     TEFA2         SKIP JOB SEGMENT                          $F0C02150
+       AXT     14,2          CONTINUE                                  $F0C02152
+       CLA     COM3+14,2     MOVE * NO ID CARD TO BUFFER               $F0C02154
+       STO     BUFF+14,2                                               $F0C02156
+       TIX     *-2,2,1                                                 $F0C02158
+       CLA     IDTES+1       RESET EXIT TO GO DIRECTLY TO SCAN         $F0C02160
+       STA     FC5OUT                                                  $F0C02162
+       TRA     FCATE         PROCESS FORTRAN ID CARD                   $F0C02164
+ SKIP  TSX     FITP,2        SKIP OVER CARD IN ERROR                   $F0C02166
+       PZE     L(1),,(SKBC)  WHICH IS PROBABLY  BINARY                 $F0C02168
+       TRA     TEFA2                                                   $F0C02170
+ ERROR LDI*    (FGBX)        ERROR FOR READ                            $F0C02174
+       RFT     4             IF IBSFAP WANT TO GO TO SCAN              $F0C02178
+       TRA     SCAND         TO SKIP FOR CONTROL                       $F0C02180
+       TSX     (PRNT),4      FORTRAN, PRINT MESSAGE                    $F0C02185
+       PZE     COM8,,7                                                 $F0C02190
+       TSX     FITP,2        SKIP OVER RECORD IN ERROR                 $F0C02195
+       PZE     L(1),,(SKDC)                                            $F0C02200
+       ZAC                   MAKE SURE AC IS NOT ONE                   $F0C02210
+       TRA     IDTES         SEE IF SEARCHING FOR ID                   $F0C02211
+DMPSNP TSX     (TAPE),4      MAKE CERTAIN THAT TAPE IS                  F0C02220
+       MZE     BKSPC,,(SKBC) NOT REWOUND, WHICH WOULD MEAN IT WAS       F0C02230
+       PZE     ,,SNPTAP      USED IN EXECUTION                          F0C02240
+       STI     TMPR          SAVE INDICATORS FOR RETURN PROCESSING.     F0C02250
+       LDI     (SCHU)        TEST INFORMATION CELL BIT 35 FOR BTT       F0C02260
+       RFT     1             TAPE INDICATOR BIT. IF THE BIT INDICATES   F0C02270
+       TRA     NOSNPS        TAPE IS AT BEGINNING,PRINT ERROR. TAPE NG. F0C02280
+       TSX    (TAPE),4       *YES, REWIND SNAP TAPE                     F0C02290
+       MZE     REWND,,(SKBP)                                            F0C02300
+       PZE     READS+3,,-1                                              F0C02310
+       LXD     READS+3,4     INITIALIZE LOCATION OF (SCHU) + SNAPTAPE.  F0C02320
+       TXI     *+1,4,(SCHU)                                             F0C02330
+       SXA     READS+5,4                                                F0C02340
+SNAP0  AXT     0,2           RESET WRITE ROUTINE TO NEW PAGE           $F0C02350
+       SXA     WRIT1,2       ZERO FOR LINES LEFT TO CAUSE PAGE         $F0C02353
+       SLN     2             RESTORE AND HEADING IF NEW SNAP           $F0C02357
+       TSX     READS,2       *READ TITLE.                               F0C02360
+ TITIO IORT    TITBF,,5                                                 F0C02370
+       NZT     (SCHU)+SNPTAP IF HIT END OF FILE TRYING TO READ          F0C02380
+       TRA     DONE          A TITLE, THEN THE SNAPS ARE DONE.          F0C02390
+       AXT     2,1           CHECK AND MAKE SURE THIS RECORD            F0C02400
+   CLA CLA     CONSNA+2,1    IS THE TITLE. THIS IS DONE BY MAKING       F0C02410
+       SUB     TITBF+4,1     SURE SNAPSHOTS ARE FOUND IN PROPER         F0C02420
+       TNZ     NOSNPS        LOCATION. IF NOT ZERO AFTER SUBTRACTING    F0C02430
+       TIX     CLA,1,1       THIS IS NOT A SNAPSHOT. GO TO CANCEL.NG    F0C02440
+       TSX     READS,2       *READ PANEL                                F0C02450
+       IORT    BUFF2,,9                                                 F0C02460
+       TSX     WRITE,2       *WRITE FIRST PANEL HEADING                 F0C02470
+       IORT    PHDG1,,18                                                F0C02480
+       REM                                                              F0C02490
+       REM     SET UP PANEL                                             F0C02500
+       CLA     BUFF2+3        LOAD AC SIGN, Q BIT.                      F0C02510
+       ALS     1              GET Q BIT                                 F0C02520
+       LDI     MNUSP          PREPARE TO DISPLAY Q BIT, MINUS SIGN      F0C02530
+       PBT                    IS Q BIT ON                               F0C02540
+       LDI     MNUSB          NO, DELETE Q BIT                          F0C02550
+       TMI     *+2            IS AC MINUS                               F0C02560
+       OSI     PLUSZ          NO, DELETE MINUS SIGN                     F0C02570
+       STI     BUFF1+1        IN FIRST WORD OF LINE                     F0C02580
+       LDQ     BUFF2+4        LOAD REST OF AC                           F0C02590
+       TSX     OCTCV,4       *CONVERT TO OCTAL                          F0C02600
+       STI     BUFF1+2        INSERT IN WORDS 2 AND 3 OF LINE           F0C02610
+       SLW     BUFF1+3                                                  F0C02620
+       AXT     9,1           PREPARE TO CONVERT KEYS,SI, AND            F0C02630
+       AXT     9,2           THE MQ                                     F0C02640
+ PREGS LDQ     BUFF2+9,1      LOAD NEXT REGISTER                        F0C02650
+       TSX     OCTCV,4       *CONVERT TO OCTAL                          F0C02660
+       LDQ     BLNKS          SET WORD 1 OF TRIAD BLANK                 F0C02670
+       STQ     BUFF1+13,2                                               F0C02680
+       STI     BUFF1+14,2     INSERT LEFT HALF IN WORD 2 OF TRIAD       F0C02690
+       SLW     BUFF1+15,2     INSERT RIGHT HALF IN WORD 3 OF TRIAD      F0C02700
+       TXI     *+1,1,-1       BUMP REGISTER COUNT                       F0C02710
+       TIX     PREGS,2,3      ARE ALL REGISTERS CONVERTED               F0C02720
+ XREGS LDQ     BUFF2+9,2      LOAD NEXT INDEX REGISTER                  F0C02730
+       TSX     OCTCV,4       *CONVERT TO OCTAL                          F0C02740
+       ANA     BKOFC         ELIMINATES ANY GARBAGE FIRST CHARACTER.    F0C02750
+       LDQ     BLNKS          SET FIRST WORD OF DIAD BLANK              F0C02760
+       STQ     BUFF1+19,1                                               F0C02770
+       ORA     LDGBK          SET FIRST CHARACTER BLANK                 F0C02780
+       SLW     BUFF1+20,1     INSERT IN SECOND WORD OF DIAD             F0C02790
+       TXI     *+1,2,-1       BUMP REGISTER COUNT                       F0C02800
+       TIX     XREGS,1,2      ARE ALL REGISTERS CONVERTED               F0C02810
+       TSX     WRITS,2       *YES, WRITE PANEL LINE 1                   F0C02820
+       IORT    BUFF1+1,,18                                              F0C02830
+       TSX     WRITE,2       *WRITE PANEL HEADING 2                     F0C02840
+       IORT    PHDG2,,16                                                F0C02850
+       REM                                                              F0C02860
+       REM     SET UP TRIGGERS                                          F0C02870
+       AXT     0,4           SET SHIFT CONTROL + CONSTANT SELECTOR TO 0 F0C02880
+       AXT     14,1          SET STORAGE LOCATION COUNT TO 14 LOCATIONS.F0C02890
+       AXT     6,2           SET COUNTER TO TEST 6 SENSE SWITCHES.      F0C02900
+       LDI     BUFF2+5       PICK UP BITS TO TEST VARIOUS PANEL LIGHTS. F0C02910
+       IIR     170           INVERT SENSE LIGHT BITS TO SAME AS OTHERS. F0C02920
+       PIA                   LOAD AC WITH INFORMATION ON VARIOUS LIGHTS.F0C02930
+       ALS     12,4          POSITION 1ST BIT TO BE TESTED FOR SWITCHES.F0C02940
+  TEST LDQ     L(DN),4       SET MQ WITH CODE FOR TEST BIT ZERO.        F0C02950
+       PBT                   WHAT IS THE STATUS OF THIS TRIGGER         F0C02960
+       TRA     *+2           OFF, LEAVE MQ ALONE.                       F0C02970
+       LDQ     L(DN)-1,4     BIT EQUALS ONE, RESET MQ FOR BIT ON.       F0C02980
+       TXI     *+1,1,-1      BUMP STORAGE TO NEXT LOCATION.             F0C02990
+       STQ     BUFF1+17,1    SAVE MQ IN PROPER LOCATION FOR OUTPUT      F0C03000
+       ALS     1             SHIFT NEXT BIT TO TESTING POSITION.        F0C03010
+       TIX     TEST,2,1      HAS THIS BIT SEQUENCE BEEN FULLY TESTED.   F0C03020
+       TXI     *+1,4,4       BUMP INDEX REGISTER FOR NEXT BIT SERIES.   F0C03030
+       TNX     OUT,1,1       FINISHED, GET OUT. NO, SKIP 1 STORAGE LOC- F0C03040
+       AXT     7,2           ATION, AND SET COUNTER FOR 7 MORE BITS.    F0C03050
+       TRA     TEST-1        SHIFT TO TEST LAST GROUP AND CONTINUE.     F0C03060
+  OUT  LDQ     BLNKS         FINISHED, BLANK OUT LEFT OVER CELLS IN     F0C03070
+       STQ     BUFF1+2       OUTPUT BUFFER NOT RESET FOR THIS LINE OF   F0C03080
+       STQ     BUFF1+3       INFORMATION.                               F0C03090
+       TSX     WRITS,2       *WRITE PANEL LINE 2                        F0C03100
+       IORT    BUFF1+2,,16                                              F0C03110
+       AXT     -1,1           RESET BUFFER SWITCH TO BUFFER 2 INITIALLY F0C03120
+       SXA     PACK0+3,1                                               $F0C03130
+       TRA     SNAP3                                                    F0C03140
+       REM                                                              F0C03150
+       REM     REENTRY TO SET UP NEXT LINE                              F0C03160
+ SNAP2 LXA     FWORD,1        COMPUTE COUNT OF WORDS REMAINING IN DUMP  F0C03170
+       TXL     SNAP3,1,0     IF ZERO LAST LINE SHOULD BE DONE          $F0C03180
+       SXD     SXH,1         SAVE FIRST WORD OF LINE                   $F0C03185
+       LXA     LCORS,1       SUBTRACT IT FROM ADDRESS LAST LINE TO TELL F0C03190
+   SXH TIX     SNAP6,1,**    IS THE DUMP FINISHED                      *F0C03200
+       AXC     **,4           YES, LOAD NUMBER OF WORDS LEFT ON TAPE    F0C03210
+       TXH     SNAP4,4,0      DO ANY SEGMENTS REMAIN ON TAPE            F0C03220
+       REM                                                              F0C03230
+       REM     REENTRY TO READ FIRST DUMP RECORD                        F0C03240
+ SNAP3 SXD     SNAP4+2,0      NO, RESET NUMBER OF WORDS TO SKIP         F0C03250
+       CLA     TRA           RESTORE TRANSFER                          $F0C03251
+       STO     FRT                                                     $F0C03252
+       TSX     READS,2       *READ FIRST SEGMENT OF DUMP RECORD         F0C03260
+       IORT    CORBF,,TOPTAB-CORBF  ROUTINE PUTS LAST ADDRESS IN IR1.   F0C03270
+       CLA     CORBF          LOAD FIRST CORE LOC,,NO OF WORDS IN DUMP  F0C03280
+       STA     LCORS          INITIALIZE CORE LOCATION AT BEGIN OF DUMP F0C03290
+       PDC     ,4             LOAD NUMBER OF WORDS IN DUMP              F0C03300
+       TXL     SNAP3,4,0     IF WORD COUNT ZERO READ                   $F0C03310
+       TRA     SAVORG        NOT ZERO GO PROCESS INFORMATION           $F0C03315
+       REM                                                              F0C03320
+       REM     REENTRY TO READ NEXT SEGMENT OF DUMP RECORD              F0C03330
+ SNAP4 SXA     SVTW,2        PRESERVE INDEX REGISTER TWO FOR PROCESSING.F0C03340
+       TSX     READT,2       *READ NEXT SEGMENT OF DUMP RECORD          F0C03350
+       IOSPN   ,,**          = OF WORDS ALREADY PUT INTO BUFFER BEFORE. F0C03360
+       IORT    CORBF+1,,TOPTAB-CORBF                                    F0C03370
+       LXA     SXH+1,4       NUMBER OF WORDS PREVIOUSLY UNDONE         $F0C03380
+  SVTW AXT     **,2          RESTORE INDEX TWO TO PROPER STORAGE COUNT. F0C03390
+SAVORG SXA     CORES,1       SAVE ORIGIN AT THE END OF THIS SEGMENT.    F0C03400
+       TXI     *+1,1,1                                                  F0C03410
+       SXA     CORES+1,1                                                F0C03420
+       TXI     *+1,1,-CORBF-2 COMPUTE NUMBER OF WORDS READ              F0C03430
+       SXD     CORES,1       = LAST LOCATION - BUFFER START.            F0C03440
+       PXA     ,1             COMPUTE CORE LOCATION AT END OF SEGMENT   F0C03450
+       ADM     LCORS         = 1ST LOCATION + NUMBER OF WORDS READ.     F0C03460
+       STA     LCORS                                                    F0C03470
+       SXD     *+1,1          COMPUTE NUMBER OF WORDS LEFT ON TAPE      F0C03480
+       TXI     *+1,4,**      WORDS IN DUMP - WORDS READ IS SAVED        F0C03490
+       SXA     SXH+1,4       IN CASE FURTHER READING IS NECESSARY      $F0C03500
+       TXL     SNAP5,4,0      ANY WORDS LEFT ON TAPE                    F0C03510
+   FRT TRA     *+3         $ ON THE FIRST READ, ONE MUST BE ADDED TO THEF0C03520
+       SXD     W2BS,1        WORD COUNT TO REFLECT THE INTRODUCTORY WORDF0C03530
+       TRA     W2BS-1        WHICH MUST BE INCLUDED IN THE WORDS SKIPPEDF0C03540
+       TXI     *+1,1,1       THEREAFTER THE TRANSFER IS CHANGED TO A NOPF0C03550
+       CLA     NOP1          IF THERE SHOULD BE MORE THAN 1 ENTRY TO   $F0C03560
+       STO     FRT           THIS CODING, THE FIRST WORD WONT BE READDEDF0C03570
+       SXD     W2BS,1        SAVE WORDS TO BE SKIPPED                  $F0C03580
+       TXI     *+1,1,-1      SUBTRACT EXTRA FIRST WORD COMPUTE SKIP    $F0C03585
+       LXD     SNAP4+2,4     BY ADDING THE WORDS ALREADY SKIPPED TO     F0C03590
+  W2BS TXI     *+1,4,**      THOSE SKIPPED THIS TIME, SAVING THE RESULT F0C03600
+       SXD     SNAP4+2,4     FOR FURTHER USE, IF NECESSARY.             F0C03610
+       TSX    (TAPE),4       *BACKSPACE TAPE OVER DUMP RECORD           F0C03620
+       MZE     BKSPC,,(SKBP)                                            F0C03630
+       PZE     READS+3,,-1                                              F0C03640
+       REM                                                              F0C03650
+       REM     PRINT FIRST LINE IN SEGMENT                              F0C03660
+ SNAP5 CAL     CORBF          LOAD FIRST CORE LOCATION OF DUMP.         F0C03670
+       TZE     TLD           IF PROCESSING IS FINISHED, GO TEST LINE.   F0C03680
+       ANA     DELLD          DELETE LAST DIGIT                         F0C03690
+       STA     FWORD          SAVE FIRST CORE LOCATION IN LINE          F0C03700
+       ERA     CORBF          COMPUTE NUMBER OF WORDS OF LEADING BLANKS F0C03710
+       STA     ERASE          TRIPLE                                    F0C03720
+       ALS     1                                                        F0C03730
+       ADD     ERASE                                                    F0C03740
+       PAX     ,4                                                       F0C03750
+       PAC     ,2                                                       F0C03760
+       ADM     L(BF3          COMPUTE ORIGIN AT END OF LEADING BLANKS   F0C03770
+       STA     *+2                                                      F0C03780
+       LDQ     BLNKS          INSERT LEADING BLANKS                     F0C03790
+       STQ     **,4                                                     F0C03800
+       TIX     *-1,4,1                                                  F0C03810
+       STZ     CORBF         SET TEST TO AVOID INITIALIZING AFTER 1 READF0C03820
+       TXI     SNAP9,2,24     COMPUTE NUMBER OF WORDS REMAINING IN LINE F0C03830
+       REM                                                              F0C03840
+       REM     REENTRY TO SCAN NEXT LINE FOR IDENTICAL WORDS            F0C03850
+ SNAP6 CAL*    CORES          LOAD NEXT WORD IN LINE                    F0C03860
+       ERA*    CORES+1        IS IT SAME AS FOLLOWING WORD              F0C03870
+       TNZ     SNAP7          NO                                        F0C03880
+       TIX     *-3,1,1        YES  IS DUMP COMPLETE                     F0C03890
+       CLA     LCORS          YES, COMPUTE FIRST WORD OF LAST LINE      F0C03900
+       TRA     SNAP7+3                                                  F0C03910
+       REM                                                              F0C03920
+       REM     PRINT IDENTICAL WORDS                                    F0C03930
+ SNAP7 PXA     ,1             COMPUTE CORE LOCATION OF LAST             F0C03940
+       SUB     L(1)          IDENTICAL WORD PLUS ONE.                   F0C03950
+       SUB     LCORS                                                    F0C03960
+       ANA     DELLD          DELETE LAST DIGIT                         F0C03970
+       STA     LWORD                                                    F0C03980
+       SUB     FWORD          IS THIS SAME LINE                         F0C03990
+       TZE     SNAP8          YES                                       F0C04000
+       LDQ     FWORD          NO, LOAD FIRST CORE LOCATION              F0C04010
+       TSX     OCTCV,4       *CONVERT TO OCTAL                          F0C04020
+       ORA     LDGBK          SET FIRST CHARACTER BLANK                 F0C04030
+       SLW     IDWBF+7        INSERT IN WORD 8 OF MESSAGE               F0C04040
+       CLA     LWORD          LOAD LOCATION OF LAST IDENTICAL WORD+1    F0C04050
+       SUB     L(1)                                                     F0C04060
+       XCA                                                              F0C04070
+       TSX     OCTCV,4       *CONVERT TO OCTAL                          F0C04080
+       ORA     LDGBK          SET FIRST CHARACTER BLANK                 F0C04090
+       SLW     IDWBF+9        INSERT IN WORD 10 OF MESSAGE              F0C04100
+       LDQ*    CORES          LOAD IDENTICAL WORDS                      F0C04110
+       TSX     OCTCV,4       *CONVERT TO OCTAL                          F0C04120
+       SLW     IDWBF+14       INSERT RIGHT HALF IN WORD 15              F0C04130
+       CAL     MINUS          PREPARE TO PRINT MINUS SIGN               F0C04140
+       LNT     40000          IS WORD MINUS                             F0C04150
+       ORA     BLNKS          NO, DELETE MINUS SIGN                     F0C04160
+       SLW     IDWBF+12       INSERT SIGN IN WORD 13                    F0C04170
+       RIL     40000          DELETE LEADING DIGIT 7 BIT                F0C04180
+       STI     IDWBF+13       INSERT LEFT HALF IN WORD 14               F0C04190
+       TSX     WRITE,2       *WRITE THIS LINE                           F0C04200
+       IORT    IDWBF,,15                                                F0C04210
+       LXA     LWORD,4        RESET FIRST WORD FOR NEXT LINE            F0C04220
+       SXA     FWORD,4                                                  F0C04230
+       REM                                                              F0C04240
+       REM     REENTRY TO PREPARE NEXT LINE                             F0C04250
+ SNAP8 LAC     FWORD,1        COMPUTE LENGTH OF REMAINING DUMP          F0C04260
+       SXD     *+2,1                                                    F0C04270
+       LXA     LCORS,1                                                  F0C04280
+       TXI     *+1,1,**                                                 F0C04290
+       AXT     24,2           PREPARE TO CONVERT 8 CELLS TO 1 LINE      F0C04300
+       REM                                                              F0C04310
+       REM     REENTRY TO CONVERT NEXT WORD                             F0C04320
+ SNAP9 LDQ*    CORES          LOAD NEXT WORD TO BE DUMPED               F0C04330
+       TSX     OCTCV,4       *CONVERT TO OCTAL                          F0C04340
+       SLW     BUFF3+26,2     SAVE RIGHT HALF                           F0C04350
+       CAL     MINUS          LOAD BCD MINUS                            F0C04360
+       LNT     40000          IS WORD MINUS                             F0C04370
+       ORA     BLNKS          NO, DELETE SIGN                           F0C04380
+       SLW     BUFF3+24,2     SAVE SIGN                                 F0C04390
+       RIL     40000          RESET LEADING DIGIT 7 BIT                 F0C04400
+       STI     BUFF3+25,2     SAVE LEFT HALF                            F0C04410
+       TIX     TLD,1,1       IF THIS SEGMENT OF THE DUMP IS DONE,TEST   F0C04420
+       XEC     SXH+1         LOCATION FOR ANY MORE WORDS TO BE         $F0C04430
+       TXH     SNAP4,4,0     READ IN. IF INDEX IS HIGH,GET NEXT SEGMENT.F0C04440
+       TNX     TLD+1,2,3     IF NOT,TEST IF LINE HAS BEEN COMPLETED.    F0C04450
+       CLA     BLNKS         IF LINE IS INCOMPLETE,COMPLETE IT WITH     F0C04460
+       STO     BUFF3+24,2    BLANKS. IF COMPLETE PREPARE IT FOR OUTPUT. F0C04470
+       TIX     *-1,2,1       TEST IF LINE HAS BEEN COMPLETED.           F0C04480
+       TRA     TLD+1         LINE NOW COMPLETE,SET UP FOR OUTPUT        F0C04490
+   TLD TIX     SNAP9,2,3     TESTS IF PROCESSING FOR THIS LINE IS DONE. F0C04500
+       LDQ     FWORD         GET LOCATION OF FIRST WORD FOR THIS LINE.  F0C04510
+       TSX     OCTCV,4       *CONVERT TO OCTAL                          F0C04520
+       TSX     PACK0,4       *PACK LINE                                 F0C04530
+       STA     *+2           INITIALIZE I/O COMMAND.                    F0C04540
+       TSX     WRITE,2       *WRITE LINE                                F0C04550
+       IORT    **,,20                                                   F0C04560
+       CLA     FWORD          BUMP FIRST CORE LOCATION                  F0C04570
+       ADD     L(8)                                                     F0C04580
+       STA     FWORD                                                    F0C04590
+       REM                                                              F0C04600
+       REM     WRITE MNEMONICS FOR THIS LINE                            F0C04610
+       AXT     24,2           PREPARE TO EXAMINE EIGHT WORDS            F0C04620
+ MNEM1 PXD     ,0                                                       F0C04630
+       LDI     BUFF3+24,2     PICK UP SIGN                              F0C04640
+       LDQ     BUFF3+25,2     LOAD LEFT HALF OF WORD                    F0C04650
+       TQP     *+2            IS WORD BLANK                             F0C04660
+       TRA     MNEM6+1        YES                                       F0C04670
+       CAQ     TBLMN,,1       NO, IS THIS A TYPE A INSTRUCTION          F0C04680
+       TZE     MNEM2          NO                                        F0C04690
+       RFT     20             YES, IS THIS A + TYPE A INSTRUCTION       F0C04700
+       TRA     *+4            YES                                       F0C04710
+       PXD     ,0             NO                                        F0C04720
+       LDQ     BUFF3+25,2     LOAD LEFT HALF OF WORD                    F0C04730
+       CAQ     TBLMN+3,,1     GET MNEMONIC FOR - TYPE A INSTRUCTION     F0C04740
+       SLW     BUFF3+25,2     INSERT IN WORD 2 OF TRIPLE                F0C04750
+       CAL     BLNKS          PREPARE TO SET WORDS 1 AND 3 BLANK        F0C04760
+       TRA     MNEM6+3                                                  F0C04770
+ MNEM2 AXT     TBLBM,4        PREPARE TO FIND - INSTRUCTION GROUP       F0C04780
+       RFT     20             IS THIS - INSTRUCTION                     F0C04790
+       AXT     TBLBP,4        NO, PREPARE TO FIND + INSTRUCTION GROUP   F0C04800
+       SXA     *+1,4                                                    F0C04810
+       CAQ     **,,1          GET INSTRUCTION GROUP PARAMETER           F0C04820
+       TRA     MNEM4                                                    F0C04830
+       REM                                                              F0C04840
+       REM     REENTRY TO DECODE PSE, MSE OPCODES                       F0C04850
+ MNEM3 ARS     12             RIGHT ADJUST PSE, MSE OPCODE              F0C04860
+       ORA     2BLNK          INSERT LEADING BLANKS                     F0C04870
+       SLW     BUFF3+25,2     INSERT IN WORD 2 OF TRIPLE                F0C04880
+       LDQ     BUFF3+26,2    PICK UP THE RIGHT HALF OF THE WORD.        F0C04890
+       CAL     BLNKS          SET WORDS 1 AND 3 BLANK                   F0C04900
+       SLW     BUFF3+24,2                                               F0C04910
+       SLW     BUFF3+26,2                                               F0C04920
+       LGL     12            GET RID OF FIRST TWO DIGITS, TAG,          F0C04930
+       PXD     ,0            AND FIRST ADDRESS DIGIT, ZERO AC           F0C04940
+       LGL     12            MOVE HUNDREDS AND THOUSANDS INTO THE AC    F0C04950
+       TNZ     MNEM7         ARE THERE ANY ENTRIES IN THESE BITS.       F0C04960
+       SXA     *+1,4          NO, PREPARE TO FIND WHICH PSE, MSE OPCODE F0C04970
+       CAL     **            SET MNEM4 TO HANDLE ADDRESS DECODING.      F0C04980
+ MNEM4 STA     MNEM5          INITIALIZE ORIGIN OF INSTRUCTION GROUP    F0C04990
+       PDX     ,1             LOAD LENGTH OF INSTRUCTION GROUP          F0C05000
+       PXD     ,0                                                       F0C05010
+       LGL     12             GET OCTAL OPCODE                          F0C05020
+       STA     MNEM5+1        INITIALIZE TEST FOR OPCODE                F0C05030
+       COM                                                              F0C05040
+       ANA     3SVNS                                                    F0C05050
+       STA     MNEM5+3       INITIALIZE TEST FOR OPCODE.                F0C05060
+ MNEM5 LDI     **,1           PICK UP NEXT OPCODE THIS GROUP            F0C05070
+       RNT     **            IS THIS THE PROPER OPCODE.                 F0C05080
+       TIX     MNEM5,1,1      NO, HAVE ALL OPCODES BEEN CHECKED         F0C05090
+       RFT     **             MAYBE, IS IT NO OTHER OPCODE              F0C05100
+       TIX     MNEM5,1,1      NO, HAVE ALL OPCODES BEEN EXHAUSTED       F0C05110
+       XEC     MNEM5+1        YES, WAS THIS OPCODE FOUND                F0C05120
+       TRA     MNEM6          NO, SET TRIPLE BLANK                      F0C05130
+       XEC     MNEM5+3        MAYBE, WAS NO OTHER OPCODE FOUND          F0C05140
+       TRA     MNEM6          NO, SET TRIPLE BLANK                      F0C05150
+       PIA                    YES, RECALL OPCODE                        F0C05160
+       AXT     TBLEP,4        PREPARE TO CHECK FOR PLUS SENSE INSTRUCTN F0C05170
+       LAS     PSEOP          IS THIS OPCODE PSE                        F0C05180
+       TRA     *+2            NO                                        F0C05190
+       TRA     MNEM3          YES, GO FIND WHICH                        F0C05200
+       AXT     TBLEM,4        PREPARE TO CHECK FOR MINUS SENSE INSTRUCTNF0C05210
+       LAS     MSEOP          IS THIS OPCODE MSE                        F0C05220
+       TRA     *+2            NO                                        F0C05230
+       TRA     MNEM3          YES, GO FIND WHICH                        F0C05240
+       ARS     12             NO, RIGHT ADJUST OPCODE                   F0C05250
+       ORA     2BLNK          INSERT LEADING BLANKS                     F0C05260
+       SLW     BUFF3+25,2     INSERT IN WORD 2 OF TRIPLE                F0C05270
+       CAL     BLNKS          PREPARE TO SET WORD 3 BLANK               F0C05280
+       RQL     3              SHIFT IN INDIRECT BITS                    F0C05290
+       TQP     MNEM6+3        IS ADDRESS INDIRECT                       F0C05300
+       RQL     1              MAYBE                                     F0C05310
+       TQP     MNEM6+3        IS IT REALLY INDIRECT                     F0C05320
+       CAL     ASTRK          YES, PICK UP ASTERISK                     F0C05330
+       SLW     BUFF3+26,2     INSERT IN WORD 3 OF TRIPLE                F0C05340
+       CAL     BLNKS          PREPARE TO SET WORD 1 BLANK               F0C05350
+       TRA     MNEM6+4                                                  F0C05360
+ MNEM6 TXL     MNEM7,4,TBLEM  WAS OPCODE FOUND                          F0C05370
+       CAL     BLNKS          NO, SET TRIPLE BLANK                      F0C05380
+       SLW     BUFF3+25,2                                               F0C05390
+       SLW     BUFF3+26,2                                               F0C05400
+       SLW     BUFF3+24,2                                               F0C05410
+ MNEM7 TIX     MNEM1,2,3      IS LINE COMPLETE                          F0C05420
+       CAL     BLNKS         LOADS AC WITH BLANKS UPON ENTRY TO PACK.   F0C05430
+       TSX     PACK0,4        YES, PACK LINE                            F0C05440
+       STA     *+2            INITIALIZE I/O COMMAND                    F0C05450
+       TSX     WRITS,2       *WRITE LINE                                F0C05460
+       IORT    **,,20                                                   F0C05470
+       TRA     SNAP2                                                    F0C05480
+NOSNPS SLN     4             MESSAGE ON AND OFF LINE.                   F0C05490
+       CLA     ERMS          SNAPS ARE MISSING OR INCORRECTLY FOUND.    F0C05500
+       XEC     FCFIV+2       TAPE PROBABLY USED IN EXECUTION. NO SNAPS. F0C05510
+  DONE CLA     DPLCT         PICK UP THE LINES OF SNAPSHOTS OUTPUT AND  F0C05520
+       ADD*    (LNCT)        ADD IT TO THE LINES IN LINECOUNT, AND      F0C05530
+       STO*    (LNCT)        SAVE THE GRAND TOTAL IN (LNCT) INDIRECTLY. F0C05540
+       CLA     EOSMS         PICK UP THE COMMAND TO OUTPUT THE          F0C05550
+       SLN     4             MESSAGE INDICATING SNAPS ARE COMPLETE.     F0C05560
+       TSX     COMNT,4       AND GO GIVE MESSAGE.                       F0C05570
+       TSX    (TAPE),4       *REWIND SNAPSHOT TAPE                      F0C05580
+       MZE     REWND,,(SKBP)                                            F0C05590
+       PZE     READS+3,,-1                                              F0C05600
+       LDI     TMPR          RETURN INDICATORS FOR MAIN ROUTINE.        F0C05610
+       TRA     FCTEN         THEN GO TO NEXT PROCESSING.                F0C05620
+HTPSTS NZT*    (LNCT)        IS THERE A LINE COUNT TO PRINT.            F0C05630
+       TRA     FRTRA         NO, NEW JOB  CHECK TAPES                  $F0C05640
+       RFT     4             CHECK FOR IBSFAP                          $F0C05641
+       AXT     ,0            MAKE TRA FCTWO IF IBSFAP STATS NOT WANTED.$F0C05642
+       AXT     3,1           SET INDEX REGISTER 3 FOR 3 DIFFERENT LINES.F0C05650
+       CLA     BLKLN         PICK UP COMMAND TO WRITE BLANK LINE       $F0C05660
+       SLN     3             TO RESTORE PAGE                           $F0C05663
+       AXT     ,0            ELIMINATES UNNECESSARY LINE               $F0C05667
+ GTCOM CLA     COMTS+1,1     SENSE LITE 3 PUTS 1ST LINE AT TOP OF NEW   F0C05670
+       AXT     ,0            PAGE OFF LINE. FOLLOWING THIS, REST OF    $F0C05680
+       TSX     COMNT,4       HEADING AND BLANK LINE ARE WRITTEN.       $F0C05690
+       TIX     GTCOM,1,1     SLN 4 INSTEAD OF AXT WILL PRINT THEM ALSO.$F0C05700
+       CLA     NOP           RESET SENSE LIGHT IF PAGE ALREADY RESTORED.F0C05710
+       STD     TONP          THIS KEEPS STATISTICS AND LINE COUNT UNITEDF0C05720
+       TSX     (STAT),4      ON RETURN INDEX REGISTER ONE CONTAINS      F0C05730
+       SXA     STAT3,1       THE ADDRESS +1 OF TOP OF TAPE STAT TABLE   F0C05740
+       SXA     STAT1,2       INDEX REGISTER TWO CONTAINS THE ADDRESS OF F0C05750
+       SXA     STAT7,2       CELL TAPNO WHICH HAS THE NUMBER OF TAPES INF0C05760
+ STAT1 LXD     **,2          SYSTEM IN DECREMENT. GET THE NUMBER OF     F0C05770
+       SXD     STAT4,2       TAPES IN SYSTEM AND SAVE IT FOR            F0C05780
+       SXD     STAT6,2       3 LATER TEST DECREMENTS                    F0C05790
+       SXD     STAT13,2                                                 F0C05800
+       AXT     1,1           INITIALIZE INDEX REGISTER ONE TO FIRST TAPEF0C05810
+ STAT2 LDQ     3ZROS         SET TAPE AND UNIT TO PROPER                F0C05820
+       STQ     STBUF+2       INITIAL STATUS.                            F0C05830
+       PXA     0,1           SET INDEX REGISTERS 1                      F0C05840
+       PAX     0,4           AND 4 EQUAL.                               F0C05850
+       AXT     2,2           SET INDEX REGISTER TWO TO MAKE             F0C05860
+ STAT3 CLA     **,4          TWO PASSES PICKING UP THE PROPER LOCATIONS F0C05870
+       STA     TOTWT+2,2     AND SETTING THE TAPE INFORMATION           F0C05880
+       ARS     18            PROPERLY IN BUFFERS FOR                    F0C05890
+       STA     NOISW+2,2     LATER CONVERTING AND OUTPUTTING.           F0C05900
+       STZ*    STAT3         BLANK THE CELL OUT.                        F0C05910
+ STAT4 TXI     *+1,4,**      INCREMENT I.R. 4 BY NUMBER OF TAPES        F0C05920
+       TIX     STAT3,2,1     TEST IF FINISHED.                          F0C05930
+       AXT     2,2           RESET INDEX REGISTER 2.                    F0C05940
+ STAT5 CLA*    STAT3         PICK UP NEXT ITEM OF TAPE STATISTICS.      F0C05950
+       STA     TOTRW+2,2     AND STORE IT IN THE PROPER LOCATION.       F0C05960
+       STZ*    STAT3         STAT3 HAS LOCATION OF THIS DATA.           F0C05970
+ STAT6 TXI     *+1,4,**      MODIFY NEXT LOCATION BEING PROCESSED       F0C05980
+       TIX     STAT5,2,1     AND TEST IF MORE TO BE DONE.               F0C05990
+ STAT7 CLA*    **,1          TAPES USED ARE OBTAINED FROM THIS POINTER.$F0C06000
+       ARS     18             MOVED TO ADDRESS                         $F0C06005
+       STA     MCHTP         AND THESE TAPES ARE SAVED ALONG            F0C06010
+       CLA*    STAT7          GET THE POSITIONING ERRORS               $F0C06015
+       ARS     18            WITH THE NUMBER OF                         F0C06020
+       STA     POSER         POSITIONING ERRORS.                        F0C06030
+       CAL     ADMSK          THIS LOCATION IS THEN ZEROED             $F0C06040
+       ANS*    STAT7         OUT IN THE DECREMENT.                      F0C06050
+       AXT     7,2           SET I.R. 2 TO SAVE INFORMATION.            F0C06060
+       PXA     0,0           CLEAR THE AC.                              F0C06070
+       ACL     TOTWT+7,2     ADD THE INFORMATION OBTAINED               F0C06080
+       TIX     *-1,2,1       AND TEST THE FINAL TOTAL. IF               F0C06090
+       TZE     STAT12        ZERO, NO USE OF THIS TAPE.                 F0C06100
+       SXA     STAT9,1       SAVE NUMBER OF TAPES PROCESSED             F0C06110
+       AXT     0,1           RELOAD INDEX REGISTERS                     F0C06120
+       AXT     6,2           SET INDEX REGISTER TO LOAD OUTPUT.         F0C06130
+ STAT8 CLA     TOTWT+6,2     PICK UP TOTAL WRITING                      F0C06140
+       TSX     CNVT,4        GO TO CONVERT TO DECIMAL                   F0C06150
+       SLW     STBUF+4,1     AND SAVE IN BUFFER                         F0C06160
+       TXI     *+1,1,-2      BUMP TO INSERT OUTPUT PROPERLY             F0C06170
+       TIX     STAT8,2,1     TEST IF ALL OUTPUT MOVED.                  F0C06180
+ STAT9 AXT     **,1          LOAD INDEX WITH NUMBER OF TAPES,           F0C06190
+       PXA     0,1           AND PLACE IT IN AC                         F0C06200
+       TSX     CNVT,4        TO CONVERT TO DECIMAL.                     F0C06210
+       SLW     STBUF         THEN STORE LOGICAL NUMBER IN OUTPUT BUFFER F0C06220
+       CLA     MCHTP         COMPUTE CORRESPONDING MACHINE              F0C06230
+       LGR     9             TAPE NUMBER.                               F0C06240
+       STO     TMPR          SAVE IN TEMPORARY STORAGE.                 F0C06250
+       PXA     0,0           ZERO THE AC                                F0C06260
+       LGL     3             MOVE FIRST OCTAL BITS INTO AC AND          F0C06270
+       LBT                   TEST FOR BIT IN 35. IF BIT IS HERE         F0C06280
+       TRA     *+2           THEN STATISTICS ARE FOR SPECIAL UNIT, PUNCHF0C06290
+       TRA     STAT14        READER, ETC. IF NOT IS A TAPE UNIT.        F0C06300
+       LGL     2             MOVE NEXT TWO CHARACTERS INTO AC.          F0C06310
+       PXA     0,0           THESE ARE NOT NEEDED, SO ZERO AC.          F0C06320
+       LGL     4             BRING IN LAST 4 BITS WITH TAPE NUMBER.     F0C06330
+       TSX     CNVT,4        CONVERT THIS OCTAL TAPE TO DECIMAL.        F0C06340
+       PAX     0,2           PLACE IN I.R. 2 AND  THEN                  F0C06350
+       SXD     STBUF+2,2     STORE IT IN PROPER PLACE IN OUTPUT BUFFER. F0C06360
+       CLA     TMPR          PICK UP MACHINE NUMBER WITH CHANNEL IN IT  F0C06370
+       SUB     SVN           IF SUBTRACTING LEAVES PLUS CHANNEL IS G ORHF0C06380
+       TPL     STAT15        OTHERWISE CHANNEL IS A-F                   F0C06390
+       LXA     TMPR,4        CHANNEL IS A-F SO LOAD CHANNEL SHIFT IN    F0C06400
+       LDQ     LTTRS         INDEX REGISTER PUT THE CHANNEL LETTERS     F0C06410
+STAT10 PXA     0,0           IN MQ, AND SHIFT UNTIL THE PROPER          F0C06420
+       LGL     6             CHANNEL IS LEFT IN THE AC ALONE            F0C06430
+       TIX     STAT10,4,1    WITH ZEROS.                                F0C06440
+       ALS     30            SHIFT THE CHANNEL INTO POSITION AND        F0C06450
+       ORS     STBUF+2       PUT IN OUTPUT BUFFER                       F0C06460
+STAT11 CLA     POSER         CONVERT AND STORE THE                      F0C06470
+       TSX     CNVT,4        NUMBER OF POSITIONING ERRORS               F0C06480
+       SLW     STBUF+17      IN THE OUTPUT BUFFER.                      F0C06490
+STAT16 CLA     COMST2        WRITE AND PRINT THE STATISTICS FOR ONE     F0C06500
+       AXT     ,0            TAPE. SLN 4 HERE WOULD PRINT.             $F0C06510
+       TSX     COMNT,4       WRITE IT OFF-                             $F0C06520
+STAT12 TXI     *+1,1,1       LINE. BUMP TAPE COUNT AND                  F0C06530
+STAT13 TXL     STAT2,1,**    CHECK IF FINISHED.                         F0C06540
+       TRA     FCTWO         TAPE STATISTICS FINISHED. GO ON PROCESSING.F0C06550
+STAT14 PXA     0,0           HAVE A SPECIAL UNIT DESIGNATION            F0C06560
+       LGL     2             PICK UP TWO CHARACTERS TELLING WHICH UNIT. F0C06570
+       PAC     0,2           PUT THEIR COMPLEMENT IN INDEX REGISTER     F0C06580
+       CLA     PER-3,2       AND PICK UP THE PROPER DESIGNATION         F0C06590
+       STO     STBUF+2       AND STORE IN THE OUTPUT BUFFER, THEN       F0C06600
+       TRA     STAT16        PRINT IT OUT.                              F0C06610
+STAT15 ADD     L(1)          SET INDEX REGISTER TO PROPER               F0C06620
+       PAX     0,4           SHIFTING VALUE THEN PICK UP                F0C06630
+       LDQ     LTTRS+1       CHANNEL G+H AND GO TO PUT                  F0C06640
+       TRA     STAT10        PROPER CHARACTER IN AC                     F0C06650
+     1 TTL     SUBROUTINES                                              F0C06660
+  CNVT ANA     ADMSK         ROUTINE DOES BINARY TO BCD CONVERSION      F0C06670
+       XCA                   MOVE ITEM INTO MQ                          F0C06680
+       SXA     CNVT3,4       SAVE CALLING LINKAGE                       F0C06690
+       AXT     0,4           SET INDEX REGISTER TO ZERO TO START.       F0C06700
+       STZ     TMPR1         ZERO OUT TEMPORARY STORAGE                 F0C06710
+ CNVT1 PXD     0,0           AND CLEAR OUT THE AC.                      F0C06720
+       LRS     0             MAKES SURE SIGN OF MQ IS PLUS.            $F0C06725
+       DVP     TEN           DIVIDE BY TEN DECIMAL.                     F0C06730
+       ALS     0,4           MOVE ANSWER TO DESIRED POSITION            F0C06740
+       ORS     TMPR1         AND PUT IT IN STORAGE.                     F0C06750
+       CLA     L(1)          TEST IF CONVERSION DONE                    F0C06760
+       TLQ     CNVT2         IF DONE GO TO EXIT, IF                     F0C06770
+       TXI     CNVT1,4,-6    MORE GO BACK TO CONTINUE.                  F0C06780
+ CNVT2 CAL     BLNKS         DONE,  LOAD AC WITH BLANKS                 F0C06790
+       ALS     6,4           SHIFT DATA TO PROPER POSITION              F0C06800
+       ORA     TMPR1         AND BLANK OUT THE REMAINDER OF             F0C06810
+ CNVT3 AXT     **,4          WORD. LEAVE IT IN AC, RESTORE LINKAGE,     F0C06820
+       TRA     1,4           AND RETURN TO CALLING PROGRAM.             F0C06830
+ COMNT SXA     AX4,4         THE LOCATION OF THE INITIAL TRANSFER IS    F0C06840
+       SXA     AX1,1         SAVED AS IS THE COMMAND WORD IN AC.        F0C06850
+       STD     COMCW         SAVE INDEX REGISTER ONE FOR THE RETURN.   $F0C06860
+       STA     COMCW                                                   $F0C06863
+       STO     WCOM           SET COMMAND WITH SIGN.                   $F0C06865
+       LXA     JECT,1        LOAD NO. OF LINES LEFT ON PAGE  K         $F0C06870
+       SLT     3             DOES LINE BELONG AT TOP                   $F0C06880
+TESTS  TXL     IOCL,1,**     ONLY IF LINE COUNT IS MAXIMUM             $F0C06890
+       LXD     TESTS,1                                                 $F0C06900
+       TSX     (TAPE),4      WRITE DUMMY LINE                          $F0C06910
+               SKPCM,,(WDNC) TO EJECT PAGE OFF-LINE ONLY               $F0C06920
+               ,,MLSTAP                                                $F0C06930
+IOCL   SLT     4             IF ON, PRINT ON-LINE                      $F0C06940
+       TRA     WTDA3         IS DESIRED. SL4 OFF, ON TAPE ALONE.        F0C06950
+       TSX     (PRNT),4      ON, PRINT OUT THIS MESSAGE.                F0C06960
+ COMCW PZE                    STORAGE FOR PRINT COMMAND.               $F0C06970
+ WTDA3 TSX     (TAPE),4      GO TO IO PACKAGE TO WRITE ON A3            F0C06980
+       PZE     WCOM,,(WDNC)   THIS HAS BEEN SET TO PROPER COMMAND.     $F0C06990
+       PZE     0,0,MLSTAP    MLSTAP IS NOW SET TO A3                    F0C07000
+       CLA     L(1)          ADD ONE TO THE LINECOUNT                   F0C07010
+       ADD*    (LNCT)        AND SAVE THE NEW LINECOUNT                 F0C07020
+       STO*    (LNCT)                                                   F0C07030
+       TIX     SJCT,1,1      REDUCE THE LINES AVAILABLE. IF ONLY        F0C07040
+       LXD     (PGCT),1      ONE REMAINS, RESTORE LINES TO THE MAXIMUM. F0C07050
+  SJCT SXA     JECT,1        SAVE THE LINES REMAINING                   F0C07060
+   AX1 AXT     ,1            RELOAD THE INDEX REGISTERS                 F0C07070
+   AX4 AXT     ,4            AND EXIT TO LOCATION 2 AFTER               F0C07080
+       TRA     1,4           RETURN TO CALLING PROGRAM.                 F0C07090
+  WCOM PZE                   STORAGE FOR TAPE COMMAND.                 $F0C07095
+  BOTP CLA     1,2           THIS ROUTINE TAKES CARE OF TAPE            F0C07100
+       STO     *+2           HANDLING OF BINARY OUTPUT TAPE.            F0C07110
+       TSX     (TAPE),4      THE COMMAND IS PICKED UP AND               F0C07120
+       MZE                   STORED IN CALLING SEQUENCE, THE TAPE       F0C07130
+       PZE     ,,MBNTAP      HANDLING PERFORMED AND CONTROL             F0C07140
+       TRA     2,2           RETURNED TO CALLING PROGRAM.               F0C07150
+  FITP CLA     1,2           THIS ROUTINE TAKES CARE OF TAPE            F0C07160
+       STO     *+2           HANDLING OF MONITOR INPUT TAPE.            F0C07170
+       TSX     (TAPE),4      THE COMMAND IS PICKED UP AND               F0C07180
+       MZE                   STORED IN CALLING SEQUENCE, THE TAPE       F0C07190
+       PZE     ,,MINTAP      HANDLING PERFORMED AND CONTROL             F0C07200
+       MZE     *+1           ERROR RETURN KILLS ALL REDUNDANCY MESSAGES.F0C07210
+       TRA     2,2           RETURNED TO CALLING PROGRAM.               F0C07220
+  NNBL SXA     NNBL7,2       INDEX REGISTERS ONE AND TWO                F0C07230
+       SXA     NNBL8,1       ARE SAVED FOR RESTORING ON EXIT.           F0C07240
+       STQ     TEMP1         THE MQ IS ALSO SAVED FOR RESTORING.        F0C07250
+ NNBL1 AXT     **,1          INDEX REGISTERS ONE AND TWO CONTAIN        F0C07260
+ NNBL2 AXT     **,2          THE NUMBER OF CHARACTERS REMAINING UNDONE. F0C07270
+       LDQ     TEMPQ         TEMPQ CONTAINS THE NEXT CHARACTER TO       F0C07280
+NNBL2A TXL     NNBL4,1,5     BE PROCESSED IF 6 CHARACTERS IN WORD       F0C07290
+       LDQ     BUFFZ+1,2     NO CHARACTERS LEFT. GET THE NEXT WORD.     F0C07300
+ NNBL4 PXD     0,0           ZERO OUT THE AC                            F0C07310
+       LGL     6             BRING A CHARACTER INTO THE AC.             F0C07320
+       SUB     BLNK          SUBTRACT BLANK FOR TESTING                 F0C07330
+       TIX     *+3,1,1       ARE ANY CHARACTERS LEFT FOR TESTING        F0C07340
+       AXT     6,1           NO RESET THE SHIFT COUNTER FOR 6 MORE      F0C07350
+       TXI     *+1,2,-1      REDUCE THE NUMBER OF WORDS,THEN PROCEED.   F0C07360
+       TNZ     NNBL5         IF CHARACTER NON BLANK, AC NOT ZERO        F0C07370
+       TXH     NNBL2A,2,2    CHECK FOR ANY WORDS REMAINING.             F0C07380
+       TXI     NNBL7,4,1     NONE REMAIN, SET IR 4 FOR ERROR RETURN     F0C07390
+ NNBL5 ADD     BLNK          RESTORE THE CHARACTER                      F0C07400
+       SXA     NNBL1,1       SAVE THE CURRENT SHIFT COUNTER             F0C07410
+       SXA     NNBL2,2       AND WORD BEING PROCESSED COUNTER           F0C07420
+ NNBL7 AXT     ,2            RELOAD THE INDEX REGISTER                  F0C07430
+ NNBL8 AXT     ,1            AND THE CONTENTS OF THE                    F0C07440
+       STQ     TEMPQ         MQ AT ENTRY AFTER SAVING                   F0C07450
+       LDQ     TEMP1         THE CURRENT MQ FOR NEXT TIME.              F0C07460
+       TRA     2,4           THEN TAKE TRANSFER BACK                    F0C07470
+ TEMP1 PZE                   STORAGE CELL FOR SAVING MQ AT ENTRY        F0C07480
+ TEMPQ PZE                   STORAGE CELL FOR SAVING INTERNAL MQ        F0C07490
+       REM                                                              F0C07500
+       REM     CONVERT WORD IN MQ TO OCTAL, L HALF IN SI, R HALF IN AC  F0C07510
+ OCTCV SXA     OCTCX,4        SAVE CALLING LINKAGE                      F0C07520
+       AXT     36,4           PREPARE TO CONVERT TWO SIX CHARACTER WORDSF0C07530
+       ALS     3              CREATE ZONE                               F0C07540
+       LGL     3              SHIFT IN OCTAL DIGIT                      F0C07550
+       TIX     *-2,4,6        IS FIRST WORD COMPLETE                    F0C07560
+       PAI                    YES, HOLD IT IN INDICATORS                F0C07570
+       ALS     3              CREATE ZONE                               F0C07580
+       LGL     3              SHIFT IN OCTAL DIGIT                      F0C07590
+       TIX     *-2,4,1        IS SECOND WORD COMPLETE                   F0C07600
+ OCTCX AXT     **,4           YES, RELOAD CALLING LINKAGE               F0C07610
+       TRA     1,4                                                      F0C07620
+       REM                                                              F0C07630
+       REM     PACK LOCATION AND 8 WORDS (OR LINE OF MNEMS) INTO LINE   F0C07640
+ PACK0 SXA     PACKX,4        SAVE CALLING LINKAGE                      F0C07650
+       SXA     PACKX+1,2     MAKE SURE INDEX REGISTERS WILL BE          F0C07660
+       SXA     PACKX+2,1     RESTORED TO ORIGINAL STATE ON ENTRY.       F0C07670
+       AXC     -1,1           LOAD OUTPUT BUFFER COUNT                  F0C07680
+       SXA     *-1,1          FLIP FLOP                                 F0C07690
+       AXT     27,2           PREPARE TO PACK EIGHT TETRADS             F0C07700
+       AXC     0,4            INTO TWO SEPTADS WITH FIVE TO SPARE       F0C07710
+       SLW*    OUTBF+14,1     INSERT CORE LOCATION OF FIRST WORD        F0C07720
+ PACK1 CAL     BUFF3+27,2     LOAD FIRST WORD OF TETRAD (SIGN)          F0C07730
+       LDQ     BUFF3+28,2     LOAD SECOND WORD OF TETRAD (LEFT HALF)    F0C07740
+       LGR     12             LEFT ADJUST WITH LEADING BLANK            F0C07750
+       STQ*    OUTBF+1,1      IN FIRST WORD OF SEPTAD                   F0C07760
+       CAL     BUFF3+28,2     LOAD SECOND WORD OF TETRAD (LEFT HALF)    F0C07770
+       LDQ     BUFF3+29,2     LOAD THIRD WORD OF TETRAD (RIGHT HALF)    F0C07780
+       LGR     12             LEFT ADJUST INCLUDING FIRST 4 IN R HALF   F0C07790
+       STQ*    OUTBF+2,1      IN SECOND WORD OF SEPTAD                  F0C07800
+       CAL     BUFF3+30,2     LOAD FIRST WORD OF NEXT TETRAD (SIGN)     F0C07810
+       LDQ     BUFF3+31,2     LOAD SECOND WORD OF TETRAD (LEFT HALF)    F0C07820
+       LGR     12             LEFT ADJUST WITH LEADING BLANK            F0C07830
+       CAL     BUFF3+29,2     LOAD THIRD WORD OF LAST TETRAD            F0C07840
+       LGR     12             SALVAGE LAST TWO DIGITS IN RIGHT HALF     F0C07850
+       STQ*    OUTBF+5,1      IN THIRD WORD OF SEPTAD                   F0C07860
+       CAL     BUFF3+31,2     LOAD SECOND WORD OF TETRAD (LEFT HALF)    F0C07870
+       LDQ     BUFF3+32,2     LOAD THIRD WORD OF TETRAD (RIGHT HALF)    F0C07880
+       LGL     12             LEFT ADJUST INCLUDING FIRST 2 IN R HALF   F0C07890
+       SLW*    OUTBF+6,1      IN FOURTH WORD OF SEPTAD                  F0C07900
+       CAL     BUFF3+32,2     LOAD THIRD WORD OF TETRAD (RIGHT HALF)    F0C07910
+       LDQ     BUFF3+33,2     LOAD FIRST OF NEXT TETRAD (SIGN)          F0C07920
+       RQL     24             LEFT ADJUST WITH LEADING BLANK            F0C07930
+       LGL     12             SALVAGE LAST FOUR DIGITS IN RIGHT HALF    F0C07940
+       SLW*    OUTBF+9,1      IN FIFTH WORD OF SEPTAD                   F0C07950
+       TNX     PACK2,2,9      IS THIS END OF LINE                       F0C07960
+       CAL     BUFF3+25,2     NO, LOAD SECOND WORD OF TETRAD (LEFT HALF)F0C07970
+       SLW*    OUTBF+10,1     IN SIXTH WORD OF SEPTAD                   F0C07980
+       CAL     BUFF3+26,2     LOAD THIRD WORD OF TETRAD (RIGHT HALF)    F0C07990
+       SLW*    OUTBF+13,1     IN SEVENTH WORD OF SEPTAD                 F0C08000
+       TXI     PACK1,4,-7     BUMP COUNT TO NEXT SEPTAD                 F0C08010
+ PACK2 CAL     OUTBF+14,1     LOAD BUFFER ORIGIN                        F0C08020
+ PACKX AXT     **,4           RELOAD CALLING LINKAGE                    F0C08030
+       AXT     **,2          RESTORE INDEX REGISTERS BEFORE             F0C08040
+       AXT     **,1          RETURNING TO CALLING PROGRAM.              F0C08050
+       TRA     1,4                                                      F0C08060
+       REM                                                              F0C08070
+       REM     READ SNAPSHOT RECORD FROM INTERMEDIATE TAPE              F0C08080
+ READT SLN     4              SET RETURN TO 3,4                         F0C08090
+ READS SXA     RIR4,4        SAVE INDEX BEFORE USING AS VALUE IS NEEDED.F0C08100
+       TSX     (TAPE),4      *READS NEXT RECORD ON (SNAP) TAPE.         F0C08110
+       PZE     1,2,(RBEC)                                               F0C08120
+       PZE     ,,SNPTAP                                                 F0C08130
+       PZE     READR                                                    F0C08140
+       LXA     **,1           LOAD LAST+1 WORD READ                     F0C08150
+       SLT     2             WILL BE ON IF TRYING TO READ TITLE.        F0C08160
+       TXL     SNAP0,1,0      WAS END OF FILE SENSED                    F0C08170
+  RIR4 AXT     **,4          RESETS INDEX REGISTER IF NO ERROROR EOF.   F0C08180
+       SLT     4              NO, IS RETURN TO 3,4                      F0C08190
+       TRA     2,2            NO                                        F0C08200
+       TRA     3,2            YES                                       F0C08210
+ READR TSX    (TAPE),4       *SKIP REST OF DUMP                         F0C08220
+       MZE     SKP1FL,,(SKBP)                                           F0C08230
+       PZE     READS+3,,-1                                              F0C08240
+       TSX     WRITE,2       *WRITE ERROR MESSAGE                       F0C08250
+       IORT    RDERM,,9                                                 F0C08260
+       TRA     SNAP0                                                    F0C08270
+       REM                                                              F0C08280
+       REM     WRITE LINE OF DUMP ON OUTPUT TAPE                        F0C08290
+ WRITS SLN     4              SET SINGLE SPACE FLAGS                    F0C08300
+       SLN     3                                                        F0C08310
+ WRITE CLA     DPLCT          BUMP LINE COUNT                           F0C08320
+       ADD     L(1)                                                     F0C08330
+       SLT     4              IS THIS SINGLE SPACE                      F0C08340
+       ADD     L(1)           NO, BUMP AGAIN                            F0C08350
+       STO     DPLCT                                                    F0C08360
+ WRIT1 AXT     **,4           BUMP PAGE LINE COUNT                      F0C08370
+       TIX     *+1,4,1        BUMP LINE COUNT                           F0C08380
+       SLT     3              IS THIS SINGLE SPACE                      F0C08390
+       TRA     *+2           NO,SENSE LIGHT OFF, DOUBLE SPACE.          F0C08400
+       TRA     WRIT2          YES, DO NOT CREATE WIDOW                  F0C08410
+       TIX     WRIT2,4,1     BUMP LINE COUNT AND TEST FOR FULL PAGE.    F0C08420
+       TSX    (TAPE),4       *YES, WRITE TITLE                          F0C08430
+       PZE     TITIO,,(WDNP)                                            F0C08440
+       PZE     WRIT2+3,,-1                                              F0C08450
+       ADD     L(1)                                                     F0C08460
+       STO     DPLCT                                                    F0C08470
+       LXD    (PGCT),4        RESET LINE COUNT TO FULL PAGE             F0C08480
+ WRIT2 SXA     WRIT1,4                                                  F0C08490
+       TSX    (TAPE),4       *WRITE LINE                                F0C08500
+       PZE     1,2,(WDNP)                                               F0C08510
+       PZE     ,,MLSTAP                                                 F0C08520
+       TRA     2,2                                                      F0C08530
+     1 TTL     TABLES                                                   F0C08540
+  HBC2 OCT     1000,400,200,100,40,20,10,4,2,1,0,102,42,0,0,0           F0C08550
+       OCT     4000,4400,4200,4100,4040,4020,4010,4004,4002,4001,5000   F0C08560
+       OCT     4102,4042,0,0,0                                          F0C08570
+       OCT     2000,2400,2200,2100,2040,2020,2010,2004,2002,2001,3000   F0C08580
+       OCT     2102,2042,0,0,0                                          F0C08590
+       OCT     0,1400,1200,1100,1040,1020,1010,1004,1002,1001,0,1102    F0C08600
+       OCT     1042,0,0,0                                               F0C08610
+       BCI ,00000D00000A00000T00000E00000N00000D00000T00000A00000P00000EF0C08620
+ TBLS  BSS     0             LOCATION USED AS BASE TO TEST CARD TYPES  $F0C08621
+       TTL     IBSYS CONTROL CARD PROCESSOR                            $F0C08622
+       REM     PROCESS CARD WITH $ IN COLUMN ONE.                      $F0C08630
+IBCARD LDI*    (FGBX)        WE'LL NEED THIS LATER                     $F0C08631
+       AXT     IBCDS,4       NUMBER OF OPERATIONS                      $F0C08632
+       CAL     BUFF          RECOGNIZED. PICK UP OPERATION             $F0C08633
+       LAS     IBNAM,4       COMPARE WITH TABLE                        $F0C08634
+       TRA     *+2           NOT THIS ONE                              $F0C08635
+       TRA*    IBPLAC,4      BRANCH TO PROCESSOR                       $F0C08636
+       TIX     *-3,4,1       DO REST OF TABLE                          $F0C08637
+       REM     CARD WAS UNKNOWN                                        $F0C08638
+IBOTHR TSX     FITP,2        BACKSPACE OVER UNKNOWN                    $F0C08639
+       MZE     BKSPC,,(SKDP) IBSYS CONTROL CARD                        $F0C0863A
+       REM     CARD WAS $IBSYS                                         $F0C08640
+NIBSYS CLA     RETNG         INFORM THEM WE RE TIRED                   $F0C08641
+       SLN     4             ON AND OFF LINE                           $F0C08642
+       TSX     COMNT,4                                                 $F0C08643
+       TSX     (TAPE),4      RESTORE AVAILABILITY                      $F0C08644
+       PZE     ,,(SUAV)      CHAIN.                                    $F0C08645
+       CAL     SYSJOB        REFLECT THIS IN SIGN OF SYSJOB, UNLESS    $F0C08646
+       RNT     10            WE'RE AWARE OF PRIOR CHANGES..            $F0C08649
+       STO     SYSJOB        WE'RE NOT.                                $F0C0864A
+       STZ     BOTTOM-12     WE'RE OUT.                                $F0C0864B
+       TRA     SYSRET        AND SO TO BED.                            $F0C08650
+       REM     CARD WAS $STOP                                          $F0C08651
+NSTOP  SLW     SYSGET        STORE OPERATION FOR                       $F0C08652
+       TRA     NIBSYS        IBSYS AND GO BACK TO IT                   $F0C08653
+       REM     CARD WAS $ID                                            $F0C08654
+ NIBID TSX     SYSIDR,4      CALL INSTALLATION ACCNTG                  $F0C08655
+       PZE     BUFF,,14      (AC IS ALREADY PLUS)                      $F0C08656
+       NZT     IDOK          DO WE NEED AN I.D...                      $F0C08658
+       TPL     FCATE         FORTRAN, TREAT AS *I.D.                   $F0C08659
+       TPL     FCFIV         IBSFAP OR PREVIOUSLY ID ED FORTRAN        $F0C08660
+NIBID2 CAL     JOBBIT        SIGN WAS MINUS, WE MUST BOMB              $F0C08661
+       ORS     SYSJOB        OUT. SET BOMB-OUT BIT                     $F0C08662
+       CAL     IBSXEC        TELL IBSYS TO IGNORE US                   $F0C08663
+       SLW     SYSGET                                                  $F0C08664
+       TRA     NIBSYS        RETURN TO IBSYS                           $F0C08665
+       REM     CARD WAS $JOB                                           $F0C08666
+NIBJOB CAL     IBSBSR        TELL IBSYS ABOUT IT                       $F0C08667
+       SLW     SYSGET                                                  $F0C08668
+       TSX     (TAPE),4      RESTORE AVAILABILITY CHAIN                $F0C08669
+       PZE     ,,(SUAV)      SO WE COULD LEGALLY RESTORE SYSJOB        $F0C0866A
+       STZ     BOTTOM-12     WE'RE OUT, PROVISIONALLY                  $F0C08670
+       CAL     SYSJOB        AVAILABILITY STATUS BEFORE US             $F0C08671
+       RNT     10            DID THEY..                                $F0C08672
+       STO     SYSJOB        NO, MAKE SYSJOB PLUS                      $F0C08673
+       TSX     SYSRPT,4      SEE WHAT'S WHAT                           $F0C08674
+       CAL     IBSYST        AH, WE CAN PROCEED                        $F0C08675
+       SLW     SYSGET        RESTORE SYSGET                            $F0C08676
+       CAL     WEREIN        WE'RE BACK IN                             $F0C08677
+       SLW     BOTTOM-12                                               $F0C08678
+       TSX     (TAPE),4      GET OUR TAPES BACK                        $F0C08679
+       PZE     ,,(SUNV)                                                $F0C0867A
+       CAL     BKSOR         (MINUS ZERO)                              $F0C0867B
+       ORS     SYSJOB        TO LET IBSYS KNOW                         $F0C0867C
+       TSX     SYSIDR,4      AND CALL ACCOUNTING IN ORDER TO           $F0C0867D
+               BUFF,,14      COMPLETE OUR DUTIES                       $F0C0867E
+       TMI     NIBID2        DID WE...     NO.                         $F0C0867F
+       SLN     4             YES. PRINT CARD ON/OFF LINE               $F0C08680
+       TRA     PJOB                                                    $F0C08681
+       REM     CARD WAS $EXECU                                         $F0C08682
+NEXECU CAL     BUFF+2        WHO DO THEY WANT                          $F0C08683
+       LDQ     BUFF+3                                                  $F0C08684
+       LGL     18            GET SYSNAM                                $F0C08685
+       ERA     FORTRA        IS IT US IN EXECUTE MODE                  $F0C08687
+       TZE     ITSME         YES                                       $F0C08689
+       ERA     FOMIB         IS IT US IN ASSEMBLE-ONLY                 $F0C08690
+       TZE     ITSYOU        YES                                       $F0C08691
+       ERA     IBSFAP        NO, RESTORE HIS NAME, AND                 $F0C08692
+       SLW     SYSGET        SET FOREIGNER                             $F0C08693
+       TRA     NIBSYS        LET IBSYS FIND HIM                        $F0C08694
+ ITSME RNT     4             WERE WE ALREADY EXECUTABLE                $F0C08695
+       TRA     FCNINE        YES, IGNORE THE CARD                      $F0C08696
+       CAL     NFAPBT        NO, CHANGE THE MONITOR                    $F0C08697
+       ANS*    (FGBX)        MODE, AND START OVER                      $F0C08698
+       CLA     CDMGE         PICK UP COMMAND TO PRINT CARD             $F0C08699
+       TSX     COMNT,4       PRINT CARD OFFLINE                        $F0C0869A
+       TRA     FRTRA         AND START OVER                            $F0C0869B
+ITSYOU SIR     4             SET ASSEMBLE ONLY                         $F0C08700
+       STI*    (FGBX)        ..IBSFAP.. MODE                           $F0C08701
+       STZ     JOBOK         END-OF-FILE NOT NEEDED                    $F0C08702
+       TRA     FCFIV+1       PRINT CARD OFF-LINE                       $F0C08703
+       TTL     DUMP TABLES FOR MNEMONICS                               $F0C08734
+       REM     MNEMONIC EQUIVALENTS OF MACHINE OPCODES                 $F0C08735
+ TBLMN PZE                                                             $F0C08736
+       BCI     1,   TXI       +1                                       $F0C08737
+       BCI     1,   TIX       +2                                       $F0C08738
+       BCI     1,   TXH       +3                                       $F0C08739
+       BCI     1,   STR       -1                                        F0C08740
+       BCI     1,   TNX       -2                                        F0C08750
+       BCI     1,   TXL       -3                                        F0C08760
+ TBLEP PZE     ETPSE,,ETPSE-BTPSE                                       F0C08770
+ TBLEM PZE     ETMSE,,ETMSE-BTMSE                                       F0C08780
+ TBLBP PZE     TBLP1,,TBLP1-TBLP0                                       F0C08790
+       PZE     TBLP2,,TBLP2-TBLP1                                       F0C08800
+       PZE     TBLP3,,TBLP3-TBLP2                                       F0C08810
+       PZE     TBLP4,,TBLP4-TBLP3                                       F0C08820
+       PZE     TBLP5,,TBLP5-TBLP4                                       F0C08830
+       PZE     TBLP6,,TBLP6-TBLP5                                       F0C08840
+       PZE     TBLP7,,TBLP7-TBLP6                                       F0C08850
+       PZE     TBLP8,,TBLP8-TBLP7                                       F0C08860
+ TBLBM PZE     TBLM1,,TBLM1-TBLM0                                       F0C08870
+       PZE     TBLM2,,TBLM2-TBLM1                                       F0C08880
+       PZE     TBLM3,,TBLM3-TBLM2                                       F0C08890
+       PZE     TBLM4,,TBLM4-TBLM3                                       F0C08900
+       PZE     TBLM5,,TBLM5-TBLM4                                       F0C08910
+       PZE     TBLM6,,TBLM6-TBLM5                                       F0C08920
+       PZE     TBLM7,,TBLM7-TBLM6                                       F0C08930
+       PZE     TBLM8,,TBLM8-TBLM7                                       F0C08940
+ BTPSE BCI     1, CLM00       +0760 00 0 00000                          F0C08950
+       BCI     1, LBT01       +0760 00 0 00001                          F0C08960
+       BCI     1, CHS02       +0760 00 0 00002                          F0C08970
+       BCI     1, SSP03       +0760 00 0 00003                          F0C08980
+       BCI     1, ENK04       +0760 00 0 00004                          F0C08990
+       BCI     1, IOT05       +0760 00 0 00005                          F0C09000
+       BCI     1, COM06       +0760 00 0 00006                          F0C09010
+       BCI     1, ETM07       +0760 00 0 00007                          F0C09020
+       BCI     1, RND10       +0760 00 0 00010                          F0C09030
+       BCI     1, FRN11       +0760 00 0 00011                          F0C09040
+       BCI     1, DCT12       +0760 00 0 00012                          F0C09050
+ ETPSE SYN     *                                                        F0C09060
+ BTMSE BCI     1, PBT01       -0760 00 0 00001                          F0C09070
+       BCI     1,EFTM02       -0760 00 0 00002                          F0C09080
+       BCI     1, SSM03       -0760 00 0 00003                          F0C09090
+       BCI     1,LFTM04       -0760 00 0 00004                          F0C09100
+       BCI     1,ESTM05       -0760 00 0 00005                          F0C09110
+       BCI     1,ECTM06       -0760 00 0 00006                          F0C09120
+       BCI     1, LTM07       -0760 00 0 00007                          F0C09130
+       BCI     1,LSNM10       -0760 00 0 00010                          F0C09140
+       BCI     1, ETT11       -0760 00 0 00011    (704)                 F0C09150
+       BCI     1, RTT12       -0760 00 0 00012    (704)                 F0C09160
+ ETMSE SYN     *                                                        F0C09170
+ TBLP0 BCI     1, HTR00       +0000                                     F0C09180
+       BCI     1, TRA20       +0020                                     F0C09190
+       BCI     1, TTR21       +0021                                     F0C09200
+       BCI     1,TRCA22       +0022                                     F0C09210
+       BCI     1,TRCC24       +0024                                     F0C09220
+       BCI     1,TRCE26       +0026                                     F0C09230
+       BCI     1,TRCG27       +0027                                     F0C09240
+       BCI     1,TEFA30       +0030                                     F0C09250
+       BCI     1,TEFC31       +0031                                     F0C09260
+       BCI     1,TEFE32       +0032                                     F0C09270
+       BCI     1,TEFG33       +0033                                     F0C09280
+       BCI     1, TLQ40       +0040                                     F0C09290
+       BCI     1, IIA41       +0041                                     F0C09300
+       BCI     1, TIO42       +0042                                     F0C09310
+       BCI     1, OAI43       +0043                                     F0C09320
+       BCI     1, PAI44       +0044                                     F0C09330
+       BCI     1, TIF46       +0046                                     F0C09340
+       BCI     1, IIR51       +0051                                     F0C09350
+       BCI     1, RFT54       +0054                                     F0C09360
+       BCI     1, SIR55       +0055                                     F0C09370
+       BCI     1, RNT56       +0056                                     F0C09380
+       BCI     1, RIR57       +0057                                     F0C09390
+       BCI     1,TCOA60       +0060                                     F0C09400
+       BCI     1,TCOB61       +0061                                     F0C09410
+       BCI     1,TCOC62       +0062                                     F0C09420
+       BCI     1,TCOD63       +0063                                     F0C09430
+       BCI     1,TCOE64       +0064                                     F0C09440
+       BCI     1,TCOF65       +0065                                     F0C09450
+       BCI     1,TCOG66       +0066                                     F0C09460
+       BCI     1,TCOH67       +0067                                     F0C09470
+       BCI     1, TSX74       +0074                                     F0C09480
+ TBLP1 BCI     1, TZE00       +0100                                     F0C09490
+       BCI     1, CVR14       +0114                                     F0C09500
+       BCI     1, TPL20       +0120                                     F0C09510
+       BCI     1, XCA31       +0131                                     F0C09520
+       BCI     1, TOV40       +0140                                     F0C09530
+       BCI     1, TQO61       +0161                                     F0C09540
+       BCI     1, TQP62       +0162                                     F0C09550
+ TBLP2 BCI     1, MPY00       +0200                                     F0C09560
+       BCI     1, VLM04       +0204                                     F0C09570
+       BCI     1, DVH20       +0220                                     F0C09580
+       BCI     1, DVP21       +0221                                     F0C09590
+       BCI     1, VDH24       +0224                                     F0C09600
+       BCI     1, VDP25       +0225                                     F0C09610
+       BCI     1, FDH40       +0240                                     F0C09620
+       BCI     1, FDP41       +0241                                     F0C09630
+       BCI     1, FMP60       +0260                                     F0C09640
+ TBLP3 BCI     1, FAD00       +0300                                     F0C09650
+       BCI     1, FSB02       +0302                                     F0C09660
+       BCI     1, FAM04       +0304                                     F0C09670
+       BCI     1, FSM06       +0306                                     F0C09680
+       BCI     1, ANS20       +0320                                     F0C09690
+       BCI     1, ERA22       +0322                                     F0C09700
+       BCI     1, CAS40       +0340                                     F0C09710
+       BCI     1, ACL61       +0361                                     F0C09720
+ TBLP4 BCI     1, ADD00       +0400                                     F0C09730
+       BCI     1, ADM01       +0401                                     F0C09740
+       BCI     1, SUB02       +0402                                     F0C09750
+       BCI     1, HPR20       +0420                                     F0C09760
+       BCI     1, IIS40       +0440                                     F0C09770
+       BCI     1, LDI41       +0441                                     F0C09780
+       BCI     1, OSI42       +0442                                     F0C09790
+       BCI     1, OFT44       +0444                                     F0C09800
+       BCI     1, RIS45       +0445                                     F0C09810
+       BCI     1, ONT46       +0446                                     F0C09820
+       BCI     1, LDA60       +0460                                     F0C09830
+ TBLP5 BCI     1, CLA00       +0500                                     F0C09840
+       BCI     1, CLS02       +0502                                     F0C09850
+       BCI     1, ZET20       +0520                                     F0C09860
+       BCI     1, XEC22       +0522                                     F0C09870
+       BCI     1, LXA34       +0534                                     F0C09880
+       BCI     1, LAC35       +0535                                     F0C09890
+       BCI     1,RCHA40       +0540                                     F0C09900
+       BCI     1,RCHC41       +0541                                     F0C09910
+       BCI     1,RCHE42       +0542                                     F0C09920
+       BCI     1,RCHG43       +0543                                     F0C09930
+       BCI     1,LCHA44       +0544                                     F0C09940
+       BCI     1,LCHC45       +0545                                     F0C09950
+       BCI     1,LCHE46       +0546                                     F0C09960
+       BCI     1,LCHG47       +0547                                     F0C09970
+       BCI     1, LDQ60       +0560                                     F0C09980
+       BCI     1, ECA61       +0561                                     F0C09990
+       BCI     1, ENB64       +0564                                     F0C10000
+ TBLP6 BCI     1, STZ00       +0600                                     F0C10010
+       BCI     1, STO01       +0601                                     F0C10020
+       BCI     1, SLW02       +0602                                     F0C10030
+       BCI     1, STI04       +0604                                     F0C10040
+       BCI     1, STA21       +0621                                     F0C10050
+       BCI     1, STD22       +0622                                     F0C10060
+       BCI     1, STT25       +0625                                     F0C10070
+       BCI     1, STP30       +0630                                     F0C10080
+       BCI     1, SXA34       +0634                                     F0C10090
+       BCI     1,SCHA40       +0640                                     F0C10100
+       BCI     1,SCHC41       +0641                                     F0C10110
+       BCI     1,SCHE42       +0642                                     F0C10120
+       BCI     1,SCHG43       +0643                                     F0C10130
+       BCI     1,PSLA64       +0664                                     F0C10140
+       BCI     1,PSLC65       +0665                                     F0C10150
+       BCI     1,PSLE66       +0666                                     F0C10160
+       BCI     1,PSLG67       +0667                                     F0C10170
+       BCI     1, ELD70       +0670                                     F0C10180
+       BCI     1, EAD71       +0671                                     F0C10190
+       BCI     1, EDP72       +0672                                     F0C10200
+       BCI     1, EMP73       +0673                                     F0C10210
+ TBLP7 BCI     1, CPY00       +0700                                     F0C10220
+       BCI     1, PAX34       +0734                                     F0C10230
+       BCI     1, PAC37       +0737                                     F0C10240
+       BCI     1, PXA54       +0754                                     F0C10250
+ PSEOP BCI     1, PSE60       +0760                                     F0C10260
+       BCI     1, NOP61       +0761                                     F0C10270
+       BCI     1, RDS62       +0762                                     F0C10280
+       BCI     1, LLS63       +0763                                     F0C10290
+       BCI     1, BSR64       +0764                                     F0C10300
+       BCI     1, LRS65       +0765                                     F0C10310
+       BCI     1, WRS66       +0766                                     F0C10320
+       BCI     1, ALS67       +0767                                     F0C10330
+       BCI     1, WEF70       +0770                                     F0C10340
+       BCI     1, ARS71       +0771                                     F0C10350
+       BCI     1, REW72       +0772                                     F0C10360
+       BCI     1, AXT74       +0774                                     F0C10370
+       BCI     1, DRS75       +0775                                     F0C10380
+       BCI     1, SDN76       +0776                                     F0C10390
+ TBLP8 SYN     *                                                        F0C10400
+ TBLM0 BCI     1,ESNT21       -0021                                     F0C10410
+       BCI     1,TRCB22       -0022                                     F0C10420
+       BCI     1,TRCD24       -0024                                     F0C10430
+       BCI     1,TRCF26       -0026                                     F0C10440
+       BCI     1,TRCH27       -0027                                     F0C10450
+       BCI     1,TEFB30       -0030                                     F0C10460
+       BCI     1,TEFD31       -0031                                     F0C10470
+       BCI     1,TEFF32       -0032                                     F0C10480
+       BCI     1,TEFH33       -0033                                     F0C10490
+       BCI     1, RIA42       -0042                                     F0C10500
+       BCI     1, PIA46       -0046                                     F0C10510
+       BCI     1, IIL51       -0051                                     F0C10520
+       BCI     1, LFT54       -0054                                     F0C10530
+       BCI     1, SIL55       -0055                                     F0C10540
+       BCI     1, LNT56       -0056                                     F0C10550
+       BCI     1, RIL57       -0057                                     F0C10560
+       BCI     1,TCNA60       -0060                                     F0C10570
+       BCI     1,TCNB61       -0061                                     F0C10580
+       BCI     1,TCNC62       -0062                                     F0C10590
+       BCI     1,TCND63       -0063                                     F0C10600
+       BCI     1,TCNE64       -0064                                     F0C10610
+       BCI     1,TCNF65       -0065                                     F0C10620
+       BCI     1,TCNG66       -0066                                     F0C10630
+       BCI     1,TCNH67       -0067                                     F0C10640
+ TBLM1 BCI     1, TNZ00       -0100                                     F0C10650
+       BCI     1, CAQ14       -0114                                     F0C10660
+       BCI     1, TMI20       -0120                                     F0C10670
+       BCI     1, XCL30       -0130                                     F0C10680
+       BCI     1, TNO40       -0140                                     F0C10690
+       BCI     1, CRQ54       -0154                                     F0C10700
+ TBLM2 BCI     1, MPR00       -0200                                     F0C10710
+       BCI     1, UFM60       -0260                                     F0C10720
+ TBLM3 BCI     1, UFA00       -0300                                     F0C10730
+       BCI     1, UFS02       -0302                                     F0C10740
+       BCI     1, UAM04       -0304                                     F0C10750
+       BCI     1, USM06       -0306                                     F0C10760
+       BCI     1, ANA20       -0320                                     F0C10770
+       BCI     1, LAS40       -0340                                     F0C10780
+ TBLM4 BCI     1, SBM00       -0400                                     F0C10790
+ TBLM5 BCI     1, CAL00       -0500                                     F0C10800
+       BCI     1, ORA01       -0501                                     F0C10810
+       BCI     1, NZT20       -0520                                     F0C10820
+       BCI     1, LXD34       -0534                                     F0C10830
+       BCI     1, LDC35       -0535                                     F0C10840
+       BCI     1,RCHB40       -0540                                     F0C10850
+       BCI     1,RCHD41       -0541                                     F0C10860
+       BCI     1,RCHF42       -0542                                     F0C10870
+       BCI     1,RCHH43       -0543                                     F0C10880
+       BCI     1,LCHB44       -0544                                     F0C10890
+       BCI     1,LCHD45       -0545                                     F0C10900
+       BCI     1,LCHF46       -0546                                     F0C10910
+       BCI     1,LCHH47       -0547                                     F0C10920
+       BCI     1, ECQ61       -0561                                     F0C10930
+ TBLM6 BCI     1, STQ00       -0600                                     F0C10940
+       BCI     1, ORS02       -0602                                     F0C10950
+       BCI     1, SLQ20       -0620                                     F0C10960
+       BCI     1, STL25       -0625                                     F0C10970
+       BCI     1, SXD34       -0634                                     F0C10980
+       BCI     1,SCHB40       -0640                                     F0C10990
+       BCI     1,SCHD41       -0641                                     F0C11000
+       BCI     1,SCHF42       -0642                                     F0C11010
+       BCI     1,SCHH43       -0643                                     F0C11020
+       BCI     1,PSLB64       -0664                                     F0C11030
+       BCI     1,PSLD65       -0665                                     F0C11040
+       BCI     1,PSLF66       -0666                                     F0C11050
+       BCI     1,PSLH67       -0667                                     F0C11060
+       BCI     1, ESB71       -0671                                     F0C11070
+       BCI     1, EUA72       -0672                                     F0C11080
+       BCI     1, EST73       -0673                                     F0C11090
+ TBLM7 BCI     1, CAD00       -0700                                     F0C11100
+       BCI     1, PDX34       -0734                                     F0C11110
+       BCI     1, PDC37       -0737                                     F0C11120
+       BCI     1, PXD54       -0754                                     F0C11130
+ MSEOP BCI     1, MSE60       -0760                                     F0C11140
+       BCI     1, LGL63       -0763                                     F0C11150
+       BCI     1, BSF64       -0764                                     F0C11160
+       BCI     1, LGR65       -0765                                     F0C11170
+       BCI     1, RUN72       -0772                                     F0C11180
+       BCI     1, RQL73       -0773                                     F0C11190
+       BCI     1, AXC74       -0774                                     F0C11200
+       BCI     1, TRS75       -0775                                     F0C11210
+ TBLM8 SYN     *                                                        F0C11220
+       REM                                                              F0C11230
+       REM     OUTPUT BUFFER SWITCH TABLE                               F0C11240
+ OUTBF PZE     BUFF2+1,4                                                F0C11250
+       PZE     BUFF2+2,4      +1                                        F0C11260
+       PZE     BUFF1+1,4      +2                                        F0C11270
+       PZE     BUFF1+2,4      +3                                        F0C11280
+       PZE     BUFF2+3,4      +4                                        F0C11290
+       PZE     BUFF2+4,4      +5                                        F0C11300
+       PZE     BUFF1+3,4      +6                                        F0C11310
+       PZE     BUFF1+4,4      +7                                        F0C11320
+       PZE     BUFF2+5,4      +8                                        F0C11330
+       PZE     BUFF2+6,4      +9                                        F0C11340
+       PZE     BUFF1+5,4      +10                                       F0C11350
+       PZE     BUFF1+6,4      +11                                       F0C11360
+       PZE     BUFF2+7,4      +12                                       F0C11370
+       PZE     BUFF2          +13                                       F0C11380
+       PZE     BUFF1+7,4      +14                                       F0C11390
+       PZE     BUFF1                                                    F0C11400
+       REM                                                              F0C11410
+     1 TTL     OTHER = E. G. ' CONSTANTS AND MESSAGES                   F0C11600
+       REM     ERASABLE                                                 F0C11610
+  TMPR PZE                   USED FOR TEMPORARY STORAGE BY STAT ROUTINE.F0C11620
+ CORES PZE     **,1,**        ORIGIN AT END OF DUMP,,LENGTH OF DUMP     F0C11630
+       PZE     **,1                                                     F0C11640
+ LCORS PZE     **             CORE LOCATION AT END OF DUMP              F0C11650
+ FWORD PZE     **             CORE LOCATION OF FIRST WORD IN LINE       F0C11660
+ LWORD PZE     **             CORE LOCATION OF LAST IDENTICAL WORD      F0C11670
+ ERASE PZE                    GENERAL ERASABLE                          F0C11680
+ DPLCT PZE     **             NUMBER OF LINES OUTPUT IN DUMP            F0C11690
+ MONTH OCT     0,0           STORAGE USED FOR BUILDING UP DATE.         F0C11700
+ TOTWT PZE                   INTERMEDIATE STORAGE-TOTAL WRITING ATTEMPTSF0C11710
+ TOTRD PZE                   INTERMEDIATE STORAGE-TOTAL READING ATTEMPTSF0C11720
+ NOISW PZE                   INTERMEDIATE STORAGE-NOISE RECORDS WRITTEN F0C11730
+ NOISR PZE                   INTERMEDIATE STORAGE-NOISE RECORDS READ    F0C11740
+ TOTRW PZE                   INTERMEDIATE STORAGE-TOTAL RECORDS WRITTEN F0C11750
+ TOTRR PZE                   INTERMEDIATE STORAGE-TOTAL RECORDS READ    F0C11760
+ POSER PZE                   INTERMEDIATE STORAGE-POSITIONING ERRORS    F0C11770
+ MCHTP PZE                   INTERMEDIATE STORAGE-CORRESPONDING TAPE.   F0C11780
+TMPR1  PZE                   TEMPORARY STORAGE FOR CONVERT ROUTINE.     F0C11790
+       REM                                                              F0C11800
+       REM     CONSTANTS                                                F0C11810
+       BCI     1,READER                                                 F0C11820
+       BCI     1, PUNCH                                                 F0C11830
+PER    BCI     1,PRNTER                                                 F0C11840
+LTTRS  BCI     2,ABCDEFGH                                               F0C11850
+ EOSMS IOCT    ENDMS,,4      COMMAND PUTS OUT CLOSING MESSAGE          $F0C11860
+ IOCOM IOCT    COM1,,7       WRITES OUT LINE COUNT.                    $F0C11870
+ SKPCM IORT    EJECT,,3       USED TO EJECT PAGE OFF-LINE              $F0C11880
+ CDMGE IOCT    PBUFF,,15     COMMAND TO WRITE OUT CARD IMAGES.         $F0C11890
+COMST2 IOCT    STBUF-1,,19   COMMAND PUTS OUT LINE OF TAPE STATISTICS. $F0C11900
+  ERMS IOCT    ERSNP,,10     WRITE OUT ERROR IN SNAPPING MESSAGE.      $F0C11910
+SKP1FL PZE     0,,1          COMMAND TO SKIP ONE FILE.                  F0C11920
+JOBBIT EQU     SKP1FL        JOB FAILED BITS                           $F0C11925
+ RCDA2 IORT    BUFF,,14      READS ONE RECORD INTO BUFF -BUFF+13        F0C11930
+ W1REC IORT    CDIM-25,,27   PUTS ONE BINARY CARD ON TAPE.              F0C11940
+ ASTK  BCI     1,00000*      TESTS FOR FORTRAN JOB.                     F0C11950
+ DOLSN BCI     1,00000$      TESTS COL 1 DOLLAR SIGNS                  $F0C11955
+ SLASH BCI     1,00000/      USED IN DATE TESTING.                      F0C11960
+   TEN DEC     10            USED FOR CONVERTING BINARY TO HOLLERITH    F0C11970
+ BLNK  OCT     60            USED TO TEST IF BLANK CHARACTER ON CARD    F0C11980
+  JECT PZE     **            STORAGE FOR LINES USED ON A PAGE.          F0C11990
+ FGMSK OCT     400100000014  USED TO RESET FLAGBOX FOR NEW JOB         $F0C12000
+ TRA   TRA     FRT+3         TO REINITIALIZE SNAP ROUTINE              $F0C12003
+ NOP1  NOP                   READING DUMP RECORDS FOR SECOND TIME      $F0C12007
+FC7BAK PZE     NIBSYS        TO TREAT *END TAPE AS $IBSYS              $F0C12010
+SWST61 PZE     FCSIX,,FCSVN  REGULATE TEST FOR DATE OR ENDTAPE CARD.    F0C12020
+ L(BF3 PZE     BUFF3         CONSTANT CONTAINING LOCATION OF BUFFER THREF0C12030
+  SKP2 PZE     2             SKIP COMMAND USED IN EXIT TO SCAN.         F0C12050
+ 3ZROS BCI     1,000                                                    F0C12060
+FRBNKS OCT     000060606060                                             F0C12070
+ BKOFC OCT     007777777777                                             F0C12080
+FRSVNS OCT     777700000000                                             F0C12090
+ 6SVNS OCT     777777000000                                            $F0C12095
+SVN    DEC     7                                                        F0C12100
+ FAPBT OCT     4             IBSFAP BIT                                $F0C12102
+ BOF   OCT     200           BEGIN. OF FILE BIT                        $F0C12104
+ IDOK  PZE     0             ID SWITCH                                 $F0C12106
+ JOBOK PZE     0             JOB SWITCH                                $F0C12108
+ ADMSK MZE     -1                                                      $F0C12110
+ L(1)  PZE     1                                                        F0C12120
+ L(8)  PZE     8                                                        F0C12130
+ 3SVNS PZE     511                                                      F0C12140
+ DELLD PZE     -8                                                       F0C12150
+ REWND PZE     ,,-1                                                     F0C12160
+ BKSPC MZE     1,,0                                                     F0C12170
+ BK1FL MZE     ,,1                                                     $F0C12175
+ BKSOR MZE     0,,0          SKIP 0 FILES + 0 RECORDS FOR CHECK        $F0C12177
+ ASTRK BCI     1,*                                                      F0C12180
+ LDGBK BCI     1, 00000                                                 F0C12190
+ 2BLNK BCI     1,  0000                                                 F0C12200
+ PLUSZ BCI     1,    +0                                                 F0C12210
+ MNUSB BCI     1,    -                                                  F0C12220
+ MNUSP BCI     1,    -1                                                 F0C12230
+ MINUS BCI     1,     -                                                 F0C12240
+ L(ON) BCI     1,    ON                                                 F0C12250
+ L(OF) BCI     1,   OFF                                                 F0C12260
+CONSNA BCI     2,   SNAPSHOT                                            F0C12270
+ L(UP) BCI     1,    UP                                                 F0C12280
+ L(DN) BCI     1,  DOWN                                                 F0C12290
+       REM                                                              F0C12300
+       REM     OUTPUT DATA                                              F0C12310
+       IOCT    COMST,,20     THREE SUCCESSIVE COMMANDS TO              $F0C12320
+       IOCT    COMST1,,19    WRITE OUT THE HEADING FOR TAPE STATISTICS,$F0C12330
+ COMTS BSS     0             FOLLOWED BY A SKIPPED LINE.                F0C12340
+ BLKLN IOCT    BLNKS-1,,3                                              $F0C12350
+ ERSNP BCI     1,                                                       F0C12360
+       BCI     9, SNAP TAPE IS INCORRECT. MAYBE USED IN ERROR. NO SNAPS.F0C12370
+ PHDG1 BCI     9,0     ACCUMULATOR        ENTRY KEYS     SENSE INDICATO F0C12380
+       BCI     9,RS         MQ             XR1         XR2         XR4  F0C12390
+ PHDG2 BCI     9,0              SS1   SS2   SS3   SS4   SS5   SS6       F0C12400
+       BCI     7,    AC    MQ    DC   SL4   SL3   SL2   SL1             F0C12410
+ IDWBF BCI     6,0                                                      F0C12420
+       BCI     9,CELLS         TO         ALL CONTAIN                   F0C12430
+ RDERM BCI     9,0 THIS PORTION OF SNAPSHOT ABANDONED DUE TO TAPE ERROR F0C12440
+ ENDMS BCI     4,0     SNAPSHOTS COMPLETE                               F0C12450
+  COM1 BCI     7,             LINES OUTPUT THIS JOB.                    F0C12460
+       BCI     1,0                                                     $F0C12470
+ COM3  BCI ,* NO I.D. CARD FOR THIS FORTRAN JOB                         F0C12480
+       BCI     4,                                                      $F0C12485
+ COM4  BCI     8,0     TO CONTINUE WITH ABOVE LINE AS ID CARD DEP      $F0C12490
+       BCI     5,RESS SIGN KEY AND PUSH START                          $F0C12492
+ COM5  BCI     1,                                                      $F0C12494
+       BCI     9,TO SKIP TO NEXT JOB PUSH SIGN KEY UP AND PUSH START   $F0C12496
+       DUP     1,16          PATCH SPACE                            (26)F0C12498
+       PZE                                                          (26)F0C12500
+ COM8  BCI     7,0     INPUT TAPE ERROR  RECORD IGNORED                $F0C12504
+ COMST BCI     1,                                                       F0C12510
+       BCI     9, LOGICAL   MACHINE       TOTAL      TOTAL          NOI F0C12520
+       BCI     9,SE RECORDS        TOTAL REDUNDANCIES          POSITION F0C12530
+       BCI     1,ING                                                    F0C12540
+COMST1 BCI     1,                                                       F0C12550
+       BCI     9,  TAPE      TAPE        WRITES      READS       WRITIN F0C12560
+       BCI     9,G     READING     WRITING     READING           ERRORS F0C12570
+       REM                                                              F0C12580
+       REM     GENERAL BUFFER SPACE                                     F0C12590
+       BCI     1,                                                       F0C12600
+ STBUF BCI ,                                                            F0C12610
+       BCI     8,                                                       F0C12620
+ TITBF BSS     5                                                        F0C12630
+ BUFF1 BSS     20                                                       F0C12640
+ BUFF2 BSS     20                                                       F0C12650
+ BUFF3 BSS     24                                                       F0C12660
+ PBUFF BCI     1,                                                       F0C12670
+  BUFF BSS     12            BEING WORKED WITH AS HOLLERITH             F0C12680
+       BCI     2,            OR READ IN OR OUT AS HOLLERITH.            F0C12690
+ BUFFZ BSS     0             END OF CARD BUFFER.                        F0C12700
+ EJECT BCI     1,1           USED TO PRINT MESSAGES ON TOP OF PAGE.     F0C12710
+       BCI     1,                                                       F0C12720
+ BLNKS BCI     3,                    MASK TO FILL IN AND TEST.          F0C12730
+  CDIM BES     25            USED TO STORE BINARY CARDS                 F0C12740
+       BSS     2             USED FOR ID FOR COLUMN BINARY CARDS.       F0C12750
+       PZE                   LEFT BLANK TO AVOID CONFLICT WITH ID CARDBFF0C12752
+       REM     IBSYS CONTROL CARDS RECOGNIZED                          $F0C12770
+       BCI     1,$JOB                                                  $F0C12771
+       BCI     1,$ID                                                   $F0C12772
+       BCI     1,$STOP                                                 $F0C12773
+       BCI     1,$IBSYS                                                $F0C12774
+       BCI     1,$EXECUTE                                              $F0C12775
+       OCT     537777777777  SPACE FOR ONE MORE                        $F0C12776
+ IBNAM EQU     *                                                       $F0C12777
+       REM     AND LOCATIONS THAT PROCESS THEM                         $F0C12778
+               NIBJOB        CALL SYSRPT                               $F0C12779
+               NIBID         CALL SYSIDR                               $F0C12780
+               NSTOP         LET IBSYS STOP                            $F0C12781
+               NIBSYS        RETURN TO IBSYS                           $F0C12782
+               NEXECU        CHECK SYSNAM                              $F0C12783
+               IBOTHR        NOT RECOGNIZED                            $F0C12784
+IBPLAC EQU     *                                                       $F0C12785
+IBCDS  EQU     IBPLAC-IBNAM  NUMBER OF DIFFERENT CARDS                 $F0C12786
+TTRDMP TTR     SYSDMP        TO REINITIALIZE CELL 2                    $F0C12787
+NFAPBT OCT     777777777773  TO TURN OFF FAP BIT                       $F0C12788
+IBSXEC BCI     1,IBSXEC      STORED IN SYSGET ON                       $F0C12789
+IBSBSR BCI     1,IBSBSR      FAILURE AND BEFORE AND                    $F0C12790
+IBSYST BCI     1,IBSYST      AFTER CALL SYSRPT                         $F0C12791
+ IBRMS BCI     7,0     FORTRAN MONITOR RETURNING TO IBSYS              $F0C12792
+IBSFAP BCI     1,IBSFAP                                                $F0C12793
+FORTRA BCI     1,FORTRA                                                $F0C12794
+WEREIN BCI     1,WEREIN                                                $F0C12795
+FOMIB  OCT     176433457066    EXCL OR OF IBSFAP AND FORTRA            $F0C12796
+ RETNG IOCT    IBRMS,,7      COMMENT RETURNING TO IBSYS                $F0C12797
+ EOFLT LDI*    (FGBX)                                                  $F0C12798
+       RNT     4             IS THIS IBSFAP                            $F0C12799
+       NZT     IDOK          NO,IS I.D. STILL NEEDED                   $F0C12800
+       TRA     RDCD+1        YES,EOF O.K.                              $F0C12801
+       STL     JOBOK         I.D. HAS OCCURRED, SO EOF                 $F0C12802
+       TRA     FCNINE        IS OUT OF PLACE                           $F0C12803
+ PJOB  CLA     CDMGE                                                   $F0C12900
+       TSX     COMNT,4                                              (24)F0C12901
+       TRA     FCNINE                                                  $F0C12902
+ PATS  BSS     29                                                      $F0C12903
+ CORBF BSS     TOPTAB-*      DUMP BUFFERS                              $F0C12910
+       END     -1                                                      $F0C12920

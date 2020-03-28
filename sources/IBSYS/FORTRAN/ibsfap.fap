@@ -1,0 +1,21 @@
+$JOB   ASSEMBLY OF MONITOR, COMPILER SECTIONS 1 THROUGH 6 OF           $00000010
+$*     FORTRAN II PROCESSOR, 7090-FO-928                                00000020
+$*     VERSION 3, MODIFICATION LEVEL 35                             (35)00000030
+$EXECUTE       IBSFAP                                                  $00000050
+*      IBSFAP VERSION 3/FORTRAN IBSFAP MODE LOADER                      9IBS0000
+*      FAP                                                              9IBS0020
+       EJECT                                                            9IBS0030
+       TTL     IBSFAP VERSION 3/FORTRAN IBSFAP MODE LOADER              9IBS0040
+       LBL     IBSFAP,X                                                 9IBS0050
+       ABS                                                              9IBS0060
+       COUNT   12                                                      $9IBS0069
+       SST     FORTRAN                                                 $9IBS0070
+       SPACE   2                                                        9IBS0105
+       ORG     SYSCUR                                                   9IBS0110
+       BCI     1,IBSFAP      TO INDICATE IBSFAP MODE                    9IBS0120
+       ORG     SYSTRA                                                   9IBS0130
+       TTR     LOADRR                                                   9IBS0140
+       ORG     SYSORG                                                   9IBS0150
+LOADRR TSX     SYSLDR,4,1    LOAD FORTRAN I/O PACKAGE                   9IBS0160
+       BCI     1,FORTRA                                                 9IBS0170
+       END     -1                                                       9IBS0180

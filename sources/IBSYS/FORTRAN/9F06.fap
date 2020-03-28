@@ -1,0 +1,1017 @@
+$JOB   ASSEMBLY OF MONITOR, COMPILER SECTIONS 1 THROUGH 6 OF           $00000010
+$*     FORTRAN II PROCESSOR, 7090-FO-928                                00000020
+$*     VERSION 3, MODIFICATION LEVEL 35                             (35)00000030
+$EXECUTE       IBSFAP                                                  $00000050
+*      32K 709/7090 FORTRAN MONITOR SCAN                                F0F00000
+*      FAP                                                              F0F00020
+*      32K 709/7090 FORTRAN MONITOR SCAN                                F0F00030
+       COUNT   850                                                      F0F00040
+       SST     FORTRAN                                                 $F0F00050
+       ABS                                                             $F0F00051
+       ORG     SYSCUR                                                  $F0F00052
+       LBL     9F06,A                                                   F0F00060
+       BCI     1,9F0600                                                $F0F00070
+       ORG     (LODR)                                                  $F0F00080
+       PON     BEGIN,,60                          TXI ENTRY,,RECORD NO. F0F00100
+CHNTAP SYN     8                                                       $F0F00120
+       TITLE                                                           $F0F00190
+ORGSCN ORG     BOTTOM                                                   F0F00200
+       REM                                                              F0F00210
+ BEGIN SLF                                                              F0F00220
+       AXT     2,1           SIGNAL IO PACKAGE TO TURN ON SL2           F0F00230
+       SXA     (MSLN),1        IN CASE GOING TO MACHINE ERROR RECORD    F0F00240
+       TSX     (TAPE),4      REWIND B2                                  F0F00250
+               REWND,,(SKDP)                                            F0F00260
+               ,,FINTAP                                                $F0F00270
+       LXD     (PGCT),1      NO. OF LINES PER PAGE (EXCLUDING HEADING)  F0F00280
+       TXI     *+1,1,2                                                  F0F00290
+       SXD     NLINS,1                                                  F0F00300
+       CLA     BLNKS                                                    F0F00310
+       STO     PBUF0                                                    F0F00320
+       STO     BUFZ0-1                                                  F0F00330
+       STO     BUFZ0-2                                                  F0F00340
+       STO     PBUF1                                                    F0F00350
+       STO     BUFZ1-1                                                  F0F00360
+       STO     BUFZ1-2                                                  F0F00370
+       TSX     (TAPE),4      RESTORE PAGE                               F0F00410
+               EJECT,,(WDNP)                                            F0F00420
+               ,,MLSTAP                                                $F0F00430
+ R1    TSX     (TAPE),4      BEGIN DOUBLE BUFFER READING                F0F00440
+               CW0,,(RDEP)                                              F0F00450
+               ,,MINTAP                                                $F0F00460
+       MZE     TPCHK         ERROR RETURN                               F0F00470
+       AXT     1,1                                                      F0F00480
+       SXD     BFSWCH,1                                                 F0F00490
+ READ  AXT     0,1                                                      F0F00500
+       NZT     BFSWCH                                                   F0F00510
+       AXT     1,1                                                      F0F00520
+       SXD     BFSWCH,1                                                 F0F00530
+       TSX     (TAPE),4                                                 F0F00540
+               CW1,1,(RDEP)                                             F0F00550
+               ,,5                                                      F0F00560
+       MZE     TPCHK         ERROR RETURN                               F0F00570
+       NZT     (SCHU)+MINTAP WAS PREVIOUS READ AN END OF FILE          $F0F00580
+       TRA     IBFAP5        CHECK FOR EOF IN IBSFAP MODE              $F0F00590
+       AXT     1,2           DELETE COLS. 81-84                         F0F00600
+       CAL*    BFZ0,1                                                   F0F00610
+       ANA     2CHAR                                                    F0F00620
+       ORA     4BLNK                                                    F0F00630
+       SLW*    BFZ0,1                                                   F0F00640
+       LDQ*    BFA0,1        TEST FOR MONITOR CONTROL CARD              F0F00650
+       PXD     0,0                                                      F0F00660
+       LGL     6                                                        F0F00670
+       SUB     ASTK                                                     F0F00680
+ SWIT  TNZ     SP                                                       F0F00690
+DSRCH  AXT     0,1                                                     $F0F00700
+       AXT     0,2                                                     $F0F00701
+ DS3   AXT     6,4           DICTIONARY.                                F0F00710
+       LDQ     DICT,1                                                   F0F00720
+ DS1   PXD     0,0                                                      F0F00730
+       LGL     6                                                        F0F00740
+ DS9   SUB     SVNS          FIND NEW DICTIONARY ENTRY)                 F0F00750
+       TNZ     DS12                                                     F0F00760
+       TXI     DS2,2,-1                                                 F0F00770
+ DS12  TIX     DS1,4,1                                                  F0F00780
+       TXI     DS3,1,-1                                                 F0F00790
+ DS2   TIX     *+4,4,1       SEVENS MEANS NEXT ENTRY,                   F0F00800
+       AXT     6,4           IS THIS END OF DICTIONARY.                 F0F00810
+       TXI     *+1,1,-1                                                 F0F00820
+       LDQ     DICT,1                                                   F0F00830
+       LGL     6                                                        F0F00840
+       CAS     SVNS                                                     F0F00850
+       TRA     DS4                                                      F0F00860
+       TRA     DS14                                                     F0F00870
+ DS4   STO     DERS          NO, NEW ENTRY.                             F0F00880
+       CLA     (6)A          PREPARE TO COMPARE WITH                    F0F00890
+       STA     NNBL1         NEXT NON BLANK CHARACTER.                  F0F00900
+       CLA     (13)A                                                    F0F00910
+       STA     NNBL2                                                    F0F00920
+ DS6   SXA     DS11,4        GET NEXT NON BLANK CHARACTER.              F0F00930
+       TSX     NNBL,4                                                   F0F00940
+       TRA     DS10          REST ARE BLANKS.                           F0F00950
+       CAS     LPREN                                                    F0F00960
+       TRA     *+2                                                      F0F00970
+       TRA     DS10          LEFT PAREN, STOP SEARCHING BUFFER.         F0F00980
+ DS11  AXT     ,4            COMPARE CHARACTER WITH DICGIONARY          F0F00990
+       CAS     DERS          CHARACTER.                                 F0F01000
+       TRA     *+2                                                      F0F01010
+       TRA     DS5           SAME                                       F0F01020
+       CLA     DERS          DIFFERENT, SEE IF THIS IS THE END          F0F01030
+       TRA     DS9           OF THIS DICTIONARY ENTRY.                  F0F01040
+ DS5   TIX     DS7,4,1       SAME, PREPARE TO COMPARE                   F0F01050
+       TXI     *+1,1,-1      NEXT CHARACTER.                            F0F01060
+       LDQ     DICT,1                                                   F0F01070
+       AXT     6,4                                                      F0F01080
+ DS7   PXD     0,0                                                      F0F01090
+       LGL     6                                                        F0F01100
+       STO     DERS                                                     F0F01110
+       TRA     DS6                                                      F0F01120
+ DS10  LXA     DS11,4        END OF BUFFER OR LEFT PAREN, IS            F0F01130
+       CLA     DERS          THIS ALSO END OF THIS                      F0F01140
+       SUB     SVNS          DICTIONARY ENTRY.                          F0F01150
+       TNZ     DS12          NO, GET NEXT DICTIONARY ENTRY.             F0F01160
+  DS14 TRA     IBFAP2        RESTORE COL 7 * CARDS                     $F0F01170
+       CLA     CWP0,1        COMMAND  TO WRITE OUT BUFFER              $F0F01180
+       TSX     COMNT,4                                                  F0F01190
+       TRA     TV            GO TO APPROPRIATE CODING                   F0F01200
+ DERS  PZE                                                              F0F01210
+       REM                                                              F0F01220
+ DICT  OCT     776725507723  -XEQ-C                                     F0F01230
+       OCT     302131457724  HAIN-D                                     F0F01240
+       OCT     216321772321  ATA-CA                                     F0F01250
+       OCT     512462514666  RDSROW                                     F0F01260
+       OCT     772321512462  -CARDS                                     F0F01270
+       OCT     234643644445  COLUMN                                     F0F01280
+       OCT     774331626377  -LIST-                                     F0F01290
+       OCT     433122257726  LIBE-F                                     F0F01300
+       OCT     214777223145  AP-BIN                                     F0F01310
+       OCT     776270442246  -SYMBO                                     F0F01320
+       OCT     436321224325  LTABLE                                     F0F01330
+       OCT     774321222543  -LABEL                                     F0F01340
+       OCT     772425226427  -DEBUG                                     F0F01350
+       OCT     774721646225  -PAUSE                                     F0F01360
+       OCT     774331626310  -LIST8                                     F0F01370
+       OCT     774751314563  -PRINT                                     F0F01380
+       OCT     775146667747  -ROW-P                                     F0F01381
+       OCT     212342772524  ACK-ED                                    $F0F01382
+       OCT     316343312225  ITLIBE                                    $F0F01383
+       OCT     773146477777  -IOP--                                    $F0F01384
+       OCT     777777777777  ------                                    $F0F01390
+       BSS     19                                                      $F0F01400
+       REM                                                              F0F01410
+ TV    TRA*    *,2                                                      F0F01420
+               XEQ                                                      F0F01430
+               CHN                                                      F0F01440
+               DATA                                                     F0F01450
+               CDROW                                                    F0F01460
+               CDCOL                                                    F0F01470
+               LIST                                                     F0F01480
+               LIBE                                                     F0F01490
+               FAP                                                      F0F01500
+               BIN                                                      F0F01510
+               SYMTAB                                                   F0F01520
+               LABEL                                                    F0F01530
+               DEBUG                                                    F0F01540
+               PAUSE                                                    F0F01550
+               LIST8                                                    F0F01560
+               ONLPR                                                    F0F01570
+               ROW                                                      F0F01571
+               PACK                                                     F0F01572
+               EDIT                                                    $F0F01573
+               IOP                                                     $F0F01574
+               READ                                                    $F0F01580
+       BSS     19                                                      $F0F01590
+       REM                                                              F0F01600
+   SP  ADD     SK1RC         IS THIS A CC 1 DOLLAR SIGN                $F0F01610
+       TRA     IBFAP1        TEST COL 1 AND 7 CHARACTERS               $F0F01620
+ (6)A  AXT     6,1           NO, PREPARE TO SCAN FOR END CARD.          F0F01630
+ (13)A AXT     13,2                                                     F0F01640
+       SXA     NNBL1,1                                                  F0F01650
+       SXA     NNBL2,2                                                  F0F01660
+       AXT     17,1            SCAN FOR CALL CHAIN(XXXXXX,          (34)F0F01670
+ SP01  TSX     NNBL,4        X                                          F0F01680
+       TRA     WSP           NO MORE CHARACTERS                         F0F01690
+       TXL     *+5,1,7         HAVE FOUND CALL CHAIN(               (34)F0F01700
+       SUB     CLCH+17,1                                            (34)F0F01710
+       TNZ     SP05            NOT CALL CHAIN(                      (34)F0F01720
+       TIX     SP01,1,1        STILL POSSIBLE                       (34)F0F01730
+       TRA     WSP             SOMETHING ILLEGAL-FORGET IT          (34)F0F01740
+       SUB     COMMA           SEARCH FOR COMMA                     (34)F0F01750
+       TNZ     *-3                                                  (34)F0F01760
+       TRA     CLCHFX          SEE IF T IS AN A OR B                (34)F0F01770
+       TZE     *+3           YES                                        F0F01780
+       ADD     ONE           NO, IS IT A                                F0F01790
+       TNZ     WSP                                                  (34)F0F01800
+       AXT     2,1           FOUND, ERASE IT                            F0F01810
+ SP03  LXA     NNBL1,4       X                                          F0F01820
+       LXA     NNBL2,2       X                                          F0F01830
+       LDQ     BMSK+2,1      X                                          F0F01840
+       TXL     *+2,4,5       X                                          F0F01850
+       TXI     SP04,2,1      X                                          F0F01860
+       RQL     6             X                                          F0F01870
+       TIX     *-1,4,1       X                                          F0F01880
+ SP04  XCL                                                              F0F01890
+       TIX     SP03,1,1      X                                          F0F01900
+       LXD     BFSWCH,4      X                                          F0F01910
+       ORS*    BFZ0,4        X                                          F0F01920
+       XCL                                                              F0F01930
+       ANS*    BFZ0,4        X                                          F0F01940
+       TRA     WSP           X                                          F0F01950
+ SP05  TXL     WSP,1,16      WAS 1ST CHARACTER AC.                  (35)F0F01960
+       ADD     CLCH          NO, SCAN FOR END CARD                      F0F01970
+       AXT     3,1           X                                          F0F01980
+ SP06  SUB     E+3,1         X                                          F0F01990
+       TNZ     WSP           X                                          F0F02000
+       TSX     NNBL,4        X                                          F0F02010
+       TRA     SP1           NO MORE CHARACTERS                         F0F02020
+       TIX     SP06,1,1      X                                          F0F02030
+       SUB     LPREN         X                                          F0F02040
+       TNZ     WSP           NOT AN END CARD                            F0F02050
+       TXI     SP2,1,14      END CARD WITH PARAMETERS                   F0F02060
+ SP1   TXL     END,1,1       END CARD WITH NO PARAMETERS.               F0F02070
+       TRA     WSP           NOTHING.                                   F0F02080
+ SP2   TSX     NNBL,4                                                   F0F02090
+       TRA     WSP                                                      F0F02100
+       STO     PSW1+15,1     SAVE ORIGINAL END CARD OPTIONS             F0F02110
+       TSX     NNBL,4        LOOK FOR COMMAS.                           F0F02120
+       TRA     WSP                                                      F0F02130
+       TNX     SP3,1,1                                                  F0F02140
+       SUB     COMMA                                                    F0F02150
+       TZE     SP2                                                      F0F02160
+       ADD     COMMA                                                    F0F02170
+ SP3   SUB     RPREN         LOOK FOR CLOSING PARENTHESIS               F0F02180
+       TNZ     WSP                                                      F0F02190
+PTCHR  TRA     CONTN          CLOSING PART. FOUND, SCAN REST OF CARD.  $F0F02200
+       ZET     ESW1          WAS THERE A CONTROL CARD AFFECTING SWITCH 1F0F02210
+       TRA     *+3           YES, IGNORE END CARD SETTING.              F0F02220
+       NZT     PSW1          NO, DOES END CARD SPECIFY SWITCH 1 UP.     F0F02230
+       STO     ENDCD+1       YES, PUT IT UP.                            F0F02240
+       REM                                                              F0F02250
+       REM     SAVE END CARD OPTIONS IN ABSENCE OF CONTROL CARDS        F0F02260
+       AXT     15,4                                                     F0F02270
+       AXT     5,2                                                      F0F02280
+SP3A   AXT     3,1                                                      F0F02290
+       LDQ     ENDCD+7,2                                                F0F02300
+SP4    TNX     SP5,4,1                                                  F0F02310
+       CLA     PSW1+15,4                                                F0F02320
+       NZT     ESW1+15,4     TEST FOR CONTROL CARD                      F0F02330
+       LBT                   NO CC, TEST FOR ONE (1).                   F0F02340
+       TRA     SP5                                                      F0F02350
+       LGL     6             ONE, PUTI IT IN END CARD                   F0F02360
+       ARS     6                                                        F0F02370
+       LGR     6                                                        F0F02380
+SP5    RQL     12                                                       F0F02390
+       TIX     SP4,1,1                                                  F0F02400
+       STQ     ENDCD+7,2                                                F0F02410
+       TIX     SP3A,2,1                                                 F0F02420
+       REM                                                              F0F02430
+ END   ZET     BEGIN         HAS SOMETHING BEEN WRITTEN                 F0F02440
+       TRA     READ          NO, THIS END CARD IS BALONEY, IGNORE.      F0F02450
+       LDI     ENDCD+4                                                 $F0F02451
+       LFT     1             IS OFF LINE ROW BINARY REQUESTED          $F0F02452
+       TRA     RBR           YES                                       $F0F02453
+       LDI     ENDCD+1       NO                                        $F0F02454
+       OSI     ENDCD+2                                                 $F0F02455
+       RFT     100           IS ON LINE ROW BINARY REQUESTED           $F0F02456
+       TRA     ENDWT         NO                                        $F0F02457
+ RBR   LDI     ENDCD+3       YES                                       $F0F02458
+       LNT     10000         IS LIBE REQUESTED                         $F0F02459
+       TRA     ENDWT         NO                                        $F0F02460
+       RIL     10000         YES                                       $F0F02461
+       STI     ENDCD+3       KILL REQUEST                              $F0F02462
+ RBLIB STZ     *                                                       $F0F02463
+ ENDWT TSX     (TAPE),4      WRITE OUT FABRICATED END CARD             $F0F02464
+               ENDCW,,(WBNP)                                            F0F02470
+               FINPUT,,FINTAP                                          $F0F02480
+       TSX     (TAPE),4                                                 F0F02490
+               ,,(WEFP)                                                 F0F02500
+               ,,FINTAP                                                $F0F02510
+       TSX     (TAPE),4                                                 F0F02520
+               REWND,,(SKBP)                                            F0F02530
+               ,,FINTAP                                                $F0F02540
+       AXT     *+2,1         WRITE END CARD ON OUTPUT TAPE              F0F02550
+       SXA     WTHDR,1                                                  F0F02560
+       LXA     WSP,1                                                    F0F02570
+       TNX     NUPAG,1,1                                                F0F02580
+       PXD     ,1                                                       F0F02590
+       SBM     NLINS                                                    F0F02600
+       ARS     18                                                       F0F02610
+       SBM     LINECT                                                   F0F02620
+ DD    TRA     IBPAT2        CHECK FOR IBSFAP END CARD                 $F0F02630
+       TSX     (TAPE),4                                                 F0F02640
+               ENDCW+1,,(WDNP)                                          F0F02650
+               ,,MLSTAP                                                $F0F02660
+       CLA     COMLB                                                   $F0F02661
+       NZT     RBLIB         WAS LIBE KILLED                           $F0F02662
+       TSX     COMNT,4       YES, TELL THEM ABOUT IT                   $F0F02663
+       TSX     (TAPE),4      WRITE EXTRA HEADING FOR SECTION 6          F0F02670
+               HEDCW,,(WDNP)                                            F0F02680
+               ,,MLSTAP                                                $F0F02690
+       LDI*    (FGBX)                                                   F0F02700
+       RNT     200           IS EXECUTION ON.                           F0F02710
+       TRA     TOFN          NO                                         F0F02720
+       AXT     NXTEF,4       YES, PREPARE TO LOOK AT NEXT CARD          F0F02730
+       SXA     CHKEF,4                                                  F0F02740
+       SXA     BEF,4                                                    F0F02750
+       SXA     EF1,4                                                    F0F02760
+       AXT     RDNXT,4                                                  F0F02770
+       SXA     CHKB,4                                                   F0F02780
+ NEXT  TSX     (TAPE),4      LOOK AT NEXT CARD                          F0F02790
+               MINTAP,,(CHKU)                                          $F0F02800
+       NZT     (SCHU)+MINTAP WAS IT AN END OF FILE                     $F0F02810
+       TRA     NXTEF                                                    F0F02820
+       AXT     0,4                                                      F0F02830
+       NZT     BFSWCH                                                   F0F02840
+       AXT     1,4                                                      F0F02850
+       SXD     BFSWCH,4                                                 F0F02860
+       LDQ*    BFA0,4        IS IT MONITOR CONTROL CARD.                F0F02870
+       PXD     0,0                                                      F0F02880
+       LGL     6                                                        F0F02890
+       SUB     ASTK                                                     F0F02900
+       TZE     NXTCC         YES                                        F0F02910
+       CLA*    BFA0,4        NO                                         F0F02911
+       SUB     BLNKS                                                    F0F02912
+       TNZ     NOTCC         ANYTHING IN FIRST WORD                     F0F02913
+       AXT     6,1           NO                                         F0F02920
+       AXT     13,2                                                     F0F02930
+       SXA     NNBL1,1                                                  F0F02940
+       SXA     NNBL2,2                                                  F0F02950
+       TSX     NNBL,4        IS THIS A BLANK CARD                       F0F02960
+       TRA     RDNXT         YES, IGNORE BLANK CARD                     F0F02970
+ NOTCC TRA     TOFN          NON-BLANK AND NOT A CONTROL CARD           F0F02980
+ RDNXT LXD     BFSWCH,1                                                 F0F02990
+       TSX     (TAPE),4      READ NEXT CARD                             F0F03000
+               CW1,1,(RDEP)                                             F0F03010
+               ,,MINTAP                                                $F0F03020
+       MZE     TPCHK                                                    F0F03030
+       TRA     NEXT                                                     F0F03040
+ NXTCC CLA     DSEND                                                    F0F03050
+       STO     DS14                                                     F0F03060
+       TRA     DSRCH         SEARCH DICTIONARY                          F0F03070
+ DSEND TRA     *+1                                                      F0F03080
+       LDI     TV,2          IS IT DATA                                 F0F03090
+       IIR     DATA                                                     F0F03100
+       RFT     777777                                                   F0F03110
+       TRA     NOTDA         NO                                         F0F03120
+ NXTDA LDI*    (FGBX)        YES, DATA CARD IS NEXT                     F0F03130
+       SIR     100000                                                   F0F03140
+       STI*    (FGBX)                                                   F0F03150
+       TRA     TOFNA                                                    F0F03160
+ NOTDA LDI     TV,2          IS IT DEBUG                                F0F03170
+       IIR     DEBUG                                                    F0F03180
+       RFT     777777                                                   F0F03190
+       TRA     TOFN          NO                                         F0F03200
+       LDI*    (FGBX)        YES, DEBUG CARD IS NEXT                    F0F03210
+       SIR     400000        SIGNAL DEBUG                               F0F03211
+       STI*    (FGBX)                                                   F0F03212
+       LNT     2             IS THIS A CHAIN JOB                        F0F03220
+       TRA     NXTDA+1       NO                                         F0F03230
+       AXT     *+2,4         YES                                        F0F03240
+       SXA     NOTCC,4                                                  F0F03250
+       LDC     BFSWCH,1      MOVE THE DEBUG CARDS TO B1                 F0F03260
+       TSX     (TAPE),4                                                 F0F03270
+               CW0,1,(WDNC)                                             F0F03280
+               ,,CHNTAP                                                $F0F03290
+       TRA     RDNXT                                                    F0F03300
+       REM                                                              F0F03310
+ NXTEF LDI*    (FGBX)                                                   F0F03320
+       SIR     100000        SIGNAL GO TO BSS AFTER COMPILATION         F0F03330
+       STI*    (FGBX)                                                   F0F03340
+ TOFN  TSX     BKIN,4        BACKSPACE OVER NEXT INPUT RECORD           F0F03350
+ TOFNA TSX     (TAPE),4      SPACE SYSTEM TAPE TO FORTRAN               F0F03360
+               SKFCW,,(SKBP)                                            F0F03370
+               ,,SYSTAP                                                $F0F03380
+       TSX     (PRNT),4      PRINT BEGIN COMPILATION AND GO TO FORTRAN  F0F03390
+               COMBC,,4                                                 F0F03400
+       TSX     (PRNT),4                                                 F0F03410
+               SPACE,,1                                                 F0F03420
+       TSX     LOAD,4                                                  $F0F03421
+       BCI     1,9F1300                                                $F0F03422
+ LOAD  CLA     1,4           GET RECORD NAME                           $F0F03430
+       STO     RNAME                                                   $F0F03431
+       CLA     TPCHK+2       CLOSE OUT ALL IO                          $F0F03432
+       STO     TPCHK                                                    F0F03440
+       AXT     7,1                                                     $F0F03450
+       TSX     (TAPE),4                                                 F0F03451
+       PZE     8,1,(CHKU)    NORMALLY CLOSE OUT TAPES 1-7 ONLY         $F0F03452
+       TIX     *-2,1,1                                                  F0F03453
+       TSX     (LOAD),4,1    LOAD NEXT SYSTEM RECORD                   $F0F03454
+ RNAME BCI     1,******                                                $F0F03455
+       REM                                                              F0F03460
+ TPCHK LDI     (SCHU)+MINTAP WAS ERROR WRONG MODE READ                 $F0F03470
+       RNT     100                                                     $F0F03480
+       TRA     QQQQ          NO                                        $F0F03490
+       LDI*    (FGBX)        YES IS XEQ ON                             $F0F03500
+       RFT     200                                                     $F0F03510
+       TRA     CBIN          YES CHECK FOR CHAIN JOB                   $F0F03520
+       AXT     RDBIN,1       NO,  SKIP OVER BINARY INPUT               $F0F03530
+       SXA     WTBIN,1                                                 $F0F03540
+       TRA     RDBIN1                                                  $F0F03550
+ CBIN  LNT     2             CHAIN JOB                                 $F0F03560
+       TRA     CBIN1         NO GO TO DEBUG                            $F0F03570
+RDBIN1 TSX     (TAPE),4      YES MOVE BINARY                           $F0F03580
+       PZE     CWB0,,(RBEC)                                            $F0F03590
+       PZE     ,,MINTAP                                                $F0F03600
+       NZT     (SCHU)+MINTAP MAKE SURE IT WASNT EOF                    $F0F03610
+ CHKEF TRA     IBFAP5        YES                                       $F0F03620
+       CLA     BLNKS                                                   $F0F03630
+       AXT     2,1                                                     $F0F03640
+       STO     BUFZ0,1                                                 $F0F03650
+       STO     BUFZ1,1                                                 $F0F03660
+       TIX     *-2,1,1                                                 $F0F03670
+       SXD     BFSWCH,1                                                $F0F03680
+ RDBIN AXT     0,1                                                     $F0F03690
+       NZT     BFSWCH                                                  $F0F03700
+       AXT     1,1                                                     $F0F03710
+       SXD     BFSWCH,1                                                $F0F03720
+       TSX     (TAPE),4                                                $F0F03730
+       PZE     CWB1,1,(RBEP)                                           $F0F03740
+       PZE     ,,MINTAP                                                $F0F03750
+ CHKB  MZE     R1            IF ERROR TRY  READING BCD                 $F0F03760
+       NZT     (SCHU)+MINTAP EOF                                       $F0F03770
+ BEF   TRA     IBFAP5        YES                                       $F0F03780
+       LDC     BFSWCH,1                                                $F0F03790
+ WTBIN TSX     (TAPE),4                                                $F0F03800
+       PZE     CWB0,1,(WBNC)                                           $F0F03810
+       PZE     ,,CHNTAP                                                $F0F03820
+       TRA     RDBIN                                                   $F0F03830
+ DATA  EQU     *                                                       $F0F03840
+ EF    EQU     *                                                       $F0F03850
+       LDI*    (FGBX)        IS XEQ ON                                 $F0F03860
+       RFT     200                                                     $F0F03870
+       TRA     EF1           YES                                       $F0F03880
+ EF2   EQU     *                                                       $F0F03885
+       TSX     (TAPE),4      NO GO TO SIGN ON                          $F0F03890
+       PZE     BS4CW,,(SKBP)                                           $F0F03900
+       PZE     ,,SYSTAP                                                $F0F03910
+       TSX     LOAD,4                                                  $F0F03920
+       BCI     1,9F0300                                                $F0F03930
+ CBIN1 SIR     200000                                                  $F0F03940
+       STI*    (FGBX)        BINARY INPUT                              $F0F03950
+       CAL     BKINR+1       KILL BACKSPACE                            $F0F03952
+       SLW     BKIN                                                    $F0F03953
+       AXT     ,0                                                      $F0F03957
+ EF1   TSX     BKIN,4        BACK UP INPUT TAPE OVER EOF OR USER'S DATA$F0F03959
+       TSX     LOAD,4        READ IN DEBUG                             $F0F03960
+       BCI     1,9F0700      DEBUG                                     $F0F03970
+ QQQQ  RNT     10            WAS ERROR REDUNDANCY                      $F0F03980
+       TRA     INERR         NO                                        $F0F03990
+       TRA     IBFAP4                                                  $F0F04000
+       REM                                                              F0F04020
+       REM                                                              F0F04030
+       REM                                                              F0F04040
+       REM     WRITE SOURCE PROGRAM CARDS FOR FORTRAN AND OUTPUT TAPE   F0F04050
+ WSP   AXT     **,1                                                     F0F04060
+       TNX     NUPAG,1,1     TRANSFER FOR NEW PAGE                      F0F04070
+       SXA     WSP,1                                                    F0F04080
+       LDC     BFSWCH,1                                                 F0F04090
+       TSX     (TAPE),4      WRITE B2 FOR FORTRAN                       F0F04100
+               CW0,1,(WBNP)                                             F0F04110
+               FINPUT,,FINTAP                                          $F0F04120
+       ZET     BEGIN                                                    F0F04130
+       TRA     WSP1          DONT WRITE A3                              F0F04140
+       TSX     (TAPE),4      WRITE A3 OUTPUT TAPE                       F0F04150
+               CWP0,1,(WDNP)                                            F0F04160
+               ,,MLSTAP                                                $F0F04170
+ WSPCK TSX     (TAPE),4      CHECK BEFORE DESTROYING THIS BUFFER        F0F04180
+               FINTAP,,(CHKU)                                          $F0F04190
+       TSX     (TAPE),4                                                 F0F04200
+               MLSTAP,,(CHKU)                                          $F0F04210
+       TRA     READ                                                     F0F04220
+ WSP1  STZ     BEGIN                                                    F0F04230
+       TRA     WSPCK                                                    F0F04240
+ NUPAG LXA     LINECT,4                                                 F0F04250
+       NZT     BEGIN         IS THIS THE FIRST SOURCE CARD              F0F04260
+ NLINS TXI     WTHED,4,**    NO   (DECREMENT HAS NO. OF LINES PER PAGE) F0F04270
+       REM     PREPARE PAGE HEADING                                     F0F04280
+       TRA     IBFAP3        CHECK FOR IBSFAP WITH NO FAP CARD         $F0F04290
+       AXT     14,2                                                     F0F04300
+       CLA*    BFZ0,1                                                   F0F04310
+       STO     TITLE+14,2                                               F0F04320
+       TXI     *+1,2,-1                                                 F0F04330
+       TXH     *-3,2,2                                                  F0F04340
+       AXT     1,2                                                      F0F04350
+       SXD     LINECT,2      SET PAGE NUMBER TO 1                       F0F04360
+       PXD     ,0                                                       F0F04370
+       STZ     BEGIN                                                    F0F04380
+       LDI     TITLE                                                    F0F04390
+       IIL     230000        WAS 1ST CHARACTER C                        F0F04400
+       LFT     770000                                                   F0F04410
+       TRA     CDATE         NO                                         F0F04420
+       SIL     600000        YES, CHANGE TO BLANK                       F0F04430
+       STI     TITLE                                                    F0F04440
+       STL     BEGIN         DONT WRITE THIS CARD AGAIN ON A3           F0F04450
+       CAL     NLINS                                                    F0F04460
+ CDATE STP     LINECT        SIGNAL FOR 1ST CHARACTER C                 F0F04470
+       CAL     (DATE)        GET DATE                                   F0F04480
+       TZE     NDATE         NO DATE                                    F0F04490
+       ANA     BLNKS         ANY ZONE BITS                              F0F04500
+       TNZ     NDATE         YES, NOT PROPER DATE                       F0F04510
+       LDQ     (DATE)        GOOD DATE                                  F0F04520
+       LGL     6                                                        F0F04530
+       TNZ     *+2                                                      F0F04540
+       CAL     BLNK                                                     F0F04550
+       LGL     6             MONTH                                      F0F04560
+       ALS     6                                                        F0F04570
+       ORS     DATE                                                     F0F04580
+       LGL     12            DAY                                        F0F04590
+       ALS     6                                                        F0F04600
+       LGL     12            YEAR                                       F0F04610
+       ALS     6                                                        F0F04620
+       ORS     DATE+1                                                   F0F04630
+       TRA     WTHED                                                    F0F04640
+ NDATE CAL     BLNKS                                                    F0F04650
+       SLW     DATE                                                     F0F04660
+       SLW     DATE+1                                                   F0F04670
+ WTHED SXA     LINECT,4                                                 F0F04680
+       LXD     NLINS,4                                                  F0F04690
+       TXI     *+1,4,-1                                                 F0F04700
+       SXA     WSP,4                                                    F0F04710
+       TSX     (TAPE),4      WRITE PAGE HEADING                         F0F04720
+               HEDCW,,(WDNP)                                            F0F04730
+               ,,MLSTAP                                                $F0F04740
+       TSX     (TAPE),4                                                 F0F04750
+               BLNCW,,(WDNP)                                            F0F04760
+               ,,MLSTAP                                                $F0F04770
+       LXD     LINECT,4      UPDATE PAGE NUMBER                         F0F04780
+       TXI     *+1,4,1                                                  F0F04790
+       SXD     LINECT,4                                                 F0F04800
+       PXA     ,4                                                       F0F04810
+       LDQ     ZERO                                                     F0F04820
+       LRS     4                                                        F0F04830
+       VDP     HUND,,4                                                  F0F04840
+       RQL     6                                                        F0F04850
+       LRS     4                                                        F0F04860
+       VDP     TEN,,4                                                   F0F04870
+       RQL     6                                                        F0F04880
+       STQ     PAGE+1                                                   F0F04890
+       ORA     PAGE+1                                                   F0F04900
+       LDQ     BLNKS                                                    F0F04910
+       LGR     6                                                        F0F04920
+       TNZ     *-1                                                      F0F04930
+       STQ     PAGE+1                                                   F0F04940
+ WTHDR TRA     WSP                                                      F0F04950
+       REM                                                              F0F04960
+ XEQ   CAL     XBIT          XEQ CONTROL CARD, SET EXECUTION BIT.       F0F04970
+       LDI     SYSJOB        OBTAIN NOGO BIT FROM IBSYS                $F0F04980
+       TRA     IBPAT1        TEST FOR IBSFAP                           $F0F04990
+       REM                                                              F0F05000
+ CHN   LDI*    (FGBX)                                                   F0F05010
+       AXT     SP,1                                                     F0F05011
+       SXA     SWIT,1                                                   F0F05012
+       RNT     200                                                      F0F05020
+       TRA     READ          NO EXECUTION                               F0F05030
+       LNT     2             IS THIS THE FIRST CHAIN.                   F0F05040
+       TRA     CHN1          YES                                        F0F05050
+       TSX     (TAPE),4      NO, WRITE EOF ON B1 AND B4                 F0F05060
+               ,,(WEFP)                                                 F0F05070
+               ,,CHNTAP                                                $F0F05080
+       TSX     (TAPE),4                                                 F0F05090
+               ,,(WEFC)                                                 F0F05100
+               ,,MBNTAP                                                $F0F05110
+       TRA     CHN1A                                                    F0F05120
+ CHN1  TSX     (TAPE),4      REWIND B1                                  F0F05130
+               REWND,,(SKBP)                                            F0F05140
+               ,,CHNTAP                                                $F0F05150
+       SIL     2                                                        F0F05160
+       STI*    (FGBX)                                                   F0F05170
+ CHN1A TSX     NNBL,4        1ST CHARACTER AFTER LEFT PAREN.            F0F05180
+       TRA     CHER1                                                    F0F05190
+       AXT     5,1                                                      F0F05200
+       STZ     TEMP                                                     F0F05210
+CHN2   SLW     TEMP          GET BCD RECORD =                           F0F05220
+       TSX     NNBL,4        IONTO TEMP.                                F0F05230
+       TRA     CHER1         X                                          F0F05240
+       CAS     COMMA         X                                          F0F05250
+       TRA     *+2           X                                          F0F05260
+       TRA     CHN3          X                                          F0F05270
+       LGR     6             X                                          F0F05280
+       CAL     TEMP          X                                          F0F05290
+       LGL     6             X                                          F0F05300
+       TIX     CHN2,1,1      X                                          F0F05310
+       TRA     CHER1                                                    F0F05320
+ CHN3  TSX     NNBL,4        GET THE TAPE NUMBER                        F0F05330
+       TRA     CHER1                                                    F0F05340
+       PAX     ,1                                                       F0F05350
+       TXH     CHN3,1,8                                                 F0F05360
+       STO     TEMPA                                                    F0F05370
+       AXT     6,1                                                      F0F05380
+CHN4   LDQ     TEMP          ELIMINATE LEADING ZEROS                    F0F05390
+ CHN5  PXD     0,0           FROM RECORD NO.                            F0F05400
+       LGL     6                                                        F0F05410
+       TNZ     CHN6                                                     F0F05420
+       TIX     CHN5,1,1                                                 F0F05430
+ CHER1 CLA     COMCH         COMMENT CHAIN CARD NG                      F0F05440
+       TSX     COMNT,4                                                  F0F05450
+       TSX     BKIN,4        BACKSPACE OVER NEXT INPUT RECORD           F0F05460
+       TSX     (TAPE),4      SPACE TO SOURCE ERROR RECORD               F0F05470
+               SK4CW,,(SKBP)                                            F0F05480
+               ,,SYSTAP                                                $F0F05490
+       SLF                                                              F0F05500
+       SLN     2                                                        F0F05510
+       TSX     LOAD,4        GO TO SOURCE ERROR RECORD                 $F0F05520
+       BCI     1,9F1100                                                $F0F05521
+CHN6   STZ     TEMP1         CONVERT RECORD = TO                        F0F05530
+CHN7   STQ     TEMP          BINARY.                                    F0F05540
+       XCA                   X                                          F0F05550
+       MPY     CHN15+5,1     X                                          F0F05560
+       XCA                   X                                          F0F05570
+       ADD     TEMP1         X                                          F0F05580
+       TNX     CHN8,1,1      X                                          F0F05590
+       STO     TEMP1         X                                          F0F05600
+       LDQ     TEMP          X                                          F0F05610
+       PXD     0,0           X                                          F0F05620
+       LGL     6             X                                          F0F05630
+       TRA     CHN7          X                                          F0F05640
+CHN8   PAX     ,1                                                       F0F05650
+       SXD     TEMPA,1                                                  F0F05660
+       TSX     (TAPE),4      WRITE THE CHAIN LABEL                      F0F05670
+               LBLCW,,(WBNC)                                            F0F05680
+               ,,CHNTAP                                                $F0F05690
+       TRA     READ                                                     F0F05700
+       REM                                                              F0F05710
+       REM                                                              F0F05720
+CHN15  DEC     10000,1000,100,10,1                                      F0F05730
+ ONE   SYN     CHN15+4                                                  F0F05740
+ TEN   SYN     CHN15+3                                                  F0F05760
+ HUND  SYN     CHN15+2                                                  F0F05770
+TEMP   PZE                                                              F0F05780
+TEMPA  PZE                                                              F0F05790
+       REM                                                              F0F05800
+CDROW  CLA     CDS           SET SWITCHES 1 AND 4 FOR CARDS ROW.        F0F05810
+       STO     ENDCD+1                                                  F0F05820
+       STL     ESW1                                                     F0F05830
+       STL     ESW4                                                     F0F05840
+       TRA     READ                                                     F0F05850
+CDCOL  CLA     100OCT        SET SWITCHES 1 AND 4 FOR CARDS COLUMN.     F0F05860
+       ORS     ENDCD+2                                                  F0F05870
+       TRA     CDROW                                                    F0F05880
+LIST   CLA     OCTTHD        SET SWITCH 2 FOR SYMBOLIC LISTING.         F0F05890
+       ORS     ENDCD+2                                                  F0F05900
+       STL     ESW2                                                     F0F05910
+       TRA     READ                                                     F0F05920
+LIBE   CLA     LBS           SET SWITCH 5 FOR FORTRAN                   F0F05930
+       ORS     ENDCD+3       LIBRARY SEARCH                             F0F05940
+       STL     ESW5                                                     F0F05950
+       TRA     READ                                                     F0F05960
+SYMTAB CAL     ONEIND                                                   F0F05970
+       ORS     ENDCD+3                                                  F0F05980
+       STL     ESW1+5                                                   F0F05990
+       TRA     READ                                                     F0F06000
+ PAUSE AXT     3,1                                                      F0F06010
+       TSX     (PRNT),4      SPACE PAGE.                                F0F06020
+               SPACE,,1                                                 F0F06030
+       TIX     *-2,1,1                                                  F0F06040
+       HPR     -1,7                                                     F0F06050
+       TRA     READ                                                     F0F06060
+ LABEL CLA     100OCT        SET SWITCH 7 FOR LABEL OPTION              F0F06070
+       ORS     ENDCD+3                                                  F0F06080
+       STL     ESW1+6                                                   F0F06090
+       TRA     READ                                                     F0F06100
+ LIST8 CLA     OCTTHD        SET SWITCH 8 FOR OCTAL LISTING             F0F06110
+       ORS     ENDCD+4                                                  F0F06120
+       STL     ESW1+7                                                   F0F06130
+       TRA     LIST                                                     F0F06140
+ ONLPR CLA     ONEIND                                                   F0F06150
+       ORS     ENDCD+2                                                  F0F06160
+       STL     ESW1+2                                                   F0F06170
+       TRA     READ                                                     F0F06180
+ ROW   CLA     ONEIND        SET SWITCH 9 FOR OFF LINE ROW BINARY       F0F06181
+       ORS     ENDCD+4                                                  F0F06182
+       STL     ESW1+8                                                   F0F06183
+       LDI*    (FGBX)                                                   F0F06184
+       RNT     200                                                      F0F06185
+       TRA     READ                                                     F0F06186
+       RIR     200           DELETE EXECUTION                           F0F06187
+       STI*    (FGBX)                                                   F0F06188
+       CLA     COMRX                                                    F0F06189
+       TSX     COMNT,4                                                  F0F06190
+       TRA     READ                                                     F0F06191
+ PACK  CLA     100OCT        SET SWITCH 10 FOR PACKED LISTING TAPE      F0F06192
+       ORS     ENDCD+4                                                  F0F06193
+       STL     ESW1+9                                                   F0F06194
+       TRA     READ                                                     F0F06195
+       REM                                                              F0F06196
+ DEBUG LDI*    (FGBX)                                                   F0F06200
+       SIR     400000        SIGNAL DEBUG.                              F0F06201
+       STI*    (FGBX)                                                   F0F06202
+       LNT     2             IS THIS A CHAIN JOB.                       F0F06210
+       TRA     DATA          NO                                         F0F06220
+ MVDBG AXT     WTDBG,1       YES, MOVE DEBUG CARDS TO B1.               F0F06230
+       SXA     SWIT,1                                                   F0F06240
+WTDBG  TRA     PATCH1         GO TEST FOR BLANK CARD                   $F0F06250
+       TSX     (TAPE),4                                                 F0F06260
+               CW0,1,(WDNC)                                             F0F06270
+               ,,CHNTAP                                                $F0F06280
+       TRA     READ                                                     F0F06290
+       REM                                                              F0F06300
+ BIN   TSX     BKIN,4        BACKSPACE OVER NEXT INPUT RECORD           F0F06310
+       TSX     (TAPE),4                                                 F0F06320
+               SK5CW,,(SKBP)                                            F0F06330
+               ,,SYSTAP                                                $F0F06340
+       TSX     LOAD,4                                                  $F0F06341
+       BCI     1,9F1200                                                $F0F06342
+       REM                                                             $F0F06343
+ EDIT  TSX     BKIN,4        BACKSPACE OVER NEXT INPUT RECORD          $F0F06350
+       AXT     4,1           SKIP 4 FILES ON SYSTEM                    $F0F06351
+       TSX     (TAPE),4                                                $F0F06352
+               SKFCW,,(SKBP)                                           $F0F06353
+               ,,SYSTAP                                                $F0F06354
+       TIX     *-3,1,1                                                 $F0F06355
+       TSX     LOAD,4        GO TO LIBRARY BLOCKER                     $F0F06356
+       BCI     1,9LEDIT                                                $F0F06357
+       BSS     20                                                       F0F06360
+       REM                                                              F0F06370
+ FAP   AXT     6,2           SET END SWITCHES FOR FAP                   F0F06380
+ GTES  LDQ     ENDCD+7,2                                                F0F06390
+       AXT     3,1                                                      F0F06400
+ GTES1 RQL     5                                                        F0F06410
+       LGL     1                                                        F0F06420
+       RQL     6                                                        F0F06430
+       TIX     GTES1,1,1                                                F0F06440
+       TIX     GTES,2,1                                                 F0F06450
+       ARS     1                                                        F0F06460
+       STA     (ENDS)                                                   F0F06461
+       TSX     BKIN,4        BACKSPACE OVER NEXT INPUT RECORD           F0F06470
+       TSX     (TAPE),4      BACKSPACE SYSTEM TO RECORD 4               F0F06480
+               BS3CW,,(SKBP)                                            F0F06490
+               ,,SYSTAP                                                $F0F06500
+       TSX     (PRNT),4      PRINT BEGIN ASSEMBLY                       F0F06510
+               COMBA,,4                                                 F0F06520
+       TSX     (PRNT),4                                                 F0F06521
+               SPACE,,1                                                 F0F06522
+       TSX     LOAD,4        GO TO FAP                                 $F0F06530
+       BCI     1,9F0400                                                $F0F06531
+       REM                                                              F0F06540
+ NNBL  SXA     NNBL6,4       ROUTINE GETS NEXT NON BLANK CHARACTER      F0F06550
+       SXA     NNBL7,2       IN BUFFER.                                 F0F06560
+       SXA     NNBL8,1                                                  F0F06570
+       STQ     TEMP1                                                    F0F06580
+ NNBL1 AXT     ,1                                                       F0F06590
+ NNBL2 AXT     ,2                                                       F0F06600
+       LXD     BFSWCH,4                                                 F0F06610
+       LDQ     TEMPQ                                                    F0F06620
+NNBL2A TXL     NNBL4,1,5                                                F0F06630
+ NNBL3 LDQ*    BFZ0,4                                                   F0F06640
+ NNBL4 PXD     0,0                                                      F0F06650
+       LGL     6                                                        F0F06660
+       ERA     BLNK                                                    $F0F06670
+       TIX     *+3,1,1                                                  F0F06680
+       AXT     6,1                                                      F0F06690
+       TXI     *+1,2,-1                                                 F0F06700
+       TNZ     NNBL5                                                    F0F06710
+       TXH     NNBL2A,2,2                                               F0F06720
+       LXA     NNBL6,4                                                  F0F06730
+       TXI     NNBL7,4,1                                                F0F06740
+ NNBL5 ERA     BLNK                                                    $F0F06750
+       SXA     NNBL1,1                                                  F0F06760
+       SXA     NNBL2,2                                                  F0F06770
+ NNBL6 AXT     ,4                                                       F0F06780
+ NNBL7 AXT     ,2                                                       F0F06790
+ NNBL8 AXT     ,1                                                       F0F06800
+       STQ     TEMPQ                                                    F0F06810
+       LDQ     TEMP1                                                    F0F06820
+       TRA     2,4                                                      F0F06830
+TEMP1  PZE                                                              F0F06840
+TEMPQ  PZE                                                              F0F06850
+       REM                                                              F0F06860
+ NCB   CLA     COMNC         COMMENT BINARY INPUT W NO CB BITS          F0F06870
+       TSX     COMNT,4                                                  F0F06880
+INERR  TSX     (TAPE),4      GO TO IO PACKAGE FOR ERROR                $F0F06890
+               ,,(TPER)           AND DONT COME BACK                    F0F06900
+               ,,MINTAP                                                $F0F06910
+       REM                                                              F0F06920
+       REM     ROUTINE TO BACKSPACE INPUT TAPE WITHOUT CHECKING         F0F06930
+ BKIN  SXA     BKINR,4                                                  F0F06940
+       CLA     KILER         KILL ERROR RETURN IN CASE IT WAS BINARY    F0F06950
+       STO     TPCHK                                                    F0F06960
+       TSX     (TAPE),4      BACKSPACE INPUT TAPE                       F0F06970
+               BSRCW,,(SKDP)                                            F0F06980
+               ,,MINTAP                                                $F0F06990
+ BKINR AXT     **,4                                                     F0F07000
+       TRA     1,4                                                      F0F07010
+ KILER TRA     BKINR                                                    F0F07020
+       REM                                                              F0F07030
+       REM     WRITE COMMENTS                                           F0F07040
+ COMNT SXA     COMNR,4                                                  F0F07050
+       STO     COMCW                                                    F0F07060
+       TSX     (TAPE),4      WRITE MESSAGE OFF LINE                     F0F07070
+               COMCW,,(WDNC)                                            F0F07080
+               ,,MLSTAP                                                $F0F07090
+       LXA     LINECT,4                                                 F0F07100
+       TXI     *+1,4,1                                                  F0F07110
+       SXA     LINECT,4                                                 F0F07120
+       ZAC                                                             $F0F07128
+       STP     COMCW                                                   $F0F07129
+       TSX     (PRNT),4      PRINT MESSAGE ON LINE                      F0F07130
+ COMCW         **                                                       F0F07140
+ COMNR AXT     **,4                                                     F0F07150
+       TRA     1,4                                                      F0F07160
+       REM                                                              F0F07170
+ ASTK  OCT     54                                                       F0F07180
+ BLNK  OCT     60                                                       F0F07190
+LPREN  OCT     74                                                       F0F07200
+RPREN  OCT     34                                                       F0F07210
+ COMMA OCT     73                                                       F0F07220
+ SVNS  OCT     77                                                       F0F07230
+ 2CHAR OCT     777700000000                                             F0F07240
+ SKFCW         ,,1           SKIP FILE CONTROL WORD FOR IO PACKAGE      F0F07250
+ONEIND SYN     SKFCW                                                    F0F07260
+ SK4CW         4             SKIP 4 RECORDS CONTROL WORD                F0F07270
+ SK5CW         5             SKIP 5 RECORDS CONTROL WORD                F0F07280
+ REWND PZE     ,,-1          REWIND CONTROL WORD FOR IO PACKAGE         F0F07290
+ BSRCW MZE     1             BACKSPACE RECORD CONTROL WORD              F0F07300
+ BS3CW MZE     3             BACKSPACE 3 RECORDS CONTROL WORD           F0F07310
+ BS4CW MZE     4             BACKSPACE 4 RECORDS CONTROL WORD           F0F07320
+LBLCW  IORT    TEMPA,,3                                                 F0F07330
+FINPUT BCI     1,FINPUT                                                 F0F07351
+ ZERO          0                                                        F0F07360
+100OCT OCT     100                                                      F0F07370
+OCTTHD OCT     010000000000                                             F0F07380
+ XBIT  OCT     200                                                      F0F07390
+CMNSAK OCT     30                                                      $F0F07400
+ CLCH  OCT     23,21,43,43,23,30,21,31,45,74                            F0F07410
+OCTB   OCT     22                                                       F0F07420
+ 4BLNK BCI     1,00                                                     F0F07430
+ BMSK  OCT     777777777760,40                                          F0F07440
+ E     OCT     25,45,24                                                 F0F07450
+LBS    OCT     010000000000                                             F0F07460
+ CDS   BCI     1,END(0,                                                 F0F07470
+BFSWCH PZE                                                              F0F07480
+ PSW1  PZE                                                              F0F07490
+ PSW2  PZE                                                              F0F07500
+ PSW3  PZE                                                              F0F07510
+ PSW4  PZE                                                              F0F07520
+ PSW5  PZE                                                              F0F07530
+       DUP     1,10                                                     F0F07540
+       PZE                                                              F0F07550
+ ESW1  PZE                                                              F0F07560
+ ESW2  PZE                                                              F0F07570
+ ESW3  PZE                                                              F0F07580
+ ESW4  PZE                                                              F0F07590
+ ESW5  PZE                                                              F0F07600
+       PZE                                                             $F0F07610
+       PZE     -1            LABEL OPTION ASSUMED                      $F0F07611
+       PZE                                                             $F0F07612
+       PZE                                                             $F0F07613
+       PZE     -1            PACK OPTION ASSUMED                       $F0F07614
+       DUP     1,5                                                     $F0F07620
+       PZE                                                             $F0F07622
+ ENDCW IORT    ENDCD,,14                                               $F0F07630
+       IORT    *+1,,15                                                 $F0F07640
+       BCI     1,                                                       F0F07650
+ ENDCD BCI     1,                                                       F0F07660
+       BCI     7,END(1,0,0,0,0,0,1,0,0,1,0,0,0,0,0)                    $F0F07670
+       BCI     6,                                                       F0F07680
+ BLNCW IORT    BLNKS,,3      CONTROL WORD FOR BLANK LINE               $F0F07690
+ EJECT IORT    *+1,,3                                                  $F0F07700
+       BCI     1,1                                                      F0F07710
+ BLNKS BCI     3,                                                       F0F07720
+ HEDCW IORT    *+1,,18       CONTROL WORD FOR PAGE HEADING             $F0F07730
+       BCI     1,1                                                      F0F07740
+ TITLE BCI     9,  MONITOR SKIPPING FOR CONTROL                        $F0F07750
+       BCI     3,                                                      $F0F07755
+ DATE  BCI     3,   00/00/00                                            F0F07760
+ PAGE  BCI     2, PAGE 1                                                F0F07770
+ COMBC BCI     4,0      BEGIN COMPILATION                               F0F07780
+ SPACE SYN     COMBC                                                    F0F07790
+ COMBA BCI     4,0      BEGIN ASSEMBLY                                  F0F07800
+ COMCH IORT    *+1,,4                                                  $F0F07810
+       BCI     4,0 ILLEGAL CHAIN CARD                                   F0F07820
+ COMNC IORT    *+1,,9                                                  $F0F07830
+       BCI     9,0BINARY RECORD ON INPUT TAPE HAS NO COLUMN BINARY BITS F0F07840
+ COMRX IORT    *+1,,8                                                  $F0F07841
+       BCI     8,0OFF LINE ROW BINARY REQUEST, EXECUTION DELETED.       F0F07842
+ COMLB IORT    *+1,,6                                                  $F0F07843
+       BCI     6,0 ROW BINARY LIBRARY REQUEST IGNORED                  $F0F07844
+ CW0   IORT    BUF0,,14                                                 F0F07850
+ CW1   IORT    BUF1,,14                                                 F0F07860
+CWP0   IORT    PBUF0,,15                                               $F0F07870
+CWP1   IORT    PBUF1,,15                                               $F0F07880
+ BFA1          BUF1                                                     F0F07890
+ BFA0          BUF0                                                     F0F07900
+ BFZ1          BUFZ1,2                                                  F0F07910
+ BFZ0          BUFZ0,2                                                  F0F07920
+ CWB0  IORT    BBUF0,,24                                                F0F07930
+ CWB1  IORT    BBUF1,,24                                                F0F07940
+   IOP CAL     BIT21                                                   $F0F07941
+       ORS*    (FGBX)                                                  $F0F07942
+       TRA     READ          BACK FOR NEXT CARD                        $F0F07943
+BIT21  OCT     40000                                                   $F0F07944
+       REM     ROUTINES TO PROCESS IBSFAP CONTROL CARDS                $F0F07949
+IBFAP1 LDI*    (FGBX)        $ IN CC1 IF IBSFAP BACK 2 RECORDS         $F0F0794A
+       TNZ     *+4           TRANSFER IF NOT A $                       $F0F0794B
+       RFT     4             IF FORTRAN BACK ONE RECORD                $F0F0794C
+       TSX     BKIN,4        IBSFAP                                    $F0F07950
+       TRA     BKIN2         GO BACKSPACE, THEN TO SIGN-ON             $F0F07951
+       ADD     CMNSAK        NO $ IS THIS A COMMENTS CARD              $F0F07952
+       TZE     WSP           YES                                       $F0F07953
+       RNT     4             IS THIS IBSFAP                            $F0F07954
+       TRA     SP+2          NO RETURN TO SCAN FOR END CARD            $F0F07955
+       STQ     TEMP2         SAVE CCS. I'6                             $F0F07956
+       AXT     13,2          GET 2ND WORD OF CARD IMAGE                $F0F07957
+       LDQ*    BFZ0,1                                                  $F0F07958
+       ZAC                   TEST CC 7 FOR ASTERISK                    $F0F07959
+       STQ     IBSAV         SAVE 2ND WORD FOR PRINT OUT               $F0F0795A
+       LGL     6                                                       $F0F0795B
+       SUB     ASTK          CC 7 ASTERISK                             $F0F0795C
+       TNZ     *+4           NO                                        $F0F0795D
+       ADD     BLNK          YES, IBSFAP CONTROL CARD                  $F0F0795E
+       LGR     6             REPLACE ASTERISK WITH BLANK FOR           $F0F0795F
+       STQ*    BFZ0,1        DICTIONARY SEARCH                         $F0F0795G
+       LDQ     TEMP2         RESTORE CCS 2'6                           $F0F0795H
+       TZE     DSRCH         IF IBSFAP CONTROL CARD AC=0               $F0F0795I
+       STZ     IBSAV         ZERO OUT PRINT OUT SAVE AREA              $F0F0795J
+       TRA     SP+2          RETURN TO SCAN FOR END CARD               $F0F0795K
+IBFAP2 LDI*    (FGBX)        IS THIS IBSFAP                            $F0F0795L
+       RNT     4                                                       $F0F0795M
+       TRA     RETRN         NO, FORTRAN RETURN                        $F0F0795N
+       TRA     *+5                                                     $F0F0795O
+       PZE                   NOT                                       $F0F0795P
+       PZE                   EXECUTED                                  $F0F0795Q
+BKIN2  TSX     BKIN,4                                                  $F0F0795R
+       TRA     EF2                                                     $F0F0795S
+       NZT     IBSAV         HAS A COL 7 *CARD BEEN SAVED              $F0F0795T
+       TRA     RETRN         NO                                        $F0F0795U
+       SXA     SAV2,2        YES, RESTORE IT TO BUFFER                 $F0F0795V
+       AXT     13,2                                                    $F0F0795W
+       LXD     BFSWCH,1      FOR 2ND WORD OF CARD IMAGE                $F0F0795X
+       CLA     IBSAV         RESTORE SECOND WORD TO BUFFER             $F0F0795Y
+       STO*    BFZ0,1                                                  $F0F0795Z
+       STZ     IBSAV         ZERO OUT SAVE AREA                        $F0F07960
+ SAV2  AXT     **,2                                                    $F0F07961
+RETRN  LDC     BFSWCH,1                                                $F0F07962
+       TRA     DS14+1        RETURN TO WRITE OUT BUFFER                $F0F07963
+IBFAP3 LXD     BFSWCH,1      FOR FORTRAN TO MOVE FIRST SOURCE CARD     $F0F07964
+       LDI*    (FGBX)        IF IBSFAP TITLE IS ALREADY IN BUFFER      $F0F07965
+       RFT     4                                                       $F0F07966
+       TRA     NLINS+7       IBSFAP                                    $F0F07967
+       TRA     NLINS+2       FORTRAN MOVE CARD TO BUFFER               $F0F07968
+IBFAP4 LDI*    (FGBX)        HERE FROM READ ERROR REDUNDANCY           $F0F07969
+       RNT     4             CHECK FOR IBSFAP                          $F0F0796A
+       TRA     NCB           FORTRAN                                   $F0F0796B
+       TSX     (TAPE),4      IBSFAP, IGNORE ERROR                      $F0F0796C
+       PZE     SK1RC,,(SKBC) SKIP OVER RECORD IN ERROR                 $F0F0796D
+       PZE     ,,MINTAP                                                $F0F0796E
+       TRA     R1            TRY READING AGAIN                         $F0F0796P
+IBFAP5 LDI*    (FGBX)        HERE TO CHECK FOR IBSFAP EOF              $F0F0796Q
+       RNT     4                                                       $F0F0796R
+       TRA     EF            FORTRAN                                   $F0F0796S
+       AXT     ,0                                                      $F0F0796T
+       TRA     R1            START READING FROM BEGINNING              $F0F0796U
+TEMP2  PZE     0                                                       $F0F0796V
+ IBSAV PZE     0                                                       $F0F0796W
+       PZE                   AVAILABLE CONSTANT                        $F0F0796X
+ SK1RC PZE     1                                                       $F0F0796Y
+  ADD  BSS     22            ADD CONTROL ROUTINES HERE                 $F0F07970
+PATCH1 LXD     BFSWCH,4       TEST FOR                                 $F0F07971
+       AXT     14,2           A BLANK CARD                             $F0F07972
+       CLA*    BFZ0,4                                                  $F0F07973
+       SUB     BLNKS                                                   $F0F07974
+       TNZ     *+3                                                     $F0F07975
+       TXL     READ,2,3       YES, A BLANK CARD GO READ NEXT CARD      $F0F07976
+       TXI     PATCH1+2,2,-1                                           $F0F07977
+       LDC     BFSWCH,1       NOT A BLANK CARD                         $F0F07978
+       TRA     WTDBG+1        RETURN TO WRITE OUT CARD                 $F0F07979
+ CONTN TSX     NNBL,4        IS THIS A REAL END CARD                   $F0F07980
+       TRA     RETN          YES (NO EQUAL SIGN FOLLOWS)               $F0F07981
+       SUB     EQUAL         NO, IS THIS A =                           $F0F07982
+       TZE     CLWSP         YES, CLEAR PSW BUFFER                     $F0F07983
+       TRA     CONTN         NO, CONTINUE FIELD SCAN                   $F0F07984
+ RETN  CLA     CDS           FORM END CARD FOR FORTRAN                 $F0F07985
+       TRA     PTCHR+1                                                 $F0F07986
+ CLWSP STZ     PSW1+15,1     CLEAR PSW BUFFER                          $F0F07987
+       TXI     *+1,1,1       IS BUFFER CLEARED                         $F0F07988
+       TXL     CLWSP,1,15    NO                                        $F0F07989
+       TRA     WSP           YES                                       $F0F0798A
+ EQUAL BCI     1,00000=                                                $F0F0798B
+IBPAT1 LNT     1             IS NOGO BIT IN SYSJOB SET                 $F0F0798C
+       TRA     IBPAT3        NO,CHECK FURTHER                          $F0F0798D
+       TRA     READM         YES,DISALLOW EXECUTION                    $F0F0798E
+IBPAT2 STA     LINECT        SAVE LINE COUNT                           $F0F0798F
+       LDI*    (FGBX)        IS THIS IBSFAP END CARD                   $F0F0798G
+       RNT     4             I.E.    IBSFAP WITH NO FAP CARD           $F0F0798H
+       TRA     DD+1          NO FORTRAN                                $F0F0798I
+       LDC     BFSWCH,1      YES                                       $F0F0798J
+       TSX     (TAPE),4      WRITE END CARD WITHOUT PARAMETERS         $F0F0798K
+       PZE     CWP0,1,(WDNC)                                           $F0F0798L
+       PZE     ,,MLSTAP                                                $F0F0798M
+       CLA     IBMGE         PRINT *FAP CARD NOT FOUND                 $F0F0798N
+       TSX     COMNT,4       ASSEMBLY DELETED                          $F0F0798O
+       STL     BEGIN         FOR NEW JOB                               $F0F0798P
+       TSX     BKIN,4        BACKSPACE OVER LOOKAHEAD                  $F0F0798Q
+       CLA     RESTR         RESTORE ERROR RETURN                      $F0F0798R
+       STO     TPCHK         KILLED IN BACKSPACE ROUTINE               $F0F0798S
+       TRA     BEGIN+1       GO TO NEXT JOB                            $F0F07990
+ IBMGE IORT    IBERR,,11                                               $F0F07991
+ IBERR BCI     8,0     *FAP CARD NOT FOUND FOR IBSFAP JOB              $F0F07992
+       BCI     3,ASSEMBLY DELETED                                      $F0F07993
+ RESTR LDI     (SCHU)+MINTAP                                           $F0F07994
+IBPAT3 LDI*    (FGBX)        STILL WONDERING IF EXECUTION              $F0F07995
+       RNT     4             IS LEGAL. IS THIS IBSFAP MODE             $F0F07996
+       ORS*    (FGBX)        NO,PERMIT EXECUTION                       $F0F07997
+       TRA     READ          READ NEXT CARD                            $F0F07998
+       PZE                   NOT EXECUTED                              $F0F07999
+ORGBUF EQU     *                                                        F0F08000
+ PBUF0 BSS     1                                                        F0F08010
+ BUF0  BSS     14                                                       F0F08020
+ BUFZ0 BSS     1                                                        F0F08030
+ PBUF1 BSS     1                                                        F0F08040
+ BUF1  BSS     14                                                       F0F08050
+ BUFZ1 BSS     1                                                        F0F08060
+ BBUF0 BSS     25                                                       F0F08070
+ BBUF1 BSS     25                                                       F0F08080
+*                                                                       F0F08090
+       REM     PATCHES                                                 $F0F08100
+ READM CLA     IBDEL         EXPLAIN WHY EXECUTION WAS                 $F0F08110
+       TSX     COMNT,4       NOT PERMITTED                             $F0F08120
+       TRA     READ          READ NEXT CARD                            $F0F08130
+ IBDEL IORT    *+1,,10                                                 $F0F08140
+       BCI     6,0IBSYS NOGO CONDITION FORBIDS EXECUT                  $F0F08150
+       BCI     4,ION.  REQUEST IGNORED.                                $F0F08160
+CLCHFX TSX     NNBL,4          IF FIRST CHARACTER OF T IS           (34)F0F08170
+       TRA     WSP             AN A OR B IT WILL BE DELETED         (34)F0F08180
+       SUB     OCTB                                                 (34)F0F08190
+       TRA     SP03-4                                               (34)F0F08200
+       BES     96              PATCH AREA                           (34)F0F08210
+       END     -1                                                       F0F09000
