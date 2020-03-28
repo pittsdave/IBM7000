@@ -1,0 +1,117 @@
+* PUNCH         WRITES OUT A LIST ON THE SYSTEM PERIFIAL PUNCH TAPE
+*               (SYSPPT) IN A FORM SUITABLE FOR PUNCHING IN BCD.
+*
+ PUNCH SXA     PNCHX,4
+       STZ     PUNLM
+       STL     PUNACT
+       PDX     0,4
+       CLS     $PRIN2
+       STO     $PRIN2
+       PXD     0,4
+       STO     PRINTL
+       TSX     $PRIN0,4
+       TSX     TERPUN,4
+       CLA     PRINTL
+ PNCHX AXT     **,4
+       TRA     1,4
+*
+* PUN2         PUNCH EQUIVELENT OF PRIN 2
+*
+ PUN2  SXA     PNX,4           SAVE INDEX REGISTERS
+       SXA     PNY,2
+       SXA     PNZ,1
+ PWRDS AXT     18,4
+ PPRTS AXT     6,2
+       AXT     6,1
+       XCA
+ PLP   PXD     0,0
+       LGL     6
+       ZET     PUNLM         FIRST 72 CHARACTERS
+       CAS     =H00000       NO, LOOK FOR BLANK
+       TRA     PUND          NOT FOUND,CONTINUE LINE
+       TRA     *+2
+       TRA     PUND
+       STQ     PNCQ
+       TXL     TPLP-1,2,5
+       TXI     PUNWD,4,1
+PUND   CAS     =O77
+       NOP
+       TRA     POUT
+       XEC     PCNT,2
+       ORS     POUP,4
+       TNX     PRPLP,2,1
+ PGRA  TIX     PLP,1,1
+ POUT  SXA     PPRTS,2
+       SXA     PWRDS,4
+       PXD     0,0
+ PNX   AXT     **,4
+ PNY   AXT     **,2
+ PNZ   AXT     **,1
+       TRA     1,4              EXIT
+       REM
+ PRPLP AXT     6,2              RELOAD CHARACTER COUNT
+       TXI     *+1,4,-1
+       TXH     PGRA,4,7
+       STL     PUNLM             INDICATE BREAK ON FIRST OPPORTUNITY
+       TXH     PGRA,4,0          LINE NOT FULL YET
+       STQ     PNCQ               YES,IT IS PUNCH AWAY
+       TRA     PUNWD              WITHOUT REGARD TO NICETIES
+PUNWRT ZET     $OUTSW
+       TRA     WRITIT
+       STL     $OUTSW
+       TSX     $ASIGN,4
+WRITIT CALLIO  WRWAIT,OUTFIL,(=0,(OUTBUF-1,,**),DISKER)  FILL IN AT W+5
+*END OF CHANGES
+       AXT     18,4              MAX NO. OF WORDS*****
+       STZ     POUP,4                 ZERO OUTPUT BUFFER
+       TIX     *-1,4,1
+       AXT     18,4                   RELOAD WORD COUNT
+       STZ     PUNLM             RESET COL. 72 SWITCH****
+       LDQ     PNCQ                   RESTORE CONTENTS OF MQ
+       TRA     PGRA                   CONTINUE WORK
+*
+* TERPUN       FILLS OUT BUFFER WITH BLANKS AND PUNCHES OUT LAST CARD
+*              OPERATES ONLY IF PUNCH ROUTINE IS CURRENTLY ACTIVE
+*
+TERPUN NZT     PUNACT                 SKIP IF PUNCH ROUTINE IS CURRENTLY ACT
+       TRA     1,4                    IMMEDIATE EXIT
+       STZ     PUNACT                 DE ACTIVATE THE PUNCH ROUTINE
+       SXA     PNX,4                  SAVE INDEX REGISTERS
+       SXA     PNY,2
+       SXA     PNZ,1
+       CLA     $PRIN2
+       SLW     $PRIN2                 RESTORE PRIN2 SWITCH
+       LXA     PWRDS,4                PICK UP WORD COUNT
+       LXA     PPRTS,2                CHARACTER COUNT
+       AXT     1,1                    CONSTANT 1
+       LDQ     S57               LOAD WORD OF 57Q
+ TPLP  PXD     0,0                    CLEAR AC
+       LGL     6                      1 INTO AC
+       XEC     PCNT,2                 SHIFT INTO POSITIN
+       ORS     POUP,4                 PUT IN OUTPUT LINE
+       TIX     TPLP,2,1               FILL OUT THIS WORD
+PUNWD  PCA     0,4               NO. OF WORDS LEFT IN LINE
+       ADD     =19               YIELDS NO. OF WORDS WRITTEN
+       STA     OUTBUF-1          SETUP OUTPUT LINEMARK
+       ADD     =1
+       ALS     18
+       STD     WRITIT+5          SETUP WRITE-WAIT COMMAND
+       AXT     6,2
+       TRA     PUNWRT            WRITE OUT LINE
+*                CONSTANTS, STORAGE AND SHIFT TABLE
+       ALS     30
+       ALS     24
+       ALS     18
+       ALS     12
+       ALS     6
+       NOP
+ PCNT  PZE                          BASE OF SHIFT TABLE AND CARD COUNT
+ PNCQ
+PUNACT                              NON-ZERO IF PUNCH ROUTINE ACTIVE
+       OCT     777777000000   LINE MARK
+OUTBUF OCT     0,0,0,0,0,0    THERE SHOULD BE 18 OF THESE
+       OCT     0,0,0,0,0,0
+       OCT     0,0,0,0,0,0
+S57    OCT     575757575757
+POUP   SYN     S57
+PUNLM  PZE                     ARE WE WORKING ON IST 72 CHARACTERS

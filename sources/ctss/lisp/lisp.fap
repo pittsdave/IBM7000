@@ -1,0 +1,79 @@
+       TITLE
+       INSERT  $IOMACS      TSSX,TSSX1,CALLIO,OPEN
+       EJECT
+       INSERT  $IOCNFG      FILE ROUTINES
+       EJECT
+       INSERT  $ZERRRF
+       EJECT
+       INSERT  $SETCNF
+       EJECT
+       INSERT  $GCOLEF
+       EJECT
+       INSERT  $TEMLIF
+       EJECT
+       INSERT  $CONSZF
+       EJECT
+       INSERT  $BLCKF2
+       EJECT
+       INSERT  DECONF
+       EJECT
+       INSERT  $EQULZF
+       EJECT
+       INSERT  $PRNTZF
+       EJECT
+       INSERT  $PUNCHF
+       EJECT
+       INSERT  $FLONMF
+       EJECT
+       INSERT  $REDZIF
+       EJECT
+       INSERT  $GTGCDF
+       EJECT
+       INSERT  $SUBSTF
+       EJECT
+       INSERT  $APENDF
+       EJECT
+       INSERT  $EVQTZF
+       EJECT
+       INSERT  $CARXZF
+       EJECT
+       INSERT  $ADV1FE
+       EJECT
+       INSERT  $ARAY1F
+       EJECT
+       INSERT  $FIXVLF
+       EJECT
+       INSERT  $ARAY2F
+       EJECT
+       INSERT  $ARTH1F
+       EJECT
+       INSERT  $EXPTFE
+       EJECT
+       INSERT  $ARTHMF
+       EJECT
+       INSERT  $APPL1F
+       EJECT
+       INSERT  $ATOMS
+       EJECT
+       INSERT  $SYNS
+       EJECT
+       INSERT  $CNSFWF
+       EJECT
+       INSERT  $LAPZFE
+       EJECT
+       HEAD    0
+BUTCH  BSS     0
+ZEROXC SXA     ZEROX,4
+       AXT     BUTCH-E$EXCIS,4
+       STZ     BUTCH,4
+       TIX     *-1,4,1
+ZEROX  AXT     **,4
+       ZAC
+       TRA     1,4
+       EJECT
+       BSS     LITRLS-*
+       HEAD    0
+       PMC     ON
+       DETAIL
+       RMT     *
+       END     20
