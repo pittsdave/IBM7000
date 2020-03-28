@@ -1,0 +1,6 @@
+       ENTRY   PRINT
+       ENTRY   ENTLIN
+       REM
+PRINT  TIA     =HPRINT
+ENTLIN TIA     =HENTLIN
+       END
