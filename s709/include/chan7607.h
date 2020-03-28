@@ -1,0 +1,17 @@
+void do_chan(int ch);
+void run_chan(int ch);
+void reset_chan(int ch);
+void active_chan(int ch);
+void man_chan(int ch);
+void load_chan(int ch);
+int unitcheck(int ch, int wr);
+int whatdev(int ch);
+void printerror(char *s);
+void startrec(int ch);
+void endrecord(int ch, int skip);
+void check_reset (int);
+void check_load (int);
+int check_chan (int, int, int, int);
+void store_chan (int);
+void check_eof (int);
+void check_cchk (int);
