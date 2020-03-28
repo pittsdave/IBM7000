@@ -1,0 +1,150 @@
+case 1:
+   
+   value = Stkval(2);
+   
+   break;
+case 5:
+   
+   value = Stkval(3) | Stkval(1);
+   
+   break;
+case 6:
+   
+   value = Stkval(3) & Stkval(1);
+   
+   break;
+case 7:
+   
+   value = Stkval(3) ^ Stkval(1);
+   
+   break;
+case 9:
+   
+   value = ~ Stkval(1);
+   
+   break;
+case 11:
+   
+   value = Stkval(1);
+   
+   break;
+case 12:
+   
+   value = Stkval(1);
+   
+   break;
+case 13:
+   
+   value = 0;
+   
+   break;
+case 14:
+   
+   {
+   int boolsym;
+   char temp1[MAXSYMLEN+2];
+   char temp2[MAXSYMLEN+2];
+   
+   if (strlen(CStkval(1)) > MAXSYMLEN)
+   {
+   strncpy (temp1, CStkval(1), MAXSYMLEN);
+   temp1[MAXSYMLEN] = '\0';
+   }
+   else
+   strcpy (temp1, CStkval(1));
+   
+   if (strlen(QStkval(1)) > MAXSYMLEN)
+   {
+   strncpy (temp2, QStkval(1), MAXSYMLEN);
+   temp2[MAXSYMLEN] = '\0';
+   }
+   else
+   strcpy (temp2, QStkval(1));
+   
+   value = symparse (temp1, temp2, &relocatable, &boolsym, defer, pcinc);
+   if (boolsym) boolexpr = TRUE;
+   }
+   
+   break;
+case 16:
+   
+   value = Stkval(3) - Stkval(1);
+   
+   break;
+case 17:
+   
+   value = Stkval(3) + Stkval(1);
+   
+   break;
+case 19:
+   
+   value = Stkval(1);
+   
+   break;
+case 20:
+   
+   value = - Stkval(1);
+   
+   break;
+case 21:
+   
+   value = Stkval(3) * Stkval(1);
+   
+   break;
+case 22:
+   
+   if (Stkval(1) == VALUEZERO)
+   /* Zero divide is treated as divide by 1 */
+   value = Stkval(3);
+   else
+   value = Stkval(3) / Stkval(1);
+   
+   break;
+case 24:
+   
+   value = Stkval(1);
+   
+   break;
+case 25:
+   
+   value = Stkval(1);
+   
+   break;
+case 26:
+   
+   value = Stkval(1); relocatable++;
+   
+   break;
+case 27:
+   
+   value = 0;
+   
+   break;
+case 28:
+   
+   {
+   int boolsym;
+   char temp1[MAXSYMLEN+2];
+   char temp2[MAXSYMLEN+2];
+   
+   if (strlen(CStkval(1)) > MAXSYMLEN)
+   {
+   strncpy (temp1, CStkval(1), MAXSYMLEN);
+   temp1[MAXSYMLEN] = '\0';
+   }
+   else
+   strcpy (temp1, CStkval(1));
+   
+   if (strlen(QStkval(1)) > MAXSYMLEN)
+   {
+   strncpy (temp2, QStkval(1), MAXSYMLEN);
+   temp2[MAXSYMLEN] = '\0';
+   }
+   else
+   strcpy (temp2, QStkval(1));
+   
+   value = symparse (temp1, temp2, &relocatable, &boolsym, defer, pcinc);
+   if (boolsym) boolexpr = TRUE;
+   }
+   
+   break;

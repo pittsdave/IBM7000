@@ -1,0 +1,165 @@
+(* ASM7090 language expression BNF *)
+
+<GOAL> := <EXPR> eos
+     (#
+     value = Stkval(2);
+     #)
+  ;
+
+<EXPR> := <BEXPR>
+  ! <AEXPR>
+  ;
+
+(* Boolean expressions *)
+
+<BEXPR> := <BFACT>
+  ! <BEXPR> or <BFACT>
+     (#
+     value = Stkval(3) | Stkval(1);
+     #)
+  ! <BEXPR> and <BFACT>
+     (#
+     value = Stkval(3) & Stkval(1);
+     #)
+  ! <BEXPR> xor <BFACT>
+     (#
+     value = Stkval(3) ^ Stkval(1);
+     #)
+  ;
+
+<BFACT> := <BELEM>
+  ! not <BELEM>
+     (#
+     value = ~ Stkval(1);
+     #)
+  ;
+
+<BELEM> := <BVARBL>
+  ! boctnum
+     (#
+     value = Stkval(1);
+     #)
+  ! bpc
+     (#
+     value = Stkval(1);
+     #)
+  ! bnulsym
+     (#
+     value = 0;
+     #)
+  ;
+
+<BVARBL> := bsym
+     (#
+     {
+        int boolsym;
+        char temp1[MAXSYMLEN+2];
+        char temp2[MAXSYMLEN+2];
+
+        if (strlen(CStkval(1)) > MAXSYMLEN)
+        {
+           strncpy (temp1, CStkval(1), MAXSYMLEN);
+           temp1[MAXSYMLEN] = '\0';
+        }
+        else
+           strcpy (temp1, CStkval(1));
+
+        if (strlen(QStkval(1)) > MAXSYMLEN)
+        {
+           strncpy (temp2, QStkval(1), MAXSYMLEN);
+           temp2[MAXSYMLEN] = '\0';
+        }
+        else
+           strcpy (temp2, QStkval(1));
+
+        value = symparse (temp1, temp2, &relocatable, &boolsym, defer, pcinc);
+        if (boolsym) boolexpr = TRUE;
+     }
+     #)
+  ;
+
+
+(* Arithmetic expressions *)
+
+<AEXPR> := <ATERM>
+  ! <AEXPR> "-" <ATERM>
+     (#
+     value = Stkval(3) - Stkval(1);
+     #)
+  ! <AEXPR> "+" <ATERM> 
+     (#
+     value = Stkval(3) + Stkval(1);
+     #)
+  ;
+
+<ATERM> := <ELEM>
+  ! "+" <ELEM>
+     (#
+     value = Stkval(1);
+     #)
+  ! "-" <ELEM>
+     (#
+     value = - Stkval(1);
+     #)
+  ! <ATERM> aster <ELEM>
+     (#
+     value = Stkval(3) * Stkval(1);
+     #)
+  ! <ATERM> "/" <ELEM>
+     (#
+     if (Stkval(1) == VALUEZERO)
+        /* Zero divide is treated as divide by 1 */
+        value = Stkval(3);
+     else
+        value = Stkval(3) / Stkval(1);
+     #)
+  ;
+
+<ELEM> := <VARBL>
+  ! octnum
+     (#
+     value = Stkval(1);
+     #)
+  ! decnum
+     (#
+     value = Stkval(1);
+     #)
+  ! aster (* pc *)
+     (#
+     value = Stkval(1); relocatable++;
+     #)
+  ! nulsym
+     (#
+     value = 0;
+     #)
+  ;
+
+<VARBL> := sym
+     (#
+     {
+        int boolsym;
+        char temp1[MAXSYMLEN+2];
+        char temp2[MAXSYMLEN+2];
+
+        if (strlen(CStkval(1)) > MAXSYMLEN)
+        {
+           strncpy (temp1, CStkval(1), MAXSYMLEN);
+           temp1[MAXSYMLEN] = '\0';
+        }
+        else
+           strcpy (temp1, CStkval(1));
+
+        if (strlen(QStkval(1)) > MAXSYMLEN)
+        {
+           strncpy (temp2, QStkval(1), MAXSYMLEN);
+           temp2[MAXSYMLEN] = '\0';
+        }
+        else
+           strcpy (temp2, QStkval(1));
+
+        value = symparse (temp1, temp2, &relocatable, &boolsym, defer, pcinc);
+        if (boolsym) boolexpr = TRUE;
+     }
+     #)
+  ;
+

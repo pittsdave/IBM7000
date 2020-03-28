@@ -1,0 +1,14 @@
+#define EOS       3
+#define OR        7
+#define AND       8
+#define XOR       9
+#define NOT       11
+#define BOCTNUM   13
+#define BPC       14
+#define BNULSYM   15
+#define BSYM      16
+#define ASTER     21
+#define OCTNUM    24
+#define DECNUM    25
+#define NULSYM    26
+#define SYM       27

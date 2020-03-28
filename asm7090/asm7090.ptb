@@ -1,0 +1,314 @@
+/*****************************************************************
+* Parser tables, Generated at Fri Dec 17 09:19:23 2010
+*****************************************************************/
+/*
+** Parser action macros
+*/
+#define SHIFT(co,ar)  (ar<<8|co)
+#define REDUCE(co)    (co<<8|255)
+#define ERROR         -1
+#define GOTO(c,n)     (n<<8|(c&255))
+
+/*
+** Parser token type equates
+*/
+#define EOS       3
+#define OR        7
+#define AND       8
+#define XOR       9
+#define NOT       11
+#define BOCTNUM   13
+#define BPC       14
+#define BNULSYM   15
+#define BSYM      16
+#define ASTER     21
+#define OCTNUM    24
+#define DECNUM    25
+#define NULSYM    26
+#define SYM       27
+
+/*
+** SLR(1) parser action tables
+*/
+static short int P1[] = {
+       SHIFT(NOT,7),
+       SHIFT('+',15),
+       SHIFT('-',14),
+       SHIFT(BOCTNUM,9),
+       SHIFT(BPC,10),
+       SHIFT(BNULSYM,11),
+       SHIFT(OCTNUM,19),
+       SHIFT(DECNUM,20),
+       SHIFT(ASTER,17),
+       SHIFT(NULSYM,21),
+       SHIFT(BSYM,12),
+       SHIFT(SYM,22),
+       ERROR
+};
+static short int P2[] = {
+       SHIFT(EOS,23),
+       ERROR
+};
+static short int P3[] = {
+       SHIFT(OR,24),
+       SHIFT(AND,25),
+       SHIFT(XOR,26),
+       REDUCE(2)
+};
+static short int P4[] = {
+       SHIFT('-',27),
+       SHIFT('+',28),
+       REDUCE(3)
+};
+static short int P5[] = {
+       REDUCE(4)
+};
+static short int P6[] = {
+       REDUCE(8)
+};
+static short int P7[] = {
+       SHIFT(BOCTNUM,9),
+       SHIFT(BPC,10),
+       SHIFT(BNULSYM,11),
+       SHIFT(BSYM,12),
+       ERROR
+};
+static short int P8[] = {
+       REDUCE(10)
+};
+static short int P9[] = {
+       REDUCE(11)
+};
+static short int P10[] = {
+       REDUCE(12)
+};
+static short int P11[] = {
+       REDUCE(13)
+};
+static short int P12[] = {
+       REDUCE(14)
+};
+static short int P13[] = {
+       SHIFT(ASTER,30),
+       SHIFT('/',31),
+       REDUCE(15)
+};
+static short int P14[] = {
+       SHIFT(OCTNUM,19),
+       SHIFT(DECNUM,20),
+       SHIFT(ASTER,17),
+       SHIFT(NULSYM,21),
+       SHIFT(SYM,22),
+       ERROR
+};
+static short int P15[] = {
+       SHIFT(OCTNUM,19),
+       SHIFT(DECNUM,20),
+       SHIFT(ASTER,17),
+       SHIFT(NULSYM,21),
+       SHIFT(SYM,22),
+       ERROR
+};
+static short int P16[] = {
+       REDUCE(18)
+};
+static short int P17[] = {
+       REDUCE(26)
+};
+static short int P18[] = {
+       REDUCE(23)
+};
+static short int P19[] = {
+       REDUCE(24)
+};
+static short int P20[] = {
+       REDUCE(25)
+};
+static short int P21[] = {
+       REDUCE(27)
+};
+static short int P22[] = {
+       REDUCE(28)
+};
+static short int P23[] = {
+       REDUCE(1)
+};
+static short int P24[] = {
+       SHIFT(NOT,7),
+       SHIFT(BOCTNUM,9),
+       SHIFT(BPC,10),
+       SHIFT(BNULSYM,11),
+       SHIFT(BSYM,12),
+       ERROR
+};
+static short int P25[] = {
+       SHIFT(NOT,7),
+       SHIFT(BOCTNUM,9),
+       SHIFT(BPC,10),
+       SHIFT(BNULSYM,11),
+       SHIFT(BSYM,12),
+       ERROR
+};
+static short int P26[] = {
+       SHIFT(NOT,7),
+       SHIFT(BOCTNUM,9),
+       SHIFT(BPC,10),
+       SHIFT(BNULSYM,11),
+       SHIFT(BSYM,12),
+       ERROR
+};
+static short int P27[] = {
+       SHIFT('+',15),
+       SHIFT('-',14),
+       SHIFT(OCTNUM,19),
+       SHIFT(DECNUM,20),
+       SHIFT(ASTER,17),
+       SHIFT(NULSYM,21),
+       SHIFT(SYM,22),
+       ERROR
+};
+static short int P28[] = {
+       SHIFT('+',15),
+       SHIFT('-',14),
+       SHIFT(OCTNUM,19),
+       SHIFT(DECNUM,20),
+       SHIFT(ASTER,17),
+       SHIFT(NULSYM,21),
+       SHIFT(SYM,22),
+       ERROR
+};
+static short int P29[] = {
+       REDUCE(9)
+};
+static short int P30[] = {
+       SHIFT(OCTNUM,19),
+       SHIFT(DECNUM,20),
+       SHIFT(ASTER,17),
+       SHIFT(NULSYM,21),
+       SHIFT(SYM,22),
+       ERROR
+};
+static short int P31[] = {
+       SHIFT(OCTNUM,19),
+       SHIFT(DECNUM,20),
+       SHIFT(ASTER,17),
+       SHIFT(NULSYM,21),
+       SHIFT(SYM,22),
+       ERROR
+};
+static short int P32[] = {
+       REDUCE(20)
+};
+static short int P33[] = {
+       REDUCE(19)
+};
+static short int P34[] = {
+       REDUCE(5)
+};
+static short int P35[] = {
+       REDUCE(6)
+};
+static short int P36[] = {
+       REDUCE(7)
+};
+static short int P37[] = {
+       SHIFT(ASTER,30),
+       SHIFT('/',31),
+       REDUCE(16)
+};
+static short int P38[] = {
+       SHIFT(ASTER,30),
+       SHIFT('/',31),
+       REDUCE(17)
+};
+static short int P39[] = {
+       REDUCE(21)
+};
+static short int P40[] = {
+       REDUCE(22)
+};
+
+static short int const *parsetable[] = {
+       P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, 
+       P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, 
+       P22, P23, P24, P25, P26, P27, P28, P29, P30, P31, 
+       P32, P33, P34, P35, P36, P37, P38, P39, P40
+};
+
+/*
+** SLR(1) parser goto tables
+*/
+static short int GOAL[] = {
+       GOTO(-1,0)
+};
+static short int EXPR[] = {
+       GOTO(-1,2)
+};
+static short int BEXPR[] = {
+       GOTO(-1,3)
+};
+static short int BFACT[] = {
+       GOTO(1,5),
+       GOTO(24,34),
+       GOTO(25,35),
+       GOTO(-1,36)
+};
+static short int BELEM[] = {
+       GOTO(7,29),
+       GOTO(-1,6)
+};
+static short int BVARBL[] = {
+       GOTO(-1,8)
+};
+static short int AEXPR[] = {
+       GOTO(-1,4)
+};
+static short int ATERM[] = {
+       GOTO(1,13),
+       GOTO(27,37),
+       GOTO(-1,38)
+};
+static short int ELEM[] = {
+       GOTO(14,32),
+       GOTO(15,33),
+       GOTO(30,39),
+       GOTO(31,40),
+       GOTO(-1,16)
+};
+static short int VARBL[] = {
+       GOTO(-1,18)
+};
+
+static struct {
+   short int *go;
+   int  handle;
+} const gototable[] = {
+   /* G1 */ GOAL,2,
+   /* G2 */ EXPR,1,
+   /* G3 */ EXPR,1,
+   /* G4 */ BEXPR,1,
+   /* G5 */ BEXPR,3,
+   /* G6 */ BEXPR,3,
+   /* G7 */ BEXPR,3,
+   /* G8 */ BFACT,1,
+   /* G9 */ BFACT,2,
+   /* G10 */ BELEM,1,
+   /* G11 */ BELEM,1,
+   /* G12 */ BELEM,1,
+   /* G13 */ BELEM,1,
+   /* G14 */ BVARBL,1,
+   /* G15 */ AEXPR,1,
+   /* G16 */ AEXPR,3,
+   /* G17 */ AEXPR,3,
+   /* G18 */ ATERM,1,
+   /* G19 */ ATERM,2,
+   /* G20 */ ATERM,2,
+   /* G21 */ ATERM,3,
+   /* G22 */ ATERM,3,
+   /* G23 */ ELEM,1,
+   /* G24 */ ELEM,1,
+   /* G25 */ ELEM,1,
+   /* G26 */ ELEM,1,
+   /* G27 */ ELEM,1,
+   /* G28 */ VARBL,1
+};
