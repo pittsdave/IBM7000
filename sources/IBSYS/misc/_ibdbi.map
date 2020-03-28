@@ -1,0 +1,2069 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .IBDBI                          3B000000
+$IBMAP .IBDBI  2005                                                     3B000010
+       TTL     .IBDBI - OBJECT TIME ROUTINES FOR DEBUGGING              3B000015
+ .PCC  OPSYN   PCC                                                      3B000020
+*   MACRO TO SET PCC AND PRESERVE STATUS OF MODE IN PCC.CT              3B000030
+ PCC   MACRO   X                                                        3B000040
+       .PCC    X                                                        3B000050
+       IFT     /X/=/ON/                                                 3B000060
+PCC.CT SET     1                                                        3B000070
+       IFT     /X/=/OFF/                                                3B000080
+PCC.CT SET     2                                                        3B000090
+       IFT     /X/=/ON/,OR                                              3B000100
+       IFT     /X/=/OFF/                                                3B000110
+       GOTO                                                             3B000120
+       IFT     PCC.CT=2                                                 3B000130
+PCC.CT SET     0                                                        3B000140
+PCC.CT SET     PCC.CT+1                                                 3B000150
+       ENDM    PCC                                                      3B000160
+       SPACE   3                                                        3B000170
+*   MACRO TO TURN ON PCC WITHOUT AFFECTING STATUS OF PCC.CT             3B000180
+PCCON  MACRO                                                            3B000190
+       .PCC    ON                                                       3B000200
+       ENDM    PCCON                                                    3B000210
+       SPACE   3                                                        3B000220
+*   MACRO TO RESTORE STATUS OF PCC ACCORDING TO PCC.CT                  3B000230
+PCCBAK MACRO                                                            3B000240
+       IFT     PCC.CT=0                                                 3B000250
+       .PCC    OFF                                                      3B000260
+       IFT     PCC.CT=1                                                 3B000270
+       .PCC    ON                                                       3B000280
+       IFT     PCC.CT=2                                                 3B000290
+       .PCC    OFF                                                      3B000300
+       ENDM    PCCBAK                                                   3B000310
+       PCC     OFF                                                      3B000320
+       LBL     .IBD,BEGIN     .IBDBI                                 (7)3B000330
+       TTL     ASSEMBLY PARAMETERS FOR THE DEBUGGING PACKAGE.           3B000340
+*   IF THE INSTALLATION HAS DISK OR DRUM CAPABILITY, SET DISK=1         3B000350
+*                                            IF NOT, SET DISK=0         3B000360
+DISK   SET     0                                                        3B000370
+       TTL     .DSTRS    (THE OBJECT-TIME STR SUPERVISOR FOR DEBUGGING) 3B000380
+*                                                                       3B000390
+*              THIS ROUTINE IS ENTERED WHENEVER AN STR OCCURS DURING    3B000400
+*            A DEBUGGING EXECUTION.  IT SAVES THE CONTENTS OF THE AC,   3B000410
+*            MQ, XR1, XR2, XR4, SI, AND THE STATUS OF THE THE AC O'FLO  3B000420
+*            INDICATOR, AND THE TRAP TRANSFER MODE.                     3B000430
+*                                                                       3B000440
+*              IF .DSTRN (OR .DSTRO) DETERMINE THAT THIS IS NOT A       3B000450
+*            DEBUGGING REQUEST STR, THIS ROUTINE RESTORES REGISTERS     3B000460
+*            AND TRANSFERS TO THE STR ENTRANCE IN .LXCON                3B000470
+*            IF THIS IS A DEBUGGING STR, ALL REQUESTS AT THIS           3B000480
+*            LOCATION ARE INTERPRETED AND THEN THE REGISTERS ARE        3B000490
+*            RESTORED AND THE INSTRUCTION REPLACED IS EITHER            3B000500
+*            EXECUTED OR SIMULATED.   (RETURN IS TO THE OBJECT PROGRAM) 3B000510
+       SPACE   5                                                        3B000520
+*      THIS IS THE ENTRY POINT OF THIS ROUTINE.                         3B000530
+*              SAVE ALL REGISTERS TO BE USED BY .DSTRS ROUTINE          3B000540
+ DSTRS STO     AC                  SAVE MQ, ALL OF ACC                  3B000550
+       SLW     LAC                                                      3B000560
+       ARS     2                                                        3B000570
+       STP     QPX2X1                                                   3B000580
+       STQ     MQ                                                       3B000590
+       STI     SI                  SAVE SI                              3B000600
+       LDI     =0                  CLEAR INDICATORS                     3B000610
+       ENB     =0                                                       3B000620
+       CAL     0                                                        3B000630
+       STZ     0                                                        3B000640
+       TMI     *                                                        3B000650
+       ZET     0                                                        3B000660
+       SIB     TTM                 MARK AS TRANSFER TRAPPING MODE       3B000670
+       LTM                                                              3B000680
+       SLW     0                                                        3B000690
+       NZT     .TRPSW                                                   3B000700
+       ENB     .TRAPS                                                   3B000710
+       TNO     *+2                 TEST ACC OVRFL                       3B000720
+       SIB     OFLO                MARK AS AC O'FLOW                    3B000730
+       STI     X4ETC               SAVE STATUS OF HARDWARE INDICATORS   3B000740
+       SXA     QPX2X1,1            SAVE X1                              3B000750
+       SXD     QPX2X1,2            SAVE X2                              3B000760
+       SXD     X4ETC,4             AND X4                               3B000770
+       LXA     0,4                                                      3B000780
+       SXA     DSTS,4              1+L(STR)                             3B000790
+       SXA     DSXIT,4                                                  3B000800
+       TXI     *+1,4,1             2+L(STR)                             3B000810
+       SXA     DSXIT1,4                                                 3B000820
+       TXI     *+1,4,1             3+L(STR)                             3B000830
+       SXA     DSXIT2,4                                                 3B000840
+       TXI     *+1,4,-3                                                 3B000850
+       NZT     NESTED              NESTED REQUESTS--                 (2)3B000851
+       TRA     DTRS-2              NO                                (2)3B000852
+       STZ     NESTED              YES                               (2)3B000853
+       SXD     LSTR,4                                                (2)3B000854
+       TRA     DTRS                                                  (2)3B000855
+NESTED PZE     **                                                    (2)3B000856
+       STL     NESTED                                                (2)3B000857
+       SXA     LSTR,4              AND  L(STR)                          3B000860
+       SPACE   3                                                        3B000870
+*    SEARCH TBSTR FOR A DEBUG REQUEST AT THIS POINT                     3B000880
+ DTRS  SXA     DSTR7,4             L(INSTRUCTION EXECUTED)              3B000890
+       PXD     ,4                                                       3B000900
+       SPACE   5                                                        3B000910
+* THE FOLLOWING CELL IS A TRANSFER VECTOR LOADED BY ONE OF TWO ROUTINES.3B000920
+*     IT WILL TRANSFER TO THE TBSTR SEARCH ROUTINE FOR EITHER           3B000930
+*         OVERLAY OR NON-OVERLAY, APPROPRIATE TO THE JOB.               3B000940
+       ENTRY   .DSTRS                                                   3B000950
+.DSTRS BSS     1                   TSX TO APPROPRIATE STR TABLE SEARCH  3B000960
+*    ACCUMULATOR RETURNS NEGATIVE IF MORE REQUESTS AT THIS LOCATION.    3B000970
+*    ACCUMULATOR RETURNS ZERO IF NO MATCH COULD BE FOUND.               3B000980
+       STO     DSTR8               SAVE AS SWITCH FOR USE AFTER RESTORE 3B000990
+       SPACE   3                                                        3B001000
+*      CONTENTS OF AC(21-35)=LOCATION OF ENTRY IN .TBSTR                3B001010
+       TZE     IBDXT               NO MATCH FOUND                    (2)3B001011
+       ZET     NESTED              NESTED REQUEST--                  (2)3B001012
+       TRA     IBDIN               NO, INTERPRET CORR. REQUEST       (2)3B001013
+       CALL    .LXSL1(NEST)        YES. OUTPUT TERMINATION MESSAGE. (10)3B001014
+       CLA     NESTED-15                                             (2)3B001015
+       STT     RDLRC                                                 (2)3B001016
+       TSX     MOTWR+2,4           OUTPUT NESTED REQUEST             (2)3B001017
+       PZE     STRLST              POINT RECORD                      (2)3B001018
+       TRA     .LXERR              TERMINATE EXECUTION               (2)3B001019
+  NEST PTW     SYSOU1,,*+1                                           (2)3B001020
+       IORP    *+2,,9                                                (2)3B001021
+       TCH     .LTCH                                                 (2)3B001022
+       BCI     4, ***EXECUTION TERMINATED                            (2)3B001023
+       BCI     5, DUE TO NESTED DEBUG REQUESTS.                      (2)3B001024
+ IBDXT CLA     DSTR8                                                    3B001030
+       TPL     *+3                 NO MORE REQUESTS AT THIS LOCATION    3B001040
+*    WHEN THIS POINT IS REACHED, AT LEAST ONE MORE DEBUG REQUEST HAS    3B001050
+*    BEEN REQUESTED FOR THIS LOCATION.                                  3B001060
+       LXA     DSTR7,4             PREPARE TO GO BACK FOR MORE REQUESTS 3B001070
+       TRA     DTRS+1                AT THIS ABSOLUTE LOCATION.         3B001080
+       SPACE   3                                                        3B001090
+ DSTR7 LDQ     **                  PICKUP THE INSTRUCTION               3B001100
+       TZE     DSTR9                AND PROCESS IT.                     3B001110
+       SPACE   3                                                        3B001120
+*              ASSEMBLE REPLACED INSTRUCTION IN PREPARATION FOR EXECUT  3B001130
+       RQL     3                   PUSH STR TO CORNER.                  3B001140
+       CAL*    IBDPRE              GET 1ST WD OF 1ST TBSTR ENTRY     (4)3B001150
+       ARS     15                  RIGHT-JSTFY 3 REPLACED OP BITS       3B001160
+       LGR     3                   FORM INSTR TO BE STUDIED-            3B001170
+ DSTR9 STQ     DSTO                STORE IT.                            3B001180
+       SPACE   3                                                        3B001190
+*      RESTORE STATUS OF ALL REGISTERS USED BY THIS ROUTINE AND         3B001200
+*              RESET OVERFLOW INDICATOR AND TRANS TRAP MODE.            3B001210
+       CAL     *                   TURN ON OVERFLOW  INDICATOR FOR NOW  3B001220
+       ALS     3                    SO STATUS CAN BE REESTABLISHED      3B001230
+       LDQ     QPX2X1              RESTORE AC AND MQ                    3B001240
+       LLS     2                                                        3B001250
+       LDQ     AC                                                       3B001260
+       LLS     35                                                       3B001270
+       LDQ     MQ                                                       3B001280
+       LXD     X4ETC,4             RESTORE X4                           3B001290
+       LXD     QPX2X1,2            RESTORE X2                           3B001300
+       LXA     QPX2X1,1            AND X1                               3B001310
+       LDI     X4ETC               HARDWARE STATUS WORD                 3B001320
+       BNT     OFLO                WAS OVERFLOW  ON AT ENTRY            3B001330
+       TOV     *+1                  -NO, TURN IT OFF NOW                3B001340
+       BFT     TTM                 WAS EXECUTION IN TRAPPING MODE-      3B001350
+       ETM                          -YES, ENTER TRAPPING MODE.          3B001360
+       SPACE   2                                                        3B001370
+       LDI     DSTO                REPLACED INSTRUCTION                 3B001380
+       SPACE   3                                                        3B001390
+*      TESTS ARE FOR INSTRUCTIONS INVOLVING THE USE OF THE LOCATION     3B001400
+*              COUNTER SO THEY CAN BE SIMULATED, INSTEAD OF BEING       3B001410
+*              EXECUTED AT A REMOTE LOCATION.                           3B001420
+ DSTA  IIB     /XEC*/IGNORE                                             3B001430
+       BNT     /IGNORE             IS THIS XEC                          3B001440
+       TTR     DSTC                 -NO                                 3B001450
+       RIB     /LDI*/IGNORE         -YES, FORM LDI                      3B001460
+       STI     *+1                                                      3B001470
+ DSTR6 ***     **                  WILL BE LDI OR LDI* TO SIMULATE XEC  3B001480
+       TTR     DSTA                                                     3B001490
+ DSTC  IIB     /STR*/IGNRE-/XEC*/IGNORE                                 3B001500
+       BNT     /IGNRE              IS THIS STR                          3B001510
+       TTR     *+2                  -NO                                 3B001520
+       TTR     DSTRC                -YES, SEE IF THIS NEEDS TO BE RERUN 3B001530
+       NZT     DSTR8               WAS THIS A DEBUG REQUEST             3B001540
+       TTR     LXSTR                -NO, MUST BE AN OPERATOR STR        3B001550
+       IIB     /STR*/IGNRE-/STL*/IGNORE                                 3B001560
+       BNT     /IGNORE             IS THIS STL                          3B001570
+       TTR     DSTD                 -NO                                 3B001580
+       RIB     /STI*/IGNORE         -YES, FORM STI                      3B001590
+       STI     DSTE                                                     3B001600
+       IIB     /STI*/IGNORE-/LDI*/IGNORE    (NOW MAKE LDI)              3B001610
+       STI     *+1                                                      3B001620
+       LDI     **                                                       3B001630
+       RIB     ADDRS               CLEAR ADDRESS                        3B001640
+       OSI     DSTS                GET CORRECT ADDRESS                  3B001650
+ DSTE  STI     **                  SIMULATE STL                         3B001660
+       LDI     SI                  RESTORE SI                           3B001670
+       STZ     NESTED                                                (2)3B001675
+       TTR*    DSXIT               EXIT TO INTERRUPTED PROGRAM          3B001680
+       SPACE   3                                                        3B001690
+ DSTD  IIB     /STL*/IGNORE-/TSX*/IGNORE                                3B001700
+       BNT     /IGNORE             IS THIS TSX                          3B001710
+       TTR     DSTB                 -NO                                 3B001720
+       STI     DSTO                SAVE INSTRUCTION FOR RECOVERY        3B001730
+       RIS     =O777777077777      ALL BUT TAG                          3B001740
+       OSI     DSXIT3              FORM LAC                             3B001750
+       STI     *+1                                                      3B001760
+       LAC     LSTR,**             AND EXECUTE IT                       3B001770
+       LDI     DSTO                                                     3B001780
+       RIB     TAG                 CLEAR TAG AND                        3B001790
+       STI     DSTO                                                     3B001800
+DSTB   LDI     SI                  RESTORE SI                           3B001810
+       STZ     NESTED                                                (2)3B001815
+DSTO   ***                         EXECUTE INSTRUCTION                  3B001820
+DSXIT  TTR     **                  RETURN TO INTERRUPTED                3B001830
+DSXIT1 TTR     **                  PROGRAM THROUGH ONE                  3B001840
+DSXIT2 TTR     **                  OF THESE THREE EXITS, IF NOT A TRANS.3B001850
+       SPACE   3                                                        3B001860
+ DSTRC NZT     DSTR6               WAS XEC LOOP PERFORMED               3B001870
+       TTR     LXSTR                -NO, SIMULATE NORMAL STR            3B001880
+*                                                                       3B001890
+*        IF THIS POINT IS REACHED, IT MEANS THAT THE STR WHICH WE       3B001900
+*              ARE PROCESSING WAS WAS BROUGHT INTO EFFECT BY AN XEC     3B001910
+*              AND THE EFFECTIVE ADDRESS OF THE STR MUST BE COMPUTED    3B001920
+*              TO SEE IF A DEBUGGING REQUEST WAS LOCATED THERE.         3B001930
+*                                                                       3B001940
+       LTM                         RESTORE MUST BE DONE AGAIN,          3B001950
+ DSEF  CAL     DSTR6                 SO USE AC TO COMPUTE EFFECTIVE     3B001960
+       STT     *+1                    ADDRESS OF STR LOCATION.          3B001970
+       PXA     ,**                                                      3B001980
+       STT     DSTR6               CLEAR TAG                            3B001990
+       SBM     DSTR6                                                    3B002000
+       STA     DSTR6                                                    3B002010
+       LDI     DSTR6                                                    3B002020
+       BNT     INDRCT              INDIRECT ADDRESS                     3B002030
+       TRA     DSEG                 -NO, PUT EFFECTIVE ADDRESS IN X4    3B002040
+       LDI*    DSTR6                -YES, PICKUP INSTRUCTION            3B002050
+       RIB     INDRCT              PREVENT RECYCLING                    3B002060
+       SIB     LDI                 ASSURE THAT SOME BITS ARE ON IN OP   3B002070
+       STI     DSTR6                                                    3B002080
+       TRA     DSEF                                                     3B002090
+ DSEG  LXA     DSTR6,4                                                  3B002100
+       STZ     DSTR6               CLEAR INDICATION OF XEC CYCLE        3B002110
+       TRA     DTRS                                                     3B002120
+       EJECT                                                            3B002130
+*      WORKING STORAGE AND DATA AREA OF .DSTRS                          3B002140
+DSXIT3 LAC     LSTR,**                                                  3B002150
+DSTS   PZE     **                  L(STR)+1  (FOR STL SIMULATOR)        3B002160
+.IBPRE CONTRL  IBDPRE,DSTR8                                          (4)3B002168
+IBDPRE BSS     1                   LOC OF CORRECT OP CODE TBSTR ENTRY(4)3B002169
+DSTR8  BSS     1                   LOCATION IN .TBSTR, OR ZERO IF NONE  3B002170
+       SPACE   3                                                        3B002180
+*    BITS USED TO STORE HARDWARE STATUS AT ENTRY IN X4ETC               3B002190
+ OFLO  RBOOL   100000              AC OVERFLOW INDICATOR                3B002200
+ DC    RBOOL   040000              DIVIDE CHECK INDICATOR               3B002210
+ IO    RBOOL   020000              I/O CHECK INDICATOR                  3B002220
+ TTM   RBOOL   010000              TRANSFER TRAP MODE STATUS            3B002230
+       SPACE   3                                                        3B002240
+*    BIT CONFIGURATIONS OF OP CODES                                     3B002250
+ LDI   LBOOL   044100                                                   3B002260
+ STI   LBOOL   060400                                                   3B002270
+ STL   LBOOL   462500                                                   3B002280
+ STR   LBOOL   500000                                                   3B002290
+ TSX   LBOOL   007400                                                   3B002300
+ XEC   LBOOL   052200                                                   3B002310
+       SPACE   3                                                        3B002320
+*    FIELD DEFINITONS OF PARTS OF 7090/7094 WORD                        3B002330
+IGNORE LBOOL   000077              BITS NOT USED BY 12 BIT OP CODES     3B002340
+ IGNRE LBOOL   077777              BITS NOT USED BY 3 BIT OP CODES      3B002350
+INDRCT LBOOL   000060              BITS SIGNALING INDIRECT ADDRESSING   3B002360
+TAG    RBOOL   700000                                                   3B002370
+ ADDRS RBOOL   077777                                                   3B002380
+       SPACE   5                                                        3B002390
+*      PLANT TRANSFER IN STR COMMUNICATION CELL                         3B002400
+       USE     ABS                                                      3B002410
+       ORG     2                                                        3B002420
+       TTR     DSTRS                                                    3B002430
+       USE                                                              3B002440
+       TTL     IBDIN               (REPLACEABLE CONTROL SECTIONS)       3B002450
+*                                                                       3B002460
+*    THE FOLLOWING ARE REPLACEABLE CONTROL SECTIONS WHOSE CODE APPLIES  3B002470
+*      TO ONLY A SPECIFIC OPERATION OR SET OF RELATED OPERATIONS.       3B002480
+*      IF THIS FUNCTION IS NOT REQUIRED BY A GIVEN DEBUG RUN, THE       3B002490
+*      DEBUGGING COMPILER (IBDBL) WILL OUTPUT AN ENTRY POINT WITH THE   3B002500
+*      SAME NAME.   SINCE THE DEBUG COMPILER DECK (.DBGTX) PRECEDES     3B002510
+*      THIS SUBROUTINE, THE  CODING IN THIS ROUTINE WILL NOT BE         3B002520
+*      LOADED FOR CORRESPONDING FUNCTION.                               3B002530
+*                                                                       3B002540
+.IBD01 CONTRL  01B,01E                                                  3B002550
+.IBD02 CONTRL  02B,02E                                                  3B002560
+.IBD03 CONTRL  03B,03E                                                  3B002570
+.IBD04 CONTRL  04B,04E                                                  3B002580
+.IBD06 CONTRL  06B,06E                                                  3B002590
+.IBD10 CONTRL  10B,10E                                                  3B002600
+.IBD12 CONTRL  12B,12E                                                  3B002610
+.IBD14 CONTRL  14B,14E                                                  3B002620
+.IBD18 CONTRL  18B,18E                                                  3B002630
+.IBD20 CONTRL  20B,20E                                                  3B002640
+.IBD22 CONTRL  22B,22E                                                  3B002650
+.IBD23 CONTRL  23B,23E                                                  3B002660
+.IBD27 CONTRL  27B,27E                                                  3B002670
+.IBD28 CONTRL  28B,28E                                                  3B002680
+.IBD32 CONTRL  32B,32E                                                  3B002690
+.IBD33 CONTRL  33B,33E                                                  3B002700
+.IBD35 CONTRL  35B,35E                                                  3B002710
+.IBD39 CONTRL  39B,39E                                                  3B002720
+.IBD41 CONTRL  41B,41E                                                  3B002730
+.IBD44 CONTRL  44B,44E                                                  3B002740
+.IBD45 CONTRL  45B,45E                                                  3B002750
+.IBD48 CONTRL  48B,48E                                                  3B002760
+.IBD49 CONTRL  49B,49E                                                  3B002770
+.IBD51 CONTRL  51B,51E                                                  3B002780
+.IBD64 CONTRL  64B,64E                                                  3B002790
+.IBD65 CONTRL  65B,65E                                                  3B002800
+.IBD66 CONTRL  66B,66E                                                  3B002810
+.IBD67 CONTRL  67B,67E                                                  3B002820
+.IBD68 CONTRL  68B,68E                                                  3B002830
+.IBD69 CONTRL  69B,69E                                                  3B002840
+.IBDSB CONTRL  SBB,SBE                                                  3B002850
+.IBDAA CONTRL  AAB,AAE                                                  3B002860
+.IBDAB CONTRL  ABB,ABE                                                  3B002870
+.IBDAC CONTRL  ACB,ACE                                                  3B002880
+.IBDAD CONTRL  ADB,ADE                                                  3B002890
+.IBDAE CONTRL  AEB,AEE                                                  3B002900
+.IBDAF CONTRL  AFB,AFE                                                  3B002910
+.IBDAG CONTRL  AGB,AGE                                                  3B002920
+.IBDAH CONTRL  AHB,AHE                                                  3B002930
+       TTL     IBDIN  -  DEBUG REQUEST INTERPRETER                      3B002940
+ IBDIN STA     *+1                                                      3B002950
+       CLA     **                                                       3B002960
+       STA     INCSX                                                    3B002970
+IBDIN2 LXD     .IBDB1,2                                                 3B002980
+       TIX     IBDIN1,2,1          IS STR COUNTER LIMIT REACHED         3B002990
+       TXL     IBDXT,2,0            -YES, IS THIS THE FIRST TIME        3B003000
+       CLA     .IBDB1               -YES                                3B003010
+       TMI     IBDIN1-1                                                 3B003020
+       CALL    .LXSL1(NOMORE)      OUTPUT TERMINATION MESSAGE.      (10)3B003030
+       TXI     *+1,2,-1                                                 3B003040
+IBDIN1 SXD    .IBDB1,2                                                  3B003050
+       AXT     -.IBDB5+1,4                                              3B003060
+       SXA     PSHDN,4                                                  3B003070
+       STZ     DUMP                DUMP STR LOC FLAG                    3B003080
+       AXT     .IBDB6,4                                                 3B003090
+       SXA     GETRS1,4                                                 3B003100
+*                                                                       3B003110
+*   INTERPRETER                                                         3B003120
+*              - PROCESSES CONSECUTIVE HALFWORD ENTRIES IN .IBDBT       3B003130
+*                TO EVALUATE REQUESTS.                                  3B003140
+ INCSX AXT     **,4                SET XR4 = NEXT ITEM TO BE INTERPRETED3B003150
+       PXA     ,4                                                       3B003160
+       TXI     *+1,4,1             BUMP TO NEXT ITEM                    3B003170
+       SXA     INCSX,4              AND SAVE                            3B003180
+       LGR     1                   DIVIDE BY 2, SAVE REMAINDER IN MQ    3B003190
+       PAC     ,4                  RELATIVE POINTER INTO .IBDBT         3B003200
+       CAL     .IBDBT,4                                                 3B003210
+       TQP     *+2                                                      3B003220
+       ALS     18                                                       3B003230
+       PDX     ,1                  XR1 CONTAINS VALUE.                  3B003240
+       ARS     15                                                       3B003250
+       ANA     =O000007000000      CLEAR ALL BUT 3 BITS                 3B003260
+       PDC     ,2                  XR2 = -PREFIX =-INTERPRETER CODE.    3B003270
+       LAC     GTSB,4                                                   3B003280
+       TXL     *+3,4,0                                                  3B003290
+       STZ     GTSB                                                     3B003300
+       TRA     1,4                                                      3B003310
+       TRA     *+1,2               PREFIX                               3B003320
+       TRA     OPTOR               0 - OPERATION                        3B003330
+       TRA     RDOP                1 - READ VIA RDICT.                  3B003340
+       TRA     RCON                2 - READ VIA CONSTANT POOL - .IBDB2  3B003350
+       TRA     RABS                3 - ABSOLUTE ADDRESS                 3B003360
+       TRA     RMR                4 - READ MACHINE REGISTER             3B003370
+       STR                                                              3B003380
+       TRA     VALUE               6 - VALUE IS TRUE VALUE.             3B003390
+       STR                                                              3B003400
+       TTL     IBDIN               OPERATIONS                           3B003410
+*    DETERMINE CATEGOY AND                                              3B003420
+*        PREPARE TO PERFORM OPERATION                                   3B003430
+*                                                                       3B003440
+ OPTOR STZ     UNDEF                                                    3B003450
+       STZ     AHIGH                                                    3B003460
+       STZ     BHIGH                                                    3B003470
+       TXL     AOPS,1,17           ARITHMETIC AND RELATIONAL OPERATIONS 3B003480
+       TXL     OPTOR1,1,18         SPECIAL ADDER FOR ADDRESSES          3B003490
+       TXL     INCSX,1,19          UNDEFINED                            3B003500
+       TXL     ADDR,1,21           ADDRESS AND DECREMENT OPERATIONS     3B003510
+       TXL     COMPL,1,22          COMPLEMENT OPERATION                 3B003520
+       TXL     OPTR13,1,23         OPERATION IS 'NOT'                   3B003530
+       TXL     INCSX,1,26          UNDEFINED                            3B003540
+       TXL     OPTR12,1,27         OPERATION IS XTRACT                  3B003550
+       TXL     COPY,1,28           COPY                                 3B003560
+       TXL     DMPALL,1,31         DUMP 0-77777 IN DICTIONARY MODE      3B003570
+       TXL     JUMPS,1,38          SKIP AND JUMP OPERATIONS             3B003580
+       TXL     OPTOR4,1,39                                              3B003590
+       TXL     OPT40,1,40                                               3B003600
+       TXL     DSTOR,1,41         DESTRUCTIVE STORE                     3B003610
+       TXL     .LXERR,1,43         TERMINATE EXECUTION                  3B003620
+       TXL     PAUSE,1,44          PAUSE OPERATION                      3B003630
+       TXL     OPCALL,1,45         CALL                                 3B003640
+       TXL     INCSX,1,46          NO OPERATION                         3B003650
+       TXL     IBDXT,1,47          EXIT FROM IBDIN                      3B003660
+       TXL     ONOP,1,48           'ON'                                 3B003670
+       TXL     OPTOR3,1,50         LOOPING AND DUMMY VARIABLE OPERATIONS3B003680
+       TXL     OP51,1,51           GET SUBSCRIPTED VARIABLE             3B003690
+       TXL     OP52,1,52           GET LAST LOCATION OF ARRAY           3B003700
+       TXL     DUMPS,1,4*8*8-1     (OCTAL 377) DUMP OPERATIONS          3B003710
+       STR                         NO SUCH OPERATIONS                   3B003720
+       TTL     IBDIN             OPERATIONS (ARITHMETIC AND RELATIONAL) 3B003730
+*        OPERATIONS  00 TO 17 , ARITHMETIC AND RELATIONAL OPERATIONS    3B003740
+*              ARITHMETIC OPERATIONS ARE - - -                          3B003750
+*      1   IS  +                                                        3B003760
+*      2   IS  -                                                        3B003770
+*      3   IS  *                                                        3B003780
+*      4   IS  /                                                        3B003790
+*      5   IS  UNDEFINED                                                3B003800
+*                                                                       3B003810
+*              RELATIONAL OPERATIONS ARE                                3B003820
+*      6    IS LGT                                                      3B003830
+*      7    IS LGE                                                      3B003840
+*      8    IS LLE                                                      3B003850
+*      9    IS LLT                                                      3B003860
+*      10   IS LNE                                                      3B003870
+*      11   IS LEQ                                                      3B003880
+*      12   IS NE                                                       3B003890
+*      13   IS EQ                                                       3B003900
+*      14   IS GT                                                       3B003910
+*      15   IS GE                                                       3B003920
+*      16   IS LE                                                       3B003930
+*      17   IS LT                                                       3B003940
+       SPACE   3                                                        3B003950
+*        GET OPERANDS                                                   3B003960
+ AOPS  SXA     AOPS6,1             OPERATION TYPE                       3B003970
+       TSX     OPAND,1             GET OPERAND 'A'                      3B003980
+       STO     AHIGH                                                    3B003990
+       STQ     ALOW                                                     3B004000
+       SXA     MODE,4                                                   3B004010
+       TSX     OPAND,1             GET OPERAND 'B'                      3B004020
+       STO     BHIGH                                                    3B004030
+       STQ     BLOW                                                     3B004040
+ AOPS6 AXC     **,1                RESTORE OPERATION TYPE               3B004050
+       TXH     *+2,1,-6           ARITHMETIC OPERATION                  3B004060
+       TXH     DOOP3,1,-12        LOGICAL RELATIONAL (IGNORES MODE)     3B004070
+       SPACE   3                                                        3B004080
+*        PUT OPERANDS INTO A COMPATABLE MODE                            3B004090
+ ABB   NULL                                                             3B004100
+       LXA     MODE,2              MODE OF A                            3B004110
+       TXH     AOPS1,4,6           TRA IF B IS FLTNG, DBLE, OR CMPLX.   3B004120
+       TXH     AOPS4,2,6           TRA IF A IS FLOATING, ETC.           3B004130
+ AOPSA STZ     MODE                SET MODE AS OCTAL.                   3B004140
+       TRA     DOOP                GO DO OPERATION.                     3B004150
+ AOPS1 TXL     *+2,4,7                                                  3B004160
+       TXL     DOOP,4,8                                                 3B004170
+       TXL     AOPS3,2,6           TRA IF A IS NOT FLOATING, ETC.       3B004180
+       TXL     *+3,2,7                                                  3B004190
+       TXH     *+2,2,8                                                  3B004200
+       SXA     MODE,4                                                   3B004210
+       PXA     0,4                 AC = BMODE.                          3B004220
+       CAS     MODE                THE GREATER MODE OVERIDES.           3B004230
+       TRA     AOPS2               BMODE MTH AMODE,                     3B004240
+       TRA     DOOP                BOTH HAVE SAME MODE.                 3B004250
+       TRA     AOPS5               AMODE OVERIDES.                      3B004260
+ AOPS2 STO     MODE                BMODE OVERIDES.                      3B004270
+       TRA     AOPS5                                                    3B004280
+ AOPS3 SXA     MODE,4              BMODE OVERIDES                       3B004290
+       CLA     AHIGH                                                    3B004300
+       TSX     AOPFL,4             FLOAT A                              3B004310
+       STQ     ALOW                                                     3B004320
+       STO     AHIGH                                                    3B004330
+       TRA     AOPS5                                                    3B004340
+ AOPS4 TXL     *+2,2,7                                                  3B004350
+       TXL     AOPSA,2,8                                                3B004360
+       CLA     BHIGH                                                    3B004370
+       TSX     AOPFL,4             FLOAT B                              3B004380
+       STQ     BLOW                                                     3B004390
+       STO     BHIGH                                                    3B004400
+ AOPS5 CLA     MMODE1                                                   3B004410
+       CAS     MODE                IS MODE COMPLEX                      3B004420
+       TRA     DOOP                 -NO                                 3B004430
+       TRA     DOOP                 -NO                                 3B004440
+       TXL     *+3,2,14            MODE OF 'A'                          3B004450
+       STZ     BLOW                                                     3B004460
+       TRA     DOOP                                                     3B004470
+       STZ     ALOW                                                     3B004480
+       TRA     DOOP                                                     3B004490
+ ABE   NULL                                                             3B004500
+       SPACE   3                                                        3B004510
+*        CONVERT TO FLOATING POINT                                      3B004520
+ AOPFL LDQ     =0                                                       3B004530
+       LRS     8                                                        3B004540
+       ORA     =163B8                                                   3B004550
+       STO     TEMP                                                     3B004560
+       CLA     =155B16                                                  3B004570
+       LLS     8                                                        3B004580
+       FAD     TEMP                                                     3B004590
+       TRA     1,4                                                      3B004600
+       EJECT                                                            3B004610
+*                                                                       3B004620
+*        ARITHMETIC OPERATIONS                                          3B004630
+*                                                                       3B004640
+ 01B   NULL                                                             3B004650
+ XADD  CLA     AHIGH               B+A                                  3B004660
+       ADD     BHIGH                                                    3B004670
+       TRA     RDOP10                                                   3B004680
+ FADD  CLA     AHIGH                                                    3B004690
+       FAD     BHIGH                                                    3B004700
+       TRA     RDOP10                                                   3B004710
+ CADD  CLA     AHIGH                                                    3B004720
+       FAD     BHIGH                                                    3B004730
+       STO     0,2                                                      3B004740
+       CLA     ALOW                                                     3B004750
+ CADD1 FAD     BLOW                                                     3B004760
+       STO     1,2                                                      3B004770
+       TRA     INCSX                                                    3B004780
+ DADD  CLA     AHIGH                                                    3B004790
+       FAD     BHIGH                                                    3B004800
+       STO     0,2                                                      3B004810
+       XCA                                                              3B004820
+       FAD     ALOW                                                     3B004830
+ 01E   NULL                                                             3B004840
+ AAB   NULL                                                             3B004850
+       FAD     BLOW                                                     3B004860
+ DADD1 FAD     0,2                                                      3B004870
+       STQ     1,2                                                      3B004880
+       TRA     RDOP10                                                   3B004890
+ DOOP1 TSX     GETRS,4             GET RESULT.STORAGE.POINTER.          3B004900
+       CLA     MODE                                                     3B004910
+       TZE*    XOP-1,1                                                  3B004920
+       CAS     MMODE1                                                   3B004930
+       TRA*    COP-1,1                                                  3B004940
+       TRA*    DOP-1,1                                                  3B004950
+       CAS     MMODE2                                                   3B004960
+       TRA*    XOP-1,1             OPERATION ASSUMED FOR MODE=8         3B004970
+       TRA*    FOP-1,1                                                  3B004980
+       TRA*    XOP-1,1                                                  3B004990
+ XOP   TRA     XADD                                                     3B005000
+       TRA     XSUB                                                     3B005010
+       TRA     XMUL                                                     3B005020
+       TRA     XDIV                                                     3B005030
+ FOP   TRA     FADD                                                     3B005040
+       TRA     FSUB                                                     3B005050
+       TRA     FMUL                                                     3B005060
+       TRA     FDIV                                                     3B005070
+ DOP   TRA     DADD                                                     3B005080
+       TRA     DSUB                                                     3B005090
+       TRA     DMUL                                                     3B005100
+       TRA     DDIV                                                     3B005110
+ COP   TRA     CADD                                                     3B005120
+       TRA     CSUB                                                     3B005130
+       TRA     CMUL                                                     3B005140
+       TRA     CDIV                                                     3B005150
+ AAE   NULL                                                             3B005160
+*                                                                       3B005170
+ 02B   NULL                                                             3B005180
+ XSUB  CLS     AHIGH               B-A                                  3B005190
+       TRA     XADD+1                                                   3B005200
+ FSUB  CLS     AHIGH                                                    3B005210
+       TRA     FADD+1                                                   3B005220
+ DSUB  CLS     ALOW                                                     3B005230
+       STO     ALOW                                                     3B005240
+       CLS     AHIGH                                                    3B005250
+       TRA     DADD+1                                                   3B005260
+ CSUB  CLS     AHIGH                                                    3B005270
+       FAD     BHIGH                                                    3B005280
+       STO     0,2                                                      3B005290
+       CLS     ALOW                                                     3B005300
+       TRA     CADD1                                                    3B005310
+ 02E   NULL                                                             3B005320
+ 04B   NULL                                                             3B005330
+ XDIV  LDQ     BHIGH               B/A                                  3B005340
+       ZAC                                                              3B005350
+       DVP     AHIGH                                                    3B005360
+       TRA     XMUL1                                                    3B005370
+*                                                                       3B005380
+ FDIV  CLA     BHIGH                                                    3B005390
+       FDP     AHIGH                                                    3B005400
+       TRA     XMUL1                                                    3B005410
+ DDIV  CLA     BHIGH               B/A = (BH/AH) + (BL+R-AL*(BH/AH))/AH 3B005420
+       FDP     AHIGH                                                    3B005430
+       STO     1,2                 R                                    3B005440
+       STQ     0,2                 BH/AH                                3B005450
+       FMP     ALOW                                                     3B005460
+       CHS                         -AL*(BH/AH)                          3B005470
+       FAD     1,2                 +R                                   3B005480
+       FAD     BLOW                +BL                                  3B005490
+       FDP     AHIGH               /AH                                  3B005500
+       XCA                                                              3B005510
+       TRA     DADD1                                                    3B005520
+*                                                                       3B005530
+*                                                                       3B005540
+ CDIV  LDQ     AHIGH                                                    3B005550
+       FMP     AHIGH                                                    3B005560
+       STO     CDIV1                                                    3B005570
+       LDQ     ALOW                                                     3B005580
+       FMP     ALOW                                                     3B005590
+       FAD     CDIV1                                                    3B005600
+       STO     CDIV1               STORE ABS VAL OF DENOMINATOR.        3B005610
+       LDQ     BHIGH                                                    3B005620
+       FMP     ALOW                                                     3B005630
+       STO     1,2                                                      3B005640
+       LDQ     BLOW                                                     3B005650
+       FMP     AHIGH                                                    3B005660
+       FSB     1,2                                                      3B005670
+       FDP     CDIV1                                                    3B005680
+       STQ     1,2                                                      3B005690
+       LDQ     BHIGH               MUL B BY COMPLEX CONJ. OF A.         3B005700
+       FMP     AHIGH                                                    3B005710
+       STO     0,2                                                      3B005720
+       LDQ     BLOW                                                     3B005730
+       FMP     ALOW                                                     3B005740
+       FAD     0,2                                                      3B005750
+       FDP     CDIV1                                                    3B005760
+       TRA     XMUL1                                                    3B005770
+ CDIV1 PZE                                                              3B005780
+ 04E   NULL                                                             3B005790
+ 03B   NULL                                                             3B005800
+ CMUL  LDQ     ALOW                                                     3B005810
+       FMP     BLOW                                                     3B005820
+       STO     0,2                                                      3B005830
+       LDQ     AHIGH                                                    3B005840
+       FMP     BHIGH                                                    3B005850
+       FSB     0,2                                                      3B005860
+       STO     0,2                                                      3B005870
+       LDQ     ALOW                                                     3B005880
+       FMP     BHIGH                                                    3B005890
+       STO     1,2                                                      3B005900
+       LDQ     AHIGH                                                    3B005910
+       FMP     BLOW                                                     3B005920
+       FAD     1,2                                                      3B005930
+       STO     1,2                                                      3B005940
+       TRA     INCSX                                                    3B005950
+ DMUL  LDQ     BLOW                                                     3B005960
+       FMP     AHIGH                                                    3B005970
+       STO     1,2                                                      3B005980
+       LDQ     BHIGH                                                    3B005990
+       FMP     AHIGH                                                    3B006000
+       STO     0,2                                                      3B006010
+       STQ     BLOW                                                     3B006020
+       LDQ     BHIGH                                                    3B006030
+       FMP     ALOW                                                     3B006040
+       FAD     1,2                                                      3B006050
+       TRA     DADD1-1                                                  3B006060
+ FMUL  LDQ     BHIGH                                                    3B006070
+       FMP     AHIGH                                                    3B006080
+       TRA     RDOP10                                                   3B006090
+ XMUL  LDQ     BHIGH               B*A                                  3B006100
+       MPY     AHIGH                                                    3B006110
+ 03E   NULL                                                             3B006120
+ XMUL1 STQ     0,2                                                      3B006130
+       TRA     INCSX                                                    3B006140
+       EJECT                                                            3B006150
+*    LOGICAL RELATIONAL PROCESSING                                      3B006160
+ ACB   NULL                                                             3B006170
+ DOOP3 ZET     UNDEF                                                    3B006180
+       TRA     IBDXT                                                    3B006190
+       CAL     AHIGH                                                    3B006200
+       TXL     *+2,1,-10          LEQ AND LNE                           3B006210
+       TXI     DOOP4,1,7          LGT, LGE, LLE, LLT                    3B006220
+ ACE   NULL                                                             3B006230
+ 10B   NULL                                                             3B006240
+       ERA     BHIGH                                                    3B006250
+       TNZ*    DONE-10,1          A NE B                                3B006260
+       TZE*    DONE-9,1           A EQ B                                3B006270
+ 10E   NULL                                                             3B006280
+       SPACE   3                                                        3B006290
+ 06B   NULL                                                             3B006300
+ DOOP4 LAS     BHIGH                                                    3B006310
+       TXI     TRUE-1,1,2                                               3B006320
+       TXI     TRUE-1,1,1                                               3B006330
+       TRA     TRUE-1                                                   3B006340
+ 06E   NULL                                                             3B006350
+       EJECT                                                            3B006360
+*                                                                       3B006370
+*        PERFORM THE PROPER OPERATION.  (MODES HAVE BEEN MATCHED)       3B006380
+ DOOP  TXH     DOOP1,1,-6                                               3B006390
+*        RELATIONAL OPERATIONS                                          3B006400
+ ADB   NULL                                                             3B006410
+       ZET     UNDEF                                                    3B006420
+       TRA     IBDXT                                                    3B006430
+       LXA     MODE,4                                                   3B006440
+       TNX     *+1,4,6                                                  3B006450
+       TNX     *+1,4,6                                                  3B006460
+       CLA     AHIGH                                                    3B006470
+       TXH     DOOP2,1,-14         EQ AND NE TESTS                      3B006480
+       TRA     *+4,4                                                    3B006490
+       TXI     CCOM,1,15           COMPLEX COMPARISON                   3B006500
+       TXI     DCOM,1,15           DOUBLE PRECISION COMPARISON          3B006510
+       TXI     XCOM,1,15           FLOATING COMPARISON                  3B006520
+       TXI     XCOM,1,15           ONE WORD COMPARISONS                 3B006530
+       SPACE   3                                                        3B006540
+       FSB     BHIGH                                                    3B006550
+       FSB     BHIGH                                                    3B006560
+       FSB     BHIGH                                                    3B006570
+ SBTR  SUB     BHIGH                                                    3B006580
+ ADE   NULL                                                             3B006590
+ 12B   NULL                                                             3B006600
+       SPACE   3                                                        3B006610
+*                                                                       3B006620
+*        EQ AND NE RELATIONAL PROCESSING                                3B006630
+*                                                                       3B006640
+ DOOP2 XEC     SBTR,4                                                   3B006650
+       TNZ*    DONE-12,1           A NE B                               3B006660
+       TXH     *+2,4,1                                                  3B006670
+       TRA*    DONE-11,1           A EQ B                               3B006680
+       CLA     ALOW                                                     3B006690
+       FSB     BLOW                                                     3B006700
+       TNZ*    DONE-12,1           NE                                   3B006710
+       TRA*    DONE-11,1           EQ                                   3B006720
+ 12E   NULL                                                             3B006730
+       EJECT                                                            3B006740
+ 14B   NULL                                                             3B006750
+*                                                                       3B006760
+*                                                                       3B006770
+*   ROP    XR1    XR1+15                                                3B006780
+*                                                                       3B006790
+*   GT     -14     1                                                    3B006800
+*   GE     -15     0                                                    3B006810
+*   LE     -16    -1                                                    3B006820
+*   LT     -17    -2                                                    3B006830
+*                                                                       3B006840
+       SPACE   2                                                        3B006850
+*        SINGLE WORD COMPARISON                                         3B006860
+ XCOM  XEC     SBTR,4                                                   3B006870
+       TZE     ZRO                                                      3B006880
+       TMI     NEG                                                      3B006890
+       TXI     TRUE-1,1,2          B LT A                               3B006900
+ ZRO   TXI     TRUE-1,1,1          B EQ A                               3B006910
+*                                                                       3B006920
+*        DOUBLE PRECISION COMPARISON                                    3B006930
+ DCOM  XEC     SBTR,4                                                   3B006940
+       TNZ     XCOM+2                                                   3B006950
+       CLA     ALOW                                                     3B006960
+       FSB     BLOW                                                     3B006970
+       TRA     XCOM+1                                                   3B006980
+       SPACE   2                                                        3B006990
+*        COMPLEX NUMBER COMPARISON (AMPLITUDE)                          3B007000
+ CCOM  AXC     AHIGH,2             SET UP TO COMPARE THE ABSOLUTE       3B007010
+       TSX     CCOM1,4             VALUES OF A AND B.                   3B007020
+       AXC     BHIGH,2                                                  3B007030
+       TSX     CCOM1,4                                                  3B007040
+       CLA     AHIGH                                                    3B007050
+       TXI     XCOM,4,*-2+3        SET XR4=3                            3B007060
+*                                                                       3B007070
+ CCOM1 LDQ     0,2                 GET ABSOLUTE VALUE OF COMPLEX        3B007080
+       FMP     0,2                 NUMBER IN 0,2 AND 1,2.               3B007090
+       STO     0,2                                                      3B007100
+       LDQ     1,2                                                      3B007110
+       FMP     1,2                                                      3B007120
+       FAD     0,2                                                      3B007130
+       STO     0,2                                                      3B007140
+       TRA     1,4                                                      3B007150
+ 14E   NULL                                                             3B007160
+       TTL     IBDIN             OPERATIONS  (SPECIAL WORD OPERATIONS)  3B007170
+ 18B   NULL                                                             3B007180
+*        SPECIAL ADDER FOR ADDRESSES  - IS OPERATION 18                 3B007190
+*                                                                       3B007200
+OPTOR1 TSX     FXOPND,1                                                 3B007210
+       SXD     OPTR11,4           SAVE INTEGER ADDEND                   3B007220
+       TSX     PSHUP,4             GET WORD WHOSE ADDRESS PORTION IS TO 3B007230
+       STO     AHIGH               BE INCREASED.                        3B007240
+       PAX     0,4                                                      3B007250
+OPTR11 TXI     *+1,4,**                                                 3B007260
+       SXA     AHIGH,4                                                  3B007270
+       TSX     RDOP8,4                                                  3B007280
+       CLA     AHIGH                                                    3B007290
+       TRA     RDOP10                                                   3B007300
+ 18E   NULL                                                             3B007310
+       EJECT                                                            3B007320
+*    OPERATIONS 20, 21, AND 22                                          3B007330
+*                                                                       3B007340
+ 20B   NULL                                                             3B007350
+*                                                                       3B007360
+*      20  IS  ADDR                                                     3B007370
+*      21  IS  DECRE                                                    3B007380
+*                                                                       3B007390
+ ADDR  SXA     ADDR1,1                                                  3B007400
+       TSX     OPAND,1                                                  3B007410
+ ADDR1 AXT     **,1                                                     3B007420
+       XEC     ADDRA+21,1                                               3B007430
+       TXI     OPTR4,1,39-21                                            3B007440
+       SPACE   2                                                        3B007450
+ ADDRA ARS     18                  OPERATE ON DECREMENT                 3B007460
+       TXI     OPTR4,1,39-20       OPERATE ON ADDRESS                   3B007470
+ 20E   NULL                                                             3B007480
+       SPACE   5                                                        3B007490
+ 22B   NULL                                                             3B007500
+*      22  IS  COMPLEMENT                                               3B007510
+*                                                                       3B007520
+ COMPL TSX     PSHUP,4                                                  3B007530
+       PAC     ,4                                                       3B007540
+       PXA     ,4                                                       3B007550
+       TRA     OPTR4+1                                                  3B007560
+ 22E   NULL                                                             3B007570
+       EJECT                                                            3B007580
+*        OPERATION IS 'NOT'                                             3B007590
+*                                                                       3B007600
+ 23B   NULL                                                             3B007610
+OPTR13 TSX     OPAND,1             23-027 IS 'NOT' = 1'S COMPLEMENT     3B007620
+       STO     AHIGH                                                    3B007630
+       TSX     GETRS,4                                                  3B007640
+       CAL     AHIGH                                                    3B007650
+       TZE     *+2                                                      3B007660
+       AXT     0,4                                                      3B007670
+       PXA     ,4                                                       3B007680
+       SLW     0,2                                                      3B007690
+       TRA     INCSX                                                    3B007700
+ 23E   NULL                                                             3B007710
+       EJECT                                                            3B007720
+*                                                                       3B007730
+*    OPERATION IS EXTRACT.                                              3B007740
+*      (CLEAR ALL BUT BITS A1 TO A2 AND SAVE RIGHT JUSTIFIED)           3B007750
+*                                                                       3B007760
+*                                                                       3B007770
+ 27B   NULL                                                             3B007780
+OPTR12 TSX     FXOPND,1            GET AN OPERAND IN FIXED POINT        3B007790
+       SXA     OPT122,4                                                 3B007800
+       TSX     FXOPND,1                                                 3B007810
+       SXA     OPT121,4                                                 3B007820
+       TSX     OPAND,1                                                  3B007830
+       STO     BHIGH                                                    3B007840
+       STQ     BLOW                                                     3B007850
+       ZSA     MODE                                                     3B007860
+       TSX     GETRS,4                                                  3B007870
+*        CLEAR ALL BUT BITS A1 TO A2 INCLUSIVE                          3B007880
+OPT121 AXC     **,4                                                     3B007890
+OPT122 AXT     **,1                                                     3B007900
+       CAL     BHIGH                                                    3B007910
+       LDQ     BLOW                                                     3B007920
+       LGL     1,4                 SHIFT LEFT 1+A1                      3B007930
+       SXD     *+1,1                                                    3B007940
+       TXI     *+1,4,**            XR4 = A2-A1                          3B007950
+       LGR     72,4                SHIFT RIGHT 72-(A2-A1)               3B007960
+       SLW     1,2                 INVERSE ORDER.                       3B007970
+       TRA     XMUL1                                                    3B007980
+       SPACE   6                                                        3B007990
+ DSTIM STA     DSTIM1              (NUMBER OF RIGHT BIT)                3B008000
+       TSX     PSHUP,4                                                  3B008010
+       PAC     ,2                  XR2= -(LEFT BIT)                     3B008020
+       SXD     DSTIM2,2                                                 3B008030
+       TSX     OPAND,1             GET CONTENTS OF CELL BEING ALTERED   3B008040
+       TSX     PSHDN,4             RESTORE PUSHDOWN STATUS              3B008050
+DSTIM1 AXC     **,2                RIGHT BIT NUMBER                     3B008060
+       LAC     DSTIM1,1            RIGHT BIT NUMBER                     3B008070
+DSTIM2 TXI     *+1,1,**            X1= (RIGHT BIT NO.)-(LEFT BIT NO.)   3B008080
+       STO     ALOW                PUT CONTENTS OF CELL BEING        (2)3B008081
+       CAL     ALOW                 ALTERED IN LOGICAL AC            (2)3B008082
+       LGR     35,2                                                     3B008090
+       SLW     ALOW                                                     3B008100
+       CAL     DSTIM3              ALL BITS ON                          3B008110
+       ARS     35,1                35-(BIT DIFFERENCE)                  3B008120
+       ANS     AHIGH               MASK OFF UNWANTED BITS               3B008130
+       COM                                                              3B008140
+       ANA     ALOW                CLEAR REPLACED BIT AREA              3B008150
+       ORA     AHIGH               INSERT NEW BITS                      3B008160
+       LGL     35,2                READJUST WORD TO PROPER B VALUE      3B008170
+       SLW     AHIGH               WORD THAT WILL BE STORED             3B008180
+       TRA     DSTI                RETURN TO STORE WORD                 3B008190
+DSTIM3 OCT     777777777777                                             3B008200
+ 27E   NULL                                                             3B008210
+       EJECT                                                            3B008220
+*    OPERATION IS COPY    - 28                                          3B008230
+ 28B   NULL                                                             3B008240
+ COPY  LXA     PSHDN,2                                                  3B008250
+       CLA     0,2                                                      3B008260
+       TSX     PSHDN,4                                                  3B008270
+       TRA     RDOP10                                                   3B008280
+ 28E   NULL                                                             3B008290
+       TTL     IBDIN             OPERATIONS  (SKIPS AND JUMPS)          3B008300
+*    SKIPPING AND JUMPING OPERATIONS                                    3B008310
+*      32  IS  JUMP EXIT                                                3B008320
+*      33  IS  JUMP                                                     3B008330
+*      34  IS  JUMP RETURN                                              3B008340
+*      35  IS  SKIP IF TRUE                                             3B008350
+*      36  IS  SKIP 3 IF TRUE                                           3B008360
+*      37  IS  SKIP IF FALSE                                            3B008370
+*      38  IS  SKIP 3 IF FALSE                                          3B008380
+ JUMPS TXL     JMPXIT,1,32         OPERATION IS JUMP EXIT               3B008390
+       SXA     OPT2A,1             SAVE TYPE                            3B008400
+       TSX     OPAND,1             GET ARGUMENT                         3B008410
+ OPT2A AXT     **,1                OPERATION TYPE                       3B008420
+ 33B   NULL                                                             3B008430
+       TXH     *+3,1,33            OPERATION IS NOT JUMP                3B008440
+*    OPERATION IS SIMPLE JUMP                                           3B008450
+       STA     INCSX               ESTABLISH JUMP ADDRESS               3B008460
+       TRA     INCSX                                                    3B008470
+       SPACE   2                                                        3B008480
+ 33E   NULL                                                             3B008490
+       TNX     JMPRET,1,34         GO DO JUMP RETURN                    3B008500
+ 35B   NULL                                                             3B008510
+*    OPERATION IS SKIP TYPE                                             3B008520
+       LXA     INCSX,4                                                  3B008530
+       XEC     SKIPOP+4,1                                               3B008540
+       XEC     SKIPNO+4,1                                               3B008550
+       SPACE   2                                                        3B008560
+SKIPOP TNZ     INCSX+1             SKIP 3 IF FALSE                      3B008570
+       TNZ     INCSX+1             SKIP   IF FALSE                      3B008580
+       TZE     INCSX+1             SKIP 3 IF TRUE                       3B008590
+       TZE     INCSX+1             SKIP   IF TRUE                       3B008600
+SKIPNO TXI     INCSX+1,4,3         SKIP 3 IF FALSE                      3B008610
+       TXI     INCSX+1,4,2         SKIP   IF FALSE                      3B008620
+       TXI     INCSX+1,4,3         SKIP 3 IF TRUE                       3B008630
+       TXI     INCSX+1,4,2         SKIP   IF TRUE                       3B008640
+       SPACE   3                                                        3B008650
+ NEG   TXH     FALSE,1,1                                                3B008660
+ TRUE  CLA     =1                                                       3B008670
+       TSX     PSHDN,4                                                  3B008680
+       TRA     RDOP10                                                   3B008690
+ FALSE ZAC                                                              3B008700
+       TRA     TRUE+1                                                   3B008710
+       SPACE   3                                                        3B008720
+ DONE  TRA     TRUE                                                     3B008730
+       TRA     FALSE                                                    3B008740
+       TRA     TRUE                                                     3B008750
+ 35E   NULL                                                             3B008760
+       EJECT                                                            3B008770
+ 32B   NULL                                                             3B008780
+*    JUMP EXIT                                                          3B008790
+JMPXIT CLA     RJMPM                                                    3B008800
+       STA     INCSX                                                    3B008810
+       PDX     ,2                                                       3B008820
+       CLA     0,2                                                      3B008830
+       STO     RJMPM                                                    3B008840
+       SXA     PSHDN,2                                                  3B008850
+       TSX     PSHUP,4                                                  3B008860
+       TRA     INCSX                                                    3B008870
+*    RETURN JUMP                                                        3B008880
+JMPRET ZET     UNDEF                                                    3B008890
+       TRA     INCSX                                                    3B008900
+       PAX     ,1                                                       3B008910
+       CLA     RJMPM                                                    3B008920
+       TSX     PSHDN,4                                                  3B008930
+       STO     0,2                                                      3B008940
+       CLA     INCSX                                                    3B008950
+       STA     RJMPM                                                    3B008960
+       PXD     ,2                                                       3B008970
+       STD     RJMPM                                                    3B008980
+       SXA     INCSX,1                                                  3B008990
+       TRA     INCSX                                                    3B009000
+       SPACE   4                                                        3B009010
+ 32E   NULL                                                             3B009020
+       SPACE   3                                                        3B009030
+RJMPM  PZE     **,,**                                                   3B009040
+       TTL     IBDIN             OPERATIONS                             3B009050
+*    OPERATIONS 39 AND 40                                               3B009060
+*      39  IS  ADDRESS TO VALUE                                         3B009070
+*      40  IS  VALUE TO ADDRESS                                         3B009080
+ 39B   NULL                                                             3B009090
+OPTOR4 TSX     PSHUP,4                                                  3B009100
+ OPTR4 ANA     =O000000077777      CLEAR ALL BUT ADDRESS                3B009110
+       TSX     RDOP8,4                                                  3B009120
+       TRA     RDOP10                                                   3B009130
+ OPT40 TSX     FXOPND,1                                                 3B009140
+       PXA     ,4                                                       3B009150
+       ORA     OPT45               MAKE ADDRESS OF DICTIONARY MODE LOC. 3B009160
+       TRA     OPTR4+1                                                  3B009170
+ OPT45 PON     0,0,8               ADDRESS POINTER, DICTIONARY MODE     3B009180
+ 39E   NULL                                                             3B009190
+       EJECT                                                            3B009200
+*    OPERATION IS DESTRUCTIVE STORE   -  41                             3B009210
+ 41B   NULL                                                             3B009220
+ DSTOR TSX     OPAND,1                                                  3B009230
+       SXD     DSTO1,4             SAVE MODE OF OPERAND                 3B009240
+       TXI     *+1,4,-1              BUMP DOWN ONE                      3B009250
+       SXD     DSTO2,4              AND SAVE                            3B009260
+       STO     AHIGH                                                    3B009270
+ DSTI  TSX     PSHUP,4             GET STORAGE LOCATION                 3B009280
+       TMI     DSTORM              MACHINE REGISTER                     3B009290
+       SUB     =1B2                IS IT PARTIAL WORD STORE             3B009300
+       TMI     DSTIM                -YES, GO EVALUATE STORAGE WORD      3B009310
+       ZET     UNDEF                                                    3B009320
+       TRA     INCSX                                                    3B009330
+       PDX     ,1                  MODE OF STORAGE CELL                 3B009340
+       PAC     ,2                                                       3B009350
+       CLA     AHIGH                                                    3B009360
+ DSTO1 TXH     DSTO3,1,**          OPERAND MODE .LT. CELL MODE          3B009370
+ DSTO2 TXL     DSTO4,1,**          OPERAND MODE .GT. CELL MODE          3B009380
+ DSTO5 TXL     RDOP10,1,13         ONLY SINGLE WORD STORE               3B009390
+       STQ     1,2                                                      3B009400
+       TRA     RDOP10                                                   3B009410
+ DSTO3 TXL     DSTO5,1,6           BOTH ARE INTEGER TYPE                3B009420
+       TXL     DSTO6,1,7           NOT DICTIONARY MODE                  3B009430
+       TXL     DSTO5,1,8                                                3B009440
+ DSTO6 TSX     AOPFL,4             FLOAT OPERAND                        3B009450
+       TXL     DSTO5,1,13                                               3B009460
+ DSTO7 LDQ     =0                                                       3B009470
+       TRA     DSTO5                                                    3B009480
+ DSTO4 LXD     DSTO1,4             MODE OF OPERAND                      3B009490
+       TXL     DSTO5,4,6           BOTH ARE INTEGER TYPE                3B009500
+       TXL     DSFIX,4,7                                                3B009510
+       TXL     DSTO5,4,8                                                3B009520
+       TXH     DSTO7,1,6                                                3B009530
+ DSFIX TSX     FIX,4                                                    3B009540
+       TRA     DSTO5                                                    3B009550
+ 41E   NULL                                                             3B009560
+ AHB   NULL                                                             3B009570
+DSTORM PAX     ,2                  STORE INTO MACHINE REGISTER          3B009580
+       ZET     UNDEF                                                 (8)3B009583
+       TRA     INCSX                                                 (8)3B009586
+       TNX     DSTORX,2,7          (GO STORE INDEX REGISTER)            3B009590
+       CLA     AHIGH                                                    3B009600
+       STO*    OPANTB+4,2          STORE INTO APPROPRIATE REGISTER      3B009610
+       TRA     INCSX                                                    3B009620
+DSTORX ALS     15                                                       3B009630
+       STT     DSTX                                                     3B009640
+       CLA     AHIGH                                                    3B009650
+       LXD     DSTO1,1                                                  3B009660
+       TXH     *+3,1,8                                                  3B009670
+       TXH     *+3,1,7                                                  3B009675
+       TXL     *+2,1,6                                                  3B009680
+       TSX     FIX,4                                                    3B009690
+       ADD     DSTY                                                     3B009700
+       PAC     ,1                                                       3B009710
+       XEC     DSTOTB,2            STORE INTO APPROPRIATE XR            3B009720
+ DSTX  PAC     ,**                 (IN CASE XR3, 5, 6, OR 7)            3B009730
+       TRA     INCSX                                                    3B009740
+ DSTY  OCT     -377777700000                                            3B009750
+       SXD     X7X6,1                                                   3B009760
+       SXA     X7X6,1                                                   3B009770
+       SXD     X5X3,1                                                   3B009780
+       SXD     X4ETC,1                                                  3B009790
+       SXA     X5X3,1                                                   3B009800
+       SXD     QPX2X1,1                                                 3B009810
+       SXA     QPX2X1,1                                                 3B009820
+DSTOTB NULL                                                             3B009821
+       EJECT                                                            3B009830
+*    GET MACHINE REGISTER CONTENTS                                      3B009840
+ GMR   SXA     GMRX,4                                                   3B009850
+       AXT     8,4                 SET REGISTER MODE = DICTIONARY       3B009860
+       SXA     OPAN4+2,4                                                3B009870
+       PAX     ,4                  REGISTER NUMBER                      3B009880
+       TNX     GMRA,4,7            MACHINE REGISTER IS AN INDEX         3B009890
+       CLA*    OPANTB+4,4          GET REGISTER CONTENTS                3B009900
+ GMRX  AXT     **,4                                                     3B009910
+       TRA     1,4                                                      3B009920
+       SPACE   3                                                        3B009930
+ GMRA  PXD     ,4                                                       3B009940
+       ARS     3                                                        3B009950
+       STT     GMRB                STORE INDEX NUMBER                   3B009960
+       LXA     QPX2X1,1                                                 3B009970
+       LXD     QPX2X1,2                                                 3B009980
+       LXD     X4ETC,4                                                  3B009990
+       ZSA     OPAN4+2             SET REGISTER MODE OCTAL              3B010000
+ GMRB  PXA     ,**                                                      3B010010
+       TRA     GMRX                                                     3B010020
+OPANTB PZE     SI                                                       3B010030
+       PZE     MQ                                                       3B010040
+       PZE     LAC                                                      3B010050
+       PZE     AC                                                       3B010060
+*    OPERAND IS A MACHINE REGISTER                                      3B010070
+ OPAN4 CLA     OPANA               REGISTER NUMBER                      3B010080
+       TSX     GMR,4               GET THE REGISTER                     3B010090
+       AXT     **,4                SET MODE                             3B010100
+       TRA     OPANX                                                    3B010110
+       SPACE   4                                                        3B010120
+*    DUMP MACHINE REGISTER                                              3B010130
+ DMPMR STA     MRNO                                                     3B010140
+       TSX     GMR,4                                                    3B010150
+       STO     MR                                                       3B010160
+       TSX     MOTWR,4                                                  3B010170
+       PZE     *+2                                                      3B010180
+       TRA     INCSX                                                    3B010190
+       IOCD    *+1,,4                                                   3B010200
+       PZE     4,,2                                                     3B010210
+ MRNO  PZE     **                                                       3B010220
+       BCI     1,00000                                                  3B010230
+ MR    BSS     1                                                        3B010240
+ AHE   NULL                                                             3B010250
+       EJECT                                                            3B010260
+*    OPERATION IS PAUSE  -OPERATION 44                                  3B010270
+ 44B   NULL                                                             3B010280
+ PAUSE TSX     .MWR,4                                                   3B010290
+       PZE     1                                                        3B010300
+       PZE     PAUMES,,4                                                3B010310
+       HTR     INCSX                                                    3B010320
+PAUMES BCI     4,DEBUG REQUEST PAUSE.                                   3B010330
+ 44E   NULL                                                             3B010340
+       EJECT                                                            3B010350
+*    OPERATION IS CALL    - 45                                          3B010360
+ 45B   NULL                                                             3B010370
+OPCALL TSX     OPAND,1                                                  3B010380
+       PAX     ,1                 NUMBER OF CALL PARAMETERS             3B010390
+       SXD     OPCAL1+1,1                                               3B010400
+       SXA     OPCAL2,1                                                 3B010410
+       TXI     *+1,1,OPCAL1+3                                           3B010420
+       SXA     OPCAL1+1,1         RETURN ADDRESS                        3B010430
+       TXL     OPCAL3,1,OPCAL1+3                                        3B010440
+OPCAL4 STL     CALL                                                     3B010450
+       TSX     PSHUP,4                                                  3B010455
+       TMI     OPCA10             EITHER UNDEFINED OR MACHINE REG       3B010460
+       PAI                                                              3B010470
+       LFT     700000                                                   3B010480
+       TRA     OPCAL2                                                   3B010490
+OPCAL6 PAI                        HOLD OPERAND                          3B010500
+       LDQ     UNDEF                                                    3B010510
+       STZ     UNDEF                                                    3B010520
+       TSX     GETRS,4            GET A PLACE TO PUT IT                 3B010530
+       STQ     UNDEF                                                    3B010540
+       STI     0,2                PUT IT IN.                            3B010550
+       TSX     PSHUP,4            GET POINTER TO THE CELL               3B010560
+OPCAL2 AXC     **,1                                                     3B010570
+       STZ     OPCAL1+2,1                                               3B010580
+       STA*    *-1                                                      3B010590
+       LXA     OPCAL2,1                                                 3B010600
+       TNX     OPCAL3,1,1                                               3B010610
+       SXA     OPCAL2,1                                                 3B010620
+       TRA     OPCAL4                                                   3B010630
+OPCAL3 STZ     CALL                                                     3B010640
+       TSX     PSHUP,4                                                  3B010645
+       STA     OPCAL1                                                   3B010650
+       CAL     OPCARP                                                   3B010660
+       SLW*    OPCAL1+1                                                 3B010670
+       ZET     UNDEF                                                    3B010680
+       TRA     INCSX-2                                                  3B010690
+       TSX     PANSAV,4                                                 3B010700
+       TRA     OPCAL1                                                   3B010710
+OPCARP TRA     *+1                                                      3B010720
+       TSX     PANRES,4                                                 3B010730
+       LXA     X5X3,3                                                   3B010740
+       LXD     X5X3,5                                                   3B010750
+       LXA     X7X6,6                                                   3B010760
+       LXD     X7X6,7                                                   3B010770
+       TRA     INCSX-2                                                  3B010780
+OPCA10 TSX     GMR,4               GET MACHINE REGISTER                 3B010790
+       TPL     OPCAL6                                                   3B010800
+OPCAL8 ORA     =-0                                                      3B010810
+       TRA     OPCAL6                                                   3B010820
+ 45E   NULL                                                             3B010840
+CALL   PZE     **                                                       3B010845
+       EJECT                                                            3B010850
+ 48B   NULL                                                             3B010860
+*    OPERATION IS 'ON'    - 48                                          3B010870
+ ONOP  TSX     PSHUP,4             GET POINTER TO COUNTER               3B010880
+       STA     ONOPCT                                                   3B010890
+       SUB     =1B2                                                     3B010900
+       TMI     ONOPIM                                                   3B010910
+       CLA*    ONOPCT              GET COUNTER                          3B010920
+       ADD     =1                  INCREMENT                            3B010930
+       STO*    ONOPCT              AND RESTORE                          3B010940
+       STO     ONOPCT                                                   3B010950
+ ONOP1 TSX     FXOPND,1            GET THE 'EVERY' ENTRY                3B010960
+       SXA     ONOPBM,4             AND HOLD IT.                        3B010970
+       TSX     FXOPND,1            GET 'UNTIL' ENTRY                    3B010980
+       PXA     ,4                                                       3B010990
+       SUB     ONOPCT              SUBTRACT CURRENT COUNTER VALUE       3B011000
+       TZE     *+2                 (WE ARE AT UPPER LIMIT, CONTINUE.)   3B011010
+       TMI     ONOPPU              UPPER LIMIT PASSED, GIVE UP          3B011020
+       TSX     FXOPND,1            GET INITIAL 'ON' ENTRY               3B011030
+       ZET     UNDEF                                                    3B011040
+       TRA     FALSE                                                    3B011050
+       SUB     ONOPCT              SUBTRACT CURRENT COUNTER VALUE       3B011060
+       TZE     TRUE                (WE ARE AT INITIAL POINT)            3B011070
+       TPL     FALSE               WE HAVEN'T GOTTEN TO INTITIAL POINT  3B011080
+       XCA                                                              3B011090
+       ZAC                                                              3B011100
+       DVP     ONOPBM              'EVERY'                              3B011110
+       TNZ     FALSE               HAS A REMAINDER, SO NOT APPROPRIATE  3B011120
+       TRA     TRUE                                                     3B011130
+ONOPPU TSX     PSHUP,4             REMOVE TOP OPERAND FROM P.D.         3B011140
+       TRA     FALSE                                                    3B011150
+       SPACE   2                                                        3B011160
+*   COUNTER IS IN THE TEXT                                              3B011170
+ONOPIM CLA     INCSX                                                    3B011180
+       LGR     1                                                        3B011190
+       PAC     ,4                                                       3B011200
+       TXI     *+1,4,1                                                  3B011210
+       CLA     ONOPCT                                                   3B011220
+       ADD     =1                                                       3B011230
+       STO     ONOPCT                                                   3B011240
+       TQP     *+3                                                      3B011250
+       STA     .IBDBT,4                                                 3B011260
+       TRA     ONOP1                                                    3B011270
+       ALS     18                                                       3B011280
+       STD     .IBDBT,4                                                 3B011290
+       TRA     ONOP1                                                    3B011300
+ONOPCT PZE     **                  CURRENT COUNTER VALUE                3B011310
+ONOPBM PZE     **                  VALUE OF 'EVERY' ENTRY               3B011320
+ 48E   NULL                                                             3B011330
+       TTL     IBDIN         OPERATIONS  (LOOPING AND DUMMY VARIABLE)   3B011340
+ 49B   NULL                                                             3B011350
+OPTOR3 TXL     LOPINT,1,49         INITIALIZE LOOP                      3B011360
+       LXA     RDOP2,4                                                  3B011370
+       CLA     RDOPT+10,4                                               3B011380
+       PDX     ,2                                                       3B011390
+       TXL     LOP3,2,0                                                 3B011400
+       STD     LOP1                                                     3B011410
+       PAX     ,2                                                       3B011420
+       SXD     LOP2,2                                                   3B011430
+       CLA     RDOPT+9,4                                                3B011440
+       PAX     ,2                                                       3B011450
+LOP1   TXI     *+1,2,**                                                 3B011460
+LOP2   TXH     LOP3,2,**                                                3B011470
+       PXA     ,2                                                       3B011480
+       STA     RDOPT+9,4                                                3B011490
+       CLA     RDOPT+11,4                                               3B011500
+       STA     INCSX                                                    3B011510
+       TRA     INCSX                                                    3B011520
+LOP3   TXI     *+1,4,-3                                                 3B011530
+       SXA     RDOP2,4                                                  3B011540
+       TRA     INCSX                                                    3B011550
+LOPINT STL     GTSB                                                     3B011560
+       TRA     INCSX                                                    3B011570
+       LXA     RDOP2,4                                                  3B011580
+       TXI     *+1,4,3                                                  3B011590
+       SXA     RDOP2,4                                                  3B011600
+       PXD     ,1                                                       3B011610
+       STO     RDOPT+9,4                                                3B011620
+       CLA     INCSX                                                    3B011630
+       STA     RDOPT+11,4                                               3B011640
+       TSX     FXOPND,1                                                 3B011650
+       PXD     0,4                                                      3B011660
+       LXA     RDOP2,4                                                  3B011670
+       STO     RDOPT+10,4                                               3B011680
+       TSX     FXOPND,1                                                 3B011690
+       PXA     ,4                                                       3B011700
+       LXA     RDOP2,4                                                  3B011710
+       STA     RDOPT+10,4                                               3B011720
+       TSX     FXOPND,1                                                 3B011730
+       PXA     ,4                                                       3B011740
+       LXA     RDOP2,4                                                  3B011750
+       STA     RDOPT+9,4                                                3B011760
+       NZT     UNDEF                                                    3B011770
+       TRA     INCSX                                                    3B011780
+       ZAC                                                              3B011790
+       STA     RDOPT+10,4                                               3B011800
+ RDOP3 CLA     RDOPT+9,2                                                3B011810
+       ANA     =O077777000000                                           3B011820
+       CAS     RDOP7                                                    3B011830
+       TRA     *+2                                                      3B011840
+       TRA     RDOP6               DUMMY VARIABLE MATCH FOUND.          3B011850
+       TIX     RDOP3,2,3                                                3B011860
+       TRA     RDOP4                                                    3B011870
+ RDOP6 CLA     RDOPT+9,2           DUMMY VARIABLE ENTRY HAS FORM        3B011880
+       ANA     =O000000077777      VALUE,,PHONY RDICT POINTER.          3B011890
+       TSX     PSHDN,4                                                  3B011900
+       TRA     RDOP10                                                   3B011910
+RDOPT  BSS     9                                                        3B011920
+ 49E   NULL                                                             3B011930
+       TTL     IBDIN               OPERATIONS  (SUBSCRIPTED VARIABLE)   3B011940
+ 51B   NULL                                                             3B011950
+*      OPERATION IS SUBSCRIPT                                           3B011960
+ OP51  TSX     GETSUB,4                                                 3B011970
+       STZ     OP51T1                                                   3B011980
+       TSX     PSHUP,4                                                  3B011990
+ OP51A STA     OP51T2              NUMBER OF SUBSCRRPTS                 3B012000
+       TSX     FXOPND,1                                                 3B012010
+       PXA     ,4                                                       3B012020
+       SUB     =1                                                       3B012030
+       ADD     OP51T1                                                   3B012040
+       AXC     GTSBB-1,4                                                3B012050
+       XCA                                                              3B012060
+       MPY*    OP51T2                                                   3B012070
+       STQ     OP51T1                                                   3B012080
+       CLA     OP51T2                                                   3B012090
+       SUB     =O400001                                                 3B012100
+       TNZ     OP51A                                                    3B012110
+       LXA     OP51T1,4                                                 3B012120
+       PXA     ,4                                                       3B012130
+       ADD     GTSBB+4                                                  3B012140
+       ADD     GTSBB+6                                                  3B012150
+       TSX     RDOP8,4                                                  3B012160
+       TRA     RDOP10                                                   3B012170
+OP51T1 BSS     1                                                        3B012180
+OP51T2 PZE     **,4                                                     3B012190
+ 51E   NULL                                                             3B012200
+       TTL     IBDIN             OPERATIONS  (DUMPS)                    3B012210
+*    OUTPUT FINAL DUMP RECORD                                           3B012220
+ DMP90 NZT     WDCNT               HAVE ANY DUMPS BEEN TAKEN            3B012230
+       TRA     2,1                  -NO, IGNORE FILE CLOSE              3B012240
+ AFB   NULL                                                             3B012250
+       TSX     MOTWR+2,4                                                3B012260
+       PZE     DMP9L                                                    3B012270
+       TRA     1,1                                                      3B012280
+ DMP9L IOCP    *+2,,1                                                   3B012290
+       IORT    .JLIN,,1                                                 3B012300
+       PZE     2,,7                                                     3B012310
+       EJECT                                                            3B012320
+ DUMPS NZT     NODUMP              HAS LINE-MAX CUT OFF DUMPS           3B012330
+       ZET     DUMP                HAS STR LOCATION BEEN OUTPUT         3B012340
+       TRA     DMP10                -YES, PROCEED WITH DUMP             3B012350
+       STL     DUMP                                                     3B012360
+       TSX     MOTWR,4                                                  3B012370
+       PZE     STRLST                                                   3B012380
+       CLA     .IBDB1                                                   3B012390
+       TMI     DMP10                                                    3B012400
+       AXT     **,4                DUMP NUMBER (INITIALLY = 0)          3B012410
+       TXI     *+1,4,1             INCREMENT                            3B012420
+       SXA     *-2,4               AND SAVE                             3B012430
+       PXA     ,4                                                       3B012440
+       TSX     .DECVA,4            CONVERT TO BCD                       3B012450
+       STQ     DMPNO                                                    3B012460
+       CALL    .LXSL1(DMPNUM)      PRINT DUMP NUMBER OFF-LINE.      (10)3B012470
+ DMP10 TXL     DMP20,1,64          SINGLE WORD DUMP                     3B012480
+       TXL     DMP30,1,65          'B' TO 'A' IN MODE 'C'               3B012490
+       TXL     DMP40,1,66          DUMP A  (ENTRY OR ARRAY)             3B012500
+       TXL     DMP50,1,67          PANEL                                3B012510
+       TXL     DMP60,1,68          BCI STRING  (COMMENT)                3B012520
+       TXL     DMP70,1,69          DUMP PROGRAM                         3B012530
+       EJECT                                                            3B012540
+*    DUMP PACKAGE OUTPUT ROUTINE                                        3B012550
+*    ENTERED ONCE PER LOGICAL RECORD                                    3B012560
+ MOTWR ZET     NODUMP                                                   3B012570
+       TRA     2,4                                                      3B012580
+       SXA     MOTXT,4                                                  3B012590
+       SXA     MOTXT+1,2                                                3B012600
+       SXA     MOTXT+2,1                                                3B012610
+       TRA     BLOCK+1                                                  3B012620
+ MOT05 CLA     1,4                GET POINTER TO I/O LIST               3B012630
+       PAC     ,4                                                       3B012640
+ MOT10 CLA     0,4                 GET COMMAND                          3B012650
+       STP     MOTCOM              SAVE TYPE                            3B012660
+       TPL     *+2                 TRA IF LAST COMMAND IN LIST          3B012670
+       SXA     MOT50,4              SAVE POINTER TO COMMAND             3B012680
+       PDX     ,2                  NUMBER OF WORDS BEING WRITTEN        3B012690
+       PXA     ,2                                                       3B012700
+       ADD     WDCNT                                                    3B012710
+       STO     WDCNT                                                    3B012720
+       LDQ     WRDMAX                                                   3B012730
+       TLQ     *+2                                                      3B012740
+       TRA     *+4                                                      3B012750
+       STL     NODUMP                                                   3B012760
+       CLA     INCSX                                                    3B012770
+       STT     DMP9L+2                                                  3B012780
+       CLA     0,4                                                      3B012790
+       PDX     ,2                                                       3B012800
+       TXL     MOT50,2,0           TRA IF NONE                          3B012810
+       AXC     MOT30,1             SET UP MOT70 EXIT                    3B012820
+       ARS     18                                                       3B012830
+       ACL     0,4                 COMPUTE LAST ADDRESS +1              3B012840
+       STA     *+2                                                      3B012850
+ MOT20 LAC     BLOCK,4             CURRENT NUMBER OF WORDS IN BLOCK     3B012860
+       CLA     **,2                GET DATA WORD                        3B012870
+       STO     BLOCK,4              AND PUT INTO BLOCK                  3B012880
+       PXA     1,4                                                      3B012890
+       SBM     *-1                 RECOMPLEMENT AND BUMP BY 1           3B012900
+       STA     BLOCK               KEEP WORD COUNT UP TO DATE           3B012910
+       TXL     MOT70,4,-BLKSIZ+1   BLOCK IS FULL, WRITE IT              3B012920
+ MOT30 TIX     MOT20,2,1           GO BACK FOR MORE WORDS               3B012930
+ MOT50 AXT     **,4                (NON-ZERO IF MORE COMMANDS IN LIST)  3B012940
+       TXL     MOT60,4,0           NO MORE COMMANDS                     3B012950
+       ZSA     MOT50               RESET FOR NEXT COMMAND               3B012960
+       TXI     MOT10,4,-1           AND RETURN TO PROCESS IT.           3B012970
+ MOT60 ZET     MOTCOM                                                   3B012980
+       TRA     MOT65,4             NOT IOCD, FORCE OUT RECORD           3B012990
+ MOTXT AXT     **,4                RESTORE IR'S                         3B013000
+       AXT     **,2                 AND EXIT                            3B013010
+       AXT     **,1                                                     3B013020
+       TRA     2,4                                                      3B013030
+ MOT65 AXC     MOTXT,1             SET MOT70 EXIT TO THIS               3B013040
+ MOT70 LXA     BLOCK,4             GET LENGTH OF BLOCK                  3B013050
+       TXH     *+2,4,2             IF LESS THAN 3 WORDS                 3B013060
+       AXT     3,4                  MAKE IT THREE                       3B013070
+       PCCON                                                            3B013080
+       IFF     DISK=1                                                   3B013090
+       GOTO    IFT,BLANK                                                3B013100
+       SPACE   3                                                        3B013110
+*   THE FOLLOWING CODE WILL BE OVERLAID BY THE CODE REQUIRED TO         3B013120
+*   WRITE ON TAPE IF THE DEBUG FILE IS NOT ON DISK (OR DRUM).           3B013130
+*          (SEE CODE BEGINNING AT MOT84)                                3B013140
+ MOT7A NULL                                                             3B013150
+       SXA     BLOCK-1,4                                                3B013160
+       TXI     *+1,4,1                                                  3B013170
+       SXD     MOTL1+1,4                                                3B013180
+       LXA     .JDTRK,4                                                 3B013190
+ MOTCL TXH     MOT71,4,**          TRA IF NO MORE TRACKS AVAILABLE      3B013200
+       PXD     ,4                                                       3B013210
+       SSM                                                              3B013220
+       STO     .LXDIS                                                   3B013230
+       TXI     *+1,4,1                                                  3B013240
+       SXA     .JDTRK,4                                                 3B013250
+       SXD     BLOCK-1,4                                                3B013260
+       CALL    .LXSL1(MOTL1)                                        (10)3B013270
+       LXA     .JDTRK,4                                                 3B013280
+       PXD     ,4                                                       3B013290
+       SSM                                                              3B013300
+       STO     .LXDIS                                                   3B013310
+       CALL    .LXSL1(MOTL2)                                        (10)3B013320
+       TRA     MOT7B                                                    3B013330
+ MOTL1 PTH     SYSCK2,,*+1                                              3B013340
+       CPYP    BLOCK-1,,**                                              3B013350
+       TCH     .LTCH                                                    3B013360
+ MOTL2 PTW     SYSCK2,,*+1                                              3B013370
+       CPYP    *+2,,2                                                   3B013380
+       TCH     .LTCH                                                    3B013390
+       SIX     1,,**                                                    3B013400
+       OCT     170000000000                                             3B013410
+ IFT   REM                                                              3B013420
+       IFT     DISK=1                                                   3B013430
+       GOTO    PCCBAK,BLANK                                             3B013440
+       SXD     MOTL+1,4                                                 3B013450
+       CALL    .LXSL1(MOTL)        WRITE BLOCK ONTO DEBUG FILE      (10)3B013460
+PCCBAK PCCBAK                                                           3B013470
+ MOT7B ZET     DUMP1               IS THIS FIRST RECORD OUTPUT          3B013480
+       TRA     MOT71                                                    3B013490
+       STL     DUMP1                                                    3B013500
+       TSX     .MWR,4             TELL OPERATOR THAT THERE IS INFO      3B013510
+       PZE     1                    ON SYSCK2                           3B013520
+       PZE     DBONCK,,7                                                3B013530
+       CAL     =HIBJOB                                                  3B013540
+       SLW     SYSGET                                                   3B013550
+       CAL     =1B16                                                    3B013560
+       ORS     SYSJOB                                                   3B013570
+ MOT71 AXT     1,4                                                      3B013580
+       SXA     BLOCK,4                                                  3B013590
+       TRA     0,1                 RETURN TO PROPER PROCESSING          3B013600
+       SPACE   2                                                        3B013610
+*   MOTWR WORKING STORAGE                                               3B013620
+MOTCOM PZE     0                   FLAG TO FORCE OUT BUFFER             3B013630
+       PCCON                                                            3B013640
+       IFT     DISK=1                                                   3B013650
+       GOTO    PCCBAK,BLANK                                             3B013660
+ MOTL  PTH     SYSCK2,,*+1         WRITE BINARY ON SYSCK2               3B013670
+       CPYP    BLOCK,,**                                                3B013680
+       TCH     .LTCH                                                    3B013690
+PCCBAK PCCBAK                                                           3B013700
+*    OUTPUT BUFFER                                                      3B013710
+BUFFR  EQU     241                 SIZE OF DMPTRN BUFFER                3B013720
+BLKSIZ EQU     256                 PHYSICAL RECORD SIZE                 3B013730
+       IFT     DISK=1                                                   3B013740
+       MZE     **,,**                                                   3B013750
+ BLOCK PZE     **,,3000            PHYSICAL RECORD CONTROL WORD         3B013760
+       CLA     .IBDB1                                                   3B013770
+       TMI     MOT82               NOMES OPTION IN EFFECT               3B013780
+       AXT     BLOCK,4                                                  3B013790
+       PXD     ,4                                                       3B013800
+       XCA                                                              3B013810
+       TSX     .BCD5R,4                                                 3B013820
+       SLW     BLKMES                                                   3B013830
+       CALL    .LXSL1(MOT80)                                        (10)3B013840
+ MOT82 AXT     1,4                                                      3B013850
+       SXA     BLOCK,4                                                  3B013860
+       LAC     SYSUNI,4                                                 3B013870
+       LDQ*    SYSCK2,4                                                 3B013880
+       TSX     .SYMUN,4                                                 3B013890
+       SLW     DBONCK+5                                                 3B013900
+       PCCON                                                            3B013910
+       IFF     DISK=1                                                   3B013920
+       GOTO    PCCBAK,BLANK                                             3B013930
+       LXA     .JDTRK,4            IS DEBUG FILE ON DISK                3B013940
+       TNX     MOT84,4,1            -NO, GO ESTABLISH CODING FOR TAPE   3B013950
+       SXD     MOTL2+3,4            -YES, SAVE LOC OF PREVIOUS EOF.     3B013960
+       LDC     SYSUNI,4                                                 3B013970
+       SXD     *+2,4                                                    3B013980
+       LAC     SYSUNI,4                                                 3B013990
+       TXI     *+1,4,**            COMPUTE UPPER TRACK LIMIT TEST       3B014000
+       CLA     SYSCK2,4                                                 3B014010
+       ACL     =O077777000000      DECREASE DECREMENT BY 1              3B014020
+       STD     MOTCL                                                    3B014030
+       TRA     MOT83                                                    3B014040
+ MOT84 AXT     MOT86-MOT85,4                                            3B014050
+       CLA     MOT86,4                                                  3B014060
+       STO     MOT86-OFSET,4                                            3B014070
+       TIX     *-2,4,1                                                  3B014080
+       LXA     MOT85+2,4           (TXI IN CALL)                        3B014090
+       TXI     *+1,4,-OFSET                                             3B014100
+       SXA     MOT85+2-OFSET,4                                          3B014110
+PCCBAK PCCBAK                                                           3B014120
+ MOT83 LXA     .IBDB1,4                                                 3B014130
+       PXA     ,4                                                       3B014140
+       ALS     3                                                        3B014150
+       STO     WRDMAX                                                   3B014160
+       LXA     MOTXT,4                                                  3B014170
+       CLA     *+2                                                      3B014180
+       STO     MOT05-1                                                  3B014190
+       TRA     MOT05                                                    3B014200
+ MOT80 PTW     SYSOU1,,*+1                                              3B014210
+       IORP    *+2,,5                                                   3B014220
+       TCH     .LTCH                                                    3B014230
+ MOT81 BCI     3,       (BUFFER AT                                      3B014240
+BLKMES BCI     2, *****)                                                3B014250
+       PCCON                                                            3B014260
+       IFF     DISK=1                                                   3B014270
+       GOTO    PCCBAK,BLANK                                             3B014280
+ MOT85 NULL                                                             3B014290
+       SXD     MOTL+1,4                                                 3B014300
+       CALL    .LXSL1(MOTL)                                         (10)3B014310
+       TRA     MOT7B                                                    3B014320
+ OFSET EQU     MOT85-MOT7A                                              3B014330
+ MOTL  EQU     *-OFSET                                                  3B014340
+       PTH     SYSCK2,,MOTL+1                                           3B014350
+       CPYP    BLOCK,,**                                                3B014360
+       TCH     .LTCH                                                    3B014370
+ MOT86 NULL                                                             3B014380
+PCCBAK PCCBAK                                                           3B014390
+ LREQ  MAX     *-BLOCK,BLKSIZ                                           3B014400
+       BSS     BLOCK+LREQ-*                                             3B014410
+NODUMP PZE     0                   IF NON-ZERO NO MORE DUMPS WILL OCCUR 3B014420
+WRDMAX BSS     1                   MAXIMUM WORDS TO BE OUTPUT BY MOTWR  3B014430
+       SPACE   2                                                        3B014440
+*    THE FOLLOWING CELLS ARE USED TO DISPLAY THE DUMP NUMBER ON SYSOU1  3B014450
+DMPNUM PTW     SYSOU1,,*+1                                              3B014460
+       IORP    *+2,,3                                                   3B014470
+       TCH     .LTCH                                                    3B014480
+       BCI     2, DUMP NUMBER                                           3B014490
+ DMPNO BCI     1, *****            WILL CONTAIN DUMP NUMBER IN BCI      3B014500
+       SPACE   2                                                        3B014510
+DBONCK BCI     7,DEBUG INFORMATION ON SYSCK2. (******)                  3B014520
+ AFE   NULL                                                             3B014530
+       EJECT                                                            3B014540
+*    DUMP A SINGLE ENTRY                                                3B014550
+ 64B   NULL                                                             3B014560
+ DMP20 TSX     PSHUP,4                                                  3B014570
+       ZET     UNDEF                                                    3B014580
+       TRA     INCSX                                                    3B014590
+       TMI     DMPMR               DUMP MACHINE REGISTER                3B014600
+       STA     DMP37+1                                                  3B014610
+       PDX     ,1                                                       3B014620
+       TXL     *+2,1,13            TRA IF NOT DBL OR CMPLX              3B014630
+       ADD     =1                                                       3B014640
+       ALS     18                                                       3B014650
+       STD     DMP37+1                                                  3B014660
+       TRA     DMP45                                                    3B014670
+ 64E   NULL                                                             3B014680
+       EJECT                                                            3B014690
+ 66B   NULL                                                             3B014700
+*    TABLE OF MODES                                                     3B014710
+       BCI     1,00000J           COMPLEX NUMBER                        3B014720
+       BCI     1,00000D           DOUBLE PRECISION                      3B014730
+       BCI     1,00000            UNDEFINED                             3B014740
+       BCI     1,00000            UNDEFINED                             3B014750
+       BCI     1,00000            UNDEFINED                             3B014760
+       BCI     1,00000            UNDEFINED                             3B014770
+       BCI     1,00000            UNDEFINED                             3B014780
+       BCI     1,00000            UNDEFINED                             3B014790
+       BCI     1,00000F           FLOATING POINT                        3B014800
+       BCI     1,00000H           ALPHANUMERIC                          3B014810
+       BCI     1,00000X           DECIMAL INTEGER                       3B014820
+       BCI     1,00000L           LOGICAL (BOOLEAN)                     3B014830
+       BCI     1,00000            UNDEFINED                             3B014840
+       BCI     1,00000C           SYMBOLIC COMMAND                      3B014850
+       BCI     1,00000S           SYMBOLIC INSTRUCTION                  3B014860
+MODTAB BCI     1,00000O           OCTAL                                 3B014870
+       SPACE   5                                                        3B014880
+*    DUMP 'A' (ELEMENT OR ARRAY)                                        3B014890
+ DMP40 TSX     GETSUB,4                                                 3B014900
+       ALS     18                                                       3B014910
+       STD     DMP37+1             LAST LOCATION OF ARRAY               3B014920
+       CLA     GTSBB+4                                                  3B014930
+       STA     DMP37+1             FIRST LOCATION OF ARRAY              3B014940
+ DMP45 CLA     MODTAB,1                                                 3B014950
+       TRA     DMP30A                                                   3B014960
+ 66E   NULL                                                             3B014970
+       SPACE   8                                                        3B014980
+DMPALL NULL                                                             3B014990
+       EJECT                                                            3B015000
+*    DUMP CORE FROM 'B' TO 'A' IN MODE 'C'                              3B015010
+ 65B   NULL                                                             3B015020
+       CLA     *                                                        3B015030
+       STO     MOTWR+1             FORCE MOTWR TO WORK AFTER LINE MAX.  3B015040
+       CLA     DMP30A-1                                                 3B015050
+       STT     RDLRC                                                    3B015060
+       TSX     MOTWR,4                                                  3B015070
+       PZE     STRLST                                                   3B015080
+       LDI     =H00000                                                  3B015090
+       TSX     PSHDN,4                                                  3B015100
+       STI     0,2                                                      3B015110
+       TSX     PSHDN,4                                                  3B015120
+       STZ     0,2                                                      3B015130
+       TSX     PSHDN,4                                                  3B015140
+       LDI     =O77777                                                  3B015150
+       STI     0,2                                                      3B015160
+ DMP30 TSX     PSHUP,4                                                  3B015170
+       PDX     ,4                                                    (4)3B015171
+       TXL     *+2,4,13                                              (4)3B015172
+       ADD     =1                                                    (4)3B015173
+       ALS     18                                                       3B015180
+       STD     DMP37+1                                                  3B015190
+       TSX     PSHUP,4                                                  3B015200
+       STA     DMP37+1                                                  3B015210
+       LDQ     DMP37+1                                               (7)3B015211
+       RQL     18                                                    (7)3B015212
+       CAL     DMP37+1                                               (7)3B015213
+       TLQ     *+2                                                   (7)3B015214
+       STQ     DMP37+1                                               (7)3B015215
+       TSX     OPAND,1             GET MODE                             3B015220
+DMP30A ZET     UNDEF                                                    3B015230
+       TRA     INCSX                                                    3B015240
+       ANA     =O77                KEEP ONE CHARACTER                   3B015250
+       SLW     DMP37+2                                                  3B015260
+       TSX     MOTWR,4             OUTPUT CORE MACRO RECORD             3B015270
+       PZE     DMP36                                                    3B015280
+ DMP32 LAC     DMP37+1,1           START LOCATION                       3B015290
+       LXD     DMP37+1,4           END LOCATION                         3B015300
+       SXA     GET+2,4                                                  3B015310
+       SXD     *+1,1                                                    3B015320
+       TXI     *+1,4,**            MAKE X4 = (NUMBER OF CELLS EXAMINED) 3B015330
+       AXT     0,1                                                      3B015340
+ GET   CLA*    *+2                                                      3B015350
+       TNX     EOBLOC,4,1                                               3B015360
+GET1   CAS     **,4                                                     3B015370
+       TRA     *+2                                                      3B015380
+       TXI     *-3,1,1             BUMP COUNT OF MATCHES                3B015390
+       TXL     GET-1,1,MATMAX-2                                         3B015400
+ EOB1  SXD     ALCON+2,1      NUMBER OF MATCHES FOUND                   3B015410
+       SXD     MATNO,1                                                  3B015420
+ MATNO TXI     *+1,4,**                                                 3B015430
+       STO     ALCON+3             WORD THAT IS THE CONSECUTIVE CELLS   3B015440
+       PXA     ,4                                                       3B015450
+       SBM     GET+2               COMPUTE EFFECTIVE ADDRESS            3B015460
+       STA     ALCON+2             FIRST WORD OF BLOCK                  3B015470
+       ADD     =1                   (MINUS 1)                           3B015480
+       STA     AHIGH               ENDING LOCATION OF BLOCK BEING DUMPED3B015490
+ EOB2  LXA     DMP37+1,4                                                3B015500
+       SXA     BHIGH,4                                                  3B015510
+*   OUTPUT ONE OR MORE DETAIL RECORDS                                   3B015520
+ DMP31 LXA     AHIGH,1                                                  3B015530
+       LXA     BHIGH,2                                                  3B015540
+       LAC     BHIGH,4                                                  3B015550
+       SXD     *+1,4                                                    3B015560
+       TXI     *+1,1,**            MAKE X1=(NUMBER OF CELLS)-1          3B015570
+       TXI     *+1,1,3             MAKE X1=RECORD LENGTH                3B015590
+       TXL     DMP33,1,BUFFR        IT WILL ALL FIT INTO BUFFER         3B015600
+       AXT     BUFFR-2,1           NUMBER OF CELLS TO BE OUTPUT         3B015610
+       PXA     ,1                                                       3B015620
+       ADM     BHIGH               ESTABLISH NEXT START POINT           3B015630
+       STA     BHIGH                                                    3B015640
+       STL     DMPCYC              MARK FOR REITERATION                 3B015650
+       TXI     DMP33+1,1,2         MAKE X1=RECORD LENGTH                3B015660
+ DMP33 STZ     DMPCYC                                                   3B015670
+       SXA     DMP39+1,2           START LOCATION                       3B015680
+       SXA     DMP38+1,2                                                3B015690
+       SXA     DMP39,1             RECORD LENGTH                        3B015700
+       TXI     *+1,1,-2                                                 3B015710
+       SXD     DMP38+1,1           NUMBER OF CELLS OUTPUT               3B015720
+       TSX     MOTWR,4             PUT OUT DETAIL RECORD                3B015730
+       PZE     DMP38                                                    3B015740
+       ZET     DMPCYC              DO WE NEED TO DUMP MORE              3B015750
+       TRA     DMP31                -YES                                3B015760
+ALLMAT LXD     ALCON+2,2           IS AN 'ALL CONTAIN' MESSAGE          3B015770
+       TXL     DMP34,2,0            IN ORDER                            3B015780
+       TSX     MOTWR,4              -YES, GIVE IT                       3B015790
+       PZE     ALCON                                                    3B015800
+       SXD     *+2,2                                                    3B015810
+       LXA     AHIGH,4             END OF PRECEEDING DUMP               3B015820
+       TXI     *+1,4,**             + LENGTH OF 'ALL CONTAIN' AREA      3B015830
+       TXI     *+1,4,1                                                  3B015840
+       SXA     DMP37+1,4           BEGINNING OF NEXT SEARCH AREA        3B015850
+       ZSD     ALCON+2             RESET 'ALL CONTAIN' COUNT            3B015860
+       NZT     ENDMAT              WAS END OF DESIRED BLOCK REACHED     3B015870
+       TRA     DMP32                -NO                                 3B015880
+ DMP34 STZ     ENDMAT                                                   3B015890
+       TRA     INCSX                                                    3B015900
+ENDMAT PZE     **                                                       3B015910
+EOBLOC TXI     *+1,4,-1                                                 3B015920
+       TXL     GET1,4,-2                                                3B015930
+       STL     ENDMAT                                                   3B015940
+       TXH     EOB1,1,MATMAX-2                                          3B015950
+       LXD     DMP37+1,4                                                3B015960
+       SXA     AHIGH,4                                                  3B015970
+       TRA     EOB2                                                     3B015980
+ ALCON IOCD    *+1,,3                                                   3B015990
+       PZE     3,1,5                                                    3B016000
+       PZE     **,,**                                                   3B016010
+       BSS     1                                                        3B016020
+STRTPT PZE     **                                                       3B016030
+MATMAX EQU     8                   NUMBER OF CONSECUTIVE CELLS REQUIRED 3B016040
+       SPACE   2                                                        3B016050
+DMP36  IOCD    DMP37,,3            CORE MACRO COMMAND                   3B016060
+*    THE FOLLOWING THREE CELLS ARE THE IMAGE FOR CORE MACRO INFORMATION 3B016070
+DMP37  PZE     3,,2                                                     3B016080
+       PZE     **,,**                                                   3B016090
+       BCI     1,00000X                                                 3B016100
+       SPACE   2                                                        3B016110
+DMPCYC BSS     1                   REITERATION FLAG, DUMP DETAIL        3B016120
+       SPACE   2                                                        3B016130
+DMP38  IOCP    DMP39,,2            COMMANDS FOR                         3B016140
+       IOCD    **,,**                CORE DETAIL RECORD                 3B016150
+*    THE FOLLOWING TWO WORDS ARE THE IMAGE FOR A CORE DETAIL RECORD     3B016160
+DMP39  PZE     **,,4                                                    3B016170
+       PZE     **                                                       3B016180
+       SPACE   5                                                        3B016190
+ OP52  TSX     GETSUB,4                                                 3B016200
+       TSX     RDOP8,4                                                  3B016210
+       TRA     RDOP10                                                   3B016220
+ 65E   NULL                                                             3B016230
+       SPACE   5                                                        3B016240
+       TTR     .LXSTR                                                   3B016250
+FKSTOP OCT     000037000053        TRY FULL DUMP AND TERMINATE          3B016260
+ LXSTR LTM                                                              3B016270
+       LDI     FKSTOP                                                   3B016280
+       STI     .IBDBT                                                   3B016290
+       EJECT                                                            3B016300
+*    DISPLAY PANEL INFORMATION                                          3B016310
+ 67B   NULL                                                             3B016320
+       ZSA     INCSX                                                    3B016330
+       CLA     *                                                        3B016340
+       STO     MOTWR+1             FORCE MOTWR TO WORK AFTER LINE MAX   3B016350
+       CLA     DMP50+1                                                  3B016360
+       STT     RDLRC                                                    3B016370
+       TSX     MOTWR,4                                                  3B016380
+       PZE     STRLST                                                   3B016390
+ DMP50 SXA     X5X3,3                                                   3B016400
+       AXT     9,1                                                      3B016410
+       AXT     7,3                                                      3B016420
+       SXA     PANRC,1                                                  3B016430
+       LXA     X5X3,3                                                   3B016440
+       ENK                                                              3B016450
+       STQ     ENK                                                      3B016460
+       TSX     PANSAV,4                                                 3B016470
+       AXT     6,1                                                      3B016480
+ DMP53 PSE     119,1                                                    3B016490
+       TRA     *+2                                                      3B016500
+       OAI                                                              3B016510
+       ARS     1                                                        3B016520
+       TIX     DMP53,1,1                                                3B016530
+       STI     X4ETC                                                    3B016540
+       LXA     PANRC,4                                                  3B016550
+       SXD     PANLST,4                                                 3B016560
+       TSX     MOTWR,4                                                  3B016570
+       PZE     PANLST                                                   3B016580
+       TSX     PANRES,4                                                 3B016590
+       TRA     INCSX                                                    3B016600
+ 67E   NULL                                                             3B016610
+       LDI     SI                                                       3B016620
+       AXT     1,4                                                      3B016630
+       SXA     INCSX,4                                                  3B016640
+       LXD     X4ETC,4                                                  3B016650
+       TTR     DMPALL                                                   3B016660
+       EJECT                                                            3B016670
+*   DUMP ENTIRE PROGRAM                                                 3B016680
+ 69B   NULL                                                             3B016690
+ DMP70 AXT     DMP75,4                                                  3B016700
+       SXA     DMP34+1,4                                                3B016710
+       AXT     IBDB8E-.IBDB8,4                                          3B016720
+ DMP73 SXA     DMP75,4                                                  3B016730
+       CAL     IBDB8E,4                                                 3B016740
+       TZE     DMP76                                                    3B016750
+       STD     DMP37+1                                                  3B016760
+       STA     DMP37+1                                                  3B016770
+       CAL     =H00000                                                  3B016780
+       TRA     DMP30A                                                   3B016790
+ DMP75 AXT     **,4                                                     3B016800
+ DMP76 TIX     DMP73,4,1                                                3B016810
+       AXT     INCSX,4                                                  3B016820
+       SXA     DMP34+1,4                                                3B016830
+       TRA     INCSX                                                    3B016840
+ 69E   NULL                                                             3B016850
+.IBDB8 PZE     **,,**              (FILLED WITH DUMP LIMITS BY IBLDR)   3B016860
+       PZE     **,,**               (NON-MAIN LINK LIMITS)              3B016870
+       PZE     **,,**               (BLANK COMMON LIMITS)               3B016880
+IBDB8E NULL                                                             3B016890
+       EJECT                                                            3B016900
+*    DUMP BCI STRING  (COMMENT RECORD)                                  3B016910
+ 68B   NULL                                                             3B016920
+ DMP60 TSX     PSHUP,4                                                  3B016930
+       STA     COMENT+2                                                 3B016940
+       TSX     MOTWR,4                                                  3B016950
+       PZE     COMENT                                                   3B016960
+       TRA     INCSX                                                    3B016970
+COMENT IOCD    *+1,,3                                                   3B016980
+       PZE     3,,5                                                     3B016990
+       PZE     **                                                       3B017000
+       PZE                                                              3B017010
+ 68E   NULL                                                             3B017020
+       TTL     IBDIN             OPERATIONS  (SUBSCRIPTS)               3B017030
+*                                                                       3B017040
+*                                                                       3B017050
+*                                                                       3B017060
+*                                                                       3B017070
+*        GET SUBSCRIPTS                                                 3B017080
+*                                                                       3B017090
+*                                                                       3B017100
+*                                                                       3B017110
+ SBB   NULL                                                             3B017120
+*                                                                       3B017130
+GETSUB SXA     GTSUBX,4                                                 3B017140
+       STL     GTSB                                                     3B017150
+       TRA     INCSX                                                    3B017160
+       SXD     RDOP7,1                                                  3B017170
+       TSX     GTRDT,4                                                  3B017180
+       TNZ     *+3                                                      3B017190
+       STL     UNDEF                                                    3B017200
+       TRA     GTSUBX                                                   3B017210
+       STA     GTSBB+4                                                  3B017220
+       ARS     15                                                       3B017230
+       LGR     3                                                        3B017240
+       STA     GTSBB+1             D1                                   3B017250
+       ARS     15                                                       3B017260
+       LGR     1                                                        3B017270
+       CAL     .RDICT,1                                                 3B017280
+       STA     GTSBB+3             D3                                   3B017290
+       PDX     ,1                                                       3B017300
+       SXA     GTSBB+2,1           D2                                   3B017310
+       ZAC                                                              3B017320
+       LGL     4                                                        3B017330
+       PAX     ,1                                                       3B017340
+       SXD     GTSBB+6,1                                                3B017350
+       CLA     =1                                                       3B017360
+       TXL     *+2,1,13            TRA IF NOT DOUBLE OR COMPLEX.        3B017370
+       ALS     1                                                        3B017380
+       STA     GTSBB                                                    3B017390
+       LDQ     GTSBB                                                    3B017400
+       AXT     3,4                                                      3B017410
+       ZET     GTSBB+4,4                                                3B017420
+       MPY     GTSBB+4,4                                                3B017430
+       TIX     *-2,4,1                                                  3B017440
+       XCA                                                              3B017450
+       ADD     GTSBB+4                                                  3B017460
+       SUB     =1                                                       3B017470
+       STA     GTSBB+5                                                  3B017480
+GTSUBX AXT     **,4                                                     3B017490
+       TRA     1,4                                                      3B017500
+*                                                                       3B017510
+ GTSBB PZE     **                  WORDS/ENTRY                          3B017520
+*    INFORMATION ABOUT DIMENSIONED VARIABLES                            3B017530
+       PZE     **                 FIRST DIMENSION                       3B017540
+       PZE     **                 SECOND DIMENSION                      3B017550
+       PZE     **                 THIRD DIMENSION                       3B017560
+       PZE     **                 FIRST LOCATION OF ENTRY               3B017570
+       PZE     **                  SIZE OF ARRAY                        3B017580
+       PON     0,,**               MODE                                 3B017590
+ SBE   NULL                                                             3B017600
+       TTL     IBDIN               EXTENDED PANEL SAVE + RESTORE        3B017610
+ AEB   NULL                                                             3B017620
+PANSAV SXA     PANOUT,4                                                 3B017630
+       SXA     X5X3,3                                                   3B017640
+       SXD     X5X3,5                                                   3B017650
+       SXA     X7X6,6                                                   3B017660
+       SXD     X7X6,7                                                   3B017670
+       LDI     X4ETC                                                    3B017680
+       CAL     SL1                                                      3B017690
+       AXT     4,4                                                      3B017700
+ PS1   SLT     5,4                                                      3B017710
+       TRA     *+2                                                      3B017720
+       OAI                                                              3B017730
+       ARS     1                                                        3B017740
+       TIX     PS1,4,1                                                  3B017750
+       DCT                                                              3B017760
+       SIB     DC                                                       3B017770
+       IOT                                                              3B017780
+       SIB     IO                                                       3B017790
+PANOUT AXT     **,4                                                     3B017800
+       TRA     1,4                                                      3B017810
+PANRES SXA     PANOUT,4                                                 3B017820
+       DCT                                                              3B017830
+       NOP                                                              3B017840
+       IOT                                                              3B017850
+       NOP                                                              3B017860
+       LDI     X4ETC                                                    3B017870
+       BFT     DC                                                       3B017880
+       DVP     =0                                                       3B017890
+       BFT     IO                                                       3B017900
+       OCT     070000000000        (CPY INSTRUCTION)                    3B017910
+       AXT     4,4                                                      3B017920
+       CAL     SL1                                                      3B017930
+       SLF                                                              3B017940
+ PR1   TIF     *+2                                                      3B017950
+       SLN     5,4                                                      3B017960
+       ARS     1                                                        3B017970
+       TIX     PR1,4,1                                                  3B017980
+       TRA     PANOUT                                                   3B017990
+ SL1   OCT     4000                                                     3B018000
+ AEE   NULL                                                             3B018010
+       TTL     IBDIN               READ   (USING .RDICT)                3B018020
+*   READ OPERAND, USING .RDICT                                          3B018030
+ RDOP  SXD     RDOP7,1             PUT RDICT POINTER IN DECREMENT.      3B018040
+       LDC     RDOP7,1                                                  3B018050
+ RDOP2 AXT     **,2                XR2 = NO. OF DUMMY VARIABLES.        3B018060
+       TXH     RDOP3,2,0           TRA IF DUMMY VARIABLES.              3B018070
+ RDOP4 TSX     PSHDN,4             GET A PUSHDOWN SLOT (XR2 WILL POINT) 3B018080
+       CLA     =O100000000000      AND PUT ENTRY IN.                    3B018090
+       STO     0,2                                                      3B018100
+       TSX     GTRDT,4                                                  3B018110
+       TZE     RDOP9               UNDEFINED ENTRY                      3B018120
+       STA     0,2                                                      3B018130
+       LGR     18                                                       3B018140
+       ARS     15                  EXTRACT MODE.                        3B018150
+       LGR     1                                                        3B018160
+       ZAC                                                              3B018170
+       LGL     22                                                       3B018180
+       STD     0,2                 STORE MODE.                          3B018190
+       TRA     INCSX                                                    3B018200
+ RDOP7 PZE                                                              3B018210
+       TTL     IBDIN              READ  (VIA CONSTANT POOL)             3B018220
+*    READ VIA CONSTANT POOL                                             3B018230
+ RCON  PXA     ,1                                                       3B018240
+       LRS     11                 PUSH MODE TO RIGHT OF AC              3B018250
+       ALS     7                  SEPARATE IT FROM INCREMENT            3B018260
+       LLS     11                                                       3B018270
+       TSX     PSHDN,4                                                  3B018280
+       ADD     RCON1              COMPLETE PUSHDOWN ENTRY               3B018290
+       TRA     RDOP10                                                   3B018300
+ RCON1 PON     .IBDB2-1                                                 3B018310
+       TTL     IBDIN              READ  (IMMEDIATE OPERAND)             3B018320
+*                                                                       3B018330
+*    OPERAND IS IN IMMEDIATE FORM, PUT (X1) INTO PUSHDOWN TABLE         3B018340
+ RABS  PXA     ,1                                                       3B018350
+       ORA     =1B2                                                     3B018360
+       TRA     VALUE+1                                                  3B018370
+       SPACE   2                                                        3B018380
+ VALUE PXA     ,1                                                       3B018390
+       TSX     PSHDN,4                                                  3B018400
+       TRA     RDOP10                                                   3B018410
+       SPACE   5                                                        3B018420
+ RMR   PXA     ,1                                                       3B018430
+       SSM                                                              3B018440
+       TRA     VALUE+1                                                  3B018450
+*                                                                       3B018460
+ RDOP8 NZT     UNDEF                                                    3B018470
+       TRA     PSHDN                                                    3B018480
+       TSX     PSHDN,4                                                  3B018490
+ RDOP9 CLA     =O700000000000      PUT UNDEFINED CODE INTO              3B018500
+RDOP10 STO     0,2                  PUSHDOWN TABLE                      3B018510
+       TRA     INCSX                                                    3B018520
+       TTL     IBDIN UTILITY FUNCTIONS                                  3B018530
+ AGB   NULL                                                             3B018540
+FXOPND SXA     OPTRI2,1                                                 3B018550
+       TSX     OPAND,1                                                  3B018560
+       TXL     OPTRI1,4,6          MODE IS NOT FLOATING                 3B018570
+*                                                                       3B018580
+*        FIX OPERAND TO ADDRESS                                         3B018590
+*                                                                       3B018600
+       TSX     FIX,4                                                    3B018610
+OPTRI1 PAX     ,4                                                       3B018620
+       TPL     OPTRI2                                                   3B018630
+       PAC     0,4                 IF RESULT IS NEGATIVE                3B018640
+OPTRI2 AXT     **,1                                                     3B018650
+       TRA     1,1                                                      3B018660
+ AGE   NULL                                                             3B018670
+       EJECT                                                            3B018680
+*   FLOAT TO FIX                                                        3B018690
+ FIX   UFA     =182B8                                                   3B018700
+       RQL     8                                                        3B018710
+       LRS     8                                                        3B018720
+       XCA                                                              3B018730
+       TRA     1,4                                                      3B018740
+       EJECT                                                            3B018750
+*                                                                       3B018760
+*      PICK OFF THE OPERAND ON THE TOP OF THE PD STACK.                 3B018770
+*                                                                       3B018780
+ OPAND TSX     PSHUP,4                                                  3B018790
+       SXA     OPANX,1                                                  3B018800
+       STA     OPANA                                                    3B018810
+       PDX     0,4                 XR4 = DECR.                          3B018820
+       ARS     15                                                       3B018830
+       PDC     0,1                 XR1 = -PREFIX                        3B018840
+       LDQ     =0                                                       3B018850
+       TMI     OPAN4               MACHINE REGISTER                     3B018880
+       TRA     *+1,1                                                 (8)3B018890
+       TRA     OPANV               0 - VALUE ENTRY                      3B018900
+       TRA     OPAN1               1 - MEMORY POINTER.                  3B018910
+       TRA     OPAN1               2 - TEMPORARY STORAGE POINTER        3B018920
+ OPANV CLA     OPANA                                                    3B018930
+ OPANX AXT     **,1                                                     3B018940
+       TRA     1,1                                                      3B018950
+ OPAN1 LAC     OPANA,2                                                  3B018960
+       TXL     *+2,4,13            OCTAL 16 AND 17 ARE DBLE AND COMPLEX.3B018970
+       LDQ     1,2                                                      3B018980
+       CLA     0,2                                                      3B018990
+       TRA     OPANX                                                    3B019000
+       EJECT                                                            3B019010
+*                                                                       3B019020
+*                                                                       3B019030
+*        GET RESULT STORAGE LOCATION                                    3B019040
+*                                                                       3B019050
+ GETRS SXA     GETRS2,4                                                 3B019060
+       TSX     RDOP8,4                                                  3B019070
+       LXA     MODE,4                                                   3B019080
+       SXD     GETRS3,4                                                 3B019090
+GETRS1 AXT     .IBDB6,4                                                 3B019100
+       SXA     GETRS3,4                                                 3B019110
+       CAL     GETRS3                                                   3B019120
+       TXI     *+1,4,2                                                  3B019130
+       TXH     RSERR,4,.IBDB2-2                                         3B019140
+       SXA     GETRS1,4                                                 3B019150
+       STO     0,2                 STORE  PTW P.S.P,,MODE.              3B019160
+       PAC     0,2                                                      3B019170
+GETRS2 AXT     **,4                                                     3B019180
+       TRA     1,4                                                      3B019190
+GETRS3 PTW     **,,**                                                   3B019200
+ RSERR STR                                                              3B019210
+*                                                                       3B019220
+       EJECT                                                            3B019230
+*    GET .RDICT ENTRY                                                   3B019240
+ GTRDT LDC     RDOP7,1                                                  3B019250
+ GTRD1 CAL     .RDICT-1,1                                               3B019260
+       TRA     1,4                                                      3B019270
+       EJECT                                                            3B019280
+*    READOUT TOP OPERAND IN PUSHDOWN TABLE                              3B019290
+ PSHUP LXA     PSHDN,2                                                  3B019300
+       CLA     0,2                                                      3B019310
+       TXI     *+1,2,1                                                  3B019320
+       SXA     PSHDN,2                                                  3B019330
+       ZET     CALL                                                     3B019333
+       TRA     *+4                                                      3B019337
+       CAS     =2B2                                                     3B019340
+       STA     GETRS1              FREE TEMPORARY STORAGE CELL          3B019350
+       NOP                                                              3B019360
+       CAS     =-3B2                                                    3B019370
+       TRA     1,4                                                      3B019380
+       SSP                                                           $5$3B019390
+       STL     UNDEF                                                    3B019400
+       TRA     1,4                                                      3B019410
+       SPACE   2                                                        3B019420
+*                                                                       3B019430
+*                                                                       3B019440
+*    LOCATE NEXT CELL IN PUSHDOWN TABLE                                 3B019450
+ PSHDN AXT     -.IBDB5+1,2                                              3B019460
+       TXI     *+1,2,-1                                                 3B019470
+       TXL     PSHDN1,2,-.IBDB6                                         3B019480
+       SXA     PSHDN,2                                                  3B019490
+       TRA     1,4                                                      3B019500
+PSHDN1 STR                         PUSHDOWN TABLE SIZE EXCEEDED         3B019510
+       TTL     IBDIN AND DUMPS WORKING STORAGE                          3B019520
+*    THE FOLLOWING TWO CELLS CONTAIN OPERAND 'A'                        3B019530
+ AHIGH PZE                                                              3B019540
+ ALOW  PZE                                                              3B019550
+       SPACE   2                                                        3B019560
+*    THE FOLLOWING TWO CELLS CONTAIN OPERAND 'B'                        3B019570
+ BHIGH PZE                                                              3B019580
+ BLOW  PZE                                                              3B019590
+       SPACE   2                                                        3B019600
+ MODE  PZE     **                  MODE OF THE OPERANDS                 3B019610
+MMODE1 PZE     14                  DOUBLE PRECISION MODE.               3B019620
+MMODE2 PZE     7                   FLOATING POINT MODE.                 3B019630
+       SPACE   2                                                        3B019640
+ OPANA PZE                         POINTS TO STORAGE LOCATION OF OPRND  3B019650
+ UNDEF PZE                         NON-ZERO IF AN OPERAND WAS UNDEFINED 3B019660
+       SPACE   3                                                        3B019670
+ GTSB  PZE     **                 FLAG TO RETURN TO SUBSCRIPT PROCESSOR 3B019680
+       SPACE   2                                                        3B019690
+*    THE FOLLOWING CELLS ARE USED TO OUTPUT A RECORD ABOUT THE LOCATION 3B019700
+*    THE DUMPING STR OCCURRED.                                          3B019710
+STRLST IOCP    RDLRC,,2            STR LOC OUTPUT COMMAND               3B019720
+*    THE FOLLOWING TWO CELLS ARE FILLED WITH APPROPRIATE INFORMATION    3B019730
+*      FOR EITHER OVERLAY OR NON-OVERLAY EXECUTIONS.                    3B019740
+       ENTRY   .LSTR                                                    3B019750
+ .LSTR BSS     1                   IOCD  .LDT+1,,.LRECT-1-.LDT          3B019760
+ RDLRC BSS     1                   PZE   .LRECT-.LDT+1,,6               3B019770
+ LSTR  PZE     **                  LOCATION OF STR                      3B019780
+ DUMP  BSS     1                   DUMP REQUEST LOCATION FLAG           3B019790
+       SPACE   2                                                        3B019800
+PANLST IOCD    PANRC,,**           COMMAND FOR PANEL RECORD             3B019810
+*    THE FOLLOWING 9 CELLS ARE  A PANEL RECORD IMAGE                    3B019820
+PANRC  PZE     **,,1                                                    3B019830
+ AC    BSS     1                                                        3B019840
+ MQ    BSS     1                                                        3B019850
+ SI    BSS     1                                                        3B019860
+QPX2X1 ***     **,,**                                                   3B019870
+ X4ETC BSS     1                                                        3B019880
+ ENK   BSS     1                                                        3B019890
+ X5X3  PZE     **,,**                                                   3B019900
+ X7X6  PZE     **,,**                                                   3B019910
+ LAC   BSS     1                  LOGICAL ACCUMULATOR                   3B019920
+ DUMP1 PZE     0                   FLAG INDICATING FIRST DUMP TAKEN     3B019930
+       SPACE   2                                                        3B019940
+ TEMP  BSS     1                   SCRATCH CELL                         3B019950
+       SPACE   2                                                        3B019960
+ WDCNT PZE     **                                                       3B019970
+       SPACE   3                                                        3B019980
+NOMORE PTW     SYSOU1,,*+1                                              3B019990
+       IORP    *+2,,3                                                   3B020000
+       TCH     .LTCH                                                    3B020010
+       BCI     3, TRAP MAX REACHED.                                     3B020020
+       SPACE   2                                                        3B020030
+*    PLANT DEBUG FILE CLOSE IN .LXCON                                   3B020040
+       USE     ABS                                                      3B020050
+       ORG     .DBCLS                                                   3B020060
+       TSX     DMP90,1                                                  3B020070
+       USE     PREVIOUS                                                 3B020080
+       SPACE   4                                                        3B020090
+*    THE FOLLOWING SECTIONS ARE PUT INTO THIS DECK TO KEEP THE          3B020100
+*      SUBROUTINE LIBRARY FREE OF 1NDEFINED VIRTUALS.                   3B020110
+*    THE ACTUAL CONTROL SECTIONS WILL BE IN THE IBDBL COMPILER GENERATED3B020120
+*      DECK, '.DBGTX'.                                                  3B020130
+       USE     .IBDBT                                                   3B020140
+.IBDBT CONTRL  .IBDBT                                                   3B020150
+       USE     .IBDB1                                                   3B020160
+.IBDB1 CONTRL  .IBDB1                                                   3B020170
+       USE     .IBDB2                                                   3B020180
+.IBDB2 CONTRL  .IBDB2                                                   3B020190
+       USE     .IBDB5                                                   3B020200
+.IBDB5 CONTRL  .IBDB5                                                   3B020210
+       USE     .IBDB6                                                   3B020220
+.IBDB6 CONTRL  .IBDB6                                                   3B020230
+       USE                                                              3B020240
+OPCAL1 NULL                                                             3B020250
+.IBDB7 ENTRY   OPCAL1                                                   3B020260
+.IBDB8 CONTRL  .IBDB8,IBDB8E                                            3B020270
+       END     DSTRS                                                    3B020280

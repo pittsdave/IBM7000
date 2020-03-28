@@ -1,0 +1,36 @@
+$IBMAP CAR08   ADDREL                                                   3LA00000
+       LBL     AR08,BEGIN     CAR08                                  (7)3LA00010
+*              NOTE     ENTER VIA                                       3LA00020
+*                                                                       3LA00030
+*              TSX  .CAR0X,4  X= 8 OR 9                                 3LA00040
+*              NOTE      PZE   L(C)                                     3LA00050
+*                                                                       3LA00060
+*              NOTE     WHERE L(C) IS THE LOCATION OF A SCALING         3LA00070
+*              NOTE      CONSTANT.                                      3LA00080
+*                                                                       3LA00090
+*              .CAR09 DOWNSCALES THE DOUBLE PRECISION AC-MQ             3LA00100
+*              NOTE      BY C, LEAVING THE RESULT IN THE AC-MQ.         3LA00110
+*              .CAR08 DOWNSCALES THE DOUBLE PRECISION AC-MQ BY          3LA00120
+*              NOTE      10**10 FOLLOWED BY C, LEAVING THE RESULT IN    3LA00130
+*              NOTE      THE MQ.                                        3LA00140
+       ENTRY   .CAR08                                                   3LA00150
+.CAR08 STQ     SCLAX               SAVE LOWER                           3LA00160
+       LRS     35                  GET UPPER                            3LA00170
+       DVP     L.101X                QUOTIENT                           3LA00180
+       STQ     SCLBX                                                    3LA00190
+       LDQ     SCLAX                                                    3LA00200
+       DVP     L.101X              GET LOWER QUOTIENT AND               3LA00210
+       CLA     SCLBX                 RESTORE NUMBER                     3LA00220
+       ENTRY   .CAR09                                                   3LA00230
+.CAR09 STQ     SCLAX               SAVE LOWER                           3LA00240
+       LRS     35                  SECOND UPPER                         3LA00250
+       DVP*    1,4                   QUOTIENT                           3LA00260
+       STQ     SCLBX                                                    3LA00270
+       LDQ     SCLAX               REMAINDER + LOWER QUOTIENT YIELDS    3LA00280
+       DVP*    1,4                   FINAL LOWER QUOTIENT               3LA00290
+       CLA     SCLBX                 AND RESULT                         3LA00300
+       TRA     2,4                                                      3LA00310
+L.101X OCT     112402762000        10**10                               3LA00320
+SCLAX  PZE     0                   TEMPORARY                            3LA00330
+SCLBX  PZE     0                      STORAGE                           3LA00340
+       END                                                              3LA00350

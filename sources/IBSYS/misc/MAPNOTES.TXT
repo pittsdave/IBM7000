@@ -1,0 +1,16 @@
+The .map files here were generated from "SYSTEM.IAS" which was in
+turn generated from files obtained from Paul Pierce's site at:-
+http://www.piercefuller.com/oldibm-shadow/709x.html
+ 
+Each file (more or less) is a separate assembly deck for the IBM 7090/7094
+IBSYS operating system. They were created by spliting the orginal tape
+records at each occurance of $IBMAP (the assembler program).
+There are some ifs and buts:-
+ 
+The file names are based on the name following "$IBMAP". Some of these
+included dots (full stops, periods). These have been changed to "_" to
+create legal Linux filenames.
+ 
+The last file in the original deck is incomplete.
+It is just an incomplete duplicate of _iocs.map.
+ 

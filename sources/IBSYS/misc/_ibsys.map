@@ -1,0 +1,127 @@
+$IBSYS                                                                  ED099998
+$STOP                                                                   ED099999
+$DATE          120164                                                $5$3A000000
+$*     7090/7094 IBJOB LIBRARY (IBLIB), 7090-LM-803,                    3A000001
+$*     VERSION 5, MODIFICATION LEVEL 0.                              $5$3A000002
+$*     IBJOB LIBRARY (IBLIB), 7090-LM-803, VERSION 5, MOD. LEVEL 4   (4)3A000005
+$*     IBJOB LIBRARY (IBLIB), 7090-LM-803, VERSION 5, MOD. LEVEL 5   (5)3A000006
+$*     IBJOB LIBRARY (IBLIB), 7090-LM-803, VERSION 5, MOD. LEVEL 6   (6)3A000007
+$*     IBJOB LIBRARY (IBLIB), 7090-LM-803, VERSION 5, MOD. LEVEL 7   (7)3A000008
+$*     IBJOB LIBRARY (IBLIB), 7090-LM-803, VERSION 5, MOD. LEVEL 8   (8)3A000009
+$*     IBJOB LIBRARY (IBLIB), 7090-LM-803, VERSION 5, MOD. LEVEL 9   (9)3A00000A
+$*     IBJOB LIBRARY (IBLIB), 7090-LM-803, VERSION 5, MOD. LEVEL 10 (10)3A00000B
+$*     IBJOB LIBRARY (IBLIB), 7090-LM-803, VERSION 5, MOD. LEVEL 11 (11)3A00000C
+$*     IBJOB LIBRARY (IBLIB), 7090-LM-803, VERSION 5, MOD. LEVEL 12 (12)3A00000D
+$*     IBJOB LIBRARY (IBLIB), 7090-LM-803, VERSION 5, MOD. LEVEL 13 (13)3A00000E
+$*     IBJOB LIBRARY (IBLIB), 7090-LM-803, VERSION 5, MOD. LEVEL 14 (14)3A00000F
+$EXECUTE       IBJOB                                                    3A000010
+$IBJOB IBLIB   NOGO                                                     3A000020
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .IBSYS                          3AA00000
+$IBMAP .IBSYS                                                           3AA00010
+*  IBSYS  MEMORY MAP SUBROUTINE                                         3AA00020
+       ENTRY   SYSTRA                                                   3AA00030
+       ENTRY   SYSDAT                                                   3AA00040
+       ENTRY   SYSCUR                                                   3AA00050
+       ENTRY   SYSRET                                                   3AA00060
+       ENTRY   SYSKEY                                                   3AA00070
+       ENTRY   SYSSWS                                                   3AA00080
+       ENTRY   SYSPOS                                                   3AA00090
+       ENTRY   SYSUNI                                                   3AA00100
+       ENTRY   SYSUBC                                                   3AA00110
+       ENTRY   SYSUAV                                                   3AA00120
+       ENTRY   SYSUCW                                                   3AA00130
+       ENTRY   SYSRPT                                                   3AA00140
+       ENTRY   SYSCEM                                                   3AA00150
+       ENTRY   SYSDMP                                                   3AA00160
+       ENTRY   SYSIOX                                                   3AA00170
+       ENTRY   SYSIDR                                                   3AA00180
+       ENTRY   SYSCOR                                                   3AA00190
+       ENTRY   SYSLDR                                                   3AA00200
+       ENTRY   SYSPID                                                   3AA00210
+       ENTRY   SYSCYD                                                   3AA00215
+       ENTRY   SYSACC                                                   3AA00220
+       ENTRY   SYSTWT                                                   3AA00230
+       ENTRY   SYSLB1                                                   3AA00240
+       ENTRY   SYSLB2                                                   3AA00250
+       ENTRY   SYSLB3                                                   3AA00260
+       ENTRY   SYSLB4                                                   3AA00270
+       ENTRY   SYSCRD                                                   3AA00280
+       ENTRY   SYSPRT                                                   3AA00290
+       ENTRY   SYSPCH                                                   3AA00300
+       ENTRY   SYSOU1                                                   3AA00310
+       ENTRY   SYSOU2                                                   3AA00320
+       ENTRY   SYSIN1                                                   3AA00330
+       ENTRY   SYSIN2                                                   3AA00340
+       ENTRY   SYSPP1                                                   3AA00350
+       ENTRY   SYSPP2                                                   3AA00360
+       ENTRY   SYSCK1                                                   3AA00370
+       ENTRY   SYSCK2                                                   3AA00380
+       ENTRY   SYSUT1                                                   3AA00390
+       ENTRY   SYSUT2                                                   3AA00400
+       ENTRY   SYSUT3                                                   3AA00410
+       ENTRY   SYSUT4                                                   3AA00420
+       ENTRY   SYSUT5                                                $5$3AA00421
+       ENTRY   SYSUT6                                                $5$3AA00422
+       ENTRY   SYSUT7                                                $5$3AA00423
+       ENTRY   SYSUT8                                                $5$3AA00424
+       ENTRY   SYSUT9                                                $5$3AA00425
+       ENTRY   SYSSLD                                                   3AA00430
+       ENTRY   SYSGET                                                   3AA00440
+       ENTRY   SYSJOB                                                   3AA00450
+       ENTRY   SYSTCH                                                   3AA00451
+       EJECT                                                            3AA00460
+*  IBSYS SYSUNI ASSIGNMENTS                                             3AA00470
+SYSLB1 BSS     1                                                        3AA00480
+SYSLB2 BSS     1                                                        3AA00490
+SYSLB3 BSS     1                                                        3AA00500
+SYSLB4 BSS     1                                                        3AA00510
+SYSCRD BSS     1                                                        3AA00520
+SYSPRT BSS     1                                                        3AA00530
+SYSPCH BSS     1                                                        3AA00540
+SYSOU1 BSS     1                                                        3AA00550
+SYSOU2 BSS     1                                                        3AA00560
+SYSIN1 BSS     1                                                        3AA00570
+SYSIN2 BSS     1                                                        3AA00580
+SYSPP1 BSS     1                                                        3AA00590
+SYSPP2 BSS     1                                                        3AA00600
+SYSCK1 BSS     1                                                        3AA00610
+SYSCK2 BSS     1                                                        3AA00620
+SYSUT1 BSS     1                                                        3AA00630
+SYSUT2 BSS     1                                                        3AA00640
+SYSUT3 BSS     1                                                        3AA00650
+SYSUT4 BSS     1                                                        3AA00660
+SYSUT5 BSS     1                                                     $5$3AA00661
+SYSUT6 BSS     1                                                     $5$3AA00662
+SYSUT7 BSS     1                                                     $5$3AA00663
+SYSUT8 BSS     1                                                     $5$3AA00664
+SYSUT9 BSS     1                                                     $5$3AA00665
+       SPACE   2                                                        3AA00670
+*  IBSYS COMMUNICATION REGION                                           3AA00680
+       BSS     40                                                    $5$3AA00690
+SYSTRA BSS     1                                                        3AA00700
+SYSDAT BSS     1                                                        3AA00710
+SYSCUR BSS     1                                                        3AA00720
+SYSRET BSS     1                                                        3AA00730
+SYSKEY BSS     1                                                        3AA00740
+SYSSWS BSS     1                                                        3AA00750
+SYSPOS BSS     1                                                        3AA00760
+SYSUNI BSS     1                                                        3AA00770
+SYSUBC BSS     1                                                        3AA00780
+SYSUAV BSS     1                                                        3AA00790
+SYSUCW BSS     1                                                        3AA00800
+SYSRPT BSS     1                                                        3AA00810
+SYSCEM BSS     1                                                        3AA00820
+SYSDMP BSS     1                                                        3AA00830
+SYSIOX BSS     1                                                        3AA00840
+SYSIDR BSS     1                                                        3AA00850
+SYSCOR BSS     1                                                        3AA00860
+SYSLDR BSS     1                                                        3AA00870
+SYSACC BSS     1                                                        3AA00880
+SYSPID BSS     1                                                        3AA00890
+SYSCYD BSS     2                                                        3AA00900
+SYSSLD BSS     1                                                        3AA00910
+SYSTCH BSS     2                                                        3AA00920
+SYSTWT BSS     1                                                        3AA00930
+SYSGET BSS     1                                                        3AA00940
+SYSJOB BSS     1                                                        3AA00950
+       END                                                              3AA00960

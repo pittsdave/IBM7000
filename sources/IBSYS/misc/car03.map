@@ -1,0 +1,23 @@
+$IBMAP CAR03   ADDREL                                                   3L800000
+       LBL     AR03,BEGIN     CAR03                                  (7)3L800010
+*              NOTE      PRECISION FIXED POINT NUMBERS.                 3L800020
+*              NOTE      ENTER VIA,                                     3L800030
+*                                                                       3L800040
+*              NOTE  TSX  .CAR03,4                                      3L800050
+*                                                                       3L800060
+*              NOTE      WITH THE NUMBER IN THE AC-MQ. THE RESULT       3L800070
+*              NOTE     IS LEFT IN THE AC-MQ.                           3L800080
+       ENTRY   .CAR03                                                   3L800090
+.CAR03 STQ     ADJB                SAVE LOWER HALF,L                    3L800100
+       TZE     *+2                 IF UPPER NOT ZERO, PRODUCE           3L800110
+       ACL     ADJA                  U-1 IN CELL ADJC AND               3L800120
+       STO     ADJC                  SGN(U)*2**36) IN ACCUM.            3L800130
+       SUB     ADJC                                                     3L800140
+       ADD     ADJB                PRODUCE L OR (2**36)-L               3L800150
+       LRS     35                    IN MQ, 0 OR 1 IN AC, SIGNS ALIKE.  3L800160
+       ADD     ADJC                RESTORE CORRECTED U                  3L800170
+       TRA     1,4                   IN AC, AND EXIT                    3L800180
+ADJA   OCT     377777777777        ADJUST CONSTANT                      3L800190
+ADJB   PZE     0                   TEMPORARY                            3L800200
+ADJC   PZE     0                      STORAGE                           3L800210
+       END                                                              3L800220

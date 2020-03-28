@@ -1,0 +1,33 @@
+$IBMAP CAR10   ADDREL                                                   3LB00000
+       LBL     AR10,BEGIN     CAR10                                  (7)3LB00010
+*              NOTE      FIXED POINT DIVIDE.                            3LB00020
+*              NOTE      ENTER VIA                                      3LB00030
+*                                                                       3LB00040
+*              TSX  .CAR10,4                                            3LB00050
+*                                                                       3LB00060
+*              NOTE      WITH DIVISOR IN AC-MQ, HIGH ORDER DIVIDEND     3LB00070
+*              NOTE      IN SYSOPH, AND LOW ORDER DIVIDEND IN SYSOPL.   3LB00080
+*              NOTE     THE RESULT IS LEFT IN THE AC-MQ.                3LB00090
+       ENTRY   .CAR10                                                   3LB00100
+.CAR10 SXA     SDX,4               SAVE RETURN                          3LB00110
+       AXT     0,4                                                      3LB00120
+       TZE     *+3                 REDUCE DIVISOR TO                    3LB00130
+       LRS     1                     SINGLE PRECISION AND               3LB00140
+       TXI     *-2,4,-1              COUNT BINARY SHIFT                 3LB00150
+       STQ     SDTP                                                     3LB00160
+       CLA     SYSOPH                                                   3LB00170
+       LDQ     SYSOPL              SHIFT DIVIDEND BY                    3LB00180
+       LRS     0,4                   SAME AMOUNT                        3LB00190
+       STQ     SYSOPL              SAVE LOWER                           3LB00200
+       LRS     35                                                       3LB00210
+       DVP     SDTP                PRODUCE UPPER QUOTIENT               3LB00220
+       STQ     SYSOPH                AND SAVE                           3LB00230
+       LDQ     SYSOPL                                                   3LB00240
+       DVP     SDTP                FINAL QUOTIENT                       3LB00250
+       CLA     SYSOPH                AND RESULT                         3LB00260
+SDX    AXT     0,4                                                      3LB00270
+       TRA     1,4                                                      3LB00280
+SDTP   PZE     0                   TEMPORARY                            3LB00290
+SYSOPH EQU     .CARS1                                                   3LB00300
+SYSOPL EQU     .CARS2                                                   3LB00310
+       END                                                              3LB00320

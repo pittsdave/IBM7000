@@ -1,0 +1,42 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .IOCSL                          3IOC0000
+$IBMAP .IOCSL  100,()OK                                                 3IOC0010
+       LBL     .IOL,BEGIN     .IOCSL                                 (7)3IOC0013
+       TTL     .IOCSL/COMMUNICATION REGION FOR LABEL IOCS               3IOC0020
+*      OVERLAY PACKAGE FOR LABEL IOCS                                   3IOC0030
+*              MUST FOLLOW .BASCR ON LIBRARY UNIT                       3IOC0040
+       ENTRY   .NSLB1                                                   3IOC0050
+       ENTRY   .NSLB2                                                   3IOC0060
+       ENTRY   .NSLB3                                                   3IOC0070
+       ENTRY   .NSLB4                                                   3IOC0080
+       ENTRY   .NSLB5                                                   3IOC0090
+*                                                                       3IOC0100
+.NSLB1 TTR     .LABRT                                                   3IOC0110
+.NSLB2 TTR     .LABRT+1                                                 3IOC0120
+.NSLB3 TTR     .LABRT+2                                                 3IOC0130
+.NSLB4 TTR     .LABRT+3                                                 3IOC0140
+.NSLB5 TTR     .LABRT+4                                                 3IOC0150
+*                                                                       3IOC0160
+       ORG     .SH9+1                                                   3IOC0190
+       TSX     .LABCO,1                                                 3IOC0200
+*                                                                       3IOC0210
+*                                                                       3IOC0220
+       ORG     .OP7                                                     3IOC0230
+       TSX     .LABCI,1                                                 3IOC0240
+*                                                                       3IOC0250
+       ORG     .OP9.2                                                   3IOC0260
+       TSX     .LABOO,1                                                 3IOC0270
+*                                                                       3IOC0280
+       ORG     .MNT1A                                                   3IOC0290
+       CLA     .MNT6                                                    3IOC0300
+*                                                                       3IOC0310
+       ORG     .EOFEX+1                                                 3IOC0320
+       TSX     .LAEOF,1                                                 3IOC0330
+*                                                                       3IOC0340
+       ORG     .ETOF3                                                   3IOC0350
+       TSX     .LBEOT,1                                                 3IOC0360
+*                                                                       3IOC0370
+       ORG     .ETOF3+3                                                 3IOC0380
+       TSX     .LABOO,1                                                 3IOC0390
+*                                                                       3IOC0400
+       ORG     .IOCSB                                                   3IOC0410
+       END                    END OF LABEL OVERLAY                      3IOC0420

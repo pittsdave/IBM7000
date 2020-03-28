@@ -1,0 +1,30 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .JBCON                          3AC00000
+$IBMAP .JBCON  19                                                       3AC00010
+       TTL     .JBCON - OBJECT TIME IBJOB COMMUNICATIONS AREA        $5$3AC00015
+SYSLOC ENTRY   SYSLOC                                                   3AC00020
+SYSFAZ ENTRY   SYSFAZ                                                   3AC00030
+.JCOR  ENTRY   .JCOR                                                    3AC00040
+.JDATE ENTRY   .JDATE                                                   3AC00050
+.JLDAT ENTRY   .JLDAT                                                   3AC00060
+.JTYPE ENTRY   .JTYPE                                                   3AC00070
+.JLIN  ENTRY   .JLIN                                                    3AC00080
+.JVER  ENTRY   .JVER                                                    3AC00090
+SYSDSB ENTRY   SYSDSB                                                   3AC00100
+.IOEXD ENTRY   .IOEXD                                                   3AC00101
+.FDPOS ENTRY   .FDPOS                                                   3AC00102
+.JDTRK ENTRY   .JDTRK                                                   3AC00103
+SYSZRO ENTRY   SYSZRO                                                $5$3AC00104
+SYSLOC BSS     1                                                        3AC00110
+SYSFAZ BSS     1                                                        3AC00120
+.JCOR  BSS     1                                                        3AC00130
+.JDATE BSS     1                                                        3AC00140
+.JLDAT BSS     2                                                        3AC00150
+.JTYPE BSS     1                                                        3AC00160
+.JLIN  BSS     1                                                        3AC00170
+.JVER  BSS     1                                                        3AC00180
+SYSDSB ENB     SYSZRO                                                $5$3AC00190
+.IOEXD BSS     25                                                       3AC00191
+.FDPOS BSS     1                                                        3AC00192
+.JDTRK BSS     1                                                        3AC00193
+SYSZRO PZE     0,,0                                                  $5$3AC00194
+       END                                                              3AC00200

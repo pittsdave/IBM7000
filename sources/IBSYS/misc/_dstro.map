@@ -1,0 +1,120 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .DSTRO                          3D000000
+$IBMAP .DSTRO                                                           3D000010
+       TTL  .DSTRO - DEBUG STR SRCH ROUT. FOR OVERLAY EXECUTIONS     (7)3D000020
+       LBL     .DSO,BEGIN     .DSTRO                                 (7)3D000030
+*    THIS ROUTINE IS ENTERED WITH AN ABSOLUTE LOCATION IN THE DECREMENT 3D000040
+*     OF THE ACCUMULATOR. THE REST OF THE ACCUMULATOR IS CLEARED.       3D000050
+*     .TBSTR IS SEARCHED FOR A DEBUBGING REQUEST LOCATED AT THIS POINT. 3D000060
+*       (ONLY LINKS PRESENT IN CORE ARE SEARCHED)                       3D000070
+*     IF ONE IS FOUND, A LOOKAHEAD IS DONE TO DETERMINE IF MORE THAN ONE3D000080
+*     REQUEST HAS BEEN MADE FOR THIS LOCATION IN THIS LINK.  IF ANOTHER 3D000090
+*     FOUND, THE ROUTINE HOLDS ITS LOCATION IN THE TABLE, AND EXITS     3D000100
+*     WITH THE ACCUMULATOR NEGATIVE.  THE LOCATION OF THE FIRST      (4)3D000110
+*     MATCHING ENTRY, WHICH CONTAINS THE TRUE OP CODE PREFIX OF THE  (4)3D000111
+*     REQUEST POINT, IS SAVED IN .IBPRE OF .IBDBI.                   (4)3D000112
+*                                                                       3D000120
+*    CALLING SEQUENCE -                                                 3D000130
+*              TSX    .DSTRS,4                                          3D000140
+*             (RETURN)        NOTE -  X1 AND X2 NOT RESTORED            3D000150
+*                                                                       3D000160
+*    THE ENTRIES ARE SEARCHED FROM FIRST TO LAST WITHIN A LINK GROUP (4)3D000170
+*     THE LINK WHERE THE PREVIOUS MATCH WAS FOUND IS SEARCHED FIRST,    3D000180
+*     AND IF NO MATCH IS NOW FOUND, THE TABLE IS SEARCHED STARTING WITH 3D000190
+*     THE FIRST LINK GROUP.                                             3D000200
+       SPACE   3                                                        3D000210
+ DSTRO XCL                         HOLD ARGUMENT IN MQ THRUOUT ROUTINE  3D000220
+ DSTTA AXT     **,2                POINTER TO CHAIN WORD OF LINK GROUP  3D000230
+       REM                          OF PREVIOUS MATCH TO X2             3D000240
+       TXH     DSTSL,2,0           IF POINTER EXISTS, SCAN LINK GROUP   3D000250
+ DSTRT ZSA     DSTTA               RESET MATCH IN LINK GROUP POINTER    3D000260
+       AXC     .TBSTR+1,2          POINT TO CHN WRD OF 1ST LINK GROUP   3D000270
+ DSTSL CLA     0,2                 PICKUP LINK NUMBER                   3D000280
+       PAC     ,1                   LINK NUMBER TO X1                   3D000290
+       CLA     .LDT,1              LDT ENTRY CORRES TO THIS LINK        3D000300
+       TPL     DSTIC               THIS LINK IS IN CORE                 3D000310
+       SPACE   2                                                        3D000320
+*    NO MATCH OCCURRED FOR THIS LINK GROUP IN .TBSTR                    3D000330
+ DSTIR LXA     DSTTA,1             WERE WE PROCESSING THIS LINK GROUP   3D000340
+       REM                          BECAUSE LAST MATCH WAS HERE.        3D000350
+       TXH     DSTRT,1,0            -YES, GO BACK AND START W/ 1ST L GRP3D000360
+       CLA     0,2                  -NO, PICKUP CHAIN ADDRESS           3D000370
+       PDC     ,2                                                       3D000380
+       TXH     DSTSL,2,1           IF NOT LAST LINK GROUP, TRY NEXT     3D000390
+ DSTNF LAC     DSSAV,1             PICKUP MATCH LOCATION, IF ANY        3D000400
+       PXA     ,1                  SETUP AC FOR EXIT                    3D000410
+       TZE     1,4                 IF NO MATCH FOUND, TRA               3D000420
+       ZSA     DSSAV               RESET, SINCE ANOTHER MATCH IS NOT    3D000430
+       REM                         IN THE OFFING.                       3D000440
+ DSTF2 AXT     **,1                SAVE LINK GROUP POINTER           (4)3D000450
+       SXA     DSTTA,1              FOR THIS MATCH                      3D000460
+       TRA     1,4                 AND EXIT                             3D000470
+       SPACE   3                                                        3D000480
+*    THIS PART OF THE ROUTINE SCANS ENTRIES WITHIN A LINK GROUP.        3D000490
+ DSTIC CLA     0,2                 PICKUP CHAIN WORD                    3D000500
+       LXA     DSSAV,1             IF RE-ENTERING THIS ROUTINE TO GET   3D000510
+       TXH     DST10,1,0            SUBSEQUENT MATCHES, CONTINUE LOOKAHD3D000520
+       SPACE   2                                                        3D000530
+*    INITIALIZE LIMITS FOR THIS LINK GROUP                              3D000540
+       SXA     DSTF2,2             SAVE LINK GROUP POINTER           (4)3D000550
+       PDC     ,1                  LOC OF NEXT LINK GROUP               3D000560
+       TXH     *+2,1,1             TRA IF NOT LAST LINK GROUP           3D000570
+       AXC     .RDICT+1,1          UPPER BOUND FOR LAST LINK GROUP      3D000580
+       TXI     *+1,1,ENLEN+1       ADJUST TO POINT TO LAST ENTRY THIS   3D000590
+       SXD     DST10,1              LINK GROUP                       (4)3D000600
+       SXA     *+1,2                                                 (4)3D000601
+       AXT     **,1                                                  (4)3D000602
+       TXI     *+1,1,1                                               (4)3D000603
+       SPACE   2                                                        3D000610
+ DST01 CAL     0,1                 PICKUP FIRST WORD OF ENTRY           3D000620
+       ANA     =O077777000000      CLEAR ALL BUT DECREMENT              3D000630
+       TLQ     DST20               PASSED POSSIBLE MATCH POINT       (7)3D000640
+       XCL                                                              3D000650
+       TLQ     DST10-1             DOES NOT MATCH, CONTINUE SEARCH   (7)3D000660
+       SPACE   2                                                        3D000670
+*    THIS POINT IS REACHED ONLY IF A MATCH IS FOUND.                    3D000680
+       NZT     DSSAV               ARE WE IN LOOKAHEAD MODE             3D000690
+       TRA     DST09                -NO, ENTER IT                       3D000700
+       SXA     DSSAV,1              -YES, SAVE LOC FOR RE-ENTRY         3D000710
+       PXA     -ENLEN,1            PUT LOC IN AC (COMPLEMENTED)      (4)3D000720
+       SBM     *-1                 RECOMPLEMENT AND BUMP ONE ENTRY      3D000730
+       ANA     =O000000077777      CLEAR ALL BUT ADDRESS                3D000740
+       SSM                         MARK FOR RE-ENTRY                    3D000750
+       TRA     DSTF2                                                    3D000760
+ DST09 SXA     DSSAV,1             SAVE LOCATION MATCH OCCURRED         3D000770
+       LAC     DSSAV,1                                               (7)3D000773
+       SXA     .IBPRE,1            ENTRY W/CORRECT OP CODE PREFIX    (4)3D000775
+       LXA     DSSAV,1                                               (7)3D000776
+       XCL                                                           (7)3D000777
+ DST10 TXL     DST20,1,**          TRA NO MORE ENTRIES THIS LINK GRP (4)3D000780
+       TXI     DST01,1,-ENLEN      RETURN TO TEST NEXT ENTRY         (4)3D000790
+*    MATCH NOT FOUND                                                    3D000800
+ DST20 LAC     DSSAV,1                                                  3D000820
+       TXH     DSTNF+1,1,0         TRA W/ LOC OF MATCH IF IN LOOKAHEAD  3D000830
+*    NO MATCH FOUND IN THIS LINK GROUP                                  3D000840
+       TRA     DSTIR                POSSIBLE SCAN IN NEXT LINK GROUP    3D000850
+       SPACE   3                                                        3D000860
+*    WORKING STORAGE, CONSTANTS ETC.                                    3D000870
+ DSSAV PZE     **                  POINTS TO LOC WHERE MATCH OCCURRED   3D000880
+ ENLEN EQU     2                   LENGTH OF ENTRY IN .TBSTR            3D000890
+       SPACE   2                                                        3D000900
+       LORG                                                             3D000910
+       SPACE   3                                                        3D000920
+*      THE FOLLOWING TWO ENTRY POINTS ARE DUMMIES TO KEEP THE SUBROUTINE3D000930
+*      LIBRARY FREE OF UNDEFINED VIRTUALS.  THE REAL SECTIONS WILL      3D000940
+*      BE FOUND IN THE OUTPUT DECK FROM THE DEBUGGING COMPILER, IBDBL.  3D000950
+       USE     .TBSTR                                                   3D000960
+.TBSTR CONTRL  .TBSTR                                                   3D000970
+       USE     .RDICT                                                   3D000980
+.RDICT CONTRL  .RDICT                                                   3D000990
+       USE                                                              3D001000
+       SPACE   3                                                        3D001010
+*    PLANT ENTRY TRANSFER IN .DSTRS ROUTINE                             3D001020
+       ORG     .DSTRS                                                   3D001030
+       TSX     DSTRO,4                                                  3D001040
+       SPACE   3                                                        3D001050
+*    PLANT I/O COMMANDS IN IBDIN DUMP OF STR LOC RECORD                 3D001060
+       ORG     .LSTR                                                    3D001070
+       IOCD    .LDT+1,,.LRECT-.LDT-1 I/O COMMAND FOR DUMP STR LOC RECORD3D001080
+       PZE     .LRECT-.LDT+1,,6    FIRST WORD OUTPUT IN STR LOC RECORD  3D001090
+       SPACE   2                                                        3D001100
+       END     DSTRO                                                    3D001110

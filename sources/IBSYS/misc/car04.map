@@ -1,0 +1,32 @@
+$IBMAP CAR04   ADDREL                                                   3L900000
+       LBL     AR04,BEGIN     CAR04                                  (7)3L900010
+*      CALLING SEQUENCE                                                 3L900020
+*      TSX     .CARXX,4                                                 3L900030
+*      PZE     L(C)                                                     3L900040
+*      RETURN                                                           3L900050
+*      WHERE L(C) IS THE LOCATION OF A SCALING                          3L900060
+*      CONSTANT.  .CAR04 UPSCALES THE SINGLE                            3L900070
+*      PRECISION AC BY 10**10 FOLLOWED BY C.                            3L900080
+*      .CAR05 DOES THE SAME IF THE ORIGINAL                             3L900090
+*      NUMBER IS IN THE MQ                                              3L900100
+*      .CAR06 UPSCALES THE DOUBLE PRECISION AC-MQ                       3L900110
+*      BY C, WHILE .CAR07 IS USED IF THE HIGH                           3L900120
+*      ORDER IS ORIGINALLY IN THE MQ.                                   3L900130
+       ENTRY   .CAR04                                                   3L900140
+.CAR04 XCA                                                              3L900150
+       ENTRY   .CAR05                                                   3L900160
+.CAR05 MPY     L.1010              UPSCALE BY 10**10                    3L900170
+       ENTRY   .CAR06                                                   3L900180
+.CAR06 XCA                                                              3L900190
+       ENTRY   .CAR07                                                   3L900200
+.CAR07 STO     SCLA                SAVE LOW PART                        3L900210
+       MPY*    1,4                 SAVE RESULT OF HIGH*C,               3L900220
+       STQ     SCLB                  WHICH MUST BE SINGLE               3L900230
+       LDQ     SCLA                                                     3L900240
+       MPY*    1,4                 PRODUCT OF LOW*C IN AC-MQ            3L900250
+       ADD     SCLB                FINAL RESULT                         3L900260
+       TRA     2,4                                                      3L900270
+L.1010 OCT     112402762000        10**10                               3L900280
+SCLA   PZE     0                   TEMPORARY                            3L900290
+SCLB   PZE     0                      STORAGE                           3L900300
+       END                                                              3L900310

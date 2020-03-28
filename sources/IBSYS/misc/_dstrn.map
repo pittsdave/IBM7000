@@ -1,0 +1,84 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .DSTRN                          3C000000
+$IBMAP .DSTRN                                                           3C000010
+       TTL  .DSTRN - DEBUG STR SRCH ROUT. FOR NON-OVRLY EXECUTIONS   (7)3C000020
+       LBL     .DSN,BEGIN     .DSTRN                                 (7)3C000030
+*    THIS ROUTINE IS ENTERED WITH AN ABSOLUTE LOCATION IN THE DECREMENT 3C000040
+*     OF THE ACCUMULATOR. THE REST OF THE ACCUMULATOR IS CLEARED.       3C000050
+*     .TBSTR IS SEARCHED FOR A DEBUBGING REQUEST LOCATED AT THIS POINT. 3C000060
+*     IF ONE IS FOUND, A LOOKAHEAD IS DONE TO DETERMINE IF MORE THAN ONE3C000070
+*     REQUEST HAS BEEN MADE FOR THIS LOCATION.   IF ANOTHER MATCH IS    3C000080
+*     FOUND, THE ROUTINE HOLDS ITS LOCATION IN THE TABLE, AND EXITS     3C000090
+*     WITH THE ACCUMULATOR NEGATIVE.  THE LOCATION OF THE FIRST      (4)3C000100
+*     MATCHING ENTRY, WHICH CONTAINS THE TRUE OP CODE PREFIX OF THE  (4)3C000101
+*     REQUEST POINT, IS SAVED IN .IBPRE OF .IBDBI.                   (4)3C000102
+*                                                                       3C000110
+*    CALLING SEQUENCE -                                                 3C000120
+*              TSX    .DSTRS,4                                          3C000130
+*             (RETURN)        NOTE -  XR1 IS NOT RESTORED            (4)3C000140
+*                                                                    (4)3C000150
+*    THE ENTRIES ARE SEARCHED FROM FIRST TO LAST.                    (4)3C000160
+       SPACE   3                                                        3C000170
+DSTRN  XCL                         PUT ARGUMENT IN MQ                   3C000180
+       LXA     DSSAV,1                                                  3C000190
+       TXH     DST10,1,0           TRANSFER IF NOW PROCESSING LOOKAHEAD 3C000200
+       AXC     .TBSTR,1            POINT TO FIRST ENTRY IN TABLE     (4)3C000210
+       SPACE   2                                                        3C000220
+ DST01 CAL     0,1                 PICKUP FIRST WORD OF ENTRY           3C000230
+       ANA     =O077777000000      MASK OFF ALL BUT DECREMENT           3C000240
+       TLQ     DST20               MARK OVERSHOT, TERMINATE SEARCHING(7)3C000250
+       XCL                         CHANGE SHOES                         3C000260
+       TLQ     DST10               NO MATCH, CONTINUE SCANNING       (7)3C000270
+*                                                                       3C000280
+*         THIS POINT IS REACHED IF AND ONLY IF A MATCH IS FOUND         3C000290
+*                                                                       3C000300
+       NZT     DSSAV               ARE WE IN LOOKAHEAD MODE             3C000310
+       TRA     DST09                -NO,GO MARK AS SUCH AND LOOKAHEAD   3C000320
+       SPACE   3                                                        3C000330
+       SXA     DSSAV,1              -YES, SAVE LOOKAHEAD ADDRESS        3C000340
+       PXA     -ENLEN,1            PUT LOC IN ACC                    (4)3C000350
+       SBM     *-1                 COMPLEMENT AND BUMP ONE ENTRY        3C000360
+       ANA     =O000000077777      CLEAR ALL BUT ADDRESS                3C000370
+       SSM                         MARK FOR REENTRY                     3C000380
+       TRA     1,4                                                      3C000390
+       SPACE   2                                                        3C000400
+ DST09 SXA     DSSAV,1             HOLD MATCH ADDRESS                   3C000410
+       LAC     DSSAV,1                                               (7)3C000413
+       SXA     .IBPRE,1            ENTRY W/CORRECT OP CODE PREFIX    (4)3C000415
+       LXA     DSSAV,1                                               (7)3C000417
+       SPACE   3                                                        3C000420
+*   SEARCH FOREWARD FOR MATCH                                        (4)3C000430
+DST10  TXL     DST20,1,ENLEN-.RDICT   END OF TABLE REACHED           (7)3C000440
+       XCL                                                           (7)3C000445
+       TXI     DST01,1,-ENLEN      BUMP TO NEXT ENTRY AND RETURN     (4)3C000450
+       SPACE   2                                                        3C000460
+ DST20 LAC     DSSAV,1             PICKUP MATCH LOCATION, IF ANY.       3C000470
+       ZSA     DSSAV               RESET FOR NEXT ENTRY                 3C000480
+       PXA     ,1                  PUT MATCH LOCATION IN AC             3C000490
+       TRA     1,4                                                      3C000500
+       SPACE   3                                                        3C000510
+ DSSAV PZE     **                  HOLDS MATCH LOCATION                 3C000520
+       SPACE   2                                                        3C000530
+ ENLEN EQU     2                   LENGTH OF .TBSTR ENTRY               3C000540
+       SPACE   3                                                        3C000550
+ IOCD  IOCD    0,,0                DUMMY I/O INSTRUCTION FOR IBDIN      3C000560
+       LORG                                                             3C000570
+       SPACE   3                                                        3C000580
+*      THE FOLLOWING TWO ENTRY POINTS ARE DUMMIES TO KEEP THE SUBROUTINE3C000590
+*      LIBRARY FREE OF UNDEFINED VIRTUALS.  THE REAL SECTIONS WILL      3C000600
+*      BE FOUND IN THE OUTPUT DECK FROM THE DEBUGGING COMPILER, IBDBL.  3C000610
+       USE     .TBSTR                                                   3C000620
+.TBSTR CONTRL  .TBSTR                                                   3C000630
+       USE     .RDICT                                                   3C000640
+.RDICT CONTRL  .RDICT                                                   3C000650
+       USE                                                              3C000660
+       SPACE   3                                                        3C000670
+*    PLANT TRANSFER IN .DSTRS                                           3C000680
+       ORG     .DSTRS                                                   3C000690
+       TSX     DSTRN,4                                                  3C000700
+       SPACE   3                                                        3C000710
+*    PLANT I/O COMMANDS IN IBDIN DUMP OF STR LOC RECORD                 3C000720
+       ORG     .LSTR                                                    3C000730
+       IOCD    0,,0                I/O COMMAND FOR DUMP STR LOC RECORD  3C000740
+       PZE     2,,6                                                     3C000750
+       SPACE   2                                                        3C000760
+       END     DSTRN                                                    3C000770

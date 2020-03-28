@@ -1,0 +1,303 @@
+$IBMAP CAR14   ADDREL                                                   3LH00000
+       LBL     AR14,BEGIN     CAR14                                  (7)3LH00010
+*                   DOUBLE PRECISION EXPONENTIAL A**B,                  3LH00030
+*                   FLOATING POINT.                                     3LH00040
+*              NOTE                CALLING SEQUENCE-                    3LH00050
+*                           TSX SYSEXN,4                                3LH00060
+*                           PZE CP+NNN                                  3LH00070
+*                   WITH A IN AC-MQ AND B IN SYSOPH-SYSOPL,             3LH00080
+*                   WHERE N IS                                          3LH00090
+*                          2 IF A IS SINGLE, B DOUBLE                   3LH00100
+*                          3 IF A IS DOUBLE, B SINGLE                   3LH00110
+*                          4 IF BOTH ARE DOUBLE                         3LH00120
+*                   PRECISION NUMBERS - THE RESULT IS ALWAYS            3LH00130
+*                   DOUBLE PRECISION AND IS LEFT IN THE AC-MQ.          3LH00140
+*      NOTE                        OUT OF RANGE CONDITIONS RESULT       3LH00150
+* IN ON-LINE MESSAGES. CP+NNN IS THE LOCATION                           3LH00160
+* OF THE SOURCE LANGUAGE CARD NUMBER AT WHICH                           3LH00170
+* THE ORIGINAL COMPUTATION WAS SPECIFIED                                3LH00180
+*                   A RETURN WITH AC-MQ SET TO MAXIMUM.                 3LH00190
+ EXNG  EQU     .CEXNG              EXIT FOR A NEGATIVE                  3LH00200
+EXPERR EQU     .CEXPR              OVER(UNDER) FLOW EXIT                3LH00210
+SYSOPH EQU     .CARS1              SECOND OPERAND                       3LH00220
+SYSOPL EQU     .CARS2              SOTRAGE                              3LH00230
+       ENTRY   .CAR14                                                   3LH00240
+.CAR14 LDQ     DXZ                 SET LOWER A TO ZERO                  3LH00250
+       TRA     .CAR02                                                   3LH00260
+       ENTRY   .CAR01                                                   3LH00270
+.CAR01 STZ     SYSOPL              SET LOWER B TO ZERO                  3LH00280
+       ENTRY   .CAR02                                                   3LH00290
+.CAR02 TZE     2,4                 ZERO TO ANYTHING IS ZERO             3LH00300
+       SXA     XX4,4                                                    3LH00310
+       STQ     EMALO                                                    3LH00320
+       LDQ     1,4                                                      3LH00330
+       STQ     EMCDN                                                    3LH00340
+       LDQ     EMALO                                                    3LH00350
+       TMI     EXTST2                                                   3LH00360
+EMRTN  SXA     XX1,1               SAVE                                 3LH00370
+       SXA     XX2,2                  INDEX REGISTERS                   3LH00380
+*                                                                       3LH00390
+* COMPUTE LOG BASE 2 OF A                                               3LH00400
+       STO     Y                                                        3LH00410
+       LLS     8                   REDUCE LOWER PART                    3LH00420
+       CLA     L145                   TO LOWER PART                     3LH00430
+       LRS     8                      OF PURE FRACTION                  3LH00440
+       STQ     Y+1                                                      3LH00450
+       CLA     Y                                                        3LH00460
+       LRS     27                  SAVE TRUE POWER                      3LH00470
+       SUB     L200                   FOR ADJUST                        3LH00480
+       STO     ADJ                                                      3LH00490
+       CLA     L200                                                     3LH00500
+       LLS     27                  REDUCE UPPER TO                      3LH00510
+       STO     Y                      NORMALIZED FRACTION               3LH00520
+       FAD     FP.1                                                     3LH00530
+       STO     W                                                        3LH00540
+       XCA                                                              3LH00550
+       FAD     Y+1                                                      3LH00560
+       FAD     W                                                        3LH00570
+       STO     W                   DOUBLE PRECISION                     3LH00580
+       STQ     W+1                    Y+1.                              3LH00590
+       CLA     Y                                                        3LH00600
+       FSB     FP.1                                                     3LH00610
+       FDP     W                                                        3LH00620
+       STQ     Y                      W=(Y-1)/(Y+1)                     3LH00630
+       FAD     Y+1                                                      3LH00640
+       FDP     W                   BY DP DIVISION                       3LH00650
+       STQ     Y+1                                                      3LH00660
+       CLS     W+1                                                      3LH00670
+       FDP     W                                                        3LH00680
+       FMP     Y                                                        3LH00690
+       FAD     Y+1                                                      3LH00700
+       FAD     Y                                                        3LH00710
+       STO     W                   THIS IS IT                           3LH00720
+       STQ     W+1                                                      3LH00730
+       AXC     W,1                 NOW COMPUTE                          3LH00740
+       TSX     DPMP,2                 Y=W*W FOR                         3LH00750
+       STO     Y                      POWER SERIES                      3LH00760
+       STQ     Y+1                                                      3LH00770
+       AXT     26,4                                                     3LH00780
+       CLA     DLOC                                                     3LH00790
+       LDQ     DLOC+1                                                   3LH00800
+GLOOP  AXC     Y,1                 POWER SERIES                         3LH00810
+       TSX     DPMP,2                EVALUATION                         3LH00820
+       STQ     PL                                                       3LH00830
+       FAD     DLOC+28,4                                                3LH00840
+       STO     PH                                                       3LH00850
+       XCA                                                              3LH00860
+       FAD     DLOC+29,4                                                3LH00870
+       FAD     PL                                                       3LH00880
+       FAD     PH                                                       3LH00890
+       TIX     GLOOP,4,2                                                3LH00900
+       AXC     W,1                 NOW MULTIPLY BY W                    3LH00910
+       TSX     DPMP,2                 AND THEN BY                       3LH00920
+       AXC     DL2E,1                 2*LOGE TO GET                     3LH00930
+       TSX     DPMP,2                 LOG OF FRACTION                   3LH00940
+       STO     Y                                                        3LH00950
+       STQ     Y+1                                                      3LH00960
+       CLA     ADJ                 ADD TRUE POWER                       3LH00970
+       ACL     DXZ                    TO GET FINAL                      3LH00980
+       FAD     DXZ                    RESULT                            3LH00990
+       FAD     Y                                                        3LH01000
+       STO     Y                                                        3LH01010
+       XCA                                                              3LH01020
+       FAD     Y+1                                                      3LH01030
+       FAD     Y                                                        3LH01040
+*                                                                       3LH01050
+       AXC     SYSOPH,1            PRODUCT                              3LH01060
+       TSX     DPMP,2              B*LOG(A)                             3LH01070
+*  FINISH WITH 2**B*LOG(A)                                              3LH01080
+       STO     Y                   SAVE ORIGINAL                        3LH01090
+       STQ     Y+1                    NUMBER                            3LH01100
+       UFA     DXZ                 FIND INTEGRAL PART                   3LH01110
+       LAS     MAX                 IF OUT OF RANGE,                     3LH01120
+       TRA     EXPER                  GO TO TEST                        3LH01130
+       TRA     EXPER                  FOR HIGH OR LOW                   3LH01140
+       ALS     27                                                       3LH01150
+       STO     ADJ                 CHARACTERISTIC ADJUSTMENT            3LH01160
+       TZE     OK                                                       3LH01170
+       STQ     Y                   ADJUST NUMBER TO                     3LH01180
+       CLA     Y+1                    PURE FRACTION                     3LH01190
+       FAD     Y                      IF POWER WAS                      3LH01200
+       STQ     Y+1                    POSITIVE                          3LH01210
+       STO     Y                                                        3LH01220
+OK     AXT     26,4                SETUP LOOP                           3LH01230
+       CLA     COEF                                                     3LH01240
+       LDQ     COEF+1                                                   3LH01250
+DLOOP  AXC     Y,1                 COMPUTE EXPONENTIAL                  3LH01260
+       TSX     DPMP,2                 OF FRACTION                       3LH01270
+       STQ     PL                     BY POLYNOMIAL-                    3LH01280
+       FAD     COEF+28,4                                                3LH01290
+       STO     PH                                                       3LH01300
+       XCA                                                              3LH01310
+       FAD     PL                                                       3LH01320
+       FAD     COEF+29,4                                                3LH01330
+       FAD     PH                                                       3LH01340
+       TIX     DLOOP,4,2                                                3LH01350
+       XCA                         ADJUST CHAR TO                       3LH01360
+       ADD     ADJ                    REFLECT TRUE POWER                3LH01370
+       TPL     *+2                                                      3LH01380
+       PXA     0,0                                                      3LH01390
+       TIX     *-4,4,1                                                  3LH01400
+*                                                                       3LH01410
+XX4    AXT     0,4                                                      3LH01420
+       TXL     EMRET,4,0                                                3LH01430
+XX1    AXT     0,1                 RESTORE AND                          3LH01440
+XX2    AXT     0,2                    EXIT                              3LH01450
+       TRA     2,4                                                      3LH01460
+*                                                                       3LH01470
+EXPER  TSX     EXPERR,4                                                 3LH01480
+EMCDN  PZE     **                                                       3LH01490
+       TRA     XX4                                                      3LH01500
+DPMP   STO     PH                  DOUBLE PRECISION                     3LH01510
+       FMP     0,1                    MULTIPLY OF                       3LH01520
+       STO     PL                     AC-MQ WITH                        3LH01530
+       LDQ     PH                     OPERAND WHOSE                     3LH01540
+       FMP     1,1                 ADDRESS IS IN                        3LH01550
+       FAD     PL                  IR1 (COMP).                          3LH01560
+       STO     PL                                                       3LH01570
+       LDQ     PH                                                       3LH01580
+       FMP     0,1                                                      3LH01590
+       STO     PH                                                       3LH01600
+       XCA                                                              3LH01610
+       FAD     PL                                                       3LH01620
+       FAD     PH                                                       3LH01630
+       TRA     1,2                                                      3LH01640
+*      NEGATIVE A, STRIP OFF SIGN AND CALC. A(MAG)**B.                  3LH01650
+EXTST2 STO     EMAHI               A                                    3LH01660
+       CLA     SYSOPH                                                   3LH01670
+       STO     EMSBIT                                                   3LH01680
+       SSP                                                              3LH01690
+       TZE     EMEXOK                                                   3LH01700
+       STO     SYSOPH              B ABS.                               3LH01710
+       LRS     27                                                       3LH01720
+       SUB     L200                                                     3LH01730
+       TZE     *+2                                                      3LH01740
+       TMI     EXNG                NON-INTEGER EXP.                     3LH01750
+EMEXOK PAC     0,4                 TRUE EXP TO IR4 (COMPLEMENTED).      3LH01760
+       CAL     SYSOPL                                                   3LH01770
+       STO     SYSOPL              B ABS. LOW                           3LH01780
+       ALS     9                   CLEAR OUT LOW-ORDER EXP              3LH01790
+       XCA                                                              3LH01800
+       CLA     SYSOPH                                                   3LH01810
+       LLS     8,4                                                      3LH01820
+       LXA     XX4,4                                                    3LH01830
+       SLW     EMPBIT              LOW O-DER BIT OF B INTEGER           3LH01840
+       LLS     2                                                        3LH01850
+       TNZ     EXNG                NON-INTEGER EXPONENT                 3LH01860
+       XCA                           NOT ALLOWED FOR                    3LH01870
+       TNZ     EXNG                    NEGATIVE A VALUES.               3LH01880
+       LXA     XX4,4               SAVE .CAR14 RETURN POINT             3LH01890
+       SXA     EMXX4,4                                                  3LH01900
+       STA     XX4                 C(AC)=0   SET UP NEG. A RETURN FLAG  3LH01910
+       CLS     EMAHI               FORCE SIGN PLUS                      3LH01920
+       LDQ     EMALO                                                    3LH01930
+       LRS     0                   FORCE MQ S+GN PLUS                   3LH01940
+       TRA     EMRTN               MAGNITUDE EPONENTIATION              3LH01950
+EMRET  STO     EMAHI                                                    3LH01960
+       STQ     EMALO                                                    3LH01970
+       CLA     EMSBIT                                                   3LH01980
+       TPL     EMSIGN                                                   3LH01990
+*      DFDP MAC-O EXPANSION FOR RECIPROCAL.                             3LH02000
+       CLA     EM1HI                                                    3LH02010
+       FDP     EMAHI                                                    3LH02020
+       STO     E.2                                                      3LH02030
+       STQ     E.3                                                      3LH02040
+       FMP     EMALO                                                    3LH02050
+       CHS                                                              3LH02060
+       FAD     E.2                                                      3LH02070
+       FAD     EM1LO                                                    3LH02080
+       FDP     EMAHI                                                    3LH02090
+       XCA                                                              3LH02100
+       FAD     E.3                                                      3LH02110
+*                                                                       3LH02120
+       STO     EMAHI                                                    3LH02130
+EMSIGN CAL     EMPBIT                                                   3LH02140
+       ANA     EMCLR              CLEAR TO P-BIT ONLY                   3LH02150
+       ORS     EMAHI               AFFIX SIGN                           3LH02160
+       CLA     EMAHI                                                    3LH02170
+EMMQSN LRS     0                                                        3LH02180
+EMXX4  AXT     **,4                                                     3LH02190
+       TRA     XX1                                                      3LH02200
+*                                                                       3LH02210
+EMCLR  OCT     400000000000                                             3LH02220
+EM1HI  OCT     201400000000                                             3LH02230
+EM1LO  OCT     146000000000                                             3LH02240
+EMAHI  PZE     **                                                       3LH02250
+EMALO  PZE     **                                                       3LH02260
+E.2    PZE     **                                                       3LH02270
+E.3    PZE     **                                                       3LH02280
+EMPBIT PZE     **                                                       3LH02290
+EMSBIT PZE     **                                                       3LH02300
+*                                                                       3LH02310
+Y      PZE     0                   VARIOUS                              3LH02320
+       PZE     0                      TEMPORARY                         3LH02330
+W      PZE     0                      STORAGES                          3LH02340
+       PZE     0                                                        3LH02350
+PH     PZE     0                                                        3LH02360
+PL     PZE     0                                                        3LH02370
+ADJ    PZE     0                   ADJUST STORAGE                       3LH02380
+L145   OCT     145                 FOR CHAR                             3LH02390
+L200   OCT     200                    ADJUST                            3LH02400
+DL2E   OCT     202561250731        2*LOGE IN                            3LH02410
+       OCT     147225602774           DOUBLE PRECISION                  3LH02420
+DXZ    OCT     233000000000        INTEGER ZERO                         3LH02430
+MAX    OCT     233000000177        RANGE TEST WORD                      3LH02440
+*                                                                       3LH02450
+DLOC   OCT     174457104611      POLYNOMIAL COEFF. - 1/27               3LH02460
+       OCT     141353460410                                             3LH02461
+       OCT     174507534121      1/25                                   3LH02462
+       OCT     141727024365                                             3LH02470
+       OCT     174544131026        1/23                                 3LH02480
+       OCT     141205441310                                             3LH02490
+       OCT     174606060606        1/21                                 3LH02500
+       OCT     141060606061                                             3LH02510
+       OCT     174657120657          1/19                               3LH02520
+       OCT     141120657121                                             3LH02530
+       OCT     174741703607          1/17                               3LH02540
+       OCT     141417036074                                             3LH02550
+       OCT     175421042104          1/15                               3LH02560
+       OCT     142210421042                                             3LH02570
+       OCT     175473047304          1/13                               3LH02580
+       OCT     142730473047                                             3LH02590
+       OCT     175564272135          1/11                               3LH02600
+       OCT     142056427214                                             3LH02610
+       OCT     175707070707          1/9                                3LH02620
+       OCT     142070707071                                             3LH02630
+       OCT     176444444444          1/7                                3LH02640
+       OCT     143444444445                                             3LH02650
+       OCT     176631463146          1/5                                3LH02660
+       OCT     143314631463                                             3LH02670
+       OCT     177525252525          1/3                                3LH02680
+       OCT     144252525253                                             3LH02690
+FP.1   OCT     201400000000        FLOATING ONE                         3LH02700
+       OCT     000000000000                                             3LH02710
+*                                                                       3LH02720
+COEF   OCT     131604546627        POLYNOMIAL COEFFICIENTS-             3LH02730
+       OCT     076373672054                                             3LH02740
+       OCT     135707734771        C13  .1380942553937516 X 10-11       3LH02750
+       OCT     102726002460        C12  .2591671190111412 X 10-10       3LH02760
+       OCT     141750613453        C11  .4445361131688115 X 10-9        3LH02770
+       OCT     106071130534        C10  .7054583523083176 X 10-8        3LH02780
+       OCT     145744623056        C9  .1017808736329201 X 10-6         3LH02790
+       OCT     112716354342        C8  .1321548902877208 X 10-5         3LH02800
+       OCT     151665112404        C7  .1525273379851831 X 10-4         3LH02810
+       OCT     116110420624        C6  .1540353038554321 X 10-3         3LH02820
+       OCT     155542600230        C5  .1333355814644007 X 10-2         3LH02830
+       OCT     122524313370        C4  .9618129107641535 X 10-2         3LH02840
+       OCT     160777627761        C3  .5550410866482143 X 10-1         3LH02850
+       OCT     125253306674        C2  .2402265069590998                3LH02860
+       OCT     164503022113        C1  .6931471805599453                3LH02870
+       OCT     131655247146                                             3LH02880
+       OCT     167535417771                                             3LH02890
+       OCT     134705174104                                             3LH02900
+       OCT     172473125333                                             3LH02910
+       OCT     137735153674                                             3LH02920
+       OCT     174706541065                                             3LH02930
+       OCT     141602240523                                             3LH02940
+       OCT     176753767577                                             3LH02950
+       OCT     143701305332                                             3LH02960
+       OCT     200542710277                                             3LH02970
+       OCT     145575071736                                             3LH02980
+       OCT     201400000000                                             3LH02990
+       OCT     000000000000                                             3LH03000
+       END                                                              3LH03010

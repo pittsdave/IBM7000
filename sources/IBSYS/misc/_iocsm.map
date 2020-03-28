@@ -1,0 +1,79 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .IOCSM                          3IOA0000
+$IBMAP .IOCSM  100,()OK                                                 3IOA0010
+       TTL     .IOCSM/COMMUNICATION REGION FOR MINIMUM IOCS          (7)3IOA0020
+       LBL     .IOM,BEGIN     .IOCSM                                 (7)3IOA0025
+*      COMMUNICATION REGION FOR MINIUM IOCS                             3IOA0030
+*              MUST FOLLOW .IOCSM ON LIBRARY TAPE                       3IOA0040
+ENTRY  EQU     .ENTRY                                                   3IOA0050
+ROUTE  EQU     .ENTRY+8                                                 3IOA0060
+       ORG     .DEFIN                                                   3IOA0070
+DEFINE STL     ROUTE               DEFINE A BUFFER POOL                 3IOA0080
+       TXL     ENTRY,,.DEFI.                                            3IOA0090
+       BES     2                                                        3IOA0100
+ATTACH STL     ROUTE               ATTACH FILES TO A                    3IOA0110
+       TXL     ENTRY,,.ATTC.       BUFFER POOL                          3IOA0120
+CLOSE  STL     ROUTE               CLOSE FILE(S) OPTIONALLY             3IOA0130
+       TXL     ENTRY,,.CLOS.       DETACHING FROM A POOL                3IOA0140
+OPEN   STL     ROUTE               OPEN A FILE                          3IOA0150
+       TXL     ENTRY,,.OPEN.                                            3IOA0160
+READ   STL     ROUTE               BUFFERED READ                        3IOA0170
+       TXL     ENTRY,,.READ.                                            3IOA0180
+WRITE  STL     ROUTE               BUFFERED WRITE                       3IOA0190
+       TXL     ENTRY,,.WRIT.                                            3IOA0200
+       BES     7                                                        3IOA0210
+       TXL     ENTRY,,.BSR.                                             3IOA0220
+*                                                                       3IOA0230
+       ORG     .READR                                                   3IOA0240
+READR  STL     ROUTE                                                    3IOA0250
+       TXL     ENTRY,,.RER1.                                            3IOA0260
+RELESE STL     ROUTE                                                    3IOA0270
+       TXL     ENTRY,,.RLSE.                                            3IOA0280
+*                                                                       3IOA0290
+*                                                                       3IOA0300
+       ORG     .GOA                                                     3IOA0310
+       TXL     .GO,1,.OPEN.                                             3IOA0320
+       TXI     *+1,1,-.RLSE.                                            3IOA0330
+*                                                                       3IOA0340
+       ORG     .GO+5                                                    3IOA0350
+       TSX     .SWITC,1                                                 3IOA0360
+       NOP                                                              3IOA0370
+       BES     1                                                        3IOA0380
+       LXA     .GTIOX,4                                                 3IOA0390
+       BES     1                                                        3IOA0400
+       TSX     .EOTOF,1                                                 3IOA0410
+*                                                                       3IOA0420
+       ORG     .LUNBL+2                                                 3IOA0430
+       TTR     .MONSW                                                   3IOA0440
+       TTR     .TEOR                                                    3IOA0450
+*                                                                       3IOA0460
+       ORG     .ENTRY+5                                                 3IOA0470
+       SXA     .GTIOX,4                                                 3IOA0480
+*                                                                       3IOA0490
+       ORG     .ENTRY+10                                                3IOA0500
+       STZ     .TCHEX                                                   3IOA0510
+       BES     1                                                        3IOA0520
+       ENB     .L(0)                                                    3IOA0530
+*                                                                       3IOA0540
+       ORG     ENTRY+23                                              (7)3IOA0550
+       TXH     .ENDTR-2,1,.ATTC.                                        3IOA0560
+*                                                                       3IOA0570
+       ORG     .ENTRY                                                   3IOA0580
+       ZET     .L(0)                                                    3IOA0590
+*                                                                       3IOA0600
+       ORG     .NOPXI+1                                                 3IOA0610
+       TSX     .FEEIT,1                                                 3IOA0620
+*                                                                       3IOA0630
+       ORG     .COMXI                                                   3IOA0640
+       ENB     .L(0)                                                    3IOA0650
+*                                                                       3IOA0660
+       ORG     .COMXI+4                                                 3IOA0670
+       SXA     .RER2.,0                                                 3IOA0680
+*                                                                       3IOA0690
+       ORG     .COMXI+6                                                 3IOA0700
+       TRA     .EX34-4                                                  3IOA0710
+*                                                                       3IOA0720
+       ORG     .COMXI+15                                                3IOA0730
+       LXA     .GTIOX,4                                                 3IOA0740
+       ZET     .TCHEX                                                   3IOA0750
+       LXA     .TCHEX,4                                                 3IOA0760
+       END                   END OF MINIMUM OVERLAY                     3IOA0770

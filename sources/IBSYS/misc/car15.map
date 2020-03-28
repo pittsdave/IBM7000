@@ -1,0 +1,16 @@
+$IBMAP CAR15   ADDREL                                                   3LJ00000
+       LBL     AR15,BEGIN     CAR15                                  (7)3LJ00010
+       ENTRY   .CAR15                                                   3LJ00020
+.CAR15 STO     TEMP                                                     3LJ00030
+       ANA     C1                                                       3LJ00040
+       SUB     C2                                                       3LJ00050
+       TPL     *+2                                                      3LJ00060
+       PXA     0,0                                                      3LJ00070
+       XCA                                                              3LJ00080
+       CLA     TEMP                                                     3LJ00090
+       LRS     0                                                        3LJ00100
+       TRA     1,4                                                      3LJ00110
+C1     OCT     377000000000                                             3LJ00120
+C2     OCT     033000000000                                             3LJ00130
+TEMP   BSS     1                                                        3LJ00140
+       END                                                              3LJ00150

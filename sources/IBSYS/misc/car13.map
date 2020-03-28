@@ -1,0 +1,145 @@
+$IBMAP CAR13   ADDREL                                                   3LG00000
+       LBL     AR13,BEGIN     CAR13                                  (7)3LG00010
+*                   SINGLE PRECISION EXPONENTIAL A**B,                  3LG00030
+*                   FLOATING POINT.                                     3LG00040
+*      NOTE                        CALLING SEQUENCE-                    3LG00050
+*                       TSX SYSEX1,4                                    3LG00060
+*      PZE     CP+NNN                                                   3LG00070
+*                                  PZE L1,,L2                           3LG00080
+*                   WITH A IN ACCUMULATOR, B IN SYSOPH-                 3LG00090
+*                   RESULT LEFT IN ACCUMULATOR.                         3LG00100
+*              NOTE                OUT OF RANGE CONDITIONS              3LG00110
+* RESULT IN ON LINE MESSAGES (CP+NNN IS THE                             3LG00120
+* LOCATION OF THE SOURCE LANGUAGE CARD NUMBER)                          3LG00130
+*                   AND A RETURN WITH AC SET TO MAXIMUM.                3LG00140
+ EXNG  EQU     .CEXNG              EXIT FOR AN ERROR                    3LG00150
+EXPERR EQU     .CEXPR                                                   3LG00160
+SYSOPH EQU     .CARS1              STORAGE FOR B                        3LG00170
+*                                                                       3LG00180
+       ENTRY   .CAR13                                                   3LG00190
+.CAR13 TZE     2,4                 ZERO TO ANYTHING IS ZERO             3LG00200
+       LDQ     1,4                                                      3LG00210
+       STQ     EXCDN                                                    3LG00220
+       SXA     SYSEXX,4                                                 3LG00230
+       TMI     EXTST                                                    3LG00240
+*                                                                       3LG00250
+*  COMPUTE LOG BASE 2 OF A                                              3LG00260
+       LRS     27                                                       3LG00270
+       SUB     L.200               SAVE TRUE POWER                      3LG00280
+       STO     SADJ                   FOR ADJUST                        3LG00290
+       CLA     L.200                                                    3LG00300
+       LLS     27                  REPLACE BY EQUIVALENT                3LG00310
+       STO     X                      FRACTION                          3LG00320
+       FAD     FL.1                                                     3LG00330
+       STO     Z                   POWER SERIES IN                      3LG00340
+       CLA     X                                                        3LG00350
+       FSB     FL.1                   Z=(X-1)/(X+1).                    3LG00360
+       FDP     Z                                                        3LG00370
+       STQ     Z                   AND Z**2.                            3LG00380
+       FMP     Z                                                        3LG00390
+       STO     X                                                        3LG00400
+       AXT     7,4                                                      3LG00410
+       CLA     SLOC                                                     3LG00420
+LLOOP  XCA                         COMPUTE LOG OF                       3LG00430
+       FMP     X                      FRACTION BY                       3LG00440
+       FAD     SLOC+8,4          POWER SERIES                           3LG00450
+       TIX     LLOOP,4,1                                                3LG00460
+       XCA                         COMPLETE SERIES WITH                 3LG00470
+       FMP     Z                      MULTIPLICATION BY Z               3LG00480
+       XCA                            AND THEN 2LN2                     3LG00490
+       FMP     L2E                                                      3LG00500
+       STO     Z                                                        3LG00510
+       CLA     SADJ                ADD TRUE POWER                       3LG00520
+       ACL     SXZ                 TO GET                               3LG00530
+       FAD     SXZ                 FINAL                                3LG00540
+       FAD     Z                   RESULT                               3LG00550
+*                                                                       3LG00560
+       XCA                                                              3LG00570
+       FMP     SYSOPH              PRODUCT B*LOG(A)                     3LG00580
+*                                                                       3LG00590
+*FINISH WITH 2**B*LOG(A)                                                3LG00600
+       STO     X                   SAVE NUMBER                          3LG00610
+       UFA     SXZ                 GET INTEGRAL PART                    3LG00620
+       LAS     SMAX                IF OUT OF RNAGE,                     3LG00630
+       TRA     EXPER                  GO TO TEST                        3LG00640
+       TRA     EXPER               FOR HIGH OR LOW                      3LG00650
+       ALS     27                                                       3LG00660
+       STO     SADJ                CHARACTERIST ADJUSTMENT              3LG00670
+       TZE     *+2                                                      3LG00680
+       STQ     X                   ADJUST TO FRACTION IF NOT            3LG00690
+       AXT     9,4                                                      3LG00700
+       CLA     SCOF                                                     3LG00710
+SLOOP  XCA                         COMPUTE EXPONENTIAL                  3LG00720
+       FMP     X                      BY POLYNOMIAL                     3LG00730
+       FAD     SCOF+10,4                                                3LG00740
+       TIX     SLOOP,4,1                                                3LG00750
+       ADD     SADJ                GET TRUE CHAR                        3LG00760
+*                                                                       3LG00770
+SYSEXX AXT     **,4                                                     3LG00780
+       TXL     PAR,4,0                                                  3LG00790
+       TRA     2,4                                                      3LG00800
+EXPER  TSX     EXPERR,4                                                 3LG00810
+EXCDN  PZE     **                                                       3LG00820
+       TRA     SYSEXX                                                   3LG00830
+* THIS CODING ENTERED IF 'A' IS NEGATIVE                                3LG00840
+EXTST  STO     A                                                        3LG00850
+       CLA     .CARS1                                                   3LG00860
+       STO     B                                                        3LG00870
+       SLW     K                                                        3LG00880
+*DETERMINE IF B IS AN INTEGER                                           3LG00890
+INTST  CAL     K                                                        3LG00900
+       UFA     SXZ                                                      3LG00910
+       LGL     35                                                       3LG00920
+       SLW     PBIT                                                     3LG00930
+       LGL     4                                                        3LG00940
+       TNZ     EXNG                                                     3LG00950
+       CLS     A                                                        3LG00960
+       SXA     SYSEXX,0                                                 3LG00970
+       SXA     KS,4                                                     3LG00980
+       TRA     .CAR13+5                                                 3LG00990
+*REENTER .CAR13 SR TO CALC A(MAG)**B(MAG)                               3LG01000
+       ENTRY   PAR                                                      3LG01010
+PAR    STO     R                                                        3LG01020
+       XCA                                                              3LG01030
+       CLA     B                                                        3LG01040
+       TPL     KEVTS                                                    3LG01050
+       CLA     FL.1                                                     3LG01060
+       FDP     R                                                        3LG01070
+KEVTS  CLA     PBIT                                                     3LG01080
+       LRS     0                                                        3LG01090
+       XCA                                                              3LG01100
+KS     AXT     **,4                                                     3LG01110
+       TRA     2,4                                                      3LG01120
+K      SYN     .CARS1                                                   3LG01130
+A      PZE                                                              3LG01140
+B      PZE                                                              3LG01150
+R      PZE                                                              3LG01160
+PBIT   PZE                                                              3LG01170
+ X     PZE     0                   TEMPORARY                            3LG01180
+ Z     PZE     0                      STORAGE                           3LG01190
+ SADJ  PZE     0                   ADJUST STORAGE                       3LG01200
+ L.200 OCT     200                 TO GET POWER                         3LG01210
+ SXZ   OCT     233000000000        INTEGER ZERO                         3LG01220
+SMAX   OCT     233000000177        RANGE TEST WORD                      3LG01230
+L2E    OCT     202561250731        2*LOGE                               3LG01240
+SLOC   OCT     175421042104      POLY COEFF. -  1/15                    3LG01250
+       OCT     175473047305      1/13                                   3LG01251
+       OCT     175564272135        1/11                                 3LG01260
+       OCT     175707070707           1/9                               3LG01270
+       OCT     176444444445           1/7                               3LG01280
+       OCT     176631463146           1/5                               3LG01290
+       OCT     177525252525           1/3                               3LG01300
+FL.1   OCT     201400000000        FLOATING ONE                         3LG01310
+*                                                                       3LG01320
+*                                                                       3LG01330
+SCOF   OCT     151665112404        POLYNOMIAL COEFFICIENTS-             3LG01340
+       OCT     155542600231        C9  .10178087 X 10-6                 3LG01350
+       OCT     160777627761        C8  .13215489 X 10-5                 3LG01360
+       OCT     164503022114        C7  .15252738 X 10-4                 3LG01370
+       OCT     167535417772        C6  .15403530 X 10-3                 3LG01380
+       OCT     172473125334        C5  .13333558 X 10-2                 3LG01390
+       OCT     174706541066        C4  .96181291 X 10-2                 3LG01400
+       OCT     176753767600        C3  .55504109 X 10-1                 3LG01410
+       OCT     200542710300        C2  .24022561                        3LG01420
+       OCT     201400000000        C1  .69314718                        3LG01430
+       END                                                              3LG01440

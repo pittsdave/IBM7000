@@ -1,0 +1,204 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .IODEF                          3AE00000
+$IBMAP .IODEF  300,()OK                                                 3AE00010
+       TTL     .IODEF/PRIMARY IOCS COMMUNICATIONS                   (12)3AE00020
+*THE FOLLOWING EQU CARDS MUST BE PROPERLY SETUP ACCORDING TO            3AE00030
+*THE MACHINE CONFIGURATION AND THE INSTALLATION STANDARD                3AE00040
+       SPACE   1                                                        3AE00050
+ NOCH  SET     0     NO. OF DIRECT ACCESS MODULES DEFINED IN IOCS *DKDM 3AE00060
+       SPACE   1                                                        3AE00070
+NOHYP  EQU     0                                                        3AE00080
+       SPACE   1                                                       $3AE00090
+*END OF EQU CARDS TO BE DEFINED BY INSTALLATION.                        3AE00100
+       TTL              IBSYS COMMUNICATION REGION                      3AE00110
+IOEX   EQU     .ACTV                                                    3AE00120
+STOP   EQU     IOEX+9              SYSTEM STOP                          3AE00130
+(PROUT EQU     IOEX+4              MESSAGE WRITER                       3AE00140
+TRAPS  EQU     IOEX+27             CURRENT TRAPS (NORMAL)               3AE00150
+       SPACE   1                                                        3AE00160
+OUTPUT BOOL    03000               NOT INPUT                            3AE00170
+LABEL  BOOL    00400               IF=1 LABELS                          3AE00180
+NOEOT  BOOL    00004               IF=1 NO END OF TAPE                  3AE00190
+       ENTRY   .DEFIN                                                   3AE00200
+       ENTRY   .ATTAC                                                   3AE00210
+       ENTRY   .CLOSE                                                   3AE00220
+       ENTRY   .OPEN                                                    3AE00230
+       ENTRY   .READ                                                    3AE00240
+       ENTRY   .WRITE                                                   3AE00250
+       ENTRY   .BSR                                                     3AE00260
+       ENTRY   .READR                                                   3AE00270
+       ENTRY   .RELES                                                   3AE00280
+       ENTRY   .LAREA                                                   3AE00290
+       ENTRY   .AREA1                                                   3AE00300
+       ENTRY   .LFBLK                                                   3AE00310
+       ENTRY   .LUNBL                                                   3AE00320
+       ENTRY   .ENTRY                                                   3AE00330
+.RLHLD ENTRY   RLHLD                                                (12)3AE00335
+.GO    ENTRY   GO                                                       3AE00340
+.COMXI ENTRY   COMXIT                                                   3AE00350
+.NOPXI ENTRY   NOPXIT                                                   3AE00360
+       ENTRY   .EX34                                                    3AE00370
+       ENTRY   .GOA                                                     3AE00380
+       ENTRY   .DERR                                                    3AE00390
+.LTSX  ENTRY   LTSX                                                  $5$3AE00395
+       TTL     IOCS INPUT/OUTPUT CONTROL SYSTEM COMMUNICATION REGION    3AE00400
+* PRIMARY IOCS COMMUNICATIONS                                           3AE00410
+.DEFIN STL     ROUTE               DEFINE                               3AE00420
+       BSS     1                                                        3AE00430
+.JOIN  STL     ROUTE               JOIN                                 3AE00440
+       BSS     1                                                        3AE00450
+.ATTAC STL     ROUTE               ATTACH                               3AE00460
+       BSS     1                                                        3AE00470
+.CLOSE STL     ROUTE               CLOSE                                3AE00480
+       BSS     1                                                        3AE00490
+.OPEN  STL     ROUTE               OPEN                                 3AE00500
+       BSS     1                                                        3AE00510
+.READ  STL     ROUTE               READ                                 3AE00520
+       BSS     1                                                        3AE00530
+.WRITE STL     ROUTE               WRITE                                3AE00540
+       BSS     1                                                        3AE00550
+.COPY  STL     ROUTE               COPY                                 3AE00560
+       BSS     1                                                        3AE00570
+.REW   STL     ROUTE               REW                                  3AE00580
+       BSS     1                                                        3AE00590
+.WEF   STL     ROUTE               WEF                                  3AE00600
+       BSS     1                                                        3AE00610
+.BSR   STL     ROUTE               BSR                                  3AE00620
+       BSS     1                                                        3AE00630
+.BSF   STL     ROUTE               BSF                                  3AE00640
+       BSS     1                                                        3AE00650
+.CKPT  STL     ROUTE               CKPT                                 3AE00660
+       BSS     1                                                        3AE00670
+.STASH STL     ROUTE               STASH                                3AE00680
+       BSS     1                                                        3AE00690
+.READR STL     ROUTE               READR                                3AE00700
+       BSS     1                                                        3AE00710
+.RELES STL     ROUTE               RELESE                               3AE00720
+       BSS     1                                                        3AE00730
+       BES     3                                                        3AE00740
+       TTL              SECONDARY IOCS COMMUNICATION CELLS              3AE00750
+       PZE                   'DATE' IS EQUATED TO 'IBJDAT'.             3AE00760
+JOBID  BCI     3,                  JOB NAME                             3AE00770
+.LAREA BSS     14                  LABEL AREA                           3AE00780
+.LFBLK BSS     1                   L(FILE BLOCK),,SIZE                  3AE00790
+CPFILE PZE     **                  CURRENT CHECKPOINT FILE              3AE00800
+CPSEQ  BCI     1, 00001            SEQ NUMBER + 1 OF LAST CHECKPOINT    3AE00810
+LTSX   PZE     0,,**               L(TSX)                               3AE00820
+XEOB   PZE     0,,**               L( EOB EXIT)                         3AE00830
+XEOF   PZE     **,,0               L( EOF EXIT)                         3AE00840
+XERR   PZE     0,,**               L( ERROR EXIT)                       3AE00850
+LTRAD  PZE     **,,0               LAST TRANSMIT ADDRESS                3AE00860
+TRANS  PZE     **,,0               TRANSMIT ADDRESS                     3AE00870
+WDCT   PZE     0,,**               WORD COUNT                           3AE00880
+IRS    PZE     **,,**              INDEX REGISTER STORAGE               3AE00890
+RLHLD  PZE     **                                                   (12)3AE00895
+SENSE  PZE     0,,0                SENSE INDICATOR STORAGE              3AE00900
+FCW    IORT    **,,**              IO WORD FOR BUFS AND IN IOCS SWITCH  3AE00910
+.AREA1 BSS     6                                                        3AE00920
+.LUNBL BSS     1                   LOC AND LENGTH RESERVE UNIT BLOCK    3AE00940
+CKPT1  BSS     1                   TTR CHCPT                            3AE00950
+SWITCD BSS     1                   TTR MONSW                            3AE00960
+MONEOF BSS     1                   TTR TEOR                             3AE00970
+       TTL     COMMON ENTRY TO ALL JOBS ROUTINES                        3AE00980
+*      SAVES   1. SENSE INDICATORS AND ALL INDEX REGISTERS              3AE00990
+*              2.L(ENTRY) TO ROUTINE (I.E. L(TSX))                      3AE01000
+*              3.L(TSX+2)                                               3AE01010
+*              4.PLACES IN CELL -FCW- AND IN IR2 COMPLEMENTED           3AE01020
+*                 A.L(POOL) FOR DEFINE,JOIN AND ATTACH                  3AE01030
+*                 B.L(FILE) FOR ALL OTHER IOCS ROUTINES                 3AE01040
+*              5.PLACES IN CELL-XEOB-                                   3AE01050
+*                 A.EOB EXIT FOR READ AND WRITE                         3AE01060
+*                 B.L(POOL2) FOR JOIN                                   3AE01070
+*                 C.L(FILE2) FOR COPY AND STASH                         3AE01080
+*              6.PLACES FILE CONTROL BITS IN SI                         3AE01090
+       SPACE   1                                                        3AE01100
+.ENTRY BSS     1                   ZET L(0)                             3AE01110
+       TSX     STOP,4                                                  $3AE01120
+       STI     SENSE                                                   $3AE01130
+       SXA     LTSX,4              SAVE L(ENTRY)                       $3AE01140
+       TXI     *+1,4,-2                                                 3AE01150
+       BSS     1                   SAVE L(TSX)+2                        3AE01160
+       SXA     IRS,2               SAVE IR2                             3AE01170
+       SXD     IRS,1               SAVE IR1                             3AE01180
+ROUTE  LXD     **,1                FIND L(ROUTINE)                     $3AE01190
+       SXA     GO,1                WHICH WAS CALLED                    $3AE01200
+       BSS     1                   CLEAR TCH SWITCH                     3AE01210
+       CAL     -1,4                SAVE IN-LFCW-AND IR2(COMPLEMENTED)  $3AE01220
+       BSS     1                   DISABLE TRAPS                        3AE01230
+       STA     FCW                 L(BPC) FOR DEFINE,JOIN AND ATTACH    3AE01240
+       PAC     0,2                 L(FCW) FOR READ,WRITE,COPY,REW,      3AE01250
+       STD     XEOB                WEF, OPEN AND CLOSE                  3AE01260
+       LDQ     5,2                 DISK...                           (7)3AE01261
+       TQP     LDI                 NO  -  BYPASS END OF TRACKS TEST  (7)3AE01262
+       ZET     .DERR                   DISK ERROR                       3AE01270
+       TSX     STOPA,4                 YES                              3AE01280
+       LDI     6,2                 TEST FOR END OF TRACK + EOB EXIT    $3AE01290
+       RNT     700000                                                  $3AE01300
+       TRA     *+2            NO                                       $3AE01310
+       BSS     1                                                        3AE01320
+LDI    LDI     1,2                 FILE INDICATORS TO SI             (7)3AE01330
+       RIR     77777                                                   $3AE01340
+       LDQ     7,2                                                  (12)3AE01345
+       STQ     RLHLD                                                (12)3AE01347
+       ENB     TRAPS               ALLOW TRAPS (FILE BITS IN SI)        3AE01350
+.GOA   BSS     1                   IF REFERENCE TO A FILE               3AE01360
+       BSS     1                   IS THIS A RELEASE ENTRY              3AE01370
+       TXL     GO,1,0              YES, GO THERE                       $3AE01380
+       LFT     NOEOT               AND EOT OR NON-LABELED EOF           3AE01390
+GO     TTR     **                  GO TO ROUTINE CALLED                 3AE01400
+       LFT     OUTPUT              IS FILE INPUT                        3AE01410
+       TRA     ENT2                OR OUTPUT                            3AE01420
+       LFT     LABEL               IF LABELLED INPUT                    3AE01430
+       TRA*    GO                  GO TO ROUTINE WHICH WILL GIVE EOF    3AE01440
+       BSS     1                   IF EOF NON LABELED FILE              3AE01450
+       BSS     1                   TSX CPINT,4                          3AE01460
+ENT1   SIL     NOEOT               REFERENCED,SWITCH REELS AND          3AE01470
+       BSS     1                   RESTORE IR4 AND                      3AE01480
+       TRA*    GO                  GO.......                            3AE01490
+ENT2   BSS     1                   HANDLE EOT                           3AE01500
+       TRA     ENT1                TURN OFF EOT AND CONTINUE            3AE01510
+.DERR  PZE                                                              3AE01520
+STOPA  CLA     .DERR                                                    3AE01530
+       STZ     .DERR                                                    3AE01540
+       TRA     STOP                                                     3AE01550
+       BES     STOPA+NOCH/NOCH**-NOCH/NOCH*STOPA-*                      3AE01560
+       TTL     COMMON. EXIT ROUTINE - COMXIT-                           3AE01570
+*                              TRA COMXIT                               3AE01580
+*                          NO RETURN POSSIBLE                           3AE01590
+*                        THIS ROUTINE RESTORES                          3AE01600
+*              1.IR2,IR1,SI                                             3AE01610
+*              2. FILE CONTROL BITS TO FILE WORDS                       3AE01620
+*         AND PLACES HISTORY IN THE AC                                  3AE01630
+       SPACE   1                                                        3AE01640
+NOPXIT SXD     LTRAD,4             SAVE LAST WRD WORKED ON              3AE01650
+       BSS     1                                                        3AE01660
+COMXIT BSS     1                   DISABLE TRAPS                        3AE01670
+       PIA                         RESTORE CONTROL                      3AE01680
+       STD     1,2                 BITS TO FILE                         3AE01690
+       SXA     FCW,0               SET IOBS SWITCH =0                   3AE01700
+       BSS     1                                                        3AE01710
+       ENB     TRAPS               ALLOW TRAPS                          3AE01720
+EX14   BSS     1                                                        3AE01730
+       TRA     EX19                SWITCH FOR CKPTS                     3AE01740
+       ZET     CPSW                DOWN WAIT TILL PLACED UP             3AE01750
+       TRA     EX23                THEN DOWN...                         3AE01760
+       STL     CPSW                SENSE LITE ON SIGNIFIES THAT         3AE01770
+       BSS     1                   THE CORRESDONDING SENSE              3AE01780
+       TRA     EX23                SWITCH HAS NOT BEEN SENSED           3AE01790
+EX19   STZ     CPSW                IN THE UP POSITION.                  3AE01800
+EX23   CLA     LTRAD               HISTORY TO AC                        3AE01810
+       BSS     1                   IF TCH OCCURED                       3AE01820
+       BSS     1                   EXIT AT L (1ST TCH) +1               3AE01830
+       BSS     1                   ELSE AT NORMAL EXIT                  3AE01840
+.EX34  LXA     IRS,2               RESTORE IR2                          3AE01850
+       LXD     IRS,1                                                    3AE01860
+       LDI     SENSE               RESTORE SI                           3AE01870
+       TTR     0,4                 RETURN TO USER                       3AE01880
+CPSW   PZE     **,,0               ZERO IF CKPT SENSE SWITCH UP         3AE01890
+.GO    EQU     GO                                                       3AE01900
+.COMXI EQU     COMXIT                                                   3AE01910
+.NOPXI EQU     NOPXIT                                                   3AE01920
+       ORG     .CLSE                                                    3AE01930
+       TTR     .CLOSE                                                   3AE01940
+       ORG     .LUNB                                                    3AE01970
+       PZE     .LUNBL                                                   3AE01980
+       END                         END OF COMMUNICATION AREA            3AE01990

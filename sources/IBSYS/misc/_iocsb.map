@@ -1,0 +1,74 @@
+$*     7090/7094 IBLIB SYSTEM LIBRARY - .IOCSB                          3IOB0000
+$IBMAP .IOCSB  100,()OK                                                 3IOB0010
+       LBL     .IOB,BEGIN     .IOCSB                                 (7)3IOB0013
+       TTL     .IOCSB/COMMUNICATION REGION FOR BASIC IOCS               3IOB0020
+*      COMMUNICATION REGION FOR BASIC IOCS                              3IOB0030
+*              MUST FOLLOW .MINOR ON LIBRARY TAPE                       3IOB0040
+*                                                                       3IOB0050
+ENTRY  EQU     .ENTRY                                                   3IOB0060
+ROUTE  EQU     .ENTRY+8                                                 3IOB0070
+       ENTRY   .COPY                                                    3IOB0080
+       ENTRY   .REW                                                     3IOB0090
+       ENTRY   .WEF                                                     3IOB0100
+       ENTRY   .BSF                                                     3IOB0110
+       ENTRY   .CKPT                                                    3IOB0120
+       ENTRY   .STASH                                                   3IOB0130
+       ENTRY   .JOIN                                                    3IOB0140
+.JOIN  TTR     .DEFIN+2                                                 3IOB0150
+.COPY  TTR     .WRITE+2                                                 3IOB0160
+.REW   TTR     .WRITE+4                                                 3IOB0170
+.WEF   TTR     .WRITE+6                                                 3IOB0180
+.BSF   TTR     .WRITE+10                                                3IOB0190
+.CKPT  TTR     .WRITE+12                                                3IOB0200
+.STASH TTR     .WRITE+14                                                3IOB0210
+       ORG     .DEFIN+2                                                 3IOB0220
+       STL     ROUTE               JOIN                                 3IOB0230
+       TXL     ENTRY,,.JOINX                                            3IOB0240
+       ORG     .WRITE+2                                                 3IOB0250
+       STL     ROUTE               COPY                                 3IOB0260
+       TXL     ENTRY,,.COPY.                                            3IOB0270
+       STL     ROUTE               REW                                  3IOB0280
+       TXL     ENTRY,,.REW.                                             3IOB0290
+       STL     ROUTE               WEF                                  3IOB0300
+       TXL     ENTRY,,.WEF.                                             3IOB0310
+       BES     2                                                        3IOB0320
+       STL     ROUTE               BSF                                  3IOB0330
+       TXL     ENTRY,,.BSF.                                             3IOB0340
+       STL     ROUTE               CKPT                                 3IOB0350
+       TRA     .CKPT.                                                   3IOB0360
+       STL     ROUTE               STASH                                3IOB0370
+       TXL     ENTRY,,.STAS.                                            3IOB0380
+*                                                                       3IOB0390
+       ORG     .LUNBL+1                                                 3IOB0400
+       TTR     .CHCPT                                                   3IOB0410
+*                                                                       3IOB0420
+       ORG     .GO+6                                                    3IOB0430
+       TSX     .CPINT,4                                                 3IOB0440
+*                                                                       3IOB0450
+       ORG     .COMXI+6                                                 3IOB0460
+       XEC     .BASIO+1                                                 3IOB0470
+       BES     4                                                        3IOB0480
+       TSX     .CKPT.,4                                                 3IOB0490
+*                                                                       3IOB0530
+       ORG     .JOINX                                                   3IOB0540
+       TRA     .JOIN.                                                   3IOB0550
+*                                                                       3IOB0560
+       ORG     .OP4                                                     3IOB0570
+       TMI     .INTOP                                                   3IOB0580
+*                                                                       3IOB0590
+       ORG     .SH1                                                     3IOB0600
+       TMI     .INTCL                                                   3IOB0610
+*                                                                       3IOB0620
+       ORG     .RE7                                                     3IOB0630
+       TSX     .ENTIN,1                                                 3IOB0640
+*                                                                       3IOB0650
+       ORG     .SEL59                                                   3IOB0660
+       TSX     .ENTIN,1                                                 3IOB0670
+       BSS     5                                                        3IOB0680
+       TRA     .BSF5                                                    3IOB0690
+*                                                                       3IOB0700
+       ORG     .ETOF3+4                                                 3IOB0710
+       TSX     .CPINT,4                                                 3IOB0720
+*                                                                       3IOB0730
+       ORG     .IOCSM                                                   3IOB0740
+       END                    END OF BASIC OVERLAY                      3IOB0750

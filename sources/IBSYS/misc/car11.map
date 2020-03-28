@@ -1,0 +1,75 @@
+$IBMAP CAR11   ADDREL                                                   3LC00000
+       LBL     AR11,BEGIN     CAR11                                  (7)3LC00010
+*              NOTE      MULTIPLIES   ENTER VIA                         3LC00020
+*                                                                       3LC00030
+*              TSX  .CARX,4        X=11 OR 12                           3LC00040
+*              NOTE      PZE   L(C)                                     3LC00050
+*                                                                       3LC00060
+*              NOTE     WHERE L(C) IS THE LOCATION OF A SCALING         3LC00070
+*              NOTE      CONSTANT.                                      3LC00080
+*              .CAR11 IS USED WHEN THE PRODUCT DOES NOT                 3LC00090
+*              NOTE      EXCEED 103 BITS- THE RESULT IS SCALED DOWN BY  3LC00100
+*              NOTE      C AND LEFT IN THE AC-MQ.                       3LC00110
+*              .CAR12 IS USED WHEN THE PRODUCT DOES NOT                 3LC00120
+*              NOTE      EXCEED 136 BITS- THE RESULT IS SCALED DOWN     3LC00130
+*              NOTE      BY 10**10, FOLLOWED BY C, AND LEFT IN THE      3LC00140
+*              NOTE      AC-MQ.                                         3LC00150
+       ENTRY   .CAR11                                                   3LC00160
+.CAR11 STZ     MPTP                SET SWITCH FOR ONE DIVIDE            3LC00170
+       TRA     *+2                                                      3LC00180
+       ENTRY   .CAR12                                                   3LC00190
+.CAR12 STL     MPTP                SET FOR TWO DIVIDES                  3LC00200
+       SXA     SYSMX,2                                                  3LC00210
+       STO     CELLS               SAVE SECOND OPERAND                  3LC00220
+       STQ     CELLS+1                                                  3LC00230
+       MPY     SYSOPL                                                   3LC00240
+       STQ     CELLS+3             SAVE (L1L2)6                         3LC00250
+       STO     CELLS+2             PART FIRST (L1L2)U                   3LC00260
+       LDQ     CELLS+1             L1 TO MQ                             3LC00270
+       MPY     SYSOPH                                                   3LC00280
+       STQ     CELLS+1             PART FIRST (L1U2)L                   3LC00290
+       LDQ     SYSOPL              L2 TO MQ                             3LC00300
+       STO     SYSOPL              SAVE (L1U2)U                         3LC00310
+       MPY     CELLS                                                    3LC00320
+       XCA                                                              3LC00330
+       ADD     CELLS+2                                                  3LC00340
+       ADD     CELLS+1                                                  3LC00350
+       STO     CELLS+2             FIRST- (L1L2)U+(L1U2)L+(L2U1)L       3LC00360
+       STQ     CELLS+1             SAVE (L2U1)U                         3LC00370
+       LRS     35                                                       3LC00380
+       LDQ     CELLS               U2 TO MQ                             3LC00390
+       STO     CELLS               SAVE (FIRST)U                        3LC00400
+       MPY     SYSOPH                                                   3LC00410
+       XCA                                                              3LC00420
+       ADD     CELLS                                                    3LC00430
+       ADD     SYSOPL                                                   3LC00440
+       ADD     CELLS+1             SECOND- (FIRST)U+(L2U1)U+            3LC00450
+       STO     CELLS+1               (L1U2)+(U1U2)L                     3LC00460
+       STQ     CELLS                                                    3LC00470
+       LRS     35                                                       3LC00480
+       ADD     CELLS               THIRD- (SECOND)U+(U1U2)U             3LC00490
+       AXT     3,2                                                      3LC00500
+       NZT     MPTP                                                     3LC00510
+       TXI     SYSMB,2,-2                                               3LC00520
+       STZ     MPTP                SETUP TO FIRST DIVIDE                3LC00530
+       LDQ     L.101Y                BY 10**10                          3LC00540
+SYSMA  STQ     MPTP+1                                                   3LC00550
+       LDQ     CELLS+4,2           LOWER DIVIDE                         3LC00560
+       DVP     MPTP+1              DIVIDE AND STORE                     3LC00570
+       STQ     CELLS+4,2                                                3LC00580
+       TIX     *-3,2,1                                                  3LC00590
+       ZET     MPTP                                                     3LC00600
+       TRA     SYSMX               EXIT IF SCALING DONE                 3LC00610
+SYSMB  LDQ*    1,4                                                      3LC00620
+       STL     MPTP                SETUP FOR DIVIDE                     3LC00630
+       CLA     CELLS+1               BY C.                              3LC00640
+       TXI     SYSMA,2,1                                                3LC00650
+SYSMX  AXT     0,2                                                      3LC00660
+       CLA     CELLS+2                                                  3LC00670
+       TRA     2,4                                                      3LC00680
+SYSOPH EQU     .CARS1                                                   3LC00690
+SYSOPL EQU     .CARS2                                                   3LC00700
+L.101Y OCT     112402762000        10**10                               3LC00710
+CELLS  BSS     4                                                        3LC00720
+MPTP   BSS     2                                                        3LC00730
+       END                                                              3LC00740

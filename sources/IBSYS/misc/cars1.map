@@ -1,0 +1,6 @@
+$IBMAP CARS1   ADDREL                                                   3L600000
+       LBL     ARS1,BEGIN     CARS1                                  (7)3L600010
+*              NOTE     MULTIPLY SUBROUTINES.                           3L600020
+       ENTRY   .CARS1                                                   3L600030
+.CARS1 PZE     **                                                       3L600040
+       END                                                              3L600050
