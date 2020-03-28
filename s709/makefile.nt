@@ -1,0 +1,162 @@
+CPU = i386
+MAKECPU = /D_X86_
+PCPU = /G3
+
+!include <ntwin32.mak>
+
+CFLAGS = /nologo /D_WIN32 /DWIN32 /W3 /Zi /MD $(PCPU) /Iinclude 
+
+TARGETS = s709.exe bcd2txt.exe bcd2bin.exe bcd2cbn.exe bin2bcd.exe \
+	bin2txt.exe cbn2bcd.exe crd2cbn.exe txt2bcd.exe txt2bin.exe \
+	gendate.exe genext.exe
+
+S709OBJ = s709.obj arith.obj binloader.obj chan7607.obj chan7909.obj \
+	console.obj io.obj lights.obj negop.obj parity.obj posop.obj \
+	screen.obj sense.obj commdev.obj
+
+BCD2CBNOBJ = bcd2cbn.obj prsf2.obj
+BCD2BINOBJ = bcd2bin.obj prsf2.obj
+BCD2TXTOBJ = bcd2txt.obj prsf2.obj
+BCDDUMPOBJ = bcddump.obj prsf2.obj
+
+BIN2BCDOBJ = bin2bcd.obj prsf2.obj
+BIN2TXTOBJ = bin2txt.obj prsf2.obj
+
+CBN2BCDOBJ = cbn2bcd.obj prsf2.obj
+CRD2CBNOBJ = crd2cbn.obj prsf2.obj
+
+TXT2BCDOBJ = txt2bcd.obj prsf2.obj
+TXT2BINOBJ = txt2bin.obj prsf2.obj
+
+GENDATEOBJ = gendate.obj
+GENEXTOBJ = genext.obj
+
+all: $(TARGETS)
+
+s709.exe: $(S709OBJ)
+	link $(S709OBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+bcd2bin.exe: $(BCD2BINOBJ)
+	link $(BCD2BINOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+bcd2cbn.exe: $(BCD2CBNOBJ)
+	link $(BCD2CBNOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+bcd2txt.exe: $(BCD2TXTOBJ)
+	link $(BCD2TXTOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+bin2bcd.exe: $(BIN2BCDOBJ)
+	link $(BIN2BCDOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+bin2txt.exe: $(BIN2TXTOBJ)
+	link $(BIN2TXTOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+cbn2bcd.exe: $(CBN2BCDOBJ)
+	link $(CBN2BCDOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+crd2cbn.exe: $(CRD2CBNOBJ)
+	link $(CRD2CBNOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+txt2bcd.exe: $(TXT2BCDOBJ)
+	link $(TXT2BCDOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+txt2bin.exe: $(TXT2BINOBJ)
+	link $(TXT2BINOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+gendate.exe: $(GENDATEOBJ)
+	link $(GENDATEOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+genext.exe: $(GENEXTOBJ)
+	link $(GENEXTOBJ) /nologo /SUBSYSTEM:console \
+	netapi32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib \
+	        shell32.lib wsock32.lib
+
+clean:
+	-del $(S709OBJ) s709.exe
+	-del $(BCD2BINOBJ) bcd2bin.exe
+	-del $(BCD2CBNOBJ) bcd2cbn.exe
+	-del $(BCD2TXTOBJ) bcd2txt.exe
+	-del $(BCDDUMPOBJ) bcddump.exe
+	-del $(BIN2BCDOBJ) bin2bcd.exe
+	-del $(BIN2TXTOBJ) bin2txt.exe
+	-del $(CBN2BCDOBJ) cbn2bcd.exe
+	-del $(CRD2CBNOBJ) crd2cbn.exe
+	-del $(TXT2BCDOBJ) txt2bcd.exe
+	-del $(TXT2BINOBJ) txt2bin.exe
+	-del $(GENDATEOBJ) gendate.exe
+	-del $(GENEXTOBJ) genext.exe
+
+arith.obj: arith.c include/sysdef.h include/regs.h include/s709.h \
+	include/console.h
+binloader.obj: binloader.c include/sysdef.h include/regs.h include/binloader.h
+chan7607.obj: chan7607.c include/sysdef.h include/regs.h include/parity.h \
+	include/io.h include/trace.h include/chan7607.h include/console.h \
+	include/lights.h include/chan7909.h
+chan7909.obj: chan7909.c include/sysdef.h include/regs.h include/parity.h \
+	include/io.h include/trace.h include/chan7607.h include/console.h \
+	include/lights.h include/chan7909.h
+console.obj: console.c include/sysdef.h include/regs.h include/trace.h \
+	include/lights.h include/io.h include/chan7607.h include/console.h \
+	include/screen.h include/binloader.h include/chan7909.h
+io.obj: io.c include/sysdef.h include/regs.h include/parity.h \
+	include/nativebcd.h include/chan7607.h include/io.h include/chan7909.h
+lights.obj: lights.c include/sysdef.h include/regs.h include/trace.h \
+	include/io.h include/screen.h
+negop.obj: negop.c include/sysdef.h include/regs.h include/s709.h \
+	include/arith.h include/io.h include/chan7607.h include/negop.h \
+	include/chan7909.h
+parity.obj: parity.c
+posop.obj: posop.c include/sysdef.h include/regs.h include/s709.h \
+	include/arith.h include/chan7607.h include/io.h include/posop.h \
+	include/chan7909.h
+s709.obj: s709.c include/sysdef.h include/regs.h include/trace.h \
+	include/s709.h include/io.h include/chan7607.h include/negop.h \
+	include/posop.h include/sense.h include/console.h include/lights.h \
+	include/chan7909.h
+screen.obj: screen.c
+sense.obj: sense.c include/regs.h include/arith.h
+commdev.obj: commdev.c include/sysdef.h include/regs.h include/parity.h \
+	include/nativebcd.h include/chan7607.h include/chan7909.h \
+	include/io.h include/screen.h include/comm.h
+
+bcd2bin.obj: bcd2bin.c include/sysdef.h include/cvtpar.h include/prsf2.h
+bcd2cbn.obj: bcd2bin.c include/sysdef.h include/cvtpar.h include/prsf2.h
+bcd2txt.obj: bcd2txt.c include/sysdef.h include/nativebcd.h include/prsf2.h
+bcddump.obj: bcddump.c include/sysdef.h include/prsf2.h include/parity.h
+
+bin2bcd.obj: bin2bcd.c include/sysdef.h include/prsf2.h include/cvtpar.h
+bin2txt.obj: bin2txt.c include/sysdef.h include/prsf2.h include/cvtpar.h
+
+cbn2bcd.obj: cbn2bcd.c include/sysdef.h include/prsf2.h include/cvtpar.h
+crd2cbn.obj: crd2cbn.c include/sysdef.h include/prsf2.h
+
+txt2bcd.obj: txt2bcd.c include/sysdef.h include/prsf2.h include/nativebcd.h \
+	include/cvtpar.h
+txt2bin.obj: txt2bin.c include/sysdef.h include/prsf2.h include/cvtpar.h
+
+prsf2.obj: prsf2.c
+
+gendate.obj: gendate.c
+genext.obj: genext.c

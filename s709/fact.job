@@ -1,0 +1,17 @@
+$JOB           FACTORIALS - INTEGER
+$EXECUTE       IBJOB
+$IBJOB         GO,LOGIC,MAP,FIOCS
+$IBFTC FACT    FULIST,REF,NODECK,M90
+C
+C   Print factorial using integer.
+C
+      INTEGER I,NUM,MAX
+      MAX = 10
+      NUM = 1
+      DO 10 I=1,MAX
+   10   NUM=NUM*I
+      WRITE(6,100) MAX, NUM
+      STOP
+C
+  100 FORMAT(1X,I3,13H FACTORIAL = ,I8)
+      END

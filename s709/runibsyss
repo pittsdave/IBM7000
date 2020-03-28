@@ -1,0 +1,35 @@
+#!/bin/sh
+PATH=.:$PATH
+
+#
+# Run IBSYS Job using tape as input, using simh format tapes.
+#
+if [ "$1" = "" -o "$2" = "" ];then
+   echo "usage: runibsyss program listing [s709options]"
+   exit 1
+fi
+rm -f punch.* print.* sysou1.* sys*.bin $2
+#
+# Make sysin tape.
+#
+gendate >sysin.txt
+cat $1 >>sysin.txt
+cat eof.dat >>sysin.txt
+cat ibsys.ctl >>sysin.txt
+txt2bcd -s sysin 
+#
+txt2bcd ibsys.ctl reader.bcd 80 80
+bcd2cbn reader
+#
+# Run IBSYS
+#
+#	a1sr=../tapes/ASYS1s.BIN   a2sr=../tapes/ASYS8s.BIN \
+s709 $3 -cibsyss.cmd -m7094 r=reader p=print u=punch \
+	a1r=ASYS1.BIN  a2r=ASYS8.BIN \
+	a3s=sysin.bcd  a4s=sysou1.bcd  a5s=sysut1.bin  a6s=sysut3.bin \
+	a7s=sysut2.bin a8s=syspp1.bin  a9s=sysut4.bin a10s=sysck2.bin 
+#
+# Convert printed output
+#
+bcd2txt -sp sysou1.bcd $2
+#rm -f reader.* print.bcd sysou1.* sysin.* sysck2.*

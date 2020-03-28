@@ -1,0 +1,438 @@
+$JOB  UPDATE EDIT DECK FOR 1301 DISK AND 7320 DRUM 
+$*BLOCK         BCD,0084
+$*
+$*     PLEASE MOUNT THE DISTRIBUTION SYMBOLIC TAPE NO. 1 ON TAPE UNIT A5
+$*
+$PAUSE
+$IBSYS
+$LIST
+$ATTACH        A5
+$AS            SYSUT1             UNIT 4
+$ATTACH        B5
+$AS            SYSUT4             UNIT 3
+$ATTACH        A7                 UNIT 9
+$AS            SYSCK1             UPDATE INTERMEDIATE TAPE
+$REWIND        SYSUT4             UPDATE OUTPUT TAPE
+$REWIND        SYSUT1             UPDATE INPUT TAPE
+$REWIND        SYSCK1
+$*
+$*     NEW SYMBOLIC TAPE NUMBER 1 WITH DISK, DRUM OR
+$*     HYPERTAPE PARAMETERS WILL BE WRITTEN ON TAPE UNIT B5
+$*
+$EXECUTE       UPDATE
+       UPDATE  4,3,10
+IBM    SET     7090                                                     IBB00130
+IBSORG SET     64                                                       IBB00170
+IOXORG SET     450                                                      IBB00210
+SYSORG SET     2000                                               *ALL  IBB00250
+SYSEND SET     -1                                                       IBB00290
+HIGHLO SET     1                                                        IBB00330
+PP     SET     0                                                        IBB00370
+EJECT  SET     1                                                        IBB00420
+DBLSP  SET     4                                                        IBB00450
+RDUNRT SET     100                                                      IBB00480
+ETMODE SET     0                                                        IBB00530
+*                             CHANNEL 'A'                               IBB00550
+CHA1   SET     8                                                        IBB00580
+CHAAT  BOOL    16000               CR, PU, PR, AND 8 TAPES ATTACHED     IBB00630
+CHAMD  BOOL    01777               ALL TAPES MODEL IV                   IBB00670
+PRNTA  SET     1                                                        IBB00700
+PNCHA  SET     1                                                        IBB00730
+CDRDA  SET     1                                                        IBB00760
+HTA1   SET     0                                                        IBB00800
+HTAA1  BOOL    1777                                                     IBB00820
+HTA2   SET     0                                                        IBB00850
+HTAA2  BOOL    1777                                                     IBB00870
+DFA1   SET     0                                                        IBB00910
+DFA3   SET     0                                                     $6$IBB00930
+NFA1   SET     0                                                        IBB00950
+DFAA1  BOOL    1777                                                     IBB00970
+IFA1   SET     0                                                        IBB00990
+DFA2   SET     0                                                        IBB01020
+DFA4   SET     0                                                     $6$IBB01040
+NFA2   SET     0                                                        IBB01060
+DFAA2  BOOL    1777                                                     IBB01080
+IFA2   SET     0                                                        IBB01100
+*                             CHANNEL 'B'                               IBB01120
+ CHB1  SET     8                                                        IBB01150
+CHBAT  BOOL    16003               8 729 TAPES ATTACHED                 IBB01200
+CHBMD  BOOL    01777               ALL TAPES MODEL IV                   IBB01240
+PRNTB  SET     0                                                        IBB01270
+PNCHB  SET     0                                                        IBB01300
+CDRDB  SET     0                                                        IBB01330
+HTB1   SET     0                                                        IBB01370
+HTBA1  BOOL    1777                                                     IBB01390
+HTB2   SET     0                                                        IBB01420
+HTBA2  BOOL    1777                                                     IBB01440
+DFB1   SET     0                                                        IBB01480
+DFB3   SET     0                                                     $6$IBB01500
+NFB1   SET     0                                                        IBB01520
+DFBA1  BOOL    1777                                                     IBB01540
+IFB1   SET     0                                                        IBB01560
+DFB2   SET     0                                                        IBB01590
+DFB4   SET     0                                                     $6$IBB01610
+NFB2   SET     0                                                        IBB01630
+DFBA2  BOOL    1777                                                     IBB01650
+IFB2   SET     0                                                        IBB01670
+*                             CHANNEL 'C'                               IBB01690
+CHC1   SET     0                                                        IBB01720
+CHCAT  BOOL    17777                                                 $6$IBB01770
+CHCMD  BOOL    1777                ALL DRIVES MODEL IV                  IBB01810
+PRNTC  SET     0                                                        IBB01840
+PNCHC  SET     0                                                        IBB01870
+CDRDC  SET     0                                                        IBB01900
+HTC1   SET     0                                                        IBB01940
+HTCA1  BOOL    0000                                                     IBB01960
+HTC2   SET     0                                                        IBB01990
+HTCA2  BOOL    1777                                                     IBB02010
+DFC1   SET     0                                                        IBB02050
+DFC3   SET     0                                                     $6$IBB02070
+NFC1   SET     0                                                        IBB02090
+DFCA1  BOOL    1777                                                     IBB02110
+IFC1   SET     0                                                        IBB02130
+DFC2   SET     0                                                        IBB02160
+DFC4   SET     0                                                     $6$IBB02180
+NFC2   SET     0                                                        IBB02200
+DFCA2  BOOL    1777                                                     IBB02220
+IFC2   SET     0                                                        IBB02240
+*                             CHANNEL 'D'                               IBB02260
+CHD1   SET     0                                                        IBB02290
+CHDAT  BOOL    17777                                                 $6$IBB02340
+CHDMD  BOOL    1777                ALL DRIVES MODEL IV                  IBB02380
+PRNTD  SET     0                                                        IBB02410
+PNCHD  SET     0                                                        IBB02440
+CDRDD  SET     0                                                        IBB02470
+HTD1   SET     0                                                        IBB02510
+HTDA1  BOOL    1777                                                     IBB02530
+HTD2   SET     0                                                        IBB02560
+HTDA2  BOOL    1777                                                     IBB02580
+DFD1   SET     2                                                        IBB02620
+DFD3   SET     1                                                     $6$IBB02640
+NFD1   SET     1                                                        IBB02660
+DFDA1  BOOL    0077                                                     IBB02680
+IFD1   SET     0                                                        IBB02700
+DFD2   SET     0                                                        IBB02730
+DFD4   SET     0                                                     $6$IBB02750
+NFD2   SET     0                                                        IBB02770
+DFDA2  BOOL    1777                                                     IBB02790
+IFD2   SET     0                                                        IBB02810
+*                             CHANNEL 'E'                               IBB02830
+CHE1   SET     0                                                        IBB02860
+CHEAT  BOOL    17777                                                    IBB02910
+CHEMD  BOOL    1777                                                     IBB02950
+PRNTE  SET     0                                                        IBB02980
+PNCHE  SET     0                                                        IBB03010
+CDRDE  SET     0                                                        IBB03040
+HTE1   SET     0             -                                          IBB03080
+HTEA1  BOOL    1777                                                     IBB03100
+HTE2   SET     0                                                        IBB03130
+HTEA2  BOOL    1777                                                     IBB03150
+DFE1   SET     0                                                        IBB03190
+DFE3   SET     0                                                     $6$IBB03210
+NFE1   SET     0                                                        IBB03230
+DFEA1  BOOL    1777                                                     IBB03250
+IFE1   SET     0                                                        IBB03270
+DFE2   SET     0                                                        IBB03300
+DFE4   SET     0                                                     $6$IBB03320
+NFE2   SET     0                                                        IBB03340
+DFEA2  BOOL    1777                                                     IBB03360
+IFE2   SET     0                                                        IBB03380
+*                             CHANNEL 'F'                               IBB03400
+CHF1   SET     0                                                        IBB03430
+CHFAT  BOOL    17777                                                    IBB03480
+CHFMD  BOOL    1777                                                     IBB03520
+PRNTF  SET     0                                                        IBB03550
+PNCHF  SET     0                                                        IBB03580
+CDRDF  SET     0                                                        IBB03610
+HTF1   SET     0                                                        IBB03650
+HTFA1  BOOL    1777                                                     IBB03670
+HTF2   SET     0                                                        IBB03700
+HTFA2  BOOL    1777                                                     IBB03720
+DFF1   SET     0                                                        IBB03760
+DFF3   SET     0                                                     $6$IBB03780
+NFF1   SET     0                                                        IBB03800
+DFFA1  BOOL    1777                                                     IBB03820
+IFF1   SET     0                                                        IBB03840
+DFF2   SET     0                                                        IBB03870
+DFF4   SET     0                                                     $6$IBB03890
+NFF2   SET     0                                                        IBB03910
+DFFA2  BOOL    1777                                                     IBB03930
+IFF2   SET     0                                                        IBB03950
+*                             CHANNEL 'G'                               IBB03970
+CHG1   SET     0                                                        IBB04000
+CHGAT  BOOL    17777                                                    IBB04050
+CHGMD  BOOL    1777                                                     IBB04090
+PRNTG  SET     0                                                        IBB04120
+PNCHG  SET     0                                                        IBB04150
+CDRDG  SET     0                                                        IBB04180
+HTG1   SET     0                                                        IBB04220
+HTGA1  BOOL    1777                                                     IBB04240
+HTG2   SET     0                                                        IBB04270
+HTGA2  BOOL    1777                                                     IBB04290
+DFG1   SET     0                                                        IBB04330
+DFG3   SET     0                                                     $6$IBB04350
+NFG1   SET     0                                                        IBB04370
+DFGA1  BOOL    1777                                                     IBB04390
+IFG1   SET     0                                                        IBB04410
+DFG2   SET     0                                                        IBB04440
+DFG4   SET     0                                                     $6$IBB04460
+NFG2   SET     0                                                        IBB04480
+DFGA2  BOOL    1777                                                     IBB04500
+IFG2   SET     0                                                        IBB04520
+*                             CHANNEL 'H'                               IBB04540
+CHH1   SET     0                                                        IBB04570
+CHHAT  BOOL    17777                                                    IBB04620
+CHHMD  BOOL    1777                                                     IBB04660
+PRNTH  SET     0                                                        IBB04690
+PNCHH  SET     0                                                        IBB04720
+CDRDH  SET     0                                                        IBB04750
+HTH1   SET     0                                                        IBB04790
+HTHA1  BOOL    1777                                                     IBB04810
+HTH2   SET     0                                                        IBB04840
+HTHA2  BOOL    1777                                                     IBB04860
+DFH1   SET     0                                                        IBB04900
+DFH3   SET     0                                                     $6$IBB04920
+NFH1   SET     0                                                        IBB04940
+DFHA1  BOOL    1777                                                     IBB04960
+IFH1   SET     0                                                        IBB04980
+DFH2   SET     0                                                        IBB05010
+DFH4   SET     0                                                     $6$IBB05030
+NFH2   SET     0                                                        IBB05050
+DFHA2  BOOL    1777                                                     IBB05070
+IFH2   SET     0                                                        IBB05090
+SYSLB1 MZE     1,,1                SYSTEM LIBRARY-1 HIGH DEN A1         IBB42280
+SYSLB2 MZE     0                   SYSTEM LIBRARY-2                     IBB42290
+SYSLB3 MZE     0                   SYSTEM LIBRARY-3                     IBB42300
+SYSLB4 MZE     PPC,PPE,PPU         SYSTEM LIBRARY-4                     IBB42310
+SYSCRD PZE     1,,11               SYSTEM CARD READER CHANNEL A         IBB42320
+SYSPRT PZE     1,,13               SYSTEM PRINTER CHANNEL A             IBB42330
+SYSPCH PZE     1,,12               SYSTEM PUNCH CHANNEL A               IBB42340
+SYSOU1 MZE     2,,1                                                  $6$IBB42350
+SYSOU2 MZE     2,,1                                                  $6$IBB42360
+SYSIN1 MZE     1,,2                                                  $6$IBB42370
+SYSIN2 MZE     1,,2                                                  $6$IBB42380
+SYSPP1 MZE     2,,2                                                  $6$IBB42390
+SYSPP2 MZE     2,,2                                                     IBB42400
+SYSCK1 MZE     0                   SYSTEM CHECKPOINT-1 UNASSIGNED       IBB42410
+SYSCK2 MZE     1,,5                SYSCK2 FOR DEBUG                  $6$IBB42420
+SYSUT1 MZE     1,,3                                                     IBB42430
+SYSUT2 MZE     2,,3                                                     IBB42440
+SYSUT3 MZE     1,,4                                                     IBB42450
+SYSUT4 MZE     2,,4                                                     IBB42460
+SYSUT5 MZE     0                                                     $6$IBB42461
+SYSUT6 MZE     0                                                     $6$IBB42462
+SYSUT7 MZE     0                                                     $6$IBB42463
+SYSUT8 MZE     0                                                     $6$IBB42464
+SYSUT9 MZE     0                                                     $6$IBB42465
+       PZE                                                              IBB42510
+       PZE                                                              IBB42520
+       PZE                                                              IBB42530
+       PZE                                                              IBB42540
+ DMPSW PZE     **                  DUMP SWITCH                          IBB42550
+ DMPSV PZE     **,7,**             DUMP INFO SAVE                       IBB42560
+ IBSAV PZE     **                  S.S.1 SAVE                           IBB42570
+       PZE                                                              IBB42580
+       PZE                                                              IBB42590
+       PZE                                                              IBB42600
+       PZE                                                              IBB42610
+       PZE                                                              IBB42620
+       PZE                                                              IBB42630
+       PZE                                                              IBB42640
+       PZE                                                              IBB42650
+       PZE                                                              IBB42660
+       PZE                                                              IBB42670
+       PZE                                                              IBB42680
+       PZE                                                              IBB42690
+       PZE                                                           $6$IBB42691
+       PZE                                                           $6$IBB42692
+       PZE                                                           $6$IBB42693
+       PZE                                                           $6$IBB42694
+       PZE                                                           $6$IBB42695
+ONLIN  BOOL    1                                                        IBD00210
+DBLSPC BOOL    0                                                        IBD00220
+KEYSWT EQU     4                                                        IBD00230
+FORMAT EQU     3                                                        IBD00240
+$STOP                                                                   IBD17710
+       ENDFIL  3
+       ENDUP
+       UPDATE  4,3
+CH7909 SET     1                                                  *ALL  1CJ01000
+ NOCH  SET     4     NO. OF DIRECT ACCESS MODULES DEFINED IN IOCS *DKDM 1IO00310
+NOHYP  SET     0                   NO HYPERTAPE DEFINED IN IOCS      $5$1IO00330
+       AXT     HEND-HBEG,1         FIND CH LIST POINTER              $5$1IO23270
+       TIX     HYPL+3,1,HEND-HBEG/NOHYP                              $5$1IO23360
+       END                                                       *TRAIL 1IO99990
+       ENDUP                                                     *TRAIL
+       UPDATE  4,9                                               *TRAIL
+CH7909 SET     1                                                  *ALL  1PA01250
+$STOP                                                            *TRAIL 1PC99999
+       ENDFIL  9                                                 *TRAIL
+       REWIND  9                                                 *TRAIL
+       ENDUP                                                     *TRAIL
+       UPDATE  9,3                                               *TRAIL
+       END                                                       *TRAIL 1PC99990
+       REWIND  9                                                 *TRAIL
+       ENDUP                                                     *TRAIL
+       UPDATE  9,3                                               *TRAIL
+TRAIL  SET     1                                                 *TRAIL 1PA01374
+       TTL     PROCESS CONTROL UTILITIES-IBJOBY                  *TRAIL 1PC12890
+       BCI     1,IBJOBY                                          *TRAIL 1PC13790
+       END                                                       *TRAIL 1PC99990
+       REWIND  9                                                 *TRAIL
+       ENDUP                                                     *TRAIL 
+       UPDATE  9,3                                               *TRAIL
+TRAIL  SET     1                                                 *TRAIL 1PA01374
+       TTL     PROCESS CONTROL UTILITIES-IBJOBI                  *TRAIL 1PC12890
+       BCI     1,IBJOBI                                          *TRAIL 1PC13790
+       END                                                       *TRAIL 1PC99990
+       REWIND  9                                                 *TRAIL
+       ENDUP                                                     *TRAIL
+       UPDATE  9,3                                               *TRAIL
+TRAIL  SET     1                                                 *TRAIL 1PA01374
+       TTL     PROCESS CONTROL UTILITIES-IBJOBL                  *TRAIL 1PC12890
+       BCI     1,IBJOBL                                          *TRAIL 1PC13790
+$STOP                                                            *TRAIL 1PC99999
+       ENDFIL  3
+       REWIND  9                                                 *TRAIL
+       ENDUP                                                     *TRAIL
+       UPDATE  4,3                                               *TRAIL
+ NOCH  SET     4     NO. OF DIRECT ACCESS MODULES DEFINED IN IOCS *DKDM IOA00360
+NOHYP  SET     0                   NO HYPERTAPE DEFINED IN IOCS   *HYPR IOA00380
+       END                                                              IOR15470
+       ENDFIL  3
+       ENDUP 
+       UPDATE  4,3
+$STOP                                                                   ED099999
+       ENDFIL  3                                                        
+       ENDUP
+       UPDATE  4,3
+ NOCH  SET     4     NO. OF DIRECT ACCESS MODULES DEFINED IN IOCS *DKDM 3AE00060
+NOHYP  SET     0                                                        3AE00080
+ NOCH  SET     4     NO. OF DIRECT ACCESS MODULES DEFINED IN IOCS *DKDM 3AF00270
+NOHYP  SET     0                                                        3AF00290
+HYPER  SET     0                                                  *HYPR 3AK00210
+DISK   SET     1                                                  *DKDM 3AK00230
+HYPER  SET     0                                                  *HYPR 3AL00270
+DISK   SET     1                                                  *DKDM 3AL00290
+DISK   SET     1                                                  *DKDM 3B000370
+ NOCH  SET     4     NO. OF DIRECT ACCESS MODULES DEFINED IN IOCS *DKDM 3IO00300
+NOHYP  SET     0                                                        3IO00320
+       END                                                              3RN15370
+       ENDFIL  3
+       REWIND  3
+       UNLOAD  4
+       ENDUP
+$IBSYS
+$*
+$*     PLEASE REMOVE THE DISTRIBUTION SYMBOLIC TAPE NO. 1 FROM TAPE UNIT
+$*     A5 AND MOUNT A SCRATCH TAPE IN ITS PLACE.
+$*
+$*     A SYMBOLIC TAPE WITH ONLY THOSE RECORDS WHICH MUST BE REASSEMBLED
+$*     FOR DISK, DRUM OR HYPERTAPE WILL NOW BE WRITTEN ON TAPE UNIT A5.
+$*     PLEASE PRESS START WHEN ALL TAPE MOUNTING IS COMPLETE.
+$*
+$PAUSE
+$EXECUTE       UPDATE
+       UPDATE  3,4
+       END     *                                                        IBD17690
+       ENDUP                                                            IBD17690
+       UPDATE  3,4
+       SKIPTO                                                           1CJ00010
+       END                                                              1CT99990
+       SKIPTO                                                           1IO00000
+       END                                                              1PC99990
+       ENDUP
+       UPDATE  3,4                                               *TRAIL
+       END                                                       *TRAIL 1PC99990
+       ENDUP                                                     *TRAIL
+       UPDATE  3,4                                               *TRAIL
+       END                                                       *TRAIL 1PC99990
+       ENDUP                                                     *TRAIL
+       UPDATE  3,4                                               *TRAIL
+       END                                                       *TRAIL 1PC99990
+       ENDUP                                                     *TRAIL
+       UPDATE  3,4
+       SKIPTO                                                           IOA00000
+$IBSYS 
+$JOB           7090-IO-919, INPUT OUTPUT CONTROL SYSTEM, VERSION 6
+$EXECUTE       IBSFAP
+*      FAP                                                              IOA00000
+       END     -1                                                       IOF00510
+       ENDUP
+       UPDATE  3,4
+       SKIPTO                                                           3AC00000
+$IBSYS
+$JOB           IBJOB SUBROUTINE LIBRARY, 7090-LM-803, VERSION 5
+$EXECUTE       IBJOB
+$IBJOB IBLIB   MAP,LOGIC
+$EDIT          LOGIC
+$REPLACE       .JBCON,ORG=03720
+       END                                                              3AC00200
+       SKIPTO                                                           3AE00000
+$REPLACE       .IODEF
+       END                                                              3AE01990
+       SKIPTO                                                           3AF00000
+$REPLACE       .IOCSF
+       END                                                              3AF28140
+       SKIPTO                                                           3AK00000
+$REPLACE       .LOVRY
+       END     .LOVRY                                                   3AK10100
+       SKIPTO                                                           3AL00000
+$REPLACE       .LXSL
+       END                                                              3AL02520
+       SKIPTO                                                           3B000000
+$REPLACE       .IBDBI
+       END     DSTRS                                                    3B020280
+       SKIPTO                                                           3IO00000
+$REPLACE       .IOCS
+       END                                                              3IO56800
+       ENDFIL  4
+       UNLOAD  3
+       ENDUP
+       UPDATE  ,4,1
+$IBSYS
+$JOB           BUILD SYSTEM
+$*BLOCK         BCD,0084
+$SWITCH        SYSPP1,SYSUT2
+$IBEDT
+      *EDIT    MAP,MODS
+TAPE  *REPLACE IBSYS
+TAPE  *REPLACE SYSDMP
+TAPE  *REPLACE IBJOB
+TAPE  *REPLACE IOCSB
+TAPE  *REPLACE IBJOBB
+TAPE  *REPLACE IBJOBC
+      *AFTER   IBCBC9                                            *TRAIL
+TAPE  *INSERT  IBJOBY                                            *TRAIL
+      *AFTER   IBFTCG
+TAPE  *INSERT  IBJOBI                                            *TRAIL
+      *AFTER   IBMAPK                                            *TRAIL
+TAPE  *INSERT  IBJOBL                                            *TRAIL
+FILE  *REPLACE CIFSR,SYSUT4
+FILE  *REPLACE TIFSR,SYSUT4
+TAPE  *REPLACE IOCS
+TAPE  *REPLACE POST
+TAPE  *REPLACE PREP
+TAPE  *REPLACE IOBB
+TAPE  *REPLACE IOBM
+TAPE  *REPLACE NOBS
+       ENDFIL  4
+$IBSYS
+$*
+$*     TAPE UNIT A5 NOW CONTAINS THE NEW SYSTAP
+$*     WITH DISK, DRUM OR HYPERTAPE CAPABILITIES.
+$*
+$STOP
+       REWIND  4
+       ENDUP
+$IBSYS
+$*
+$*     REWIND AND SWITCH TAPE UNITS A3 AND A5.
+$*     MOUNT NEW TAPE ON B5 FOR THE SUBROUTINE LIBRARY.
+$*     DISMOUNT AND SAVE NEW SYMBOLIC TAPE ON A6 AND MOUNT A SCRATCH.
+$*     REWIND SYSTAP, CLEAR AND LOAD TAPE TO ASSEMBLE AND EDIT A SYSTAP
+$*     WITH DISK, DRUM OR HYPERTAPE CAPABILITY.
+$*
+$REWIND        SYSPP1
+$PAUSE
+~

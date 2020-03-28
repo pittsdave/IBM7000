@@ -1,0 +1,36 @@
+#!/bin/sh
+PATH=.:$PATH
+
+#
+# Run IBSYS Job using tape as input, using 2 channels.
+#
+if [ "$1" = "" -o "$2" = "" ];then
+   echo "usage: runibsys2 program listing [s709options]"
+   exit 1
+fi
+rm -f punch.* print.* sysou* sys*.bin $2
+#
+# Make sysin file
+#
+gendate >sysin.txt
+#cat ibsysc.ctl >>sysin.txt
+cat $1 >>sysin.txt
+cat eof.dat >>sysin.txt
+cat ibsys.ctl >>sysin.txt
+txt2bcd sysin
+#
+txt2bcd ibsys.ctl reader.bcd 80 80
+bcd2cbn reader
+#
+# Run IBSYS
+#
+s709 $3 -cibsys2.cmd -m7094 r=reader p=print u=punch \
+	a1r=ASYS12.BIN a2r=ASYS8.BIN  a3=sysin.bcd  a4=syslb4.bin \
+	a5=sysut1.bin  a6=sysut3.bin  a7=sysck2.bin \
+	b1=sysou1.bcd  b2=sysou2.bcd  b3=syspp1.bin b4=syspp2.bin \
+	b5=sysut2.bin  b6=sysut4.bin 
+#
+# Convert printed output
+#
+bcd2txt -p sysou1.bcd $2
+rm -f reader.* sysck*.bin print.bcd sysou1.* sysin.*

@@ -1,0 +1,29 @@
+#!/bin/sh
+PATH=.:$PATH
+
+#
+# Run LISP Job using tape as input
+#
+if [ "$1" = "" ];then
+   echo "usage: runlisp program [listing] [s709options]"
+   exit 1
+fi
+rm -f punch.* print.* sysou1.* sys*.bin $2
+#
+# Make sysin tape.
+#
+txt2bcd $1 sysin
+touch reader.cbn
+#
+# Run LISP
+#
+./s709 $3 -clisp.cmd -m7090 r=reader pc=print u=punch \
+	a1=sysin.bcd a2=sysppt.bin a3=sysout.bcd a4r=LISPTAPE.BIN \
+	b3=syscore.bin 
+if [ "$2" != "" ];then
+   #
+   # Convert printed output
+   #
+   bcd2txt -p sysout.bcd $2
+fi
+rm -f reader.cbn sysin.bcd sysout.bcd

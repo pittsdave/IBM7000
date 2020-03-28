@@ -1,0 +1,34 @@
+$JOB           COBOL HELLO WORLD
+$EXECUTE       IBJOB
+$IBJOB         GO,LOGIC,MAP,FIOCS
+$IBCBC HELLO   FULIST,REF,NODECK,M94,XR7
+000100 IDENTIFICATION DIVISION.                                         
+000200 PROGRAM-ID.            COB0.                                     
+000300 AUTHOR.                B W SPOOR.                                
+000400 INSTALLATION.          FRIDAY COMPUTER SERVICES.                 
+000500 DATE-WRITTEN.          SEPTEMBER 2004.                           
+000600 DATE-COMPILED.         SEPTEMBER 2004.                           
+000700*                                                                 
+000800*                                                                 
+000900*   OUTPUT 'HELLO WORLD'                                          
+001000*                                                                 
+001100*                                                                 
+001200 ENVIRONMENT DIVISION.                                            
+001300 CONFIGURATION SECTION.                                           
+001400 SOURCE-COMPUTER. IBM-7094.                                       
+001501 OBJECT-COMPUTER. IBM-7094.                                       
+001600 INPUT-OUTPUT SECTION.                                            
+001700 FILE-CONTROL.                                                    
+001800                                                                  
+001900 DATA DIVISION.                                                   
+002000 WORKING-STORAGE SECTION.                                         
+002100 01          FILLER                       PICTURE X.                  
+002200                                                                  
+002300 PROCEDURE DIVISION.                                              
+002301                                                                  
+002400 CONT-SECT.
+002500 CONT-0000.                                                       
+002600         DISPLAY 'HELLO WORLD'.                                   
+002700 CONT-9999.                                                       
+002800         STOP RUN.                                               
+$CBEND

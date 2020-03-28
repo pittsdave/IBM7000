@@ -1,0 +1,36 @@
+#!/bin/sh
+PATH=.:$PATH
+
+#
+# Run Disk enabled IBSYS Job using tape as input.
+#
+if [ "$1" = "" -o "$2" = "" ];then
+   echo "usage: runibsysd program listing [s709options]"
+   exit 1
+fi
+rm -f punch.* print.* sysou1.* sys*.bin $2
+#
+# Make sysin tape.
+#
+gendate >sysin.txt
+cat $1 >>sysin.txt
+cat eof.dat >>sysin.txt
+cat ibsys.ctl >>sysin.txt
+txt2bcd sysin 
+#
+txt2bcd ibsys.ctl reader.bcd 80 80
+bcd2cbn reader
+#
+# Run IBSYS
+#
+s709 $3 -cibsysd.cmd -m7094 r=reader p=print u=punch \
+	a1rs=../tapes/ASYS1Ds.BIN  a2=sysin.bcd  \
+	a3s=sysut1.bin  a4s=sysut3.bin  a5s=sysck2.bin \
+        b1=sysou1.bcd b2s=syspp1.bin b3s=sysut2.bin b4s=sysut4.bin \
+	dd00=../dasd/IBSYS1.DSK dd01=../dasd/IBSYS2.DSK \
+	dd02=../dasd/IBSYS3.DSK dn03=../dasd/IBSYS4.DRM
+#
+# Convert printed output
+#
+bcd2txt -p sysou1.bcd $2
+rm -f reader.* print.bcd sysou1.* sysin.* sysck2.*

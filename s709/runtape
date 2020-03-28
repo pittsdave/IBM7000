@@ -1,0 +1,11 @@
+#!/bin/sh
+PATH=.:$PATH
+
+if [ "$1" = "" ];then
+   echo "usage: runtape mode diagprog"
+   exit 1
+fi
+rm -f punch.* print.*
+s709 $3 -m$1 r=../diags/9b01hdat.cbn p=print u=punch a1r=$2 \
+	dd00=../dasd/DIAG.DSK $4
+bcd2txt -p print

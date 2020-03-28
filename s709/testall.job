@@ -1,0 +1,383 @@
+$JOB           PRIME NUMBERS IV
+$EXECUTE       IBJOB
+$IBJOB         GO,LOGIC,MAP,FIOCS
+$IBFTC PRIME   FULIST,REF,NODECK,M90
+C
+C   Prime number generator using the sieve of Eratosthenes
+C
+      INTEGER I,NUM,MULT,PRIME,SIZE
+      DIMENSION IFLAGS(1000)
+C     *** SET ENDING NUMBER TO BE TESTED (must match array dimension)
+      SIZE=1000
+C     *** MARK ALL NUMBERS IN THE SIEVE AS PRIME INITIALLY, EXCEPT 2
+      DO 10 I=1,SIZE
+   10   IFLAGS(I)=1
+      IFLAGS(1)=0
+C
+C     *** WORK THROUGH THE LIST, FINDING THE NEXT MARKED NUMBER
+C
+      DO 40 NUM=1,SIZE
+        IF (IFLAGS(NUM).EQ.0) GOTO 40
+C       *** MARKED NUMBER IS THE CURRENT PRIME, FORM ITS FIRST MULTIPLE
+        PRIME=NUM
+        MULT=PRIME+PRIME
+C       *** UNMARK ALL MULTIPLES OF THE CURRENT PRIME
+   20   IF (MULT.GT.SIZE) GOTO 40
+        DO 30 I=MULT,SIZE,PRIME
+   30     IFLAGS(I)=0
+C     *** GO FIND NEXT UNMARKED NUMBER
+   40 CONTINUE
+C
+C     *** PRINT RESULTS - ALL NUMBERS THAT ARE STILL MARKED
+C
+      WRITE(6,900)
+      DO 50 NUM=1,SIZE
+        IF (IFLAGS(NUM).EQ.0) GOTO 50
+        WRITE(6,901) NUM
+   50 CONTINUE
+      STOP
+C
+  900 FORMAT(22H1LIST OF PRIME NUMBERS)
+  901 FORMAT(1X,I5)
+      END
+~
+$JOB           PRIME NUMBERS II
+$EXECUTE       FORTRAN
+$ID   PRIME
+*     XEQ
+*     LIST8
+C PRIMES
+C   Prime number generator using the sieve of Eratosthenes
+C   Converted to FORTRAN II
+C
+      DIMENSION IFLAGS(1000)
+C     *** SET ENDING NUMBER TO BE TESTED (must match array dimension)
+      ISIZE=1000
+C     *** MARK ALL NUMBERS IN THE SIEVE AS PRIME INITIALLY, EXCEPT 2
+      DO 10 I=1,ISIZE
+   10   IFLAGS(I)=1
+      IFLAGS(1)=0
+C
+C     *** WORK THROUGH THE LIST, FINDING THE NEXT MARKED NUMBER
+C
+      DO 40 NUM=1,ISIZE
+      IF (IFLAGS(NUM)) 15,40,15
+C     *** MARKED NUMBER IS THE CURRENT PRIME, FORM ITS FIRST MULTIPLE
+   15 IPRIME=NUM
+      MULT=IPRIME+IPRIME
+C     *** UNMARK ALL MULTIPLES OF THE CURRENT PRIME
+   20 IF (MULT-ISIZE) 25,25,40
+   25 DO 30 I=MULT,ISIZE,IPRIME
+   30 IFLAGS(I)=0
+C     *** GO FIND NEXT UNMARKED NUMBER
+   40 CONTINUE
+C
+C     *** PRINT RESULTS - ALL NUMBERS THAT ARE STILL MARKED
+C
+      WRITE OUTPUT TAPE 6,900
+      DO 50 NUM=1,ISIZE
+      IF (IFLAGS(NUM)) 45,50,45
+   45 WRITE OUTPUT TAPE 6,901,NUM
+   50 CONTINUE
+      CALL EXIT
+C
+  900 FORMAT(1H1,22H LIST OF PRIME NUMBERS)
+  901 FORMAT(1X,I5)
+      END
+~
+$ID   HELLO
+*     XEQ
+*     LIST
+C HELLO
+      WRITE OUTPUT TAPE 6,900
+      CALL EXIT
+C
+  900 FORMAT(1H1,12H HELLO WORLD)
+      END
+~
+$IBSYS
+$JOB           COBOL HELLO WORLD
+$EXECUTE       IBJOB
+$IBJOB         GO,LOGIC,MAP,FIOCS
+$IBCBC HELLO   FULIST,REF,NODECK,M94,XR7
+000100 IDENTIFICATION DIVISION.                                         
+000200 PROGRAM-ID.            COB0.                                     
+000300 AUTHOR.                B W SPOOR.                                
+000400 INSTALLATION.          FRIDAY COMPUTER SERVICES.                 
+000500 DATE-WRITTEN.          SEPTEMBER 2004.                           
+000600 DATE-COMPILED.         SEPTEMBER 2004.                           
+000700*                                                                 
+000800*                                                                 
+000900*   OUTPUT 'HELLO WORLD'                                          
+001000*                                                                 
+001100*                                                                 
+001200 ENVIRONMENT DIVISION.                                            
+001300 CONFIGURATION SECTION.                                           
+001400 SOURCE-COMPUTER. IBM-7094.                                       
+001501 OBJECT-COMPUTER. IBM-7094.                                       
+001600 INPUT-OUTPUT SECTION.                                            
+001700 FILE-CONTROL.                                                    
+001800                                                                  
+001900 DATA DIVISION.                                                   
+002000 WORKING-STORAGE SECTION.                                         
+002100 01          FILLER                       PICTURE X.                  
+002200                                                                  
+002300 PROCEDURE DIVISION.                                              
+002301                                                                  
+002400 CONT-SECT.
+002500 CONT-0000.                                                       
+002600         DISPLAY 'HELLO WORLD'.                                   
+002700 CONT-9999.                                                       
+002800         STOP RUN.                                               
+$CBEND
+~
+$JOB           LAPLACE TRANSFORM
+$EXECUTE       IBJOB
+$IBJOB         GO,FIOCS
+$IBFTC LAPLACE NODECK,M94,XR7
+C SOLUTION OF LAPLACE'S EQUATION TO FIND THE TEMPERATURE IN A PIPE
+C WITH A HOLE AND A FIN.
+      REAL U(101,201), ARRAY(2,200), SYMBOL(20)
+      REAL LINE(101), H(3)
+      INTEGER LEFT(76), RIGHT(76)
+      DATA SYMBOL /1HA, 1H , 1HB, 1H , 1HC, 1H , 1HD, 1H , 1HE, 1H ,
+     1   1HF, 1H , 1HG, 1H , 1HH, 1H , 1HI, 1H , 1HJ, 1H /
+      DATA H(1), H(2), H(3)/0.0, 0.666666667, 0.333333333/
+C      NAMELIST/INPUT/TIN, TOUT, LENGTH, MAXIT, EPS, OMEGA
+C3     READ (5, INPUT)
+      TIN=400.0
+      TOUT=0.0
+      MAXIT = 100
+      EPS=50.0
+      OMEGA=1.84
+      LENGTH=151
+C CLEAR ARRAY TO OUTSIDE TEMPERATURE
+      DO 1 I = 1, 101
+      DO 1 J = 1, 201
+1     U(I, J) = TOUT
+C  SET AN INSIDE SQUARE TO TEMPERATURE OF FLUID, THIS WILL INCLUDE
+C SOME OFF-BOUNDRARY POINTS, BUT IT WILL NOT MATTER.
+      DO 2 I = 15, 85
+      DO 2 J = 15, 85
+2     U(I, J) = TIN
+C LOCATE BOUNDRY OF CIRCLE. THE SUBSCRIPTS STORED IDENTIFY 'INTERIOR'
+C POINTS, NOT 'BOUNDARY' POINTS.
+      DO 4 I = 26, 76
+      RIGHT(I) = 52.0 + SQRT (625.1 - FLOAT(I-51)**2)
+4     LEFT(I) = 102 - RIGHT(I)
+C SET ITERATION COUNT TO 1
+      ITN = 1
+C START AN ITERATION BY SETTING SUM OF RESIDUES TO ZERO
+9     SUM = 0.0
+C TOP SLAB
+      DO 10 I = 77, 100
+      DO 10 J = 2, 100
+      DIFF = OMEGA*((U(I-1,J)+U(I+1,J)+U(I,J-1)+U(I,J+1))/4.0 - U(I,J))
+      U(I,J) = U(I,J) + DIFF
+      I1 = 102 - I
+      U(I1,J) = U(I,J)
+10    SUM = SUM + ABS(DIFF)
+C LEFT SECTION
+      DO 11 I = 26, 76
+      L = LEFT(I)
+      DO 11 J = 2, L
+      DIFF = OMEGA*((U(I-1,J)+U(I+1,J)+U(I,J-1)+U(I,J+1))/4.0 - U(I,J))
+      U(I,J) = U(I,J) + DIFF
+      I1 = 102 - I
+      U(I1,J) = U(I,J)
+11    SUM = SUM + ABS(DIFF)
+C RIGHT SECTION
+      DO 12 I = 26, 76
+      L = RIGHT(I)
+      DO 12 J = L, 100
+      DIFF = OMEGA*((U(I-1,J)+U(I+1,J)+U(I,J-1)+U(I,J+1))/4.0 - U(I,J))
+      U(I,J) = U(I,J) + DIFF
+      I1 = 102 - I
+      U(I1,J) = U(I,J)
+12    SUM = SUM + ABS(DIFF)
+C FIN
+      DO 13 I = 22, 80
+      L = LENGTH -1
+      DO 13 J = 101, L
+      DIFF = OMEGA*((U(I-1,J)+U(I+1,J)+U(I,J-1)+U(I,J+1))/4.0 - U(I,J))
+      U(I,J) = U(I,J) + DIFF
+      I1 = 102 - I
+      U(I1,J) = U(I,J)
+13    SUM = SUM + ABS(DIFF)
+C BOTTOM SLAB
+      DO 14 I = 2, 25
+      DO 14 J = 2, 100
+      DIFF = OMEGA*((U(I-1,J)+U(I+1,J)+U(I,J-1)+U(I,J+1))/4.0 - U(I,J))
+      U(I,J) = U(I,J) + DIFF
+      I1 = 102 - I
+      U(I1,J) = U(I,J)
+14    SUM = SUM + ABS(DIFF)
+C STORE ONE TEMPERATURE
+      ARRAY(1, ITN) = U(70, 110)
+C STORE SUM OF RESIDUES
+      ARRAY(2, ITN) = SUM
+      ITN = ITN + 1
+C CHECK FOR FAILURE TO CONVERGE IN MAXIMUM ALLOWABLE ITERATIONS
+      IF (ITN .GT. MAXIT) GO TO 20
+C CHECK FOR CONVERGENCE
+      IF (SUM .LE. EPS) GO TO 20
+C NOT CONVERGED--GO BACK FOR ANOTHER ITERATION
+      GO TO 9
+C EITHER PROCESS HAS CONVERGED OR MAXIT HAS BEEN EXCEEDED. WISH TO
+C PLOT RESULTS EITHER WAY. IF THERE IS ANY DOUBT ABOUT WHICH IS
+C WHICH, A COUNT OF THE NUMBER OF SUCCESSIVE RESIDUES WILL GIVE
+C THE ANSWER
+C WRITE TEMPERATURES IN FIN
+20    WRITE (6, 30) (ARRAY(1, I), I = 1, ITN)
+30    FORMAT (1H1/(1H , 1P10E12.4))
+C WRITE ARRAY OF SUCCESSIVE RESIDUALS
+      WRITE (6, 30) (ARRAY(2, I), I = 1, ITN)
+      WRITE (6, 91) TIN, TOUT, MAXIT, EPS, OMEGA
+91    FORMAT (1H1, 2F10.1, I5, 2F10.2///)
+C CONVERT TEMPERATURES TO SYMBOLS
+      L = 0.6 * FLOAT(LENGTH)
+      DO 9011 K = 1, L
+      J1 = 1 + (5 * (K-1)) / 3
+      J2 = J1 + 1
+      M = 1 + MOD(K-1, 3)
+      DO 9012 I = 1, 101
+      LINE(I) = U(I,J1) + H(M)*(U(I,J2) - U(I,J1))
+9012  IF ((I .GT. 26 .AND. I .LT. 76 .AND. J1 .GT. LEFT(I)+1 .AND.
+     1  J2 .LT. RIGHT(I)-1) .OR. (J2 .GT. 101 .AND. (I .LE. 20 .OR.
+     2  I .GE. 82))) LINE(I) = 401.0
+      DO 9013 I = 1, 101
+      N = LINE(I) / 26.667 + 1.0
+9013  LINE(I) = SYMBOL(N)
+9011  WRITE (6, 9014) LINE
+9014  FORMAT (1H , 101A1)
+C      GO TO 3
+9999  STOP
+      END
+~
+$JOB           RUN ASSEMBLER
+$EXECUTE       IBJOB
+$IBJOB         NOGO
+$TITLE         TESTRUN - TEST OPERATION
+$IBMAP TESTR   RELMOD,M90
+*
+       PCC     ON
+       PMC     ON
+       DETAIL
+       LBL     TESTR,BEGIN
+*      EXTERN  PRINT
+START  EQU     *
+       HTR     *+1
+*
+       AXT     39,1
+       DLD     ONE
+LOOP   EQU     *
+       DFMP    TEN
+       HTR     *+1
+       TIX     LOOP,1,1
+*
+       AXT     39,1
+LOOP2  EQU     *
+       DFDP    TEN
+       HTR     *+1
+       TIX     LOOP2,1,1
+       HTR     *+1
+       LDQ     =O151515151515
+       HTR     *+1
+       AXT     2,1
+       PXD     ,1
+       LDQ     TEN
+       FMP     FOUR
+       FAD     FOUR
+       LDQ     =O515151515151
+       HTR     *+1
+       TSX     PRINT,4,4
+       PZE     14,,2
+       BCI     7,THE BROWN FOX JUMPED OVER THE DOGS BACK
+       BCI     7,
+       TSX     PRINT,4,4
+       PZE     14,,2
+       BCI     7,HELLO WORLD
+       BCI     7,
+       TSX     PRINT,4,4
+       PZE     14,,2
+       BCI     2,0123456789
+       BCI     5,ABCDEFGHIJKLMNOPQRSTUVWXYZ
+       BCI     2,$'()*+,-./=
+       BCI     5,
+       HTR     *
+CMN    COMMON  32
+*      LORG
+P39    DEC     .39     +171400000000
+ONE    DEC     1.0
+       OCT     0
+TEN    DEC     10.0    +204500000000
+       OCT     0
+FORFOR DEC     44.0    +206540000000
+THREE  DEC     3.0     +202600000000
+FOUR   DEC     4.0     +203400000000
+TOTHTO DEC     232.0   +210720000000
+CTL    OCT     0
+CMN2   COMMON  64
+       END     START
+~
+$JOB           RUN ASSEMBLER
+$EXECUTE       IBSFAP
+$ID    TESTR
+*      FAP
+* TESTRUN - TEST OPERATION
+       COUNT   100
+       SST     FORTRAN
+       TTL     TESTRUN - TEST OPERATION
+       LBL     TESTR,BEGIN
+       EXTERN  PRINT
+START  EQU     *
+       HTR     *+1
+*
+       AXT     39,1
+       DLD     ONE
+LOOP   EQU     *
+       DFMP    TEN
+       HTR     *+1
+       TIX     LOOP,1,1
+*
+       AXT     39,1
+LOOP2  EQU     *
+       DFDP    TEN
+       HTR     *+1
+       TIX     LOOP2,1,1
+       HTR     *+1
+       LDQ     =O151515151515
+       HTR     *+1
+       AXT     2,1
+       PXD     ,1
+       LDQ     TEN
+       FMP     FOUR
+       FAD     FOUR
+       LDQ     =O515151515151
+       HTR     *+1
+       TSX     PRINT,4,4
+       PZE     14,,2
+       BCI     7,THE BROWN FOX JUMPED OVER THE DOGS BACK
+       BCI     7,
+       TSX     PRINT,4,4
+       PZE     14,,2
+       BCI     7,HELLO WORLD
+       BCI     7,
+       TSX     PRINT,4,4
+       PZE     14,,2
+       BCI     2,0123456789
+       BCI     5,ABCDEFGHIJKLMNOPQRSTUVWXYZ
+       BCI     2,$'()*+,-./=
+       BCI     5,
+       HTR     *
+P39    DEC     .39     +171400000000
+ONE    DEC     1.0
+       OCT     0
+TEN    DEC     10.0    +204500000000
+       OCT     0
+FORFOR DEC     44.0    +206540000000
+THREE  DEC     3.0     +202600000000
+FOUR   DEC     4.0     +203400000000
+TOTHTO DEC     232.0   +210720000000
+CTL    OCT     0
+       END     START

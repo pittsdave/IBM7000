@@ -1,0 +1,33 @@
+#!/bin/sh
+PATH=.:$PATH
+
+#
+# Run IBSYS Job using cards as input.
+#
+if [ "$1" = "" -o "$2" = "" ];then
+   echo "usage: runibsys program listing [s709options]"
+   exit 1
+fi
+rm -f punch.* print.* sysou* $2
+#
+# Make sysin card file
+#
+gendate >reader.txt
+cat ibsysc.ctl >>reader.txt
+cat $1 >>reader.txt
+cat eof.dat >>reader.txt
+cat ibsys.ctl >>reader.txt
+txt2bcd reader.txt reader.bcd 80 80
+bcd2cbn reader
+#
+# Run IBSYS
+#
+s709 $3 -cibsysc.cmd -m7094 r=reader p=print u=punch \
+	a1r=ASYS1.BIN a2r=ASYS8.BIN  a3=sysin.bcd  a4=sysou1.bcd \
+	a5=sysut1.bin  a6=sysut3.bin a7=sysut2.bin a8=syspp1.bin \
+	a9=sysut4.bin a10=sysck2.bin 
+#
+# Convert printed output
+#
+bcd2txt -p sysou1.bcd $2
+rm -f reader.* sysck2.bin print.bcd sysou1.* sysin.*

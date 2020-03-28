@@ -1,0 +1,65 @@
+$JOB           RUN ASSEMBLER
+$EXECUTE       IBJOB
+$IBJOB         NOGO
+$TITLE         TESTRUN - TEST OPERATION
+$IBMAP TESTR   RELMOD,M90
+*
+       PCC     ON
+       PMC     ON
+       DETAIL
+       LBL     TESTR,BEGIN
+*      EXTERN  PRINT
+START  EQU     *
+       HTR     *+1
+*
+       AXT     39,1
+       DLD     ONE
+LOOP   EQU     *
+       DFMP    TEN
+       HTR     *+1
+       TIX     LOOP,1,1
+*
+       AXT     39,1
+LOOP2  EQU     *
+       DFDP    TEN
+       HTR     *+1
+       TIX     LOOP2,1,1
+       HTR     *+1
+       LDQ     =O151515151515
+       HTR     *+1
+       AXT     2,1
+       PXD     ,1
+       LDQ     TEN
+       FMP     FOUR
+       FAD     FOUR
+       LDQ     =O515151515151
+       HTR     *+1
+       TSX     PRINT,4,4
+       PZE     14,,2
+       BCI     7,THE BROWN FOX JUMPED OVER THE DOGS BACK
+       BCI     7,
+       TSX     PRINT,4,4
+       PZE     14,,2
+       BCI     7,HELLO WORLD
+       BCI     7,
+       TSX     PRINT,4,4
+       PZE     14,,2
+       BCI     2,0123456789
+       BCI     5,ABCDEFGHIJKLMNOPQRSTUVWXYZ
+       BCI     2,$'()*+,-./=
+       BCI     5,
+       HTR     *
+CMN    COMMON  32
+*      LORG
+P39    DEC     .39     +171400000000
+ONE    DEC     1.0
+       OCT     0
+TEN    DEC     10.0    +204500000000
+       OCT     0
+FORFOR DEC     44.0    +206540000000
+THREE  DEC     3.0     +202600000000
+FOUR   DEC     4.0     +203400000000
+TOTHTO DEC     232.0   +210720000000
+CTL    OCT     0
+CMN2   COMMON  64
+       END     START

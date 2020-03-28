@@ -1,0 +1,15 @@
+#!/bin/sh
+PATH=.:$PATH
+
+#
+# Run Job using tape as input.
+#
+rm -f print.* 
+#
+# Run 
+#
+s709 $1 -m7094 p=print cd01=../dasd/DISK.BIN 
+#
+# Convert printed output
+#
+bcd2txt print

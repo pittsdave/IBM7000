@@ -1,0 +1,10 @@
+$RELEASE       SYSUT1
+$RELEASE       SYSUT3
+$ATTACH        DD01/0
+$AS            SYSUT1,100,000 
+$AS            SYSUT3,100,100 
+$ATTACH        DD02/0
+$RELEASE       SYSUT2
+$RELEASE       SYSUT4
+$AS            SYSUT2,100,000 
+$AS            SYSUT4,100,100 
