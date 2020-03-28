@@ -1,0 +1,11 @@
+#!/bin/ksh
+
+echo "Checking $1"
+ls -1 $1/*.obj | cut -d / -f 2 | while read file; do
+   diff -cb $1/$file checkdir/$1/$file | grep "! [0-9A-H]" >/dev/null 2>&1
+   stat=$?
+   if [ $stat -eq 0 ]; then
+      #echo "status = " $stat
+      echo "Error in file: " $1/$file
+   fi
+done

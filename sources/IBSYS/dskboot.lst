@@ -1,0 +1,40 @@
+ASM7090 2.2.29                              Tue May  7 13:12:03 2013 Page 0001
+
+
+00000                        1         ORG     0
+00000   0 00025 0 00101      2         IOCD    RSCQ,,21
+00001   0060 00 0 00001      3         TCOA    *
+00002   0020 00 0 00101      4         TRA     RSCQ
+                             5  *
+00101                        6         ORG     65
+00101  -0541 00 0 00115      7  RSCQ   RSCD    SMSQ             Do seek to loca
+00102  -0645 00 0 00000      8  SCDQ   SCDD    0                Store diagnosti
+00103   0441 00 0 00000      9         LDI     0
+00104  -0054 00  007100     10         LFT     7100             Check if good..
+00105   0020 00 0 00110     11         TRA     *+3              No, Blast and t
+00106   0063 00 0 00102     12  TCOQ   TCOD    SCDQ             Loop
+00107   0020 00 0 00003     13         TRA     3                Enter IBSYS col
+00110   0760 00 0 04350     14  RICQ   RICD    **               Blast 7909
+00111  -100512121212        15  LDVCY  OCT     500512121212,121222440000
+00113  -101212120000        16  LDSEK  OCT     501212120000,0
+00115  -30 0000 0 00016     17  SMSQ   SMS     14               Inhibit ATT, U.
+00116   20 0000 0 00113     18         CTL     LDSEK            Seek
+00117  -10 0000 2 00117     19         TCM     *                Wait
+00120   20 0000 2 00111     20         CTLR    LDVCY            Verify IBSYS Cy
+00121  -0 00001 0 00122     21         CPYP    *+1,,1           Scatter load
+00122   00 0000 0 00122     22         WTR     *                Wait and or loa
+00123   1 00000 0 00121     23         TCH     *-2
+00124  -1 00000 0 00000     24         CPYD    0,,0             Syscyd actual I
+00125   34 0000 0 00125     25         TWT     *                SYSTWT in IBNUC
+                  00101     26         END     RSCQ
+ASM7090 2.2.29                              Tue May  7 13:12:03 2013 Page 0002
+SYMBOL TABLE
+
+ LDSEK    00113R   LDVCY    00111R   RICQ     00110R   RSCQ     00101R  
+ SCDQ     00102R   SMSQ     00115R   TCOQ     00106R  
+
+MAP 7090 mode assembly
+Options in effect: ADDREL NO() 
+
+0 Warnings in assembly
+0 Errors in assembly
