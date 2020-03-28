@@ -1,0 +1,269 @@
+FIBMON    R     THE FIB MONITOR.
+          R          3/10/66 - NOEL I. MORRIS
+          R
+          R
+          R     THIS COMMAND MAY BE ISSUED ONLY BY USER 1.
+          R
+          R     PARAMETERS ARE AS FOLLOWS -
+          R
+          R     0  -  LOOK FOR NEXT JOB, IF ANY
+          R     1  -  USER ALREADY LOGGED IN, TRY AGAIN LATER
+          R     2  -  USER CANNOT BE LOGGED IN.
+          R     3  -  SUCCESSFUL LOGIN, REMOVE JOB FROM FILE.
+          R
+          R
+            NORMAL MODE IS INTEGER
+            BOOLEAN TSTRUN.
+            DIMENSION INFO (4), BUFF1 (431), BUFF2 (431), CARD (14)
+            VECTOR VALUES CARD (14) = 777777777777K
+          R
+          R     PRESET DECLARATIONS.
+          R
+            VECTOR VALUES  C0056 = $ C0056$
+            VECTOR VALUES FBPROG = $ 99995$
+            VECTOR VALUES FIBMON = $FIBMON$
+            VECTOR VALUES FIBJOB = $FIBJOB$
+            VECTOR VALUES   FILE = $  FILE$
+            VECTOR VALUES      R = $R$
+            VECTOR VALUES     RW = $RW$
+            VECTOR VALUES    MZE = -0
+            VECTOR VALUES    ALL = $ALL$
+            VECTOR VALUES  FENCE = 777777777777K
+            VECTOR VALUES SLEEPT = 600
+            VECTOR VALUES     CT = 0
+          R
+            VECTOR VALUES LGNFIB = $ LOGIN$, 0, 0, 0, 0,
+          1      777777777777K
+            VECTOR VALUES FIBM3 = $FIBMON     3$,
+          1      777777777777K
+            VECTOR VALUES RUNCOM = $RUNCOM$, 0,
+          1      777777777777K
+          R
+          R
+          R     GET ARGUMENT AND CHECK VALIDITY.
+          R
+            LUN = GLOC.(COMLOC.($USER$))
+          R WHENEVER LUN .NE. 1, TRANSFER TO NOT1
+          R
+            WHOAMI. (INFO (4) ... 5)
+            LGNFIB = INFO
+          R
+            ARG = COMARG. (1)
+            WHENEVER ARG .E. FENCE, TRANSFER TO NOT1
+            ARG = BCDEC. (ARG)
+            WHENEVER ARG .L. 0 .OR. ARG .G. 3, TRANSFER TO NOT2
+            WHENEVER ARG .NE. 3 .AND. (INFO (4) .NE. C0056 .OR.
+          1      INFO (3) .NE. FBPROG), TRANSFER TO NOT3
+          R
+            FERRTN. (ERROR)
+          R
+            WHENEVER LUN .E. 1, ATTACH. (C0056, FIBMON)
+            TRANSFER TO FIB (ARG)
+          R
+          R
+          R
+          R     INITIATE A NEW FIB JOB.
+          R
+FIB (0)     CONTINUE
+            SETPTR. (1)
+            SETRUN. (0)
+          R
+GETJOB      BFOPEN. (R, FIBJOB, FILE, BUFF1 (431) ... 432,
+          1      MZE, MZE, NAP)
+            FLOC = 1
+RDJOB       GETPTR. (RELLOC)
+            READ. (NAP)
+          R
+          R     IS IT TIME TO RUN THIS JOB
+          R
+            TIMNOW = GTDYTM.(0)
+            WHENEVER CARD(8) .G. TIMNOW, TRANSFER TO NXTJOB
+          R
+          R     DETERMINE IF FIB USER IS ALREADY LOGGED IN.
+          R
+            LUN = ISIN. (CARD (13), CARD (11))
+            WHENEVER LUN .NE. 0
+                 TRANSFER TO NXTJOB
+            END OF CONDITIONAL
+          R
+          R     PRINT COMMENT FOR FUTURE REFERENCE.
+          R
+            PRNTP. (CARD (10) )
+          R
+          R     SET UP COMMANDS FOR CHAINING.
+          R
+            LGNFIB (1) = CARD (13)
+            LGNFIB (2) = CARD (12)
+            LGNFIB (3) = CARD (11)
+            LGNFIB (4) = CARD (9)
+          R
+            RUNCOM (1) = CARD (10)
+          R
+          R     SET COMMAND BUFFERS AND EXIT TO CHNCOM.
+          R
+            SCLS. (LGNFIB, 1)
+            SCLS. (FIBM3, 2)
+            SCLS. (RUNCOM, 3)
+            SCLC. (1, 3)
+            GETRUN. (FIBRUN)
+            SETRUN. (FIBRUN .V. 1K)
+CHN         CHNCOM. (0)
+          R
+          R
+          R     SET POINTER FOR READING NEXT JOB.
+          R
+NXTJOB      RELLOC = RELLOC + 14
+            FLOC = FLOC + 14
+            SETPTR. (RELLOC)
+            TRANSFER TO RDJOB
+          R
+          R
+          R
+          R     USER IS LOGGED IN, TRY AGAIN LATER.
+          R
+FIB (1)     CONTINUE
+            WHENEVER .NOT. TSTRUN. (1K), TRANSFER TO FIB (0)
+            GETPTR. (RELLOC)
+            SETPTR. (RELLOC + 14)
+            TRANSFER TO GETJOB
+          R
+          R
+          R
+          R     USER'S LOGIN FAILED. DELETE JOB.
+          R
+FIB (2)     CONTINUE
+            WHENEVER .NOT. TSTRUN. (1K), TRANSFER TO FIB (0)
+          R
+            REWRT.
+            TRANSFER TO GETJOB
+          R
+          R
+          R
+          R     LOGIN SUCCESSFUL.  REMOVE JOB FROM FILE.
+          R
+FIB (3)     CONTINUE
+            WHENEVER .NOT. TSTRUN. (1K), TRANSFER TO NOT1
+          R
+            REWRT.
+          R
+            COMFL.(0)
+            SETRUN.(0)
+            TRANSFER TO CHN
+          R
+          R
+          R
+          R
+          R     NO WAITING FIB JOB, SLEEP.
+          R
+NAP         BFCLOS. (ALL, MZE, NAP1)
+            TRANSFER TO NAP2
+NAP1        RESETF. (NAP2)
+NAP2        WHENEVER TSTRUN. (2K), TRANSFER TO FIB (0)
+            SLEEPT = SLEEPT
+            SLEEP.
+            TRANSFER TO FIB (0)
+          R
+          R
+          R
+          R     REWRITE FIBJOB FILE.
+          R
+            INTERNAL FUNCTION
+            ENTRY TO REWRT.
+          R
+            GETPTR. (RELLOC)
+            BFOPEN. (RW, FIBJOB, FILE, BUFF1 (431) ... 432,
+          1      MZE, MZE, ERROR)
+            FLOC = 1
+            READ. (RWFIN)
+            BUFFER. (FIBJOB, FILE, BUFF2 (431) ... 432)
+          R
+RWLOOP      BFREAD. (FIBJOB, FILE, CARD (13) ... 14, RWFIN, CT, ERROR)
+            WRWAIT. (FIBJOB, FILE, RELLOC, CARD (13) ... 14)
+          R
+            RELLOC = RELLOC + 14
+            TRANSFER TO RWLOOP
+          R
+RWFIN       TRFILE. (FIBJOB, FILE, RELLOC, TRERR)
+TRERR       BFCLOS. (FIBJOB, FILE, ERROR)
+          R
+            FUNCTION RETURN
+            END OF FUNCTION
+          R
+          R
+          R
+          R     READ - READ FIBJOB FILE TO 'RELLOC'.
+          R
+            INTERNAL FUNCTION (EOF)
+            STATEMENT LABEL EOF
+            ENTRY TO READ.
+          R
+RDLOOP      BFREAD. (FIBJOB, FILE, CARD (13) ... 14, EOF, CT, ERROR)
+            WHENEVER FLOC .L. RELLOC
+                 FLOC = FLOC + 14
+                 TRANSFER TO RDLOOP
+            END OF CONDITIONAL
+          R
+            FUNCTION RETURN
+            END OF FUNCTION
+          R
+          R
+          R     TSTRUN - CHECK FOR BIT IN FIBRUN WORD.
+          R
+            INTERNAL FUNCTION (MASK)
+            ENTRY TO TSTRUN.
+          R
+            GETRUN. (FIBRUN)
+            FUNCTION RETURN (FIBRUN .A. MASK) .NE. 0
+          R
+            END OF FUNCTION
+          R
+          R
+          R
+          R     ILLEGAL CALL TO THE FIB MONITOR.
+          R
+NOT1        PRNTP. (ILLEG)
+            VECTOR VALUES ILLEG = $ ILLEGAL CALL TO FIBMON.$
+          1      , 777777777777K
+            TRANSFER TO CHN
+NOT2        PRNTP. (ILLM2)
+            VECTOR VALUES ILLM2 = $ ILLEGAL ARG TO FIBMON.$
+          1      , 777777777777K
+            TRANSFER TO CHN
+NOT3        ILLM3(0) = INFO(4)
+            ILLM3(1) = INFO(3)
+            PRNTP. (ILLM3)
+            VECTOR VALUES ILLM3 = 0, 0, $:ILLEGAL USER TO FIBMON.$
+          1      , 777777777777K
+            TRANSFER TO CHN
+          R
+          R
+          R GETRUN, SETRUN, GETPTR, AND SETPTR
+          R
+            INTERNAL FUNCTION (ARG)
+            ENTRY TO GETRUN.
+            ARG = GLOC.(COMLOC.($FIBRUN$))
+            FUNCTION RETURN
+          R
+            ENTRY TO SETRUN.
+            SLOC.(ARG,COMLOC.($FIBRUN$))
+            FUNCTION RETURN
+          R
+            ENTRY TO GETPTR.
+            ARG = GLOC.(COMLOC.($FIBPTR$))
+            FUNCTION RETURN
+          R
+            ENTRY TO SETPTR.
+            SLOC.(ARG,COMLOC.($FIBPTR$))
+            FUNCTION RETURN
+          R
+            END OF FUNCTION
+          R
+          R
+          R     DISK ERROR.
+          R
+ERROR       NCOM. ($PRNTER$, -51K)
+          R
+          R
+          R
+          R
+            END OF PROGRAM

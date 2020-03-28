@@ -1,0 +1,230 @@
+            EXTERNAL FUNCTION (BUFF)
+            ENTRY TO LDABS.
+            ENTRY TO FIRST.
+          R
+          R     NEW 'LDABS' COMMAND  02/14/65
+          R          D.R. WIDRIG
+          R
+          R     LOADING INSTRUCTIONS
+          R          FAP (MAIN) (LIST)
+          R          MAD LDBS (LIST)
+          R          FAP CKSUM (LIST)
+          R          NCLOAD (MAIN) LDBS CKSUM (LIBE) XLIBE
+          R          SAVE LDABS
+          R
+            NORMAL MODE IS INTEGER
+            BOOLEAN TCD, CKSUM.
+            DIMENSION CARD(28),BUFFR(864),BUFFR1(864)
+            EQUIVALENCE (BUFFR(1),BUFFR1(0))
+          R
+            VECTOR VALUES DUMMY(1)...DUMMY(36) = 0
+            VECTOR VALUES DEND(125) = 234644000174K,0,0,464763000002K,0
+            VECTOR VALUES DEND(1)...DEND(124) = 0
+          R
+            VECTOR VALUES MESS1 =
+          1      $CORRECT FORMAT IS   LDABS NAME1 -NAME2-$,
+          2      777777777777K
+            VECTOR VALUES MESS15 =
+          1      $IF NAME2 SPECIFIED, THEN 'NAME2 SAVED' CREATED$,
+          2      777777777777K
+            VECTOR VALUES MESS2 = $ CARD $,0,$ OUT OF BOUND$,
+          1      777777777777K
+            VECTOR VALUES MESS3 = $ CARD $,0,$ ILLEGAL BINARY CARD$,
+          1      777777777777K
+            VECTOR VALUES MESS4 = $CHECK SUM ERROR IN CARD$,0,
+          1      777777777777K
+            VECTOR VALUES MESS5 =
+          1      $TRANSFER CARD MISSING, TYPE OCTAL STARTING LOC,$,
+          2      377777777777K
+          R
+            VECTOR VALUES FENCE = 777777777777K
+            VECTOR VALUES UBD = 100000K
+            VECTOR VALUES TCD = 0B
+            VECTOR VALUES R = 864
+            VECTOR VALUES MODE = 1
+            VECTOR VALUES LO = 0
+            VECTOR VALUES M = 35
+            VECTOR VALUES STUFF = 128
+            VECTOR VALUES TOP = 0
+            VECTOR VALUES N2 = 774324212262K,$ SAVED$
+            EQUIVALENCE (N2(1),S)
+            VECTOR VALUES A = $   ABS$
+          R
+          R     INTERNAL FUNCTION FOR PRODUCING FRAMES
+          R
+            INTERNAL FUNCTION (A)
+            ENTRY TO FRAME.
+                 WRWAIT.(N2,S,LO+M2,BUFFR(R)...R)
+                 THROUGH FLOOP1, FOR I = 0,2,(I.G.R)
+                      BUFFR(I) = 0
+                      BUFFR1(I) = 0
+FLOOP1           CONTINUE
+                 LO = A
+                 HI = LO + R
+                 RDWAIT.(N2,S,LO+M2,BUFFR(R)...R)
+                 FUNCTION RETURN
+            END OF FUNCTION
+          R
+          R     ROUTINE TO MOVE WORDS INTO FRAME
+          R
+            INTERNAL FUNCTION (A)
+            ENTRY TO MOVE.
+                 INDX = R - LOC + LO
+                 THROUGH MLOOP1, FOR I = 0,1,(I.GE.A)
+                      BUFFR(INDX-I) = CARD(PTR-I)
+MLOOP1           CONTINUE
+                 PTR = PTR - I
+                 FUNCTION RETURN
+            END OF FUNCTION
+          R
+          R     GET FIRST ARGUMENT AND CHECK IT
+          R
+            WHENEVER COMARG.(1,N1) .E. FENCE
+                 PRNTP.(MESS1)
+                 PRNTP.(MESS15)
+                 TRANSFER TO ERR1
+            OR WHENEVER COMARG.(2,DUMMY) .NE. FENCE
+                 N2 = DUMMY
+                 MODE = 0
+            END OF CONDITIONAL
+          R
+          R     SET UP I/O ERROR RETURNS AND OPEN INPUT FILE
+          R     ALSO, SET MEMORY BOUND AND BUFFER POINTERS
+          R
+            FERRTN.(ERR2)
+            BUFF1 = 1K5-GMEM.(DUMMY)
+            BUFF2 = BUFF1-432
+            BUFF3 = BUFF2-432
+            SMEM.(77777K)
+            HI = R
+            M1 = M + 1
+            M2 = M + 2
+            BFOPEN.($R$,N1,A,BUFF(BUFF1),BUFF(BUFF2),-0,ERR2)
+          R
+          R     PREPARE CORE-IMAGE FILE
+          R
+            WHENEVER DELETE.(N2) .NE. 0, TRANSFER TO ERR1
+            OPEN.($RW$,N2,S,MODE)
+            BUFFER.(N2,S,BUFF(BUFF3)...432)
+            WRFILE.(N2,S,1,DUMMY(M1)...M1)
+          R
+          R     READ ONE COLUMN BINARY CARD AND PROCESS
+          R
+READ        BFREAD.(N1,A,CWD...1,REOF,EOFCT,ERR2)
+            LOC = (CWD.A.77777K)
+            WDCT = (CWD.A.77K6).RS.18
+            WDLOC = WDCT + LOC
+            PFX = (CWD.A.7777K8).RS.24
+            BFREAD.(N1,A,CARD(27)...27,WHAT,EOFCT,ERR2)
+            WHENEVER (WDLOC.G.UBD)
+                 MESS2(1) = OCABC.(LOC)
+                 PRNTP.(MESS2)
+                 TRANSFER TO READ
+            OR WHENEVER (WDCT.G.22).OR.(PFX.NE.5)
+WHAT             MESS3(1) = OCABC.(LOC)
+                 PRNTP.(MESS3)
+                 TRANSFER TO READ
+            OR WHENEVER (WDCT.E.0)
+                 TCD = 1B
+                 TLOC = LOC
+                 TRANSFER TO REOF
+            OR WHENEVER CKSUM.(CWD,CARD(26),WDCT,CARD(27))
+                 MESS4(4) = OCABC.(LOC)
+                 PRNTP.(MESS4)
+                 TRANSFER TO READ
+            END OF CONDITIONAL
+          R
+          R     PREPARE TO INSERT WORDS INTO FRAME
+          R
+            PTR = 26
+            WHENEVER (WDLOC .G. TOP), TOP = WDLOC
+          R
+          R     SEE IF NEW FRAME IS NEEDED
+          R
+            WHENEVER (LOC .L. LO)
+                 FRAME.((LOC/R)*R)
+                 TRANSFER TO SPLIT
+            END OF CONDITIONAL
+          R
+          R     SEE IF FRAME SHOULD BE MOVED UP
+          R
+UP          WHENEVER (LOC .G. HI)
+                 FRAME.(LO+R)
+                 TRANSFER TO UP
+            END OF CONDITIONAL
+          R
+          R     CHECK FOR SPLIT FRAMES
+          R
+SPLIT       WHENEVER (WDLOC .G. HI)
+                 MOVE.(HI-LOC)
+                 WDCT = WDLOC - HI
+                 LOC = HI
+                 FRAME.(LO+R)
+            END OF CONDITIONAL
+            MOVE.(WDCT)
+            TRANSFER TO READ
+          R
+          R     EOF FROM INPUT, CLOSE UP
+          R
+REOF        BFCLOS.(N1,A,ERR2)
+          R
+          R     WRITE OUT LAST FRAME
+          R
+            WRFILE.(N2,S,LO+M2,BUFFR(R)...R)
+          R
+          R     CUT BACK FILE
+          R
+            TRFILE.(N2,S,TOP+M2,TRERR,ERCODE)
+          R
+          R     FUDGE UP MEMORY BOUND, ETC.
+          R
+TROK        WHENEVER (TOP .NE. 100000K)
+                 TOP = TOP + 1
+                 STUFF = STUFF + 1
+            END OF CONDITIONAL
+          R
+          R     APPEND DUMMY SAVED FILE STUFF AT END
+          R
+            CLOSE.(N2,S)
+            OPEN.($RW$,N2,S,MODE)
+            BUFFER.(N2,S,BUFF(BUFF3)...432)
+            WRFILE.(N2,S,0,DEND(STUFF)...STUFF)
+          R
+          R     CHECK FOR TRANSFER CARD
+          R
+            WHENEVER .NOT. TCD
+                 PRNTP.(MESS5)
+                 RDFLXC.(DUMMY,5)
+                 TLOC = BCOCT.(RJUST.(DUMMY))
+            END OF CONDITIONAL
+          R
+          R     INSERT TRANSFER LOCATION AS NEW ILC
+          R     ALSO, INSERT MEMORY BOUND WORD
+          R
+            MEMBND = 3K11 .V. (M.LS.18) .V. (TOP-1)
+            WRFILE.(N2,S,1,MEMBND...1)
+            WRFILE.(N2,S,2,TLOC...1)
+          R
+          R     CLOSE SAVED FILE
+          R
+            CLOSE.(N2,S,ERR2)
+          R
+          R     NOW PRODUCE CORE IMAGE
+          R
+            NCOM.($RESTOR$,N2)
+          R
+          R     ERROR HANDLING
+          R
+ERR2        PRNTER.
+ERR1        BRAKE.
+            CHNCOM.(1)
+          R
+          R     CHECK ERROR FROM TRFILE
+          R
+TRERR       WHENEVER (ERCODE .E. 7)
+                 TRANSFER TO TROK
+            OTHERWISE
+                 TRANSFER TO ERR2
+            END OF CONDITIONAL
+          R
+            END OF FUNCTION

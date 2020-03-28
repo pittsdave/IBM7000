@@ -1,0 +1,6 @@
+       NOLNK
+       ENTRY   TSSFIL
+       ENTRY   USRFIL
+TSSFIL TIA     =HTSSFIL
+USRFIL TIA     =HUSRFIL
+       END

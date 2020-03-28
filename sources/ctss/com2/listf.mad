@@ -1,0 +1,683 @@
+          R          S. ROSENBAUM, X6035, M1416-1484, 21 JANUARY 1966
+          R          MODIFIED 11/15/67 BY PETER R. BOS M1416 3845
+          R          TO ALLOW OFF-LINE LISTING.
+          R
+          R
+          R
+          R     (ROUTINE) - 'LISTF'
+          R
+          R     SELECTIVELY LIST THE CONTENTS OF A FILE DIRECTORY
+          R
+          R
+            NORMAL MODE IS INTEGER
+            BOOLEAN THDR, TOFF
+          R
+          R
+          R
+          R
+          R
+          R
+          R     INTERNAL OPERATORS FOR 'LISTF'
+          R
+          R
+          R
+          R     (OPERATOR) - LOGICAL EXCHANGE, .XCL.
+          R
+            DEFINE BINARY OPERATOR .XCL., PRECEDENCE SAME AS .G.
+            MODE STRUCTURE 1 .XCL. 1 TO 1
+          R
+       CAL  A
+       LDQ  B
+       STQ  A
+       SLW  B
+       OUT  ACQ
+       END
+          R
+          R
+          R
+          R
+          R     INTERNAL UTILITY ROUTINES FOR 'LISTF'
+          R
+          R
+          R
+          R     (PROCEDURE) - CONVERT 'NNNNNN' (BCD) TO BINARY INTEGER
+          R
+            INTERNAL FUNCTION(VAR,LABEL)
+          R
+          R     RETURNS INTEGER VALUES OF 'VAR' IN AC
+          R     GOES TO 'LABEL' IF 'VAR' IS NOT A BCD NUMBER
+          R
+            ENTRY TO NUMBER.
+          R
+            DUM3=0
+            TEN=1
+            DUM1=VAR
+            THROUGH NUM1,FOR INUM=0,1,INUM.E.6
+            DUM2=DUM1.A.77K
+            WHENEVER (DUM2.G.9.AND.(DUM2.NE.60K)),TRANSFER TO LABEL
+            DUM1=DUM1.RS.6
+            DUM3=DUM3+TEN*(DUM2.A.17K)
+            TEN=10*TEN
+NUM1        CONTINUE
+            FUNCTION RETURN DUM3
+          R
+            STATEMENT LABEL LABEL
+          R
+            END OF FUNCTION
+          R
+          R
+          R
+          R     (PROCEDURE) - CONVERT 'MMDDYY' (BCD) TO 'YYMMDD' (F.D.)
+          R
+            INTERNAL FUNCTION(DUM1)
+          R
+            ENTRY TO YYMMDD.
+          R
+            DUM2=DUM1/100
+            DUM3=DUM2/100
+            FUNCTION RETURN (DUM1-100*DUM2).LS.27+(DUM3.LS.23)+
+          1     (DUM2-100*DUM3).LS.18
+          R
+            END OF FUNCTION
+          R
+          R
+          R
+          R     (PROCEDURE) - SET-UP FILE NAME MASKS
+          R
+            INTERNAL FUNCTION(VAR,DUM3)
+          R
+            ENTRY TO SETNAM.
+          R
+            DUM1=VAR(J)
+          R
+            WHENEVER DUM1.E.$     *$
+                 VAR(J)=0
+                 DUM3(J)=0
+                 FUNCTION RETURN
+            END OF CONDITIONAL
+          R
+            DUM2=0
+            THROUGH NAM,FOR I=0,1,I.E.6
+            WHENEVER DUM1.A.77K.E.$00000*$,DUM2=DUM2.V.(77K.LS.(6*I))
+            DUM1=DUM1.RS.6
+NAM         CONTINUE
+          R
+            DUM3(J)=.N.DUM2
+            VAR(J)=VAR(J).A.DUM3(J)
+            FUNCTION RETURN
+          R
+            END OF FUNCTION
+          R
+          R
+          R
+          R     (PROCEDURE) - RESTORE ORIGINAL DIRECTORY
+          R
+            INTERNAL FUNCTION
+          R
+          R     TSSCFL=0 - IN ORIGINAL DIRECTORY
+          R            1 - FROM A COMMON FILE
+          R            2 - FROM THE SYSTEM FILE
+          R            3 - FROM ANOTHER DIRECTORY, VIA ATTACH.
+          R
+            ENTRY TO RSCOM.
+          R
+            TRANSFER TO RSCOM1(TSSCFL)
+          R
+RSCOM1(3)   ATTACH.(ME(2),ME(1),ATTERR)
+            TSSCFL=0
+            FUNCTION RETURN
+          R
+RSCOM1(2)   USRFIL.
+            TSSCFL=0
+            FUNCTION RETURN
+          R
+RSCOM1(1)   BUSY=COMFL.(DRCT1)
+            WHENEVER BUSY.NE.0,TRANSFER TO RSCOM1(1)
+            TSSCFL=0
+RSCOM1(0)   FUNCTION RETURN
+          R
+            END OF FUNCTION
+          R
+          R
+          R
+          R
+          R
+          R
+          R     (PROCEDURE) - PROCESS REQUEST
+          R
+          R
+            INTERNAL FUNCTION (WORD,POINT)
+          R
+            ENTRY TO PROCED.
+          R
+          R
+          R
+          R     INITIALLIZE FOR REQUEST PROCESSING
+          R
+          R
+          R
+            NENTRY=WORD/7
+          R     SEE IF FILE DIRECTORY IS EMPTY
+            WHENEVER NENTRY.E.0
+                 WHENEVER THDR
+                      MT=FIL(1)
+                      MT(2)=FIL(2)
+                      PRNTP.(MT)
+                 OTHERWISE
+                      EMPTY=UFD(1)
+                      EMPTY(2)=UFD(2)
+                      PRNTP.(EMPTY)
+                 END OF CONDITIONAL
+                 FUNCTION RETURN
+            END OF CONDITIONAL
+          R
+          R
+          R
+          R     SET NUMBER OF ACCEPTABLE FILES TO ZERO
+            NFILE=0
+            NLINK=0
+            RECS=0
+          R
+          R     SET DATE LIMITS
+            WHENEVER DATE.G.DATE(1)
+                 DATE.XCL.DATE(1)
+            OTHERWISE
+                 WHENEVER ISORT.E.5,REV=-REV
+            END OF CONDITIONAL
+            WHENEVER DATE(3).G.DATE(4)
+                 DATE(3).XCL.DATE(4)
+            OTHERWISE
+                 WHENEVER ISORT.E.6,REV=-REV
+            END OF CONDITIONAL
+          R
+          R     RESTORE ORIGINAL DIRECTORY IF NO FSTATE'S NEEDED
+            WHENEVER ((IPRINT.E.3).AND.(LNKMSK.E.777777777777K))
+            OTHERWISE
+                 RSCOM.
+            END OF CONDITIONAL
+          R
+          R     PRINT HEADER IF ASKED FOR.
+            WHENEVER THDR
+                 N=0
+                 WHENEVER .NOT. TOFF, N=1
+                 HDR(5)=NULLB.(FIL(1))
+                 HDR(7)=NULLB.(FIL(2))
+                 GETTM.(HDR(9),HDR(10))
+                 SSPRNT.(0)
+                 PRNTP.(HDR(N))
+                 PRNTP.(CARRET)
+                 SSPRNT.(1)
+            END OF CONDITIONAL
+          R
+          R
+          R     GET ACCEPTABLE FILES FROM DIRECTORY
+            THROUGH STEPS,FOR II=4,7,II.G.WORD
+          R     ARRAY 'WORD' STORED BACKWARDS - INDEX ACCORDINGLY
+            I=1K5-II
+          R
+            W1=WORD(I)
+            W2=WORD(I-1)
+          R     SKIP A VOIDED ENTRY
+            WHENEVER ((W1.V.W2).E.0),TRANSFER TO STEPS
+            WHENEVER NNAME.E.0,TRANSFER TO GOTNAM
+          R     CHECK NAME
+            F=0
+            THROUGH GETNAM,FOR J=0,1,J.E.NNAME
+            WHENEVER (W1.A.MSKN1(J).E.NAM1(J)).AND.
+          1   (W2.A.MSKN2(J).E.NAM2(J))
+                 F=1
+                 NAMESF=.N.((.N.NAMESF).V.(1.LS.J))
+            END OF CONDITIONAL
+GETNAM      CONTINUE
+            WHENEVER F.E.0,TRANSFER TO STEPS
+          R     NAME IS ACCEPTABLE
+GOTNAM      WHENEVER NMODE.E.0,TRANSFER TO GOTMOD
+          R     CHECK MODE
+            W1=WORD(I-4).RS.28
+            THROUGH GETMOD,FOR J=1,1,J.G.NMODE
+            WHENEVER (W1.A.(MODE(J).RS.18)).E.(MODE(J).A.377K)
+                 TRANSFER TO GOTMOD
+            END OF CONDITIONAL
+GETMOD      CONTINUE
+            TRANSFER TO STEPS
+          R     MODE IS ACCEPTABLE
+GOTMOD      F=WORD(I-4).A.3K5
+          R     SEE IF FILE IS LINKED
+            WHENEVER F.E.0
+          R     MAKE SURE LINKED FILES WANTED
+                 WHENEVER LNKMSK.NE.0
+                      POINT(NENTRY-NLINK)=I
+                      NLINK=NLINK+1
+                 END OF CONDITIONAL
+                 TRANSFER TO STEPS
+            END OF CONDITIONAL
+          R     MAKE SURE NON-LINKED FILES WANTED
+            WHENEVER FILMSK.E.0,TRANSFER TO STEPS
+          R     CHECK DATES
+            W2=WORD(I-3).A.777777000000K
+            W1=WORD(I-2).A.777777000000K
+            WHENEVER W2.L.DATE.OR.W2.G.DATE(1)
+          1   .OR.W1.L.DATE(3).OR.W1.G.DATE(4),TRANSFER TO STEPS
+          R     DATES ARE ACCEPTABLE
+            WHENEVER NAUTH.E.0,TRANSFER TO GOTAUT
+          R     CHECK AUTHOR
+            W1=WORD(I-3).A.777777K
+            THROUGH GETAUT,FOR J=0,1,J.G.NAUTH
+            WHENEVER (W1.E.AUTHOR(J))
+                 TRANSFER TO GOTAUT
+            END OF CONDITIONAL
+GETAUT      CONTINUE
+            TRANSFER TO STEPS
+          R     AUTHOR IS ACCEPTABLE
+GOTAUT      NFILE=NFILE+1
+            POINT(NFILE)=I
+          R     DO NOT COUNT RECORDS FOR TEMPORARY OR TAPE FILES
+            WHENEVER (F.NE.3K5).AND.((WORD(I-4).A.2K9).NE.2K9),
+          1      RECS=RECS+(WORD(I-5).RS.18).A.77777K
+          R     LOOK AT NEXT ENTRY
+STEPS       CONTINUE
+          R
+          R
+          R     ALL ENTRIES PROCESSED
+          R
+          R     SEE IF ALL NAMES REQUESTED WERE FOUND
+            WHENEVER NAMESF.E.0,TRANSFER TO FINDA
+          R     TELL USER ABOUT NAMES MISSING
+            PRNTP.(ECHOH)
+            THROUGH ENAME,FOR J=0,1,J.E.NNAME
+            WHENEVER (NAMESF.A.1).E.1
+                 ECHO=NAM1(J).V.(.N.(MSKN1(J)).A.$******$)
+                 WHENEVER ECHO.E.$******$,ECHO=$     *$
+                 ECHO(2)=NAM2(J).V.(.N.(MSKN2(J)).A.$******$)
+                 WHENEVER ECHO(2).E.$******$,ECHO(2)=$     *$
+                 PRNTP.(ECHO)
+            END OF CONDITIONAL
+ENAME       NAMESF=NAMESF.RS.1
+            WHENEVER (NFILE.V.NLINK).E.0,FUNCTION RETURN
+          R     SET-UP AND OUTPUT RESULTS FOR REQUEST
+FINDA       WHENEVER (NFILE.V.NLINK).E.0
+                 PRNTP.(NOFILE)
+                 FUNCTION RETURN
+            END OF CONDITIONAL
+            WHENEVER FILMSK.A.NFILE.NE.0
+          R     OUTPUT NON-LINKED FILES
+                 POINT(0)=NFILE
+                 WHENEVER (NFILE.G.1).AND.(IPRINT.NE.0),
+          1        SORTER.(ISORT,REV,WORD,POINT)
+                 PRNTFS.(IPRINT,RECS,POINT,WORD)
+            END OF CONDITIONAL
+          R
+          R
+            WHENEVER LNKMSK.A.NLINK.E.0,FUNCTION RETURN
+          R     OUTPUT LINKED FILES
+            POINT(NENTRY-NLINK)=NLINK
+          R     FLIP SORT IN DIRECTORY ORDER
+            WHENEVER ISORT.E.0,REV=-REV
+          R     SUPPRESS FSTATE INFO IF NOT IN USER'S F.D.
+            WHENEVER IPRINT.E.3.AND.UFD.E.1,IPRINT=2
+          R     PRODUCE OUTPUT
+            WHENEVER NLINK.G.1.AND.IPRINT.G.0
+                 WHENEVER ISORT.E.5,ISORT=1
+                 SORTER.(ISORT,REV,WORD,POINT(NENTRY-NLINK))
+            END OF CONDITIONAL
+            PRNTLS.(IPRINT,RECS,POINT(NENTRY-NLINK),WORD)
+          R
+          R
+          R     FINISHED PROCESSING REQUEST
+          R
+          R
+            FUNCTION RETURN
+          R
+          R
+            END OF FUNCTION
+          R
+          R
+          R
+          R
+          R
+          R
+          R     INITIALLIZE FOR REQUEST SCAN
+          R
+BEGIN       CONTINUE
+          R     SET RETURN TO 'DONE1' IN CASE OF INTERRUPT
+            SETBRK.(DONE1)
+          R     ACCEPT ALL FILES
+            FILMSK=777777777777K
+            LNKMSK=777777777777K
+            NNAME=0
+            NAMESF=0
+            NMODE=0
+            NAUTH=0
+            DATE=377777000000K
+            DATE(1)=0
+            DATE(3)=377777000000K
+            DATE(4)=0
+          R     USE CURRENT FILE DIRECTORY
+            TSSCFL=0
+            UFD=0
+            UFD(1)=$U.F.D.$
+            UFD(2)=$(FILE)$
+          R     SORT ON USED DATE FOR NON-LINKED FILES
+            ISORT=5
+          R     USE NORMAL PRINT-OUT
+            IPRINT=2
+            REV=1
+          R
+          R
+          R
+          R
+          R     GET NEXT ARGUMENT
+NEXT        NARG=NARG+1
+            ARG=COMARG.(NARG)
+          R     SEE IF MORE ARGUMENTS FOR REQUEST
+            WHENEVER (ARG.E.$     '$.OR.ARG.E.777777777777K),
+          1   TRANSFER TO PROCES
+          R     SEE IF IT IS A META-ARGUMENT
+            THROUGH FNDMET,FOR I=0,1,I.G.MXMETA
+            WHENEVER META(I).E.ARG,TRANSFER TO SETMET(I)
+FNDMET      CONTINUE
+          R     SEE IF COMMON FILE SWITCHING IS WANTED
+            WHENEVER ((ARG.A.777777770077K).E.$(CFL0)$),
+          1      TRANSFER TO SETDIR
+          R
+          R     IT IS A PRIMARY FILE NAME
+            J=NNAME
+            NNAME=NNAME+1
+            NARG=NARG+1
+            NAM1(J)=ARG
+            SETNAM.(NAM1,MSKN1)
+            NAMESF=NAMESF.V.(1.LS.J)
+          R     ASSUME '*' FOR SECONDARY FILE NAME
+            NAM2(J)=$     *$
+            SETNAM.(NAM2,MSKN2)
+          R     LOOK AT NEXT ARGUMENT
+            ARG=COMARG.(NARG)
+          R
+            WHENEVER ARG.E.777777777777K.OR.ARG.E.$     '$
+                 TRANSFER TO PROCES
+            OR WHENEVER ARG.A.777777770077K.E.$(CFL0)$
+                 TRANSFER TO SETDIR
+            OR WHENEVER ARG.A.77K.E.$00000)$
+                 THROUGH SETN2,FOR I=0,1,I.G.MXMETA
+                 WHENEVER META(I).E.ARG,TRANSFER TO SETMET(I)
+SETN2       CONTINUE
+            END OF CONDITIONAL
+          R     ARGUMENT IS A SECONDARY FILE NAME
+            NAM2(J)=ARG
+            SETNAM.(NAM2,MSKN2)
+            TRANSFER TO NEXT
+          R
+          R
+          R     SET FILE DIRECTORY SWITCHING
+SETDIR      CFN=NUMBER.((ARG.A.7700K).RS.6,SETMET(17))
+            TSSCFL=1
+            TRANSFER TO NEXT
+          R
+          R
+          R     PROCESS META-ARGUMENTS
+          R
+          R
+          R     IGNORE LINKED FILES
+SETMET(0)   LNKMSK=0
+            TRANSFER TO NEXT
+          R
+          R     IGNORE NON-LINKED FILES
+SETMET(1)   FILMSK=0
+            TRANSFER TO NEXT
+          R
+          R     MAKE TABLE OF SELECTED AUTHORS
+SETMET(2)   ARG=COMARG.(NARG+1)
+            AUTHOR(NAUTH+1)=NUMBER.(ARG,SETMET(0))
+            NAUTH=NAUTH+1
+            NARG=NARG+1
+            TRANSFER TO SETMET(2)
+          R
+          R     FLIP PRINT-OUT ORDER
+SETMET(3)   REV=-REV
+            TRANSFER TO NEXT
+          R
+          R
+          R
+          R     CONVERT MODE AND SET MASKS
+SETMET(4)   ARG=COMARG.(NARG+1)
+            WHENEVER ARG.A.77K.NE.$00000)$,TRANSFER TO NEXT
+            ARG=ARG.RS.6
+            W1=0
+            F=377K
+            THROUGH MOD1,FOR I=0,1,I.E.5
+            W2=ARG.A.77K
+            WHENEVER W2.E.$00000($
+                 W2=W1.RS.1
+                 NMODE=NMODE+1
+                 NARG=NARG+1
+                 MODE(NMODE)=(((W1.A.1).V.W2.V.F).LS.18).V.W2
+                 TRANSFER TO SETMET(4)
+            OR WHENEVER W2.NE.$00000*$
+                 THROUGH MOD2,FOR J=0,1,J.E.9
+                 WHENEVER W2.E.MODES(J)
+                      W1=W1.V.(1.LS.J)
+                      TRANSFER TO MOD1
+                 END OF CONDITIONAL
+MOD2             CONTINUE
+                 TRANSFER TO NEXT
+            END OF CONDITIONAL
+            F=0
+MOD1        ARG=ARG.RS.6
+            TRANSFER TO NEXT
+          R
+          R     SET RANGE FOR LAST DATE USED
+SETMET(5)      J=0
+            TRANSFER TO COMDAT
+          R
+          R     SET RANGE FOR LAST DATE MODIFIED
+SETMET(6)      J=3
+          R     GET DATES
+COMDAT      CONTINUE
+            THROUGH USE1,FOR I=J,1,I.E.J+2
+            ARG=COMARG.(NARG+1)
+            WHENEVER (ARG.E.$ (NEW)$)
+                 DATE(I)=377777000000K
+            OR WHENEVER (ARG.E.$ (OLD)$)
+                 DATE(I)=0
+                 DATE(I+1)=377777000000K
+            OTHERWISE
+                 DATE(I)=YYMMDD.(NUMBER.(ARG,SETMET(0)))
+            END OF CONDITIONAL
+            NARG=NARG+1
+USE1        CONTINUE
+            TRANSFER TO SETMET(0)
+          R
+          R     SET PRINTING OPTION
+          R
+          R     PRINT SUMMARY ONLY
+SETMET(7)   IPRINT=0
+            TRANSFER TO NEXT
+          R     PRINT TABLE OF NAMES ONLY
+SETMET(8)   IPRINT=1
+            TRANSFER TO NEXT
+          R     PRINT ALL INFORMATION
+SETMET(9)   IPRINT=3
+            TRANSFER TO NEXT
+          R
+          R     SET SORTING OPTION
+SETMET(10)  CONTINUE
+SETMET(11)  CONTINUE
+SETMET(12)  CONTINUE
+SETMET(13)  CONTINUE
+            ISORT=I-10
+            TRANSFER TO NEXT
+          R
+SETMET(14)  CONTINUE
+SETMET(15)  CONTINUE
+SETMET(16)  CONTINUE
+            ISORT=I-10
+            TRANSFER TO SETMET(0)
+          R
+          R     USE SYSTEM FILES
+SETMET(17)  TSSCFL=2
+            TRANSFER TO NEXT
+          R     USE SELECTED U.F.D.
+SETMET(18)  UFD=1
+            NARG=NARG+2
+            UFD(1)=COMARG.(NARG-1)
+            UFD(2)=COMARG.(NARG)
+            TRANSFER TO NEXT
+          R
+          R     PRINT ON-LINE OR WRITE FILE.
+SETMET(19)  TOFF=1B
+            THDR=1B
+            TRANSFER TO NEXT
+SETMET(20)  TOFF=0B
+            THDR=0B
+            TRANSFER TO NEXT
+          R
+          R     IDENTIFYING HEADER, IF WANTED.
+SETMET(21)  THDR=1B
+            TRANSFER TO NEXT
+SETMET(22)  THDR=0B
+            TRANSFER TO NEXT
+          R
+          R     ATTACH TO ANOTHER DIRECTORY.
+SETMET(23)  NARG=NARG+2
+            ATT(1)=REPROB.(COMARG.(NARG-1))
+            ATT(2)=COMARG.(NARG)
+            TSSCFL=3
+            ATTNAM.(ME(2)...2)
+            TRANSFER TO NEXT
+          R
+          R
+          R
+          R
+          R     DONE SCANNING REQUEST
+          R
+PROCES      CONTINUE
+            WHENEVER TOFF
+                 OFF.($ LISTF$)
+            OTHERWISE
+                 ON.
+            END OF CONDITIONAL
+            PRNTP.(CARRET)
+          R
+          R     MAKE SURE REQUEST CAN BE PROCESSED
+            WHENEVER (FILMSK.V.LNKMSK).E.0
+                 PRNTP.(PARDOX)
+                 TRANSFER TO DONE
+            END OF CONDITIONAL
+          R     SWITCH TO DESIRED FILE
+            TRANSFER TO TSSTRA(TSSCFL)
+TSSTRA(3)   ATTACH.(ATT(1),ATT(2),ATTERR)
+            TRANSFER TO TSSTRA(0)
+TSSTRA(2)   TSSFIL.
+            TRANSFER TO TSSTRA(0)
+TSSTRA(1)   DRCT1=GETCFN.(DRCT1)
+CFLTRA      BUSY=COMFL.(CFN)
+            WHENEVER (BUSY.NE.0),TRANSFER TO CFLTRA
+TSSTRA(0)   CONTINUE
+          R
+          R     SET NAME FOR HEADER MESSAGE.
+            WHENEVER UFD(1) .E. $U.F.D.$ .AND. UFD(2) .E. $(FILE)$
+                 ATTNAM.(FIL(2)...2)
+                 FIL(1).XCL.FIL(2)
+            OTHERWISE
+                 FIL(1) = UFD(1)
+                 FIL(2) = UFD(2)
+            END OF CONDITIONAL
+          R
+          R     READ IN FILE DIRECTORY AND GO TO 'PROCED.'
+            WHENEVER UFD.E.0,UPDATE.
+            READFL.(UFD(1),UFD(2),PROCED.)
+          R
+          R
+          R
+          R     REQUEST HAS BEEN PROCESSED
+DONE        SAVBRK.
+          R     RETURNS HERE IF INTERRUPTED
+          R     RESTORE ORIGINAL FILE
+DONE1       RSCOM.
+          R     SEE IF THERE IS ANOTHER REQUEST
+DONE2       WHENEVER (ARG.E.777777777777K)
+                 PRNTP.(CARRET)
+                 CHNCOM.
+            OR WHENEVER (ARG.E.$     '$)
+                 TRANSFER TO BEGIN
+            END OF CONDITIONAL
+            NARG=NARG+1
+            ARG=COMARG.(NARG)
+            TRANSFER TO DONE2
+          R
+          R
+          R     HERE ON ERROR FROM ATTACH.
+ATTERR      $PRNTER$.XCL.400000000071K
+            NEXCOM.
+          R
+          R
+          R
+          R
+          R
+          R
+          R     TABLE OF LEGAL META ARGUMENTS
+          R
+            VECTOR VALUES META=$(FILE)(LINK)(AUTH) (REV)(MODE)(USED)(MAD
+          1E)(LSUM)  (AM)(LONG)(SDIR)(SNA1)(SNA2)(SMOD)(SREC)(SUSE)(SMAD
+          2) (SYS) (UFD) (OFF)  (ON) (HDR)(NHDR) (ATT)$
+          R
+          R
+          R     TABLE OF LEGAL MODE LITERALS
+          R
+            VECTOR VALUES MODES = 0, $00000T$, $00000S$, $00000R$,
+          1    $00000W$, $00000V$, $00000L$, $00000P$, $00000M$
+          R
+          R
+          R     ERROR COMMENTS
+          R
+            VECTOR VALUES HDR=016060605757K,$FILE DIRECTORY OF $,
+          1   605757575757K,
+          2   0,605757575757K,0,606057575757K,0,0,777777777777K
+            VECTOR VALUES MT=0,605757575757K,0,$  UFD IS EMPTY$,
+          1   777777777777K
+            VECTOR VALUES PARDOX=$CANNOT SATISFY REQUEST$,777777777777K
+            VECTOR VALUES ECHOH=$NAMES NOT FOUND:$,777777777777K
+            VECTOR VALUES EMPTY=0,605757575757K,0,$ IS EMPTY$,
+          1   777777777777K
+            VECTOR VALUES CARRET=555757575757K,377777777777K
+            VECTOR VALUES NOFILE=$NO ENTRY SATISFIES REQUEST$,
+          1   777777777777K
+          R
+          R
+          R     BUFFER FOR LIST OF NAMES NOT FOUND
+          R
+            VECTOR VALUES ECHO=0,605757575757K,0,777777777777K
+          R
+          R
+          R     VALUES SET FOR INITIAL CALL
+          R
+            VECTOR VALUES NARG=0
+            VECTOR VALUES MXMETA=23
+          R
+          R
+          R
+          R
+          R     RESERVE SPACE FOR ARRAYS
+          R
+            DIMENSION UFD(2),DATE(5),FIL(2),ATT(2),ME(2)
+            DIMENSION NAM1(9),NAM2(9),MSKN1(9),MSKN2(9)
+            DIMENSION MODE(19)
+            DIMENSION AUTHOR(20)
+          R
+          R
+          R
+            VECTOR VALUES THDR=0B
+            VECTOR VALUES TOFF=0B
+          R
+          R
+          R
+          R     EQUIVALENCES FOR 'LISTF'
+          R
+            EQUIVALENCE (NAUTH,AUTHOR),(NMODE,MODE)
+          R
+          R
+          R
+          R     END OF ROUTINE 'LISTF'
+          R
+          R
+            END OF PROGRAM
