@@ -1,0 +1,2354 @@
+$DATE          120164                                                   60A00150
+$EXECUTE       IBJOB                                                    60A00200
+$IBJOB         NOGO                                                     60A00300
+$TITLE         7090/7094 COBOL COMPILER (IBCBC) 7090-CB-806 VERSION 5   61000000
+$IBMAP C100    2000,ABSMOD,JOBSYM,()OK                                  61000100
+       SPACE   8                                                        61000200
+       PCC     ON                                                       61000300
+       TITLE                                                         $5$61000400
+       PCC     OFF                                                   $5$61000500
+       PMC     ON                                                    $5$61000600
+       TTL     ENVIRONMENT I - RECORD IBCBC1                            61000800
+*   ORIGINS                                                             61000900
+EQU    OPSYN   SET                                                   $5$61001000
+TXI    OPSYN   PON                                                      61001100
+       SPACE   1                                                        61001200
+       SPACE   1                                                        61001300
+       SPACE   1                                                        61003600
+*   SIZES OF COMPILER                                                   61003700
+SUTRSZ EQU     37                  TRANSFER VECTOR SIZE                 61003800
+SUCMSZ SET     32                  SUPERVISOR COMMUNICATION SIZE     $5$61003900
+SUGNSZ SET     4                   COMPILER GENERATION COUNTS SIZE      61004000
+SUSCSZ SET     62                  SCAN-DICTIONARY COMMUNICATION SIZE   61004100
+SUFLSZ SET     7*12                FILE BLOCKS SIZE                     61004200
+SUTBSZ SET     20*9+5              TABLE BLOCK SIZE                     61004300
+NUMBUF EQU     10                  NUMBER OF BUFFERS                    61004400
+BUFSZE SET     128                 BUFFER SIZE                          61004500
+BFAREA SET     NUMBUF*BUFSZE+NUMBUF*2+2      BUFFER AREA                61004600
+       SPACE   2                                                        61004700
+*   SIZES AND ORIGINS NECESSARY TO COMMUNICATE WITH SEGMENT 1.          61004800
+       SPACE   1                                                        61004900
+SUTROR SET     8970                SUPERVISOR ORIGIN                    61005000
+SUB2SZ SET     3050           SIZE OF SUBROUTINES NOT USED AFTER 03     61005100
+FAZ1SZ SET     4000                PHASE SIZE S1 THRU E2                61005200
+FAZ2SZ SET     10000               PHASE SIZE P3 THRU CLEANUP           61005300
+COREND EQU     -901                LAST USABLE COMPILER LOCATION        61005400
+SUTBN1 SET     COREND-BFAREA-FAZ1SZ-SUB2SZ   ORG OF SUBS USED UNTIL P3  61005500
+SUTBN2 SET     COREND-BFAREA-FAZ2SZ          ORG OF P3 AND CLEANUP      61005600
+PHSORG SET     COREND-BFAREA-FAZ1SZ     ORG OF PHASES S1 THRU D3        61005700
+       SPACE   1                                                        61005800
+SUCMOR SET     SUTROR+SUTRSZ       SUPERVISOR COMMUNICATION ORIGIN      61005900
+SUGNOR SET     SUCMOR+SUCMSZ       COMPILER GENERATION COUNTS ORIGIN    61006000
+SUSCOR SET     SUGNOR+SUGNSZ       SCAN-COMMUNICATION ORIGIN            61006100
+SUFLOR SET     SUSCOR+SUSCSZ       FILE BLOCKS ORIGIN                   61006200
+SUTBOR SET     SUFLOR+SUFLSZ       TABLE BLOCKS ORIGIN                  61006300
+SUSBOR SET     SUTBOR+SUTBSZ       SUBROUTINE ORIGIN                    61006400
+       SPACE   1                                                        61006500
+       SPACE   1                                                        61006600
+BCDCN  SET     SUTROR              CONVERT CARD NUMBER                  61006700
+BINBCD SET     BCDCN+1             CONVERT BINARY TO BCD                61006800
+COLAG  SET     BINBCD+1            COLLECT IBMAP OUTPUT                 61006900
+CONLIT SET     COLAG+1             CONVERT INTEGER                      61007000
+DBCNV  SET     CONLIT+1            CONVERT FREE FORM                    61007100
+DCDFIN SET     DBCNV+1             DEFINE CITRUS TABLE SOURCE NAME      61007200
+DCMVQU SET     DCDFIN+1            MOVE TBQUAL NAME TO CITRUS TABLE     61007300
+DCQUAL SET     DCMVQU+1            ENTER UNIT INTO TBQUAL               61007400
+DCRSRV SET     DCQUAL+1            RESERVE TBIDIC-TBEDIC CELL           61007500
+DICT2  SET     DCRSRV+1            DEFINE TBQUAL NAME -PASS 2           61007600
+EOBERR SET     DICT2+1             PRINT END-OF-BUFFER ERROR MESSAGE    61007700
+ERPR   SET     EOBERR+1            COLLECT ERROR MESSAGE SKELETONS      61007800
+GETBL  SET     ERPR+1              GET NEXT BASE LOCATOR NUMBER         61007900
+GETBUF SET     GETBL+1             LOCATE NEXT INTERNAL INPUT BUFFER    61008000
+GETGN  SET     GETBUF+1            GET NEXT GENERATED NAME NUMBER       61008100
+GETTS  SET     GETGN+1             GET NEXT TEMPORARY STORAGE NUMBER    61008200
+GLSC   SET     GETTS+1             GROUP LEVEL SCAN                     61008300
+GRIN   SET     GLSC+1              GRIN INITIAL GET                     61008400
+GRGET  SET     GRIN+1              GRIN GET                             61008500
+GRINK  SET     GRGET+1             GRIN INITIAL KEEP                    61008600
+GRKEEP SET     GRINK+1             GRIN KEEP                            61008700
+PUTBUF SET     GRKEEP+1            LOCATE NEXT INTERNAL OUTPUT BUFFER   61008800
+PUTCP  SET     PUTBUF+1            PUT  1 WORD IN CONSTANT POOL         61008900
+PUTCPM SET     PUTCP+1             PUT N WORDS IN CONSTANT POOL         61009000
+PUTE2  SET     PUTCPM+1            PUT N WORDS IN ENVIRONMENT 2 FILE    61009100
+PUTLIT SET     PUTE2+1             (CONVERT AND) PUT LITERAL INTO POOL  61009200
+PUTP3  SET     PUTLIT+1            PUT N WORDS IN PROCEDURE 3 FILE      61009300
+PUTSPM SET     PUTP3+1             PUT ENTRY INTO SYMBOLIC CONSTANT POOL61009400
+ULSC   SET     PUTSPM+1            UNIT LEVEL SCAN                      61009500
+TBDEF  SET     ULSC+1              ENTRY TO DEFINE A CITRUS TABLE       61009600
+TBKILL SET     TBDEF+1             ENTRY TO KILL A CITRUS TABLE         61009700
+GLERRS SET     TBKILL+1            ENTRY TO SET UP BCD ERROR SUBSTITUTE 61009800
+DCSAVE SET     GLERRS+1            ENTRY TO SAVE CURRENT UNIT           61009900
+DCRSTR SET     DCSAVE+1            ENTRY TO RESTORE UNIT                61010000
+TBORG  SET     DCRSTR+1            ENTRY TO RE-ORIGIN CITRUS TABLE      61010100
+DCTYPE SET     TBORG+1             ENTRY TO CLASSIFY DICTIONARY ENTRY   61010200
+TBGROW SET     DCTYPE+1            ENTRY TO TABLE GROWTH                61010300
+       SPACE   1                                                        61010400
+CON1   SET     SUCMOR              CONLIT CONVERSION CELL               61010500
+IDORG  SET     CON1+1              INTERNAL DICTIONARY ORIGIN           61010600
+DDORG  SET     IDORG+1             DATA DICTIONARY ORIGIN               61010700
+SUCOLL SET     DDORG+1             COLLATE SWITCH                       61010800
+SUCWS  SET     SUCOLL+1            NUMBER OF COBOL WORDS                61010900
+L(24W) SET     SUCWS+1             LOCATION OF TALLY IN TBIDIC          61011000
+SUDICT SET     L(24W)+1                                                 61011100
+SUERRL SET     SUDICT+1            MAXIMUM ERROR LEVEL ENCOUNTERED      61011200
+SULBSM SET     SUERRL+1            NUMBER OF LABEL CARDS * 13           61011300
+SUFLSM SET     SULBSM+1            NUMBER OF FILE CARDS * 30            61011400
+SUPTE2 SET     SUFLSM+1            BUFFER POINTER FOR PUTE2 SUBROUTINE  61011500
+SUCLKP SET     SUPTE2+1            BEEN-IN-P3-FERPR SWITCH              61011600
+SUGNSR SET     SUCLKP+1            GENERATED NAME ATTACHED TO SAVE      61011700
+SUINSW SET     SUGNSR+1            PHASE INITIALIZATION SWITCH          61011800
+SULINK SET     SUINSW+1            CALL LINKAGE CELL(S)                 61011900
+SULIST SET     SULINK+2            LIST SWITCH                          61012000
+SUPTRA SET     SULIST+1            PHASE TRANSFER POINT                 61012100
+SUSEG  SET     SUPTRA+1            PHASE NUMBER                         61012200
+SUREF  SET     SUSEG+1             REFERENCE SWITCH                     61012300
+SU7094 SET     SUREF+1             INDEX REGISTER                       61012400
+SUFLLC SET     SU7094+1            LOC OF FIRST SELECT AND FIRST FD     61012500
+SUSKDV SET     SUFLLC+1            DIVISION SKIP SWITCH                 61012600
+SUHELP SET     SUSKDV+1            COMPILER CHECKOUT SWITCH             61012700
+REDUN  SET     SUHELP+1            REDUNDANCY BYPASS SWITCH             61012800
+SUCONS SET     REDUN+1             CONSERVE SPACE SWITCH-1 IF TIGHT     61012900
+SUFORS SET     SUCONS+1            ERROR MESSAGE FORCE OUT SWITCH       61013000
+DLDBG  SET     SUFORS+1            DEBUG MODE SWITCH                    61013100
+DLFATL SET     DLDBG+1             DEBUG FATAL SWITCH                   61013200
+DCDLIM SET     DLFATL+1            DEBUG LIMITS                         61013300
+DC0224 SET     DCDLIM+1            UNDEFINED NAME SWITCH                61013400
+GENRFN SET     DC0224+1            GENERIC FILE NAME USAGE INDICATOR $5$61013410
+       SPACE   1                                                        61013500
+GETBLC SET     SUGNOR              BASE LOCATOR COUNT                   61013600
+GETTSC SET     GETBLC+1            TEMPORARY STORAGE COUNT              61013700
+GETGNC SET     GETTSC+1            GENERATED NAME COUNT                 61013800
+MAXRS  SET     GETGNC+1            MAXIMUM RESULT STORAGE COUNT         61013900
+       SPACE                                                            61014000
+ULACC  SET     SUSCOR+20           UNIT ACCUMULATOR (CURRENT)           61014100
+ULBUF  SET     ULACC+21            UNIT ACCUMULATOR (NEXT)              61014200
+ULPNT  SET     ULBUF+1             UNIT POINTER                         61014300
+ULACCL SET     ULPNT+1             UNIT LENGTH (CURRENT)                61014400
+ULBUFL SET     ULACCL+1            UNIT LENGTH (NEXT)                   61014500
+ULTYPA SET     ULBUFL+1            UNIT TYPE (CURRENT)                  61014600
+ULTYPB SET     ULTYPA+1            UNIT TYPE (NEXT)                     61014700
+ULSTSA SET     ULTYPB+1            UNIT STRIP SWITCH (CURRENT)          61014800
+ULSTSB SET     ULSTSA+1            UNIT STRIP SWITCH (NEXT)             61014900
+CARDNO SET     ULSTSB+1            CARD NUMBER (CURRENT UNIT OR SENTENCE61015000
+ULISNB SET     CARDNO+1            UNIT CARD NUMBER (NEXT)              61015100
+ULAMA  SET     ULISNB+1            UNIT-IN-A-MARGIN SWITCH (CURRENT)    61015200
+ULAMB  SET     ULAMA+1             UNIT-IN-A-MARGIN SWITCH (NEXT)       61015300
+GLCWN  SET     ULAMB+1             COBOL WORD NUMBER                    61015400
+GLPNT  SET     GLCWN+1             T1 TEXT ACCUMULATOR                  61015500
+GLTYPE SET     GLPNT+1             GROUP TYPE                           61015600
+GLAND  SET     GLTYPE+1            DELETE OR KEEP 'AND' SWITCH          61015700
+DCCCTL SET     GLAND+1             CURRENT CITRUS LIMITS                61015800
+DCIMQU SET     DCCCTL+1            IMPLIED QUALIFIER CELL               61015900
+DCLEVL SET     DCIMQU+1            LEVEL CELL                           61016000
+DLDIV  SET     DCLEVL+1            PROCEDURE DIVISION SWITCH            61016100
+GLERRL SET     DLDIV+1             ERPR SUBSTITUTION FOR BCD ERRORS     61016200
+       SPACE   1                                                        61016300
+FLP3   SET     SUFLOR              PROCEDRUE 3 FILE (OUTPUT)            61016400
+FLP3IN SET     FLP3+12             PROCEDURE 3 INPUT FILE               61016500
+FLSPOU SET     FLP3IN+12           INTERNAL FILE SPILL OUTPUT           61016600
+FLSPIN SET     FLSPOU+12           INTERNAL FILE SPILL INPUT            61016700
+FLERPR SET     FLSPIN+12           ERROR MESSAGE INTERNAL FILE          61016800
+FLFILE SET     FLERPR+12           ENVIRONMENT 2 FILE                   61016900
+FLP1P2 SET     FLFILE+12           PROCEDURE 1, PROCEDURE 2 FILE        61017000
+       SPACE   1                                                        61017100
+TBBL   SET     SUTBOR+1            BASE LOCATOR TABLE                   61017200
+TBDATA SET     TBBL+9              DATA TEXT TABLE                      61017300
+TBDBI  SET     TBDATA+9            DATA BUILD-UP TABLE                  61017400
+TBDISP SET     TBDBI+9             DATA DISPLACEMENT TABLE              61017500
+TBEDIC SET     TBDISP+9            EXTERNAL DICTIONARY TABLE            61017600
+TBEDIX SET     TBEDIC+9            EXTERNAL DICTIONARY EXTENSION TABLE  61017700
+TBFORM SET     TBEDIX+9            DATA FORMAT TABLE                    61017800
+TBHASH SET     TBFORM+9            HASH TABLE                           61017900
+TBOOCC SET     TBHASH+9            QUANTITIES OUTSIDE RECORDS TABLE     61018000
+TBPI   SET     TBOOCC+9            POSITIONAL INDICATOR TABLE           61018100
+TBPICN SET     TBPI+9              PT CARD NUMBER TABLE                 61018200
+TBPOOL SET     TBPICN+9            CONSTANT POOL TABLE                  61018300
+TBP2OU SET     TBPOOL+9            P2 OUTPUT TABLE                      61018400
+TBQFI  SET     TBP2OU+9            QUANTITY TABLE                       61018500
+TBQUAL SET     TBQFI+9             BCD SOURCE GROUP                     61018600
+TBREAQ SET     TBQUAL+9            RECORDS CHANGING QUANTITIES          61018700
+TBSBR  SET     TBREAQ+9            QUANTITY SUBROUTINES TABLE           61018800
+TBSYMB SET     TBSBR+9             SYMBOLIC POOL TABLE                  61018900
+TBWORK SET     TBSYMB+9            WORKING STORAGE TABLE                61019000
+TBPROV SET     TBWORK+9            PROVIDE DATA NAME TABLE              61019100
+TBIDIC SET     TBPROV+12           INTERNAL DICTIONARY                  61019200
+       SPACE   1                                                        61019300
+*   LOCATION COUNTER SYMBOLSS                                           61019400
+INLOC  SET     0                   IN-LINE LOCATION COUNTER             61019500
+OUTLOC SET     1                   OUT-OF-LINE LOCATION COUNTER         61019600
+BLLOC  SET     2                   BASE LOCATOR SUBROUTINES LOC COUNTER 61019700
+       SPACE   1                                                        61019800
+*  THE FOLLOWING SETS EQUATE ERROR MESSAGE NUMBERS TO THEIR POSITIONS   61019900
+*  IN THE TABLE OF MESSAGE CONTROL BLOCKS.                              61020000
+AANULL SET     0                                                        61020100
+CKE101 SET     2                                                        61020200
+CKE102 SET     3                                                        61020300
+EVE101 SET     32                                                       61020400
+EVE102 SET     33                                                       61020500
+EVE103 SET     34                                                       61020600
+EVE104 SET     35                                                       61020700
+EVE105 SET     36                                                       61020800
+EVE106 SET     37                                                       61020900
+EVE107 SET     38                                                       61021000
+OBE101 SET     128                                                      61021100
+OBE102 SET     129                                                      61021200
+SLE108 SET     145                                                      61021300
+CWE101 SET     148                                                      61021400
+SLE102 SET     149                                                      61021500
+SLE103 SET     150                                                      61021600
+SLE105 SET     152                                                      61021700
+SLE106 SET     153                                                      61021800
+SLE107 SET     154                                                      61021900
+CWE102 SET     165                                                      61022000
+SPE102 SET     166                                                      61022100
+SPE103 SET     167                                                      61022200
+SPE104 SET     168                                                      61022300
+SPE106 SET     170                                                      61022400
+SPE107 SET     171                                                      61022500
+E1E201 SET     178                                                   $5$61022550
+USE101 SET     192                                                      61022600
+USE102 SET     193                                                      61022700
+USE103 SET     194                                                      61022800
+CWE103 SET     195                                                      61022900
+USE105 SET     196                                                      61023000
+USE106 SET     197                                                      61023100
+SLE104 SET     280                                                      61023200
+USE107 SET     284                                                      61023300
+OBE103 SET     287                                                      61023400
+CKE103 SET     288                                                      61023500
+SOE101 SET     295                                                      61023600
+       EJECT                                                            61023700
+CWFIRS EQU     0                                                        61023800
+IDENTI EQU     CWFIRS+1                                                 61023900
+ID     EQU     IDENTI                                                   61024000
+ENVIRO EQU     IDENTI+1                                                 61024100
+DATA   EQU     ENVIRO+1                                                 61024200
+PROCED EQU     DATA+1                                                   61024300
+HIGHVA EQU     PROCED+1                                                 61024400
+LOWVAL EQU     HIGHVA+1                                                 61024500
+QUOTE  EQU     LOWVAL+1                                                 61024600
+QUOTES EQU     QUOTE                                                    61024700
+SPACE  EQU     QUOTE+1                                                  61024800
+SPACES EQU     SPACE                                                    61024900
+ZERO   EQU     SPACE+1                                                  61025000
+ZEROS  EQU     ZERO                                                     61025100
+ZEROES EQU     ZERO                                                     61025200
+CWIORG EQU     ZERO                                                     61025300
+AUTHOR EQU     CWIORG+1                                                 61025400
+DATECO EQU     AUTHOR+1                                                 61025500
+DATEWR EQU     DATECO+1                                                 61025600
+INSTAL EQU     DATEWR+1                                                 61025700
+PROGRA EQU     INSTAL+1                                                 61025800
+REMARK EQU     PROGRA+1                                                 61025900
+SECURI EQU     REMARK+1                                                 61026000
+CWIEND EQU     SECURI                                                   61026100
+CWEORG EQU     CWIEND                                                   61026200
+CONFIG EQU     CWEORG+1                                                 61026300
+INPUTO EQU     CONFIG+1                                                 61026400
+SOURCE EQU     INPUTO+1                                                 61026500
+OBJECC EQU     SOURCE+1                                                 61026600
+SPECIA EQU     OBJECC+1                                                 61026700
+FILECO EQU     SPECIA+1                                                 61026800
+IOCONT EQU     FILECO+1                                                 61026900
+COLLAT EQU     IOCONT+1                                                 61027000
+ASSIGN EQU     COLLAT+1                                                 61027100
+TAPEUN EQU     ASSIGN+1                                                 61027200
+CARDRE EQU     TAPEUN+1                                                 61027300
+PRINTE EQU     CARDRE+1                                                 61027400
+CARDPU EQU     PRINTE+1                                                 61027500
+NONE   EQU     CARDPU+1                                                 61027600
+KEY    EQU     NONE+1                                                   61027700
+CWEEND EQU     KEY                                                      61027800
+CWDORG EQU     CWEEND                                                   61027900
+FILE   EQU     CWDORG+1                                                 61028000
+WORKIN EQU     FILE+1                                               (11)61028050
+CONSTA EQU     WORKIN+1                                             (11)61028100
+FILES  EQU     CONSTA+1                                             (11)61028200
+FD     EQU     FILES+1                                              (11)61028300
+CWDMD1 EQU     FD                                                       61028400
+BLOCK  EQU     CWDMD1+1                                                 61028500
+RECORD EQU     BLOCK+1                                                  61028600
+LABEL  EQU     RECORD+1                                                 61028700
+RECORG EQU     LABEL+1                                                  61028800
+VALUE  EQU     RECORG+1                                                 61028900
+BLANK  EQU     VALUE+1                                                  61029000
+CHECK  EQU     BLANK+1                                                  61029100
+CLASS  EQU     CHECK+1                                                  61029200
+FLOAT  EQU     CLASS+1                                                  61029300
+OCCURS EQU     FLOAT+1                                                  61029400
+PICTUR EQU     OCCURS+1                                                 61029500
+POINT  EQU     PICTUR+1                                                 61029600
+REDEFI EQU     POINT+1                                                  61029700
+SIGNED EQU     REDEFI+1                                                 61029800
+SIZE   EQU     SIGNED+1                                                 61029900
+SYNCHR EQU     SIZE+1                                                   61030000
+USAGE  EQU     SYNCHR+1                                                 61030100
+CWDMD2 EQU     USAGE                                                    61030200
+FILESE EQU     CWDMD2+1                                                 61030300
+REELSQ EQU     FILESE+1                                                 61030400
+RETENT EQU     REELSQ+1                                                 61030500
+FILEID EQU     RETENT+1                                                 61030600
+CWDEND EQU     FILEID                                                   61030700
+CWPORG EQU     CWDEND                                                   61030800
+ACCEPT EQU     CWPORG+1                                                 61030900
+ADD    EQU     ACCEPT+1                                                 61031000
+AFTER  EQU     ADD+1                                                    61031100
+ALTER  EQU     AFTER+1                                                  61031200
+CLOSEG EQU     ALTER+1                                                  61031300
+COMPUT EQU     CLOSEG+1                                                 61031400
+DISPLA EQU     COMPUT+1                                                 61031500
+DIVIDE EQU     DISPLA+1                                                 61031600
+ELSE   EQU     DIVIDE+1                                                 61031700
+ENTER  EQU     ELSE+1                                                   61031800
+EXAMIN EQU     ENTER+1                                                  61031900
+EXIT   EQU     EXAMIN+1                                                 61032000
+GO     EQU     EXIT+1                                                   61032100
+IF     EQU     GO+1                                                     61032200
+MOVE   EQU     IF+1                                                     61032300
+MULTIY EQU     MOVE+1                                                   61032400
+NEXT   EQU     MULTIY+1                                                 61032500
+NOTE   EQU     NEXT+1                                                   61032600
+OPENG  EQU     NOTE+1                                                   61032700
+OTHERW EQU     ELSE                                                     61032800
+PERFOR EQU     OPENG+1                                                  61032900
+READG  EQU     PERFOR+1                                                 61033000
+ON     EQU     READG+1                                                  61033100
+STOP   EQU     READG+2                                                  61033200
+SUBTRA EQU     STOP+1                                                   61033300
+THEN   EQU     SUBTRA+1                                                 61033400
+USE    EQU     THEN+1                                                   61033500
+WRITEG EQU     USE+1                                                    61033600
+DECLAR EQU     WRITEG+1                                                 61033700
+END    EQU     DECLAR+1                                                 61033800
+CALL   EQU     END+1                                                    61033900
+ENTRY  EQU     CALL+1                                                   61034000
+PROVID EQU     ENTRY+1                                                  61034100
+RECEIV EQU     PROVID+1                                                 61034200
+RETURN EQU     RECEIV+1                                                 61034300
+CWPEND EQU     RETURN                                                   61034400
+VIA    EQU     CWPEND+1                                                 61034500
+ALL    EQU     VIA+1                                                    61034600
+ALPHAB EQU     ALL+1                                                    61034700
+ALPHAN EQU     ALPHAB+1                                                 61034800
+AN     EQU     ALPHAN                                                   61034900
+AND    EQU     AN+1                                                     61035000
+ARE    EQU     AND+1                                                    61035100
+AT     EQU     ARE+1                                                    61035200
+BCD    EQU     AT+1                                                     61035300
+BEFORE EQU     BCD+1                                                    61035400
+BEGINN EQU     BEFORE+1                                                 61035500
+BINARY EQU     BEGINN+1                                                 61035600
+BY     EQU     BINARY+1                                                 61035700
+CHARAC EQU     BY+1                                                     61035800
+CHECKP EQU     CHARAC+1                                                 61035900
+COBOL  EQU     CHECKP+1                                                 61036000
+COMPUL EQU     COBOL+1                                                  61036100
+COMPU1 EQU     COMPUL+1                                                 61036200
+COMPU2 EQU     COMPU1+1                                                 61036300
+CONTAI EQU     COMPU2+1                                                 61036400
+CONTRO EQU     CONTAI+1                                                 61036500
+COPY   EQU     CONTRO+1                                                 61036600
+CORRES EQU     COPY+1                                                   61036700
+COUNT  EQU     CORRES+1                                                 61036800
+DENSIT EQU     COUNT+1                                                  61036900
+DEPEND EQU     DENSIT+1                                                 61037000
+DIGIT  EQU     DEPEND+1                                                 61037100
+DIGITS EQU     DIGIT                                                    61037200
+DIVISI EQU     DIGIT+1                                                  61037300
+DOLLAR EQU     DIVISI+1                                                 61037400
+ENDING EQU     DOLLAR+1                                                 61037500
+EQUAL  EQU     ENDING+1                                                 61037600
+EQUALS EQU     EQUAL                                                    61037700
+ERROR  EQU     EQUAL+1                                                  61037800
+EVERY  EQU     ERROR+1                                                  61037900
+EXCEED EQU     EVERY+1                                                  61038000
+EXPONE EQU     EXCEED+1                                                 61038100
+FILLER EQU     EXPONE+1                                                 61038200
+FIRST  EQU     FILLER+1                                                 61038300
+FOR    EQU     FIRST+1                                                  61038400
+FROM   EQU     FOR+1                                                    61038500
+GIVING EQU     FROM+1                                                   61038600
+GREATE EQU     GIVING+1                                                 61038700
+HIGH   EQU     GREATE+1                                                 61038800
+HYPERT EQU     HIGH+1                                                   61038900
+IBM790 EQU     HYPERT+1                                                 61039000
+IBM90  EQU     IBM790                                                   61039100
+IBM794 EQU     IBM790+1                                                 61039200
+IBM94  EQU     IBM794                                                   61039300
+IN     EQU     IBM794+1                                                 61039400
+INPUT  EQU     IN+1                                                     61039500
+INTO   EQU     INPUT+1                                                  61039600
+IS     EQU     INTO+1                                                   61039700
+LEADIN EQU     IS+1                                                     61039800
+LEAVIN EQU     LEADIN+1                                                 61039900
+LEFT   EQU     LEAVIN+1                                                 61040000
+LESS   EQU     LEFT+1                                                   61040100
+LINKAG EQU     LESS+1                                                   61040200
+LOCATI EQU     LINKAG+1                                                 61040300
+LOCK   EQU     LOCATI+1                                                 61040400
+LOW    EQU     LOCK+1                                                   61040500
+MINUS  EQU     LOW+1                                                    61040600
+MODE   EQU     MINUS+1                                                  61040700
+MULTIP EQU     MODE+1                                                   61040800
+NEGATI EQU     MULTIP+1                                                 61040900
+NO     EQU     NEGATI+1                                                 61041000
+NOT    EQU     NO+1                                                     61041100
+NUMERI EQU     NOT+1                                                    61041200
+OF     EQU     NUMERI+1                                                 61041300
+OFF    EQU     OF+1                                                     61041400
+OMITTE EQU     OFF+1                                                    61041500
+OPTION EQU     OMITTE+1                                                 61041600
+OR     EQU     OPTION+1                                                 61041700
+OUTPUT EQU     OR+1                                                     61041800
+PLACE  EQU     OUTPUT+1                                                 61041900
+PLACES EQU     PLACE                                                    61042000
+PLUS   EQU     PLACE+1                                                  61042100
+POSITV EQU     PLUS+1                                                   61042200
+PROCEE EQU     POSITV+1                                                 61042300
+PROTEC EQU     PROCEE+1                                                 61042400
+REEL   EQU     PROTEC+1                                                 61042500
+RENAMI EQU     REEL+1                                                   61042600
+REPLAC EQU     RENAMI+1                                                 61042700
+RERUN  EQU     REPLAC+1                                                 61042800
+APPLY  EQU     RERUN+1                                               $5$61042880
+CHKSM  EQU     APPLY+1                                               $5$61042890
+SEQCH  EQU     CHKSM+1                                               $5$61042900
+REWIND EQU     SEQCH+1                                               $5$61042910
+RIGHT  EQU     REWIND+1                                                 61043000
+ROUNDE EQU     RIGHT+1                                                  61043100
+RUN    EQU     ROUNDE+1                                                 61043200
+SECTIO EQU     RUN+1                                                    61043300
+SELECT EQU     SECTIO+1                                                 61043400
+SENTEN EQU     SELECT+1                                                 61043500
+SIGN   EQU     SENTEN+1                                                 61043600
+STANDA EQU     SIGN+1                                                   61043700
+STATUS EQU     STANDA+1                                                 61043800
+SUPPRE EQU     STATUS+1                                                 61043900
+TALLY  EQU     SUPPRE+1                                                 61044000
+TALLYI EQU     TALLY+1                                                  61044100
+THAN   EQU     TALLYI+1                                                 61044200
+THROUG EQU     THAN+1                                                   61044300
+THRU   EQU     THROUG                                                   61044400
+TIME   EQU     THROUG+1                                                 61044500
+TIMES  EQU     TIME                                                     61044600
+TO     EQU     TIME+1                                                   61044700
+UNEQUA EQU     TO+1                                                     61044800
+UPPERB EQU     UNEQUA+1                                                 61044900
+UNTIL  EQU     UPPERB+1                                                 61045000
+UPON   EQU     UNTIL+1                                                  61045100
+USING  EQU     UPON+1                                                   61045200
+VARYIN EQU     USING+1                                                  61045300
+WHEN   EQU     VARYIN+1                                                 61045400
+WITH   EQU     WHEN+1                                                   61045500
+WITHOU EQU     WITH+1                                                   61045600
+LPAREN EQU     WITHOU+1                                                 61045700
+RPAREN EQU     LPAREN+1                                                 61045800
+DIVIDZ EQU     RPAREN+1                                                 61045900
+MINUSZ EQU     DIVIDZ+1                                                 61046000
+PLUSZ  EQU     MINUSZ+1                                                 61046100
+RETURZ EQU     PLUSZ+1                                                  61046200
+EQU    OPSYN   SYN                                                   $5$61046250
+       EJECT                                                            61046300
+*   UNIT ACCUMULATOR TYPE BITS                                          61046400
+UWD    BOOL    1                        TYPE                            61046500
+UTER   BOOL    2                                                        61046600
+UAOP   BOOL    4                          BITS                          61046700
+UINT   BOOL    10                                                       61046800
+UCOM   BOOL    20                         FOR                           61046900
+UNUM   BOOL    40                                                       61047000
+ULIT   BOOL    100                        INDICATOR                     61047100
+UMPY   BOOL    200                                                      61047200
+UDOL   BOOL    400                        INSTRUCTIONS                  61047300
+UEOF   BOOL    1000                                                     61047400
+       SPACE   1                                                        61047500
+*   DICTIONARY TYPE BITS                                                61047600
+AM     BOOL    400                 A MARGIN                             61047700
+FIL    BOOL    200                 FILLER                               61047800
+CW     BOOL    100                 COBOL WORD                           61047900
+MAJ    BOOL    40                  MAJOR                                61048000
+TER    BOOL    20                  TERMINATOR                           61048100
+AOP    BOOL    10                  ARITHMETIC OPERATOR                  61048200
+REL    BOOL    4                   RELATION                             61048300
+GRP    BOOL    2                   GROUP                                61048400
+FC     BOOL    1                   FIGURATIVE CONSTANT                  61048500
+       SPACE   1                                                        61048600
+*   ADDITIONAL GLTYPE BITS                                              61048700
+FLIT   BOOL    20000               FLOATING POINT LITERAL BIT           61048800
+LIT    BOOL    10000               LITERAL                              61048900
+LHN    BOOL    4000                LEFT HAND NAME  (THESE MUST)         61049000
+DN     BOOL    2000                DATA NAME       (BE IN     )         61049100
+PN     BOOL    1000                PROCEDURE NAME  (THIS ORDER)         61049200
+       EJECT                                                            61049300
+       ORG     SYSFAZ                                                   61049400
+       BCI     1,IBCBC1                                                 61049500
+       ORG     SUPTRA                                                   61049600
+       TRA     BEGNE1              GO TO BEGINNING INSTRUCTION OF PHASE 61049700
+       ORG     PHSORG                                                   61049800
+BEGNE1 SAVE    4                                                     $5$61049900
+       TSX     DCRSRV,4            GO RESERVE TBIDIC ENTRY              61050200
+       CLA     PHSDE1              GET 37 WORD                          61050300
+       STO*    TBIDIC              PUT INTO INTERNAL DICTIONARY         61050400
+       ZET     SUINSW              IS THIS PHASE TO BE DONE             61050500
+       TRA     PHSRET              NO, GO EXIT                          61050600
+       TSX     ENV1,4              YES                                  61050700
+       SPACE   1                                                        61050800
+PHSRET RETURN  BEGNE1              GO BACK TO COBOL SUPERVISOR       $5$61050900
+PHSDE1 OCT     370003000000        ENVIRONMENT DIVISION BREAK CONSTANT  61051000
+       EJECT                                                            61051100
+TBRNAM EQU     TBWORK              SAME TABLE BLOCK                     61051200
+       SPACE   1                                                        61051300
+* THE ENVIRONMENT 1 SUPERVISOR. THIS SUPERVISOR RECOGNIZES VALID        61051400
+* ENVIRONMENT PARAGRAPH NAMES, AND TRANSFERS CONTROL TO CORRESPONDING   61051500
+* SUBSCANS. TRANSITIONS BETWEEN ENVIRONMENT SECTIONS ARE RECOGNIZED.    61051600
+* CONTROL TO THIS SUPERVISOR IS INITIALLY RECEIVED FROM COBOL MAIN      61051700
+* SUPERVISOR BY THE CALLING SEQUENCE...                                 61051800
+*                               TSX ENV1,4                              61051900
+*                                (RETURN)                               61052000
+*                                                                       61052100
+ENV1   SXA     EVIR4,4                                                  61052200
+       AXT     -1,2                INITIALIZE EVGRIN FALSE RETURN ROUTE 61052300
+       TRA     EVGET                                                    61052400
+EVCYCL STL     SUSKDV              SUPPRESS ERPR MSGS SINCE IN SKIP MODE61052500
+       AXT     -2,2                                                     61052600
+EVGET  STL     EVGTKP                                                   61052700
+EVKEEP TSX     EVGRIN,4            ANALIZE A GLSC GROUP                 61052800
+       TRA     EVTRUE                                                   61052900
+EVFALS TRA     *,2                                                      61053000
+       TRA     EVERR1+3            ENV SECTION-NAME OMITTED             61053100
+       TRA     EVCYCL                                                   61053200
+       TRA     EVERR1              ENV PARAGRAPH-NAME OMITTED           61053300
+       TRA     EVERR3              UNIDENTIFIABLE WORD                  61053400
+       SXA     EVTBL,1             PARA BRANCH (SAVE CURR PARA TYPE)    61053500
+       TRA*    EVTBL,1             BRANCH TO A PARAGRAPH SUBSCAN        61053600
+       PZE     CKCNTL              'I-O-CONTROL' PARAGRAPH              61053700
+       PZE     SLFILE              'FILE-CONTROL' PARAGRAPH             61053800
+       PZE     SPNAME              'SPECIAL-NAMES' PARAGRAPH            61053900
+       PZE     OBCPTR              'OBJECT-COMPUTER' PARAGRAPH          61054000
+       PZE     SOCPTR              'SOURCE-COMPUTER' PARAGRAPH          61054100
+EVTBL  MZE     **                                                       61054200
+* RETURN FROM A PARAGRAPH SUBSCAN VIA EVRTRN INDICATES PARAGRAPH IN     61054300
+* QUESTION COMPLETELY SCANNED. ALSO ASSUME EVCOMM CELL IS SET WITH      61054400
+* TERMINATOR TYPE WHICH CAUSED END OF CURRENT PARAGRAPH SCANNING.       61054500
+*                                                                       61054600
+EVRTRN AXT     -4,2                SET UNIDENTIFIABLE WORD ROUTE        61054700
+       TRA     EVTRUE                                                   61054800
+* RETURN FROM A PARAGRAPH SUBSCAN VIA EVSKIP INDICATES PARAGRAPH HAS NOT61054900
+* BEEN COMPLETELY SCANNED DUE TO AN UNIDENTIFIABLE WORD. REMAINDER OF   61055000
+* PARAGRAPH IS TO BE SKIPPED OVER.                                      61055100
+*                                                                       61055200
+EVSKIP TRA     EVERR3                                                   61055300
+EVTRUE CLA     EVCOMM              TEST IF END OF DIV REACHED           61055400
+       TMI     EVIR4               YES                                  61055500
+       PDX     ,4                  TEST IF AN ENV SECTION               61055600
+       TXH     EVSV40,4,0          IF HIGH  YES                         61055700
+       ZET     EVPRD               TEST IF A PERIOD                     61055800
+       TRA     EVGET               YES-SO JUST SKIP OVER                61055900
+* FOLLOWING PROCESSES A NEW PARAGRAPH-NAME.                             61056000
+*                                                                       61056100
+       PAX     ,1                  NO-SO MUST BE PARAGRAPH NAME         61056200
+       NZT     EVSECT              TEST IF A ENV SECTION ESTABLISHED YET61056300
+       TRA     EVSV30              NO                                   61056400
+       LXA     EVSECT,4            YES, SO TEST IF PARAGRAPH            61056500
+       TXH     *+3,4,1                  BELONGS IN CURRENT SECTION      61056600
+       TXH     EVERR6,1,3          NO                                   61056700
+       TRA     EVSV15                                                   61056800
+       TXL     EVERR6,1,3          NO                                   61056900
+EVSV15 CLA     EVTBL,1             YES, SO TEST IF FIRST VALID OCCURANCE61057000
+       TPL     EVSV20                   OF PARA. IN CURRENT SECTION     61057100
+       CAL     EVLSTB-1            NO                                   61057200
+       TRA     EVERR5                                                   61057300
+EVSV20 TXL     EVSV25,1,4          TEST IF I-O-CONTROL                  61057400
+       CLA     EVTBL-4             YES, SO WAS FILE-CONTROL PROCESSED   61057500
+       TPL     EVERR2              TRANSFER IF NO                       61057600
+EVSV25 CAL     EVTBL               SET BIT TO INDICATE FIRST            61057700
+       STP     EVTBL,1                  OCCURANCE OF THIS PARA. NAME    61057800
+       AXT     -5,2                SET PARAGRAPH BRANCH ROUTE           61057900
+       TRA     EVGET                                                    61058000
+EVSV30 TXH     EVSV35,1,3          ESTABLISH A SECTION DEP ON PARA. NAME61058100
+       AXT     1,4                 ASSUME CONFIG. SECTION               61058200
+       TRA     EVERR4                                                   61058300
+EVSV35 TXH     EVERR2,1,4          IF I-O-CONTROL, SKIP OVER            61058400
+       AXT     2,4                 ASSUME INPUT-OUTPUT SECTION          61058500
+       TRA     EVERR4                                                   61058600
+* FOLLOWING PROCESSES A NEW SECTION-NAME.                               61058700
+*                                                                       61058800
+EVSV40 NZT     EVTBLS+1,4          TEST IF FIRST OCCURANCE OF THIS SECT 61058900
+       TRA     EVSV45              YES                                  61059000
+       CAL     EVLSTB              NO                                   61059100
+       TRA     EVERR5                                                   61059200
+EVSV45 SXA     EVSECT,4            SET SECTION TYPE                     61059300
+       STL     EVTBLS+1,4          SET SECTION FLAG                     61059400
+       AXT     -3,2                SET EVGRIN FALSE RETURN ROUTE        61059500
+       AXT     *+2,4                                                    61059600
+       TRA     GRIN                                                     61059700
+       MZE     SECTIO                                                   61059800
+       TXI     EVGET,,0                                                 61059900
+       TXI     EVERR7,,0                                                61060000
+EVIR4  AXT     **,4                EXIT ENVIRONMENT 1 SEGMENT           61060100
+       TRA     1,4                                                      61060200
+*                                                                       61060300
+*                                                                       61060400
+       PZE                         INPUT-OUTPUT SECTION FLAG            61060500
+EVTBLS PZE                         CONFIGURATION SECTION FLAG           61060600
+EVERR1 AXT     3,4                                                      61060700
+       SXA     EVLST1+1,4                                               61060800
+       SXA     EVLST1+2,4                                               61060900
+       TSX     ERPR,4              ...SECTION OR PARAGRAPH              61061000
+       PZE     EVE101,3,EVLST1          NAME OMITTED...                 61061100
+       TRA     EVCYCL                                                   61061200
+EVERR2 TSX     ERPR,4              ...I-O-CONTROL PARA. DOES NOT        61061300
+       PZE     EVE102,3                 FOLLOW FILE-CONTROL PARA...     61061400
+       TRA     EVCYCL                                                   61061500
+EVERR3 TSX     EVJUNK,4                                                 61061600
+       TSX     ERPR,4              ...' ' IS UNRECOGNIZABLE             61061700
+       PZE     EVE103,3,EVLST           WORD...                         61061800
+       TRA     EVCYCL                                                   61061900
+EVERR4 SXA     EVSECT,4            SET SECTION TYPE                     61062000
+       STL     EVTBLS+1,4          SET SECTION FLAG                     61062100
+       XEC     EVPRM3+1,4          SET SECTION NAME                     61062200
+       SXA     EVLST4+1,4                                               61062300
+       TSX     ERPR,4              ...SECTION-NAME OMITTED.BEGINNING    61062400
+       PZE     EVE104,3,EVLST4          OF ' ' SECTION ASSUMED...       61062500
+       AXT     -5,2                SET PARAGRAPH BRANCH ROUTE           61062600
+       TRA     EVGET                                                    61062700
+EVERR5 SLW     EVLST5+1                                                 61062800
+       TSX     ERPR,4              ...SECTIONS OR PARAGRAPHS            61062900
+       PZE     EVE105,3,EVLST5          MUST NOT BE REPEATED...         61063000
+       TRA     EVCYCL                                                   61063100
+EVERR6 LXA     EVCOMM,1            PARAGRAPH TYPE TO XR1                61063200
+       CAL     EVLSTA+1,1          SET PARAGRAPH-NAME                   61063300
+       SLW     EVLST6+1                                                 61063400
+       LXA     EVSECT,4                                                 61063500
+       XEC     EVPRM3+1,4          SET SECTION-NAME                     61063600
+       SXA     EVLST6+2,4                                               61063700
+       TSX     ERPR,4              ...' ' PARAGRAPH APPEARS ILLEGALLY   61063800
+       PZE     EVE106,3,EVLST6          IN ' ' SECTION...               61063900
+       TRA     EVCYCL              GO TO NEXT PARAGRAPH                 61064000
+EVERR7 LXA     EVSECT,4                                                 61064100
+       XEC     EVPRM3+1,4          SET SECTION-NAME                     61064200
+       SXA     EVLST4+1,4                                               61064300
+       TSX     ERPR,4              ...COBOL WORD 'SECTION' MISSING      61064400
+       PZE     EVE107,3,EVLST4          FROM SECTION-HEADER...          61064500
+       TRA     EVKEEP                                                   61064600
+       EJECT                                                            61064700
+* THIS ROUTINE CYCLES TO THOSE COBOL WDS THAT BEGIN ENTRIES IN CURRENT  61064800
+* ENV PARAGRAPH. IF IN SPECIAL-NAMES CYCLES TO 'KEY'                    61064900
+*                IF IN FILE-CONTROL  CYCLES TO 'SELECT'                 61065000
+*                IF IN I-O-CONTROL   CYCLES TO 'RERUN'                  61065100
+*                                                                       61065200
+*              CALL IS...  TSX CWCYCL,4                                 61065300
+*                           (RETURN-1)  IF PARA, SECT, OR END DIV FOUND 61065400
+*                           (RETURN-2)  IF REQUIRED CW ENCOUNTERED      61065500
+*                                                                       61065600
+CWCYCL SXA     CWXR4,4                                                  61065700
+       LXA     EVTBL,4                                                  61065800
+       TXL     CWCY50,4,2          CONFIRM IF CALL IS FROM              61065900
+       TXH     CWCY50,4,5               A LEGAL PARAGRAPH SCAN          61066000
+       CLA     CWLIST+3,4          TEST IF FIRST CALL FROM              61066100
+       TMI     CWCY05                   CURRENT PARAGRAPH SCAN          61066200
+       STD     CWNHI               YES, SO INITIALIZE...                61066300
+       ALS     18                                                       61066400
+       STD     CWNLO                                                    61066500
+       CAL     CWERTB+3,4                                               61066600
+       STA     CWERR+1                                                  61066700
+       STP     CWLIST+3,4                                               61066800
+CWCY05 CLA     CWGTKP              SET EVGRIN                           61066900
+       STO     EVGTKP                   'GET' OR 'KEEP' CELL            61067000
+       ZET     CWSKIP              TEST IF IN SKIP MODE                 61067100
+       STL     SUSKDV              YES, SO ERPR SUPPRESSOR SWITCH       61067200
+CWCYC  TSX     EVGRIN,4            TEST IF A TERMINATOR                 61067300
+       TRA     *+3                 YES                                  61067400
+       AXT     CWCY10,4            NO, SO SET UP TEST                   61067500
+       TRA     GRINK                    FOR PARAGRAPH ENTRY CW          61067600
+       LDI     EVCOMM              TEST IF A PERIOD                     61067700
+       RNT     200000                                                   61067800
+       TRA     CWEXIT-1            NO                                   61067900
+       STL     CWTERM              YES, SO SET TERMINATOR               61068000
+       TRA     CWCY25                   SWITCH AND CYCLE                61068100
+CWCY10 PZE     CW                                                       61068200
+       TXI     *+2                 TRUE                                 61068300
+       TXI     CWCY15              FALSE                                61068400
+       LXA     GLCWN,4             TEST IF A PARA ENTRY CW              61068500
+CWNLO  TXL     CWCY15,4,**         LOW CWN-1 RANGE                      61068600
+CWNHI  TXH     CWCY15,4,**         HIGH CWN  RANGE                      61068700
+       STL     CWEXSW              YES, SO SET EXIT SWITCH              61068800
+       TRA     CWEXIT                   AND EXIT                        61068900
+CWCY15 ZET     CWTERM              TEST IF LAST GRP A EVGRIN TERMINATOR 61069000
+       TRA     *+3                 YES                                  61069100
+       ZET     CWSKIP              NO, SO TEST IF IN SKIP MODE          61069200
+       TRA     CWCY20              YES                                  61069300
+       TSX     EVJUNK,4                                                 61069400
+CWERR  TSX     ERPR,4              ...'**' IS STRUCTURALLY INCORRECT    61069500
+       PZE     **,3,EVLST               SCAN RESUMED AT NEXT ENTRY      61069600
+CWCY20 STL     SUSKDV              SET ERPR MESSAGE SUPPRESSOR SWITCH   61069700
+       STL     CWSKIP              SET SKIP MODE SWITCH                 61069800
+CWCY25 STZ     CWTERM              RESET TERMINATOR SWITCH              61069900
+       STL     EVGTKP                   AND CYCLE                       61070000
+       TRA     CWCYC                                                    61070100
+       STZ     CWEXSW              SET EXIT SWITCH                      61070200
+CWEXIT STZ     SUSKDV              RESET                                61070300
+       STZ     CWSKIP                   CWCYCL ROUTINE                  61070400
+       STZ     CWGTKP                   COMMUNICATION                   61070500
+       STZ     CWTERM                   CELLS                           61070600
+CWXR4  AXT     **,4                     AND EXIT                        61070700
+       NZT     CWEXSW                                                   61070800
+       TRA     1,4                 PARAGRAPH TERMINATOR FOUND           61070900
+       TRA     2,4                 REQD PARAGRAPH ENTRY CW FOUND        61071000
+*                                                                       61071100
+       PZE     RERUN-1,,APPLY                                        $5$61071200
+       PZE     SELECT-1,,SELECT                                         61071300
+CWLIST PZE     KEY-1,,KEY                                               61071400
+       MZE     CWE103              ...SCAN SKIPS TO NEXT RERUN CLAUSE   61071500
+       MZE     CWE102              ...SCAN SKIPS TO NEXT SELECT ENTRY   61071600
+CWERTB MZE     CWE101              ...SCAN SKIPS TO NEXT SWITCH-NAME    61071700
+CWCY50 STR                         CALL FROM ILLEGAL PARAGRAPH SCAN     61071800
+       EJECT                                                            61071900
+* THIS SUBROUTINE DETERMINES WHETHER OR NOT THE CURRENT SOURCE LANGUAGE 61072000
+* GROUP IS A PERIOD, ENVIRONMENT SECTION NAME, DIVISION HEADER, $CBEND, 61072100
+* OR AN ENVIRONMENT PARAGRAPH. THE EVCOMM CELL IS SET WITH VARIOUS BITS 61072200
+* IF ANY OF THE ABOVE ENCOUNTERED.                                      61072300
+*                                                                       61072400
+* IN ADDITION, IF GROUP IS PERIOD, THE CELL EVPRD IS SET NON-ZERO       61072500
+*                                                                       61072600
+*                   CALL IS   TSX  EVGRIN,4                             61072700
+*                               (TRUE RETURN)                           61072800
+*                               (FALSE RETURN)                          61072900
+*                                                                       61073000
+EVGRIN SXA     EVGREX,4                                                 61073100
+       SXA     EVGREX+1,1                                               61073200
+       STZ     EVPRD                                                    61073300
+       STZ     EVCOMM                                                   61073400
+       AXT     EVGR10,4                                                 61073500
+       ZET     EVGTKP              TEST WHETHER TO 'GET' OR 'KEEP'      61073600
+       TRA     GRIN                                                     61073700
+       TRA     GRINK                                                    61073800
+EVGR10 PZE     TER                 TEST IF PRD, $CBEND, OR DIV HDR      61073900
+       TXI     GRKEEP,,*+2         YES                                  61074000
+       TXI     GRKEEP,,EVGR20                                           61074100
+EVGR15 PZE     CW                  TEST IF A PERIOD                     61074200
+       TXI     *+2,,0              NO                                   61074300
+       TXI     EVGRPD,,0           YES                                  61074400
+       CAL     ULTYPA              TEST IF TER IS $CBEND OR EOF         61074500
+       ANA     EVMSK3              ISOLATE 'EOF AND $CBEND' BIT         61074600
+       TNZ     EVGRDV              ON                                   61074700
+       ZET     ULAMA               OFF, SO DIVISION HEADER IMPLIED      61074800
+       TRA     EVGRDV              IN A-MARGIN                          61074900
+       TRA     EVGREX              NOT IN A-MARGIN                      61075000
+EVGR20 PZE     MAJ                                                      61075100
+       TXI     *+2,,0                                                   61075200
+       TXI     EVGREX,,0                                                61075300
+       NZT     ULAMA               IF NOT IN                            61075400
+       TRA     EVGREX                   A-MARGIN...IGNORE               61075500
+       LXA     GLCWN,4             TEST IF WD                           61075600
+       TXL     EVGR25,4,CONFIG-1        IS AN ENV                       61075700
+       TXH     EVGR25,4,INPUTO          SECTION NAME                    61075800
+       TXI     *+1,4,-CONFIG+1     YES                                  61075900
+EVGRSC SXD     EVCOMM,4            SET SECTION TYPE(1 IF CONFIGURATION, 61076000
+       TRA     EVGREX                   2 IF INPUT-OUTPUT)              61076100
+EVGR25 LXA     GLCWN,1             TEST IF WD                           61076200
+       TXL     EVGREX,1,SOURCE-1        IS AN ENV                       61076300
+       TXH     EVGREX,1,IOCONT          PARAGRAPH NAME                  61076400
+       TXI     EVGRPA,1,-SOURCE+1  YES, SET PARA. TYPE IN XR1           61076500
+* XR1=1 IF SOURCE-COMPUTER, 2 IF OBJECT-COMPUTER, 3 IF SPECIAL-NAMES,   61076600
+*     4 IF FILE-CONTROL, 5 IF I-O-CONTROL...                            61076700
+*                                                                       61076800
+EVGRPA SXA     EVCOMM,1            SET PARAGRAPH NAME TYPE              61076900
+       TRA     EVGREX                                                   61077000
+EVGRDV CAL     EVMASK              TURN ON END OF                       61077100
+       STP     EVCOMM                   DIV BIT                         61077200
+       TRA     EVGREX                                                   61077300
+EVGRPD CLA     EVMASK              TURN ON PRD                          61077400
+       STT     EVPRD                    CELL,                           61077500
+       STT     EVCOMM                   BIT                             61077600
+EVGREX AXT     **,4                                                     61077700
+       AXT     **,1                                                     61077800
+       STZ     EVGTKP                                                   61077900
+       STZ     SUSKDV              REMOVE ERPR MSG SUPPRESSOR           61078000
+       ZET     EVCOMM              TEST IF ANY PARAGRAPH TERMINATORS    61078100
+       TRA     1,4                 YES                                  61078200
+       TRA     2,4                 NO                                   61078300
+       EJECT                                                            61078400
+* FOLLOWING SETS UP ERROR MESSAGE PARAMETER FOR BCD UNIT IN CURRENT     61078500
+* ULACC IF CELL EVJKFL = 0, OR IN CURRENT ULBUF IF CELL EVJKFL IS       61078600
+* NOT ZERO. EVJKFL IS ALWAYS RESET TO 0 UPON EXIT.                      61078700
+*              CALL IS...                                               61078800
+*                        TSX EVJUNK,4                                   61078900
+*                          (RETURN)                                     61079000
+*                                                                       61079100
+EVJUNK CAL     ULPNT                                                    61079200
+       ZET     EVJKFL                                                   61079300
+       ARS     18                  SET UP FOR ULBUF                     61079400
+       STA     EVLST                                                    61079500
+       CAL     ULACCL                                                   61079600
+       ZET     EVJKFL                                                   61079700
+       CAL     ULBUFL              SET UP FOR ULACC                     61079800
+       ALS     18                                                       61079900
+       STD     EVLST                                                    61080000
+       STZ     EVJKFL              RESET FLAG                           61080100
+       TRA     1,4                 EXIT                                 61080200
+EVJKFL PZE     0                                                        61080300
+*                                                                       61080400
+       TRA     1,4                                                      61080500
+* FOLLOWING SETS CURRENT TBQUAL BCD NAME ERPR PARAMETER IN C(EVLST)     61080600
+* CALL IS      TSX EVDFER,4                                             61080700
+*                (RETURN)                                               61080800
+*                                                                       61080900
+EVDFER SXA     EVDFX4,4                                                 61081000
+       LAC     TBQUAL,4            -L(TBQUAL ENTRY) TO XR4              61081100
+       SXA     EVDF05,4            SAVE                                 61081200
+       TXI     *+1,4,1             SET                                  61081300
+       PXA     0,4                      L(LAST BCD WORD)                61081400
+       PAC     0,4                      IN XR4                          61081500
+       SXA     EVLST,4             SET IN ERPR LIST WORD                61081600
+EVDF05 AXT     **,4                RELOAD -L(TBQUAL ENTRY) TO XR4       61081700
+       CAL     0,4                 GET UNIT LENGTH CELL                 61081800
+       ALS     18                  POSITION WORD COUNT TO DECREMENT     61081900
+       STD     EVLST                    AND STORE IN ERPR LIST WORD     61082000
+EVDFX4 AXT     **,4                                                     61082100
+       TRA     1,4                 EXIT                                 61082200
+       EJECT                                                            61082300
+* THIS ROUTINE SCANS THE SOURCE-COMPUTER PARAGRAPH.                     61082400
+*                                                                       61082500
+SOCPTR AXT     *+2,4                                                    61082600
+       TRA     GRINK                                                    61082700
+       MZE     IBM790                                                   61082800
+       TXI     SOCP05                                                   61082900
+       TXI     GRKEEP,,*+1                                              61083000
+       MZE     IBM794                                                   61083100
+       TXI     SOCP05                                                   61083200
+       TXI     *+1                                                      61083300
+       TSX     ERPR,4              ...SOURCE-COMPUTER IS IMPROPERLY     61083400
+       PZE     SOE101,1                 SPECIFIED. IBM-7090 ASSUMED     61083500
+       TRA     SOCP15                                                   61083600
+SOCP05 LXD     ULACCL,4            TEST IF HYPHENATED FORM USED         61083700
+       TXH     SOCP10,4,7          YES IF HIGH                          61083800
+       SXA     OBLST1+1,0                                               61083900
+       TSX     ERPR,4              ...HYPHENATED FORM OF SOURCE-COMPUTER61084000
+       PZE     OBE101,1,OBLST1          DESIGNATION PREFERRED...        61084100
+SOCP10 STL     EVGTKP                                                   61084200
+SOCP15 TSX     EVGRIN,4                                                 61084300
+       TRA     EVRTRN              END OF PARAGRAPH REACHED             61084400
+       TRA     EVSKIP              IGNORE REMAINDER OF PARAGRAPH        61084500
+       EJECT                                                            61084600
+* THIS  ROUTINE SCANS THE OBJECT-COMPUTER PARAGRAPH.                    61084700
+*                                                                       61084800
+OBCPTR STZ     OBCPFL                                                   61084900
+       STZ     OB7094                                                   61085000
+       AXT     0,1                                                      61085100
+       AXT     *+2,4                                                    61085200
+       TRA     GRINK                                                    61085300
+       MZE     IBM790              'IBM-7090' OR 'IBM7090'              61085400
+       TXI     OBCP05,,OBCP20                                           61085500
+       TXI     GRKEEP,,*+1                                              61085600
+       MZE     IBM794              'IBM-7094' OR 'IBM7094'              61085700
+       TXI     *+2,,OBCP20                                              61085800
+       TXI     OBCP15,,OBCP20                                           61085900
+       STL     OB7094                                                   61086000
+OBCP05 STL     OBCPFL              OBJECT COMPUTER SPECIFIED            61086100
+       LXD     ULACCL,4            TEST IF HYPHENATED FORM USED         61086200
+       TXH     OBCP10,4,7          YES IF HIGH                          61086300
+OBERR1 AXT     3,4                                                      61086400
+       SXA     OBLST1+1,4                                               61086500
+       TSX     ERPR,4              ...HYPHENATED FORM OF OBJECT-COMPUTER61086600
+       PZE     OBE101,1,OBLST1          DESIGNATION PREFERRED...        61086700
+OBCP10 ZET     OB7094              TEST IF OBJECT-COMPUTER SPECIFIED    61086800
+       TRA     OBCP12                   IS CONSISTANT WITH $IBCBC CARD  61086900
+       ZET     SU7094                                                   61087000
+       TXI     OBERR2,1,1          NO                                   61087100
+       TRA     GRGET               YES                                  61087200
+OBCP12 NZT     SU7094                                                   61087300
+       TRA     OBERR2              NO                                   61087400
+       TRA     GRGET               YES                                  61087500
+OBCP15 ZET     SU7094                                                   61087600
+       TXI     *+1,1,1                                                  61087700
+OBERR2 SXA     OBLST2+1,1                                               61087800
+       TSX     ERPR,4              ...OBJECT-COMPUTER DESIGNATION       61087900
+       PZE     OBE102,1,OBLST2     OVERRIDDEN BY $IBCBC CD OPTION..     61088000
+       ZET     OBCPFL              TEST IF CMPT WAS IBM7090 OR IBM7094  61088100
+       TRA     GRGET               YES, SO CONTINUE                     61088200
+       TRA     EVSKIP              NO, SO IGNORE REMAINDER OF PARA.     61088300
+OBCP20 MZE     COLLAT              'COLLATE-COMMERCIAL'                 61088400
+       TXI     OBERR3,,0           YES                                  61088500
+       TXI     OBCP25,,0           NO                                   61088600
+OBERR3 TSX     ERPR,4              ... 'COLLATE-COMMERCIAL' NOT ALLOWED 61088700
+       PZE     OBE103,1                 TO APPEAR IN ENVIRONMENT...     61088800
+       STL     EVGTKP                                                   61088900
+OBCP25 TSX     EVGRIN,4            TEST IF A 'TERMINATOR'               61089000
+       TRA     *+2                 YES                                  61089100
+       TRA     EVSKIP              NO, BUT IGNORE REMAINDER OF PARAGRAPH61089200
+       LDI     EVCOMM                                                   61089300
+       RNT     200000              TEST IF A PERIOD                     61089400
+       TRA     EVRTRN              NO, SO ASSUME END OF PARAGRAPH       61089500
+       AXT     OBCP20,4            YES, SO CYCLE THRU                   61089600
+       TRA     GRIN                                                     61089700
+       EJECT                                                            61089800
+* THIS ROUTINE PROCESSES THE SPECIAL NAMES PARAGRAPH                    61089900
+*                                                                       61090000
+SPNAME STL     CWTERM              INITIALIZE                           61090100
+       TRA     SPCYCL              SACN FOR FIRST SWITCH-NAME ENTRY     61090200
+SPCYGT STL     CWGTKP              SET CELL TO 'GET' NEXT GROUP         61090300
+SPSKIP STL     CWSKIP              SET ENTRY SKIP MODE SWITCH           61090400
+SPCYCL TSX     CWCYCL,4            CYCLE TO NEXT SWITCH-NAME ENTRY      61090500
+       TRA     EVRTRN              PARA TERM FOUND, SO RETURN TO E1 SUPV61090600
+       AXT     *+2,4               CW 'KEY' FOUND,                      61090700
+       TRA     GRIN                     SO                              61090800
+       PZE     -1                       GET                          $5$61090900
+       TXI     *+2,,SPNM10              NEXT                            61091000
+       TXI     *+1,,SPNM10              GROUP                           61091100
+       AXT     0,1                                                      61091200
+       CLA*    ULPNT               TEST IF UNIT IS                      61091300
+       SUB     SPS                      THE CHAR 'S'                    61091400
+       TZE     SPNM05              YES                                  61091500
+       CAL     ULTYPA              NO, SO TEST IF UNIT IS               61091600
+       LGR     4                        AN INTEGER                      61091700
+       TQP     SPERR2              NO IF BIT NOT SET                    61091800
+       TSX     CONLIT,4            YES, SO CNVRT BCD INTG TO BINARY     61091900
+       PAX     0,1                      AND SET IN XR1                  61092000
+       TXL     SPERR2,1,0          TEST FOR ALLOWABLE                   61092100
+       TXH     SPERR2,1,35              RANGE                           61092200
+SPNM05 STZ     SPFLAG              INITIALIZE FOR                       61092300
+       STZ     SPMNFL                   SWITCH-NAME ENTRY               61092400
+       SXA     *+2,1                                                    61092500
+       CAL     SPMSKK              BIT IN P POSITION                    61092600
+       ARS     **                                                       61092700
+       SLW     SPKYNO              SET KEY POSITION                     61092800
+       CAL     SPKEYS              ALL KEY POSITIONS ALREADY PROCESSED  61092900
+       ANA     SPKYNO              ISOLATE KEY POSITION JUST SPECIFIED  61093000
+       TNZ     SPERR7              TEST IF KEY SPECIFICATION REDUNTANT  61093100
+       CAL     SPKYNO              NO-SO UPDATE                         61093200
+       ORS     SPKEYS              KEY POSITIONS ALREADY PROCESSED      61093300
+       TRA     GRGET                                                    61093400
+SPNM10 MZE     IS                  'IS'                                 61093500
+       TXI     SPNM15,,SPNM20                                           61093600
+       TXI     SPNM25,,SPNM30                                           61093700
+SPNM15 AXT     79,4                                                     61093800
+       SXA     DCLEVL,4                                                 61093900
+       TRA     GRGET                                                    61094000
+SPNM20 PZE     LHN                 DEFINE A MNEMONIC NAME               61094100
+       TXI     SPNM22,,SPNM30                                           61094200
+       TXI     *+1                                                      61094300
+       STZ     DCLEVL              RESTORE DCLEVL CELL                  61094400
+       TRA     SPERR3                                                   61094500
+SPNM22 STL     SPMNFL                                                   61094600
+       CLA     TBIDIC                                                   61094700
+       STO     SPNLOC              SAVE LOC OF TBIDIC MNEMOMIC ENTRY    61094800
+       STA     SPLSTN+1            SAVE FOR ERROR ANALYSIS              61094900
+       TSX     EIDFCK,4            TEST IF FIRST DEFINITION OF THIS NAME61095000
+       NZT     EIRDNT              NO, TEST IF PREV DEF NOT MNEMONIC    61095100
+       TRA     SPNM25              YES                                  61095200
+SPERR6 TSX     ERPR,4              NO...MNEMONIC-NAME IS NOT UNIQUE.    61095300
+       PZE     SPE106,1,SPLSTN          CONDITION IGNORED...            61095400
+SPNM25 CAL     SPKYNO              ENTER KEY SWITCH NO.                 61095500
+       TSX     PUTCP,4                  IN TBPOOL                       61095600
+       ALS     18                  SET TBPOOL DISP IN BITS 6 TO 17      61095700
+       ANA     SPMSKD              ISOLATE TBPOOL DISP FIELD            61095800
+       ZET     SPMNFL              TEST IF MNEMONIC NAME GIVEN          61095900
+       ORS*    SPNLOC                   AND SET DISP IN TBIDIC ENTRY    61096000
+       STO     SPOOLD              SAVE TBPOOL DISP                     61096100
+       ZET     SPMNFL                                                   61096200
+       TRA     GRGET                                                    61096300
+       TRA     GRKEEP                                                   61096400
+SPNM30 MZE     ON                  'ON'                                 61096500
+       TXI     *+2,,SPNM40                                              61096600
+       TXI     GRKEEP,,SPNM35                                           61096700
+       STL     SPONFF                                                   61096800
+       TRA     GRGET                                                    61096900
+SPNM35 MZE     OFF                 'OFF'                                61097000
+       TXI     *+2,,SPNM40                                              61097100
+       TXI     SPNM45                                                   61097200
+       STZ     SPONFF                                                   61097300
+       TRA     GRGET                                                    61097400
+SPNM40 MZE     STATUS              'STATUS'                             61097500
+       TXI     GRGET,,*+2                                               61097600
+       TXI     GRKEEP,,*+1                                              61097700
+       MZE     IS                  'IS'                                 61097800
+       TXI     SPNM55,,SPNM60                                           61097900
+       TXI     SPERR2                                                   61098000
+SPNM45 ZET     SPFLAG              TEST IF A STATUS CLAUSE PROCESSED    61098100
+       TRA     SPCYCL              YES, SO ASSUME END OF ENTRY          61098200
+       TRA     SPERR2              NO                                   61098300
+SPNM55 AXT     81,4                                                     61098400
+       SXA     DCLEVL,4                                                 61098500
+       TRA     GRGET                                                    61098600
+SPNM60 PZE     LHN                 DEFINE A CONDITION NAME              61098700
+       TXI     SPNM70,,SPNM30                                           61098800
+       TXI     *+1                                                      61098900
+       STZ     DCLEVL              RESTORE DCLEVL CELL                  61099000
+       TRA     SPERR4                                                   61099100
+SPNM70 AXT     0,1                 BUILD UP TBIDIC                      61099200
+       ZET     SPONFF                   CODE(32) ENTRY                  61099300
+       TXI     *+1,1,1                                                  61099400
+       CLA     SPMSKT,1            SET 'ON OR OFF'                      61099500
+       STT*    TBIDIC                   CONDITION                       61099600
+       CLA     SPOOLD              SET ASSOC TBPOOL DISP                61099700
+       ORS*    TBIDIC                   OF KEY NUMBER                   61099800
+       STL     SPFLAG                                                   61099900
+       TRA     GRGET               SCAN FOR NEXT STATUS CLAUSE          61100000
+SPERR2 TSX     EVJUNK,4                                                 61100100
+       TSX     ERPR,4              ...' ' IS STRUCTURALLY INCORRECT.    61100200
+       PZE     SPE102,3,EVLST           REMAINDER OF ENTRY IGNORED...   61100300
+       TRA     SPSKIP                                                   61100400
+SPERR3 TSX     EVJUNK,4                                                 61100500
+       TSX     ERPR,4              ...' ' IS NOT A MENMONIC-NAME.       61100600
+       PZE     SPE103,3,EVLST           REMAINDER OF ENTRY IGNORED...   61100700
+       TRA     SPSKIP                                                   61100800
+SPERR4 TSX     EVJUNK,4                                                 61100900
+       TSX     ERPR,4              ...' ' IS NOT A CONDITION-NAME.      61101000
+       PZE     SPE104,3,EVLST           REMAINDER OF ENTRY IGNORED...   61101100
+       TRA     SPSKIP                                                   61101200
+SPERR7 TSX     EVJUNK,4                                                 61101300
+       TSX     ERPR,4              ...REDUNDANT SWITCH-NAME ENTRY FOR   61101400
+       PZE     SPE107,3,EVLST           KEY 'X' IGNORED...              61101500
+       TRA     SPCYGT              CYCLE TO NEXT SWITCH-NAME ENTRY      61101600
+       EJECT                                                            61101700
+* THIS ROUTINE PROCESSES THE FILE-CONTROL PARAGRAPH SELECT ENTRIES.     61101800
+*                                                                       61101900
+SLFILE STZ     SUFLSM              INITIALIZE                           61102000
+       STZ     SLFLSM                   SWITCH                          61102100
+       STZ     SLRNSM                   AND                             61102200
+       STL     SLINTZ                   COUNTERS                        61102300
+       STL     CWTERM                                                   61102400
+       LAC     IDORG,4             SET -(FIRST LOC OF TBIDIC)           61102500
+       SXD     SLFL42,4                 TO XR4                          61102600
+       TRA     SLCYCL              SCAN FOR FIRST SELECT ENTRY          61102700
+SLCYGT STL     CWGTKP              SET CELL TO 'GET' NEXT GROUP         61102800
+SLSKIP STL     CWSKIP              SET ENTRY SKIP MODE SWITCH           61102900
+SLCYCL TSX     CWCYCL,4            CYCLE TO NEXT 'SELECT'               61103000
+       TRA     SLCLNP              PARA TERM FOUND, SO GO CLEANUP       61103100
+SLFL05 AXT     78,2                                                     61103200
+       SXA     DCLEVL,2                                                 61103300
+       AXT     *+2,4                                                    61103400
+       TRA     GRIN                                                     61103500
+SLFL10 PZE     LHN                 DEFINE A FILENAME                    61103600
+       TXI     SLFL20,,SLFL45                                           61103700
+       TXI     *+1,,SLFL15                                              61103800
+       STZ     DCLEVL              RESTORE DCLEVL CELL                  61103900
+       TRA     GRKEEP                                                   61104000
+SLFL15 MZE     OPTION              'OPTIONAL'                           61104100
+       TXI     *+2,,SLFL16                                              61104200
+       TXI     SLERR2                                                   61104300
+       SXA     DCLEVL,2            RESET DCLEVL CELL                    61104400
+       TRA     GRGET                                                    61104500
+SLFL16 PZE     LHN                 DEFINE A FILENAME                    61104600
+       TXI     SLERR9,,SLFL45                                           61104700
+       TXI     *+1                                                      61104800
+       STZ     DCLEVL              RESTORE DCLEVL CELL                  61104900
+       TRA     SLERR2                                                   61105000
+SLERR9 CLA     SLCYCL                                                   61105100
+       STT*    TBIDIC              SET OPTIONAL BIT IN 15-WD            61105200
+SLFL20 CLA     TBIDIC                                                   61105300
+       PDX     0,1                 TBIDIC DISP OF LAST DICT ENTRY       61105400
+       ZET*    TBEDIC              TEST IF LHN WAS CW 'FILLER'          61105500
+       TRA     SLFL25              NO                                   61105600
+       CAL     TBEDIC+1            YES, ILLEGAL, SO REMOVE ENTRY        61105700
+       SUB     EIFX1                    FROM DICTIONARY                 61105800
+       STA     TBEDIC+1                                                 61105900
+SLERR2 TSX     EVJUNK,4                                                 61106000
+       TSX     ERPR,4              ...' ' IS NOT A FILE-NAME.           61106100
+       PZE     SLE102,3,EVLST           SELECT ENTRY IGNORED...         61106200
+       TRA     SLSKIP                                                   61106300
+SLFL25 STA*    TBIDIC              CHAIN 15-WD ENTRY TO ITSELF          61106400
+       STO     SLLOC               SAVE TBIDIC SELECT ENTRY LOC         61106500
+       STA     EVLSTF+1            SET FOR ERROR ANALYSIS               61106600
+       NZT     SLINTZ              TEST IF FIRST SELECT ENTRY           61106700
+       TRA     *+3                 NO                                   61106800
+       STZ     SLINTZ                                                   61106900
+       STA     SUFLLC              TBIDIC LOC OF FIRST SELECT ENTRY     61107000
+       CLA     SLFLSM              BUMP TOTAL NO. OF 15-WD              61107100
+       ADD     EIFX1                    TBIDIC ENTRIES                  61107200
+       STA     SLFLSM                   COUNTER                         61107300
+       TSX     EIDFCK,4            TEST IF FIRST DEF OCCURANCE OF NAME  61107400
+       TRA     *+1                 NO                                   61107500
+       TSX     DCRSRV,4            YES, SO EXPAND 15-WD                 61107600
+       TSX     DCRSRV,4                 ENTRY TO                        61107700
+       TSX     DCRSRV,4                 4 WDS                           61107800
+       NZT     EIRDNT              TEST IF ANY PREVIOUS OCCURANCE OF    61107900
+       TRA     SLFL30                   FILENAME WAS IN A SELECT ENTRY  61108000
+SLERR3 TSX     ERPR,4              YES,...REDUNDANT SELECT ENTRY        61108100
+       PZE     SLE103,3,EVLSTF          IGNORED...                      61108200
+       TRA     SLCYGT                                                   61108300
+SLFL30 AXT     12,4                ZERO OUT                             61108400
+       STZ     SLNTRY+1,4                SLNTRY BUFFER                  61108500
+       TIX     *-1,4,1             AREA                                 61108600
+       CLA     SLNTRY+1            SET PREFIX AND INITIALIZE DECR       61108700
+       STO     SLNTRY                   OF FIRST SLNTRY WD              61108800
+       LXA     SUFLSM,4                                                 61108900
+       TXI     *+1,4,1             BUMP 'VALID FILENAMES CTR'           61109000
+       TXH     SLERR8,4,63         TEST FOR TOO MANY FILES              61109100
+       SXA     SUFLSM,4                                                 61109200
+       SXA     SLNTRY,4                                                 61109300
+       PXD     ,4                                                       61109400
+       ALS     6                   SET FN FIELD (FILE NUMBER)           61109500
+       ORS*    SLLOC                     IN TBIDIC 15 WORD              61109600
+       CLA     CARDNO              SET SOURCE CARD NO. OF FILENAME      61109700
+       STA     SLNTRY-1                  APPEARANCE                     61109800
+       LXA     SLLOC,4             SET LOC OF                           61109900
+       SXD     SLNTRY-1,4                TBIDIC 15 WORD                 61110000
+* FOLLOWING PLACES BCD FILENAME IN FLFILE CODE(1) ENTRY.                61110100
+*                                                                       61110200
+       CLA     ULPNT                                                    61110300
+       STA     SLFL35                                                   61110400
+       LXD     ULACCL,1            CHAR CT OF BCD FILENAME              61110500
+       AXT     0,2                                                      61110600
+SLFL35 CAL     **,2                MOVE BCD FILENAME FROM ULACC         61110700
+       SLW     SLNTRY-3,2               TO SLNTRY BUFFER AREA           61110800
+       TXI     *+1,2,1             INCREMENT WD CT                      61110900
+       TXL     SLFL40,1,6          TEST IF END OF FILENAME              61111000
+       TXI     *+1,1,-6            NO, SO DECREMENT CHAR CT             61111100
+       TXL     SLFL35,2,2          MOVE MAX OF 3 BCD WORDS              61111200
+       AXT     6,1                                                      61111300
+SLFL40 SXA     SLNTRY-2,1          SET FILENAME SUBFIELD                61111400
+       TXI     *+1,2,2                  TEXT CONTROL WORD               61111500
+       SXD     SLNTRY-2,2          DISP FROM L(SLNTRY) TO               61111600
+       TXI     *+1,2,1                  L(LAST FILENAME WD)             61111700
+       SXA     SLDISP,2            NEXT AVAIL WD LOC DISP IN SLNTRY     61111800
+       LXD     ULACCL,1            TEST IF BCD FILENAME                 61111900
+       TXL     GRGET,1,18               EXCEEDS 18 CHAR                 61112000
+SLFL42 TXI     *+1,4,**            YES, SO APPEND ASSOC ENXXXX          61112100
+       CAL     SLEN00                   NAME TO FIRST 12 CHAR           61112200
+       SLW     SLNTRY-5            SET 'EN' PORTION                     61112300
+       PXA     0,4                                                      61112400
+       TSX     BINBCD,4                                                 61112500
+       ANA     SLMSKE                                                   61112600
+       ORS     SLNTRY-5            SET 'XXXX' PORTION                   61112700
+SLERR4 TSX     ERPR,4              ...NOTE, FILE-NAME CHANGED           61112800
+       PZE     SLE104,1,EVLST8          FOR INTERNAL PURPOSES TO **...  61112900
+       TRA     GRGET                                                    61113000
+SLFL45 MZE     RENAMI              'RENAMING'                           61113100
+       TXI     GRGET,,*+2                                               61113200
+       TXI     GRKEEP,,SLFL50                                           61113300
+       PZE     DN                                                       61113400
+       TXI     SLFL48,,SLFL50                                           61113500
+       TXI     *+1,,SLFL50                                              61113600
+SLERR5 TSX     ERPR,4              ...'RENAMING' MAY ONLY BE FOLLOWED   61113700
+       PZE     SLE105,3                 BY FILE-NAME...                 61113800
+       TRA     SLERUN              SKIP REST OF SELECT ENTRY            61113900
+SLFL48 CLA*    ULPNT               TEST IF DN WAS SPECIAL               61114000
+       SUB     SLFLLR                   WORD 'FILLER'                   61114100
+       TZE     SLERR5              YES IF ZERO                          61114200
+       CLA     SLLOC               BUILD UP TBRNAM                      61114300
+       STA     SLRNLK                   ENTRY CONTROL WORD              61114400
+       LXA     CARDNO,4                                                 61114500
+       SXD     SLRNLK,4                                                 61114600
+       CLA     SLRNLK                                                   61114700
+       TSX     TBRNAM+1,4          ENTER CONTROL                        61114800
+       STO*    TBRNAM                   WORD IN TBRNAM                  61114900
+       TSX     DCMVQU,4            ENTER RENAMED                        61115000
+       PZE     TBRNAM                   FILENAME IN TBRNAM              61115100
+       CLA     SLRNSM              INCREMENT                            61115200
+       ADD     EIFX1                    RENAMING                        61115300
+       STA     SLRNSM                   CTR                             61115400
+       TRA     GRGET                                                    61115500
+SLFL50 MZE     ASSIGN              'ASSIGN'                             61115600
+       TXI     SLFL55                                                   61115700
+       TXI     *+1                                                      61115800
+SLERR6 TSX     ERPR,4              ...COBOL WDS 'ASSIGN TO' OMITTED.    61115900
+       PZE     SLE106,3,EVLSTF        ASSUME ASSIGNMENT IS 1 TAPE-UNIT..61116000
+SLERUN LDI*    SLLOC                                                    61116100
+       SIL     000010              SET TAPE-UNIT BIT IN                 61116200
+       STI*    SLLOC                    TBIDIC 15-WD ENTRY              61116300
+       STL     CWSKIP                                                   61116400
+       TRA     SLFLPK                                                   61116500
+SLFL55 LDC     ULPNT,1             TEST FOR CW 'TO'                     61116600
+       CLA     0,1                      USING ULSC ROUTINE              61116700
+       SUB     USTO                                                     61116800
+       TNZ     SLERR6                                                   61116900
+       TSX     ULSC,4              CYCLE THRU CW 'TO'                   61117000
+       TSX     USSCAN,4            GO SCAN FILE UNIT ASSIGNMENT CLAUSE  61117100
+*                                                                       61117200
+* FOLLOWING PREPARES TO ENTER FLFILE CODE(1) ENTRY IN FLFILE BY TESTING 61117300
+* IF LNG OF CURRENT ENTRY(PLUS A ZERO WORD) FITS IN CURRENT FLFILE      61117400
+* BUFFER.                                                               61117500
+*                                                                       61117600
+SLFLPK LXA     SUPTE2,4            NO. OF WDS REMAINING(NOT USED)IN BUFF61117700
+       LXA     SLDISP,2            NO. OF WDS IN CURRENT ENTRY          61117800
+       SXD     *+1,2               TEST IF ENTRY FITS                   61117900
+       TXL     SLFL70,4,**         TRANSFER IF NO                       61118000
+       LXD     SUPTE2,2            YES,SO GET FLFILE BUFF DISP OF NEXT  61118100
+       SXD     SLFL65,2                  AVAIL WD                       61118200
+       LXD     SLNTRY,1            NO. OF SUBFIESD ITEMS IN SLNTRY      61118300
+       AXT     1,4                 INITIALIZE TO ADJUST DISP FIELD IN   61118400
+       TRA     *+2                      SUBFLD CNTL WDS IN SLNTRY       61118500
+SLFL60 AXT     **,4                SLNTRY DISP TO L(NXT SUB CNTL WD -1) 61118600
+       CLA     SLNTRY-1,4          SUBFIELD CNTL WD TO ACC              61118700
+       PDX     ,2                  DISP FIELD TO XR2                    61118800
+       SXA     SLFL60,2            SAVE FOR PICKING UP NXT CNTL WD      61118900
+SLFL65 TXI     *+1,2,**            BUMP BY FLFILE BUFFER DISP           61119000
+       PXD     ,2                  RESTORE ADJUSTED CNTL WD             61119100
+       STD     SLNTRY-1,4               TO SLNTRY                       61119200
+       TIX     SLFL60,1,1          REPEAT FOR EACH SUBFLD ITEM IN SLNTRY61119300
+* IF FLFILE CODE(1) ENTRY DOES NOT FIT(ALLOWING FOR ZERO WD) IN CURRENT 61119400
+* FLFILE BUFFER, THE DISP FIELDS OF SLNTRY SUBFLD CNTL WDS NEED NOT BE  61119500
+* ADJUSTED.                                                             61119600
+SLFL70 LXA     SLDISP,4            SET NO. OF WDS IN CURRENT ENTRY      61119700
+       SXD     *+2,4                                                    61119800
+       TSX     PUTE2,4             ENTER SLNTRY(FLFILE CODE(1) ENTRY)   61119900
+       PZE     SLNTRY+1,,**              INTO FLFILE                    61120000
+       TRA     SLCYCL              GO SCAN FOR NEXT 'SELECT'            61120100
+*                                                                       61120200
+*                                                                       61120300
+* THIS SECTION IS A GENERAL CLEANUP OF FILE CONTROL PARAGRAPH. THE      61120400
+* OF FILENAMES WHICH APPEARED IN THE RENAMING CLAUSES ARE CHECKED TO    61120500
+* INSURE THAT EACH SUCH RENAMED FILENAME HAS APPEARED IN A SELECT ENTRY.61120600
+*                                                                       61120700
+SLCLNP LXA     SLRNSM,2            IF NO RENAMED FILES                  61120800
+       TXL     EVRTRN,2,0               RETURN TO ENV SUPV              61120900
+       TSX     DCSAVE,4            SAVE PERTINENT SCAN SUBROUTINE CELLS 61121000
+       AXT     0,1                                                      61121100
+SLCL10 CLA*    TBRNAM              CNTL WD OF NEXT TBRNAM ENTRY         61121200
+       STO     SLRNLK                                                   61121300
+       STA     SLLNKA                                                   61121400
+       TXI     *+1,1,1             DISP TO FRST WD OF NEXT TBRNAM ENTRY 61121500
+       STL     SUSKDV              INHIBIT ANY DICT LOOKUP ERPR MSGS    61121600
+       TSX     DCDFIN,4            LOOK UP                              61121700
+       PZE     TBRNAM                   RENAMED FILENAME                61121800
+       STZ     SUSKDV              RESTORE ERPR SUPPRESSOR SWITCH       61121900
+       LDI     GLPNT               TEST IF FILENAME                     61122000
+       IIL     150000                   DEFINED                         61122100
+       LFT     770000                   IN A SELCT ENTRY                61122200
+       TRA     SLERR7              NO                                   61122300
+       LXA     GLPNT,4                                                  61122400
+       SXA     SLLNKB,4                                                 61122500
+       TSX     SLSRCH,4            GO TEST IF A REDUNDANT RENAMING ENTRY61122600
+       TRA     SLCL20              YES                                  61122700
+SLCL15 CLA*    SLLNKA              UPDATE TBIDIC SELECT CHAIN BY        61122800
+       LDQ*    SLLNKB                   SWITCHING ADDRESS POINTERS      61122900
+       STA*    SLLNKB                   BETWEEN RENAMED AND RENAMING    61123000
+       XCA                              SELECT ENTRIES                  61123100
+       STA*    SLLNKA                                                   61123200
+SLCL20 TIX     SLCL10,2,1          CONTINUE                             61123300
+       TSX     DCRSTR,4            RESTORE PERTINENT SCAN ROUTINE CELLS 61123400
+*                                                                       61123500
+* FOLLOWING ENTERS A CODE(2) ENTRY INTO FLFILE FOR EACH SELECT FILE     61123600
+* WHICH IS RENAMED.                                                     61123700
+       LXA     SLFLSM,1            TOTAL NO. OF 15-WD ENTRIES IN TBIDIC 61123800
+       LAC     SUFLLC,2            -LOC OF FIRST 15-WD ENTRY IN TBIDIC  61123900
+       TRA     *+3                                                      61124000
+SLCL25 LXA     SLCL30,2            -LOC OF CURR 15-WD ENTRY TO XR2      61124100
+       TXI     *+1,2,-4                                                 61124200
+       CAL     0,2                                                      61124300
+       SLW     SLTEMP                                                   61124400
+       STA     SLLNKP              SAVE POINTER                         61124500
+       SXA     *+1,2                                                    61124600
+SLCL30 AXC     **,2                                                     61124700
+       PXA     ,2                  +LOC OF CURR 15-WD IN ACCUM          61124800
+       CAS     SLLNKP              TEST IF SELECT ENTRY RENAMED         61124900
+       TRA     *+2                 YES                                  61125000
+       TRA     SLCL50              NO                                   61125100
+       CAL     SLTEMP                                                   61125200
+       ANA     SLMSKF              ISOLATE FN FIELD                     61125300
+       ARS     24                                                       61125400
+       STA     SLRNAM              SET RENAMING FILE NUMBER(FN)         61125500
+       CAL*    SLLNKP                                                   61125600
+       ANA     SLMSKF                                                   61125700
+       ARS     6                                                        61125800
+       STD     SLRNAM              SET RENAMED FILE NUMBER              61125900
+       TSX     PUTE2,4             ENTER A CODE(2) ENTRY                61126000
+       PZE     SLRNAM+1,,1              INTO FLFILE                     61126100
+SLCL50 TIX     SLCL25,1,1          TEST IF ALL FILES PROCESSED          61126200
+       TRA     EVRTRN              RETURN TO ENV SUPV                   61126300
+SLERR7 LXD     SLRNLK,4            SET CARD NO ON WHICH ASSOC           61126400
+       SXA     CARDNO,4                  RENAMING CLAUSE APPEARED       61126500
+       TSX     EVDFER,4            GO SET UP ERPR MESSAGE               61126600
+       TSX     ERPR,4              ...' ' HAS NOT BEEN DEFINED IN A     61126700
+       PZE     SLE107,3,EVLST           SELECT ENTRY AND IS IGNORED...  61126800
+       TRA     SLCL20                                                   61126900
+SLERR8 TSX     ERPR,4              ...NO. OF FILES NAMED EXCEEDS        61127000
+       PZE     SLE108,5                 MAXIMUM OF 63...                61127100
+       STR                         RETURN NOT EXPECTED                  61127200
+*                                                                       61127300
+*                                                                       61127400
+*                                                                       61127500
+* FOLLOWING ROUTINE TESTS IF CURRENT RENAMING ENTRY IS REDUNDANT.       61127600
+* UPON ENTRY, ROUTINE ASSUMES...                                        61127700
+*          RENAMING SELECT 15-WD LOC IN SLLNKA                          61127800
+*          RENAMED  SELECT 15-WD LOC IN SLLNKB                          61127900
+* CALL IS      TSX   SLSRCH,4                                           61128000
+*                (1,4 RETURN PT IF REDUNDANT ENTRY)                     61128100
+*                (2,4 RETURN PT IF NON-REDUNDANT ENTRY)                 61128200
+*                                                                       61128300
+SLSRCH CLA*    SLLNKA                                                   61128400
+       STA     SLLNKP              SET FIRST LINK TO BE TESTED          61128500
+SLSR01 CLA     SLLNKB              TEST IF REDUNDANT                    61128600
+SLSR05 CAS     SLLNKP                                                   61128700
+       TRA     *+2                                                      61128800
+       TRA     1,4                 YES                                  61128900
+       CLA*    SLLNKP              NO, SO GET                           61129000
+       STA     SLLNKP                   NEXT LINK POINTER               61129100
+       CLA     SLLNKA                                                   61129200
+       CAS     SLLNKP              TEST IF END OF SELECT CHAIN REACHED  61129300
+       TRA     SLSR01              NO                                   61129400
+       TRA     2,4                 YES, SO EXIT NORMAL                  61129500
+       TRA     SLSR01              NO                                   61129600
+       EJECT                                                            61129700
+* THIS SUBROUTINE SCANS THE 'ASSIGN TO' CLAUSE AND PROCESSES THE        61129800
+* SPECIFIED UNIT-NAMES. CONTENTS OF  XR2 HAS NO OF UNITS PROCESSED AT   61129900
+* ANY TIME (0,1,OR 2)                                                   61130000
+*                   CALLING SEQUENCE IS  TSX USSCAN,4                   61130100
+*                                       (RETURN)                        61130200
+USSCAN SXA     USXR,4                                                   61130300
+       STZ     USUTLB              INITIALIZE                           61130400
+       STZ     USCDTP                   ALL                             61130500
+       STZ     USCDTP-1                 FLAGS                           61130600
+       STZ     USCDTP-2                 AND                             61130700
+       STZ     USHYFL                   SWITCHES                        61130800
+       STZ     USMLRL                                                   61130900
+       STZ     USMLTP                                                   61131000
+       STZ     USTPNO                                                   61131100
+       STZ     USREEL                                                   61131200
+       STZ     USMODE                                                   61131300
+       AXT     0,2                                                      61131400
+       LDI*    SLLOC               FIRST WD OFF ASSOC TBIDIC FILE ENTRY 61131500
+*                                                                       61131600
+* THIS SECTION DETERMINES THE UNIT MEDIUM(TAPE, CARD, ETC) AND          61131700
+* TRANSFERS CONTROL TO THE FILE ASSIGNMENT SUBSCANS WITH THE USLC UNIT  61131800
+* TO BE INTERPRETED IN THE CURRENT ULBUF AND ALSO IN THE LOGICAL        61131900
+* ACCUMULATOR.                                                          61132000
+*                                                                       61132100
+USSCNX LXD     ULPNT,1                                                  61132200
+       SXA     USPNT,1             POINTER                              61132300
+       CAL     SLBLNK              BLANK OUT                            61132400
+       SLW     USUNT                    UNIT-NAME                       61132500
+       SLW     USUNT-1                  IMAGE AREA                      61132600
+       TXL     *+3,2,0             TEST IF HYPERTAPE                    61132700
+       ZET     USHYFL                   UNIT ASSIGNMENT                 61132800
+       TRA     USHYSC              YES (SECONDARY UNIT)                 61132900
+       CLA*    USPNT                                                    61133000
+       SUB     USHYTP                                                   61133100
+       TZE     USHYSC              YES (PRIMARY UNIT)                   61133200
+       CAL*    USPNT               UNIT ASSIGNMENT TO ACC               61133300
+       LXD     ULBUFL,1            LENGTH TO XR1                        61133400
+       TXH     USGHSC,1,6          GO TO GENERAL ASSIGN SCAN            61133500
+       ZET     USTPNO              TEST IF CW TAPE-UNIT(S) EXPECTED     61133600
+       TRA     USILGL              YES-BUT OMITTED                      61133700
+       TXH     USSYSC,1,4          GO TO SYSTEM-UNIT-NAME ASSIGN  SCAN  61133800
+       LAS     USNONE              TEST IF UNIT-NAME IS 'NONE'          61133900
+       TRA     *+2                                                      61134000
+       TRA     USNOSC              YES, SO GO TO 'NONE' ASSIGN SCAN     61134100
+       TXH     USTPSC,1,3          ASSUME 4 CHAR TAPE-UNIT-NAME         61134200
+       TXL     USSC10,1,2                                               61134300
+       ANA     USMSK2              MASK OUT LAST 4 CHAR                 61134400
+       AXT     3,1                                                      61134500
+       LAS     USTBLB+1,1          TEST IF UNIT IS CARD                 61134600
+       TRA     *+2                                                      61134700
+       TRA     USCDSC              YES,GO TO SYMBOLIC-CARD-UNIT SCAN    61134800
+       TIX     *-3,1,1                                                  61134900
+       TRA     USTPSC              NO, SO ASSUME 3 CHAR TAPE-UNIT-NAME  61135000
+USSC10 TXH     USTPSC,1,1          ASSUME 2 CHAR TAPE-UNIT-NAME         61135100
+       ARS     12                  TEST IF AN                           61135200
+       PDX     ,1                       INTEGER                         61135300
+       TXH     USTPSC,1,9          IF HIGH GO TO TAPE-UNIT ASSIGN SCAN  61135400
+       ZET     USTPNO              YES - AN INTGER,SO TEST IF REDUNDANT 61135500
+       TRA     USILGL              YES                                  61135600
+       TXH     USILGL,1,2          NO,SO DIGIT MUST BE 1 OR 2           61135700
+       TXL     USILGL,1,0                                               61135800
+       SXA     USTPNO,1                                                 61135900
+       TSX     ULSC,4              GET NEXT ULSC UNIT                   61136000
+       TRA     USSCNX                                                   61136100
+*                                                                       61136200
+* THIS SECTION PROCESSES A GENERAL HARDWARE CATEGORY FILE ASSIGNMENT.   61136300
+*                                                                       61136400
+USGHSC TXH     USILGL,2,0          SECONDARY UNIT ASSIGNMENT NOT ALLOWED61136500
+       STL     USMODE              FLAG TO INDICATE SCANNING VIA GLSC   61136600
+       AXT     *+2,4                                                    61136700
+       TRA     GRIN                                                     61136800
+       PZE     CW                                                       61136900
+       TXI     *+2,,0                                                   61137000
+       TXI     USILGL,,0           ILLEGAL UNIT-NAME                    61137100
+       LXA     GLCWN,1                                                  61137200
+       TXL     USILGL,1,TAPEUN-1   TEST IF CW IS A GENERAL              61137300
+       TXH     USILGL,1,CARDPU          HARDWARE UNIT-NAME              61137400
+       TXI     *+1,1,-TAPEUN       YES,SO SET CODE IN XR1               61137500
+*                                                                       61137600
+* CONTENTS OF XR1...=0 IF TAPE-UNIT(S), 1 IF CARD READER,               61137700
+*                    2 IF PRINTER,      3 IF CARD PUNCH.                61137800
+*                                                                       61137900
+       TXL     USGH10,1,0          IF TAPE                              61138000
+       CAL     USTBLA+1,1          IF CARD                              61138100
+       TRA     USCDPK              GO TO CARD-UNIT PACK ROUTINE         61138200
+USGH10 SIL     000010              SET TAPE MEDIUM BIT                  61138300
+       LXD     ULACCL,1                                                 61138400
+       TXL     USMLSC,1,9          TEST IF CW WAS 'TAPE-UNITS'          61138500
+       STL     USMLTP              YES-SO SET MULTIPLE TAPE FLAG        61138600
+       CAL     USASTK              SET '*' IN UNIT 1 FIELD TO           61138700
+       SLW     USUNT                    INDICATE THAT PRIMARY           61138800
+       AXT     1,1                      AND SECONDARY UNITS             61138900
+       SXA     USUNTL,1                 ARE TO BE ON DISTINCT           61139000
+       TSX     USPACK,4                 PHYSICAL TAPE-UNITS             61139100
+       TRA     USMLSC              GO TO MULTIPLE REEL OPTION SCAN      61139200
+*                                                                       61139300
+* THIS SECTION PROCESSES A SYSTEM UNIT-NAME FILE ASSIGNMENT.            61139400
+*                                                                       61139500
+USSYSC ANA     USMSK1              ISOLATE FIRST 3 CHAR                 61139600
+       LAS     USSYS                    AND TEST IF 'SYS'               61139700
+       TRA     USILGL              NO                                   61139800
+       TRA     *+2                                                      61139900
+       TRA     USILGL              NO                                   61140000
+       CAL*    USPNT               UNIT ASSIGNMENT TO ACC               61140100
+       ALS     18                  LAST 3 CHAR TO LEFT SIDE             61140200
+       ORA     USMSKB              BLANK FILL RIGHT SIDE                61140300
+       AXT     24,1                TEST IF A                         $5$61140400
+       LAS     USTBLA+1,1               VALID SYSTEM-UNIT-NAME          61140500
+       TRA     *+2                                                      61140600
+       TRA     USSY10              YES                                  61140700
+       TIX     *-3,1,1                                                  61140800
+       TRA     USILGL              NO                                   61140900
+USSY10 TXL     USSY15,1,3          IF CRD,PRT,OR PCH                    61141000
+       TXL     USSY20,1,6          IF IN1,OU1,OR PP1                    61141100
+       TXL     USSY25,1,9          IF IN2,OU2,OR PP2                    61141200
+       TXH     USSY12,2,0          IF UTN,LBN,OR CKN.                   61141300
+       SIL     000010              PRIMARY UNIT - SET TAPE BIT          61141400
+       TXH     USSYPK,1,22         TRANSFER IF CK1 OR CK2            $5$61141500
+       STL     USUTLB              SET UTILITY-LIBRARY TAPE FLAG        61141600
+       TRA     USSYPK              GO PACK UNIT                         61141700
+USSY12 LFT     000020              NO, TEST IF PRIMARY UNIT IS TAPE ONLY61141800
+       TRA     USERR1              NO                                   61141900
+       TRA     USSYPK              YES,SO GO PACK UNIT                  61142000
+USSY15 TXH     USERR6,2,0          CARD UNIT ILLEGAL AS SECONDARY UNIT  61142100
+       CAL     USTBLA+1,1          UNIT-NAME TO LOG ACC                 61142200
+       TRA     USCDPK              GO TO CARD-UNIT PACK ROUTINE         61142300
+USSY20 TXH     USILGL,2,0          IN1,OU1,PP1 NOT OK AS SECONDARY UNIT 61142400
+       SIL     000030              SET BOTH CARD AND TAPE MEDIA BITS    61142500
+       STL     USCDTP+4,1               AND ASSOCIATED FLAG             61142600
+       LAC     SLLOC,4             -TBIDIC 15 WD LOC TO XR4             61142700
+       CAL     USTAG1+4,1                                               61142800
+       STT     2,4                 TAG=1 IF IN1, 2 IF OU1, 4 IF PP1     61142900
+       TRA     USSYPK                                                   61143000
+USSY25 TXL     USILGL,2,0          IN2,OU2,PP2 NOT OK AS PRIMARY UNIT   61143100
+       NZT     USCDTP+7,1          DO PRIMARY AND SECONDARY UNITS CLASH 61143200
+       TRA     USERR1              YES                                  61143300
+* SYSTEM UNIT-NAME PACK ROUTINE(ASSUMES XR1 HAS USTBLA DISP+1 OF UNIT)  61143400
+USSYPK CAL     USTBLA+1,1                                               61143500
+       SLW     USUNT               BCD UNIT-NAME                        61143600
+       AXT     3,1                                                      61143700
+       SXA     USUNTL,1            UNIT-NAME LNG                        61143800
+       TSX     USPACK,4            PACK BCD UNIT-NAME INTO SLNTRY BLOCK 61143900
+       TSX     ULSC,4                                                   61144000
+       TRA     USCYCL              CYCLE                                61144100
+*                                                                       61144200
+* THIS SECTION PROCESSES A CARD-UNIT-NAME FILE ASSIGNMENT               61144300
+*                                                                       61144400
+USCDSC TXH     USERR6,2,0          CARD UNIT ILLEGAL AS SECONDARY UNIT  61144500
+       CAL*    USPNT                                                    61144600
+       ANA     USMSK5              ISOLATE 3RD CHAR FROM LEFT           61144700
+       PDX     ,4                  SET CHAR TO XR4                      61144800
+       TXL     USILGL,4,17-1       TEST IF CHAR IS 'A'                  61144900
+       TXH     USILGL,4,24              THRU 'H'                        61145000
+       CAL*    USPNT               YES                                  61145100
+* CARD UNIT-NAME PACK ROUTINE(ASSUMES BCD UNIT IN LACC, AND XR1 SET TO  61145200
+*      1 IF RDX,CRD 2 IF PRX,PRT 3 IF PUX,PCH                           61145300
+USCDPK SLW     USUNT               BCD UNIT-NAME                        61145400
+       SIL     000020              SET CARD MEDIUM BIT                  61145500
+       TXL     *+4,1,1                                                  61145600
+       LAC     SLLOC,4             -TBIDIC 15 WD LOC TO XR4             61145700
+       CAL     USTAG1+1,1          SET TAG WITH...                      61145800
+       STT     3,4                      2 IF PRINTER, 4 IF CARD PUNCH   61145900
+       AXT     3,1                                                      61146000
+       SXA     USUNTL,1            UNIT-NAME LNG                        61146100
+       TSX     USPACK,4            PACK BCD UNIT-NAME INTO SLNTRY BLOCK 61146200
+       NZT     USMODE              TEST IF UNIT WAS SCANNED VIA GLSC    61146300
+       TSX     ULSC,4              NO, SO POSITION NEXT UNIT FOR CYCLING61146400
+       TRA     USCYCL              CYCLE                                61146500
+*                                                                       61146600
+* THIS SECTION PROCESSES A HYPERTAPE NAME UNIT ASSIGNMENT               61146700
+*                                                                       61146800
+USHYSC STL     USHYFL              SET HYPERTAPE FLAG                   61146900
+       TXH     *+2,2,0             FIRST UNIT PRECEDED BY CW 'HYPERTAPE'61147000
+       TSX     ULSC,4              CYCLE THRU CW 'HYPERTAPE'            61147100
+       LXD     ULBUFL,1                                                 61147200
+       TXH     USILGL,1,3          ULSC UNIT MUST BE 3 CHAR IN LNG      61147300
+       LDC     ULPNT,4                                                  61147400
+       CAL     ,4                                                       61147500
+       ARS     12                                                       61147600
+       PDX     ,1                  SET FIRST CHAR IN XR1                61147700
+       TXL     USILGL,1,17-1       TEST IF CHAR IS 'A'                  61147800
+       TXH     USILGL,1,24              THRU 'H'                        61147900
+       CAL     ,4                  YES                                  61148000
+       ANA     USMSK6              ISOLATE SECOND CHAR                  61148100
+       LAS     USH                 TEST IF 2ND CHAR IS 'H'              61148200
+       TRA     USILGL              NO                                   61148300
+       TRA     *+2                 YES                                  61148400
+       TRA     USILGL              NO                                   61148500
+       CAL     ,4                                                       61148600
+       ANA     USMSK5              ISOLATE 3RD CHAR                     61148700
+       PDX     ,1                                                       61148800
+       TXH     USILGL,1,9          TEST IF 3RD CHAR IS A ONE DIGIT INTGR61148900
+       STL     USHYFL              YES, SO SET HYPERTAPE FLAG           61149000
+       CAL     ,4                                                       61149100
+       ANA     USMSK1                                                   61149200
+       SLW     USUNT               SET FIRST 3 CHAR OF HYPRTPE-UNIT-NAME61149300
+       AXT     3,1                                                      61149400
+       TSX     USTPTR,4            TEST IF END OF HYPERTAPE-UNIT-NAME   61149500
+       LDC     ULPNT,4             NO                                   61149600
+       CAL     ,4                                                       61149700
+       LAS     USLASH              TEST IF NEXT CHAR A SLASH            61149800
+       TRA     USILGL              NO                                   61149900
+       TRA     *+2                 YES                                  61150000
+       TRA     USILGL              NO                                   61150100
+       CAL     USLASH+1                                                 61150200
+       ORS     USUNT               SET SLASH IN 4RTH CHAR POSITION      61150300
+       TSX     ULSC,4              GET NEXT ULSC-UNIT                   61150400
+       NZT     ULSTSA              ILLEGAL IF SLASH IMMEDIATELY         61150500
+       TRA     USILGL                   FOLLOWED BY A BLANK             61150600
+       LDC     ULPNT,4                                                  61150700
+       CAL     ,4                                                       61150800
+       ARS     12                                                       61150900
+       PDX     ,1                  TEST IF NEXT CHAR                    61151000
+       TXH     USILGL,1,1               IS 0 OR 1                       61151100
+       ARS     12                  YES                                  61151200
+       ORS     USUNT               PLACE IT IN 5TH CHAR POSITION        61151300
+       AXT     5,1                 LENGTH OF HYPERTAPE-UNIT-NAME        61151400
+       TSX     USTPTR,4            CONFIRM END OF HYPERTAPE-UNIT-NAME   61151500
+       TRA     USILGL              NO                                   61151600
+*                                                                       61151700
+* THIS SECTION PROCESSES A SYMBOLIC TAPE-UNIT-NAME FILE ASSIGNMENT      61151800
+*                                                                       61151900
+USTPSC RIR     077777              ZERO ADDR PORTION OF INDICATORS      61152000
+       STZ     USUNT                                                    61152100
+       STZ     USUNTL                                                   61152200
+       CAL*    USPNT               FIRST CHAR                           61152300
+       ARS     12                                                       61152400
+       PDX     ,4                       TO XR4                          61152500
+       TXL     USTP02,4,17-1       TEST IF CHAR IS 'A'                  61152600
+       TXH     USTP02,4,24              THRU 'H'                        61152700
+       SIR     000001              YES, SO SET REAL CHAN BIT 35         61152800
+       TRA     USTP06                                                   61152900
+USTP02 TXL     USTP04,4,33-1       TEST IF CHAR IS 'J'                  61153000
+       TXH     USTP04,4,40              THRU 'Q'                        61153100
+       SIR     000002              YES, SO SET INTERSYSTEM CHAN BIT 34  61153200
+       TRA     USTP06                                                   61153300
+USTP04 TXL     USTP06,4,50-1       TEST IF CHAR IS 'S'                  61153400
+       TXH     USTP06,4,57              THRU 'Z'                        61153500
+       SIR     000004              YES, SO SET SYMBOLIC CHAN BIT 33     61153600
+USTP06 LXD     ULBUFL,1            LNG OF CURR ULBUF UNIT               61153700
+       CLA     USTRA+1,1           SET BRANCH ROUTE DEPENDING           61153800
+       STA     USTPBR                   ON LNG OF ULSC-UNIT             61153900
+       RFT     000007              TEST IF FIRST CHAR WAS A CHAN NAME   61154000
+       TRA     USTP08              YES                                  61154100
+       TXL     USILGL,1,1          NO, IF MORE THAN 1 CHAR IN LNG       61154200
+       CAL*    USPNT                    ASSUME A TAPE MODEL TYPE        61154300
+       TRA     USTP20                   ASSIGNMENT, ELSE ILLEGAL        61154400
+USTP08 PXD     ,4                                                       61154500
+       ALS     12                                                       61154600
+       SLW     USUNT               SET CHAR IN FIRST BYTE POSITION      61154700
+       AXT     1,1                 LNG OF UNIT-NAME                     61154800
+       SXA     USUNTL,1                 SO FAR                          61154900
+       CAL*    USPNT               SET UP FOR REMAINDER OF SCAN         61155000
+       ANA     USMSKL              DELETE FIRST CHAR AND LEFT           61155100
+       ALS     6                        JUSTIFY REMAINDER OF UNIT       61155200
+       ORA     USRTBK                                                   61155300
+USTPBR TRA     **                  TO USTP00, USTP10, USTP20, OR USTP30 61155400
+USTP00 TSX     USTPTR,4            TEST IF END OF TAPE-UNIT-NAME        61155500
+       LDC     ULPNT,4             NO                                   61155600
+       CAL     ,4                                                       61155700
+       LAS     USLPAR              TEST IF NEXT CHAR A LEFT PAREN       61155800
+       TRA     USILGL              NO                                   61155900
+       TRA     *+2                 YES                                  61156000
+       TRA     USILGL              NO                                   61156100
+       CAL     USLPAR+1                                                 61156200
+       ORS     USUNT               SET PAREN IN BITS 6-11 OF USUNT      61156300
+       TSX     ULSC,4              GET NEXT ULSC-UNIT                   61156400
+       NZT     ULSTSA              ILLEGAL IF LEFT PAREN IMMEDIATELY    61156500
+       TRA     USILGL                   FOLLOWED BY A BLANK             61156600
+       LXD     ULBUFL,4                                                 61156700
+       TXH     USILGL,4,1          MUST BE A                            61156800
+       CAL     ULTYPB                   ONE CHAR                        61156900
+       ANA     USMSKI                   INTEGER                         61157000
+       TZE     USILGL              IS NOT                               61157100
+       LDC     ULPNT,4             PICK UP                              61157200
+       CAL     ,4                       INTEGER                         61157300
+       ARS     12                       AND SET                         61157400
+       ANA     USMSK5                   IT IN                           61157500
+       ORS     USUNT                    BITS 12-17 OF USUNT             61157600
+       TSX     ULSC,4              GET NEXT ULSC-UNIT                   61157700
+       NZT     ULSTSA              ILLEGAL IF INTEGER IMMEDIATELY       61157800
+       TRA     USILGL                   FOLLOWED BY A BLANK             61157900
+       LDC     ULPNT,4             NO, SO TEST IF A RIGHT PAREN         61158000
+       CAL     ,4                                                       61158100
+       LAS     USRPAR                                                   61158200
+       TRA     USILGL              NO                                   61158300
+       TRA     *+2                 YES                                  61158400
+       TRA     USILGL              NO                                   61158500
+       CAL     USRPAR+1                                                 61158600
+       ORS     USUNT               SET PAREN IN BITS 18-23 OF USUNT     61158700
+       AXT     4,1                 SET LNG OF UNIT-NAME                 61158800
+       SXA     USUNTL,1                 SO FAR                          61158900
+       TSX     USTPTR,4            TEST IF END OF TAPE-UNIT-NAME        61159000
+       LXD     ULBUFL,1            NEXT ULSC-UNIT LNG TO XR1            61159100
+       TXH     USILGL,1,4          ILLEGAL IF EXCEEDS 4 CHAR            61159200
+       LDC     ULPNT,4                                                  61159300
+       CAL     ,4                                                       61159400
+       TXL     USTP10,1,1          1 CHAR ALLWD...V, R                  61159500
+       TXL     USTP20,1,2          2 CHAR ALLWD...II, IV, VI, VR        61159600
+       TRA     USTP30              3 CHAR ALLWD...IIR, IVR, VIR         61159700
+*                                                                       61159800
+* FOLLOWING TESTS IF 1 CHAR(LEFT JUSTIFIED IN LACC) IS V, OR R          61159900
+*                                                                       61160000
+USTP10 TSX     USRLSE,4            TEST IF CHAR IS R                    61160100
+       TRA     *+3                 NO                                   61160200
+       AXT     1,1                 YES, SO SET CHAR LNG                 61160300
+       TRA     USTP90                                                   61160400
+       ARS     30                  IF CHAR IS V, REPLACE BY II          61160500
+       TSX     USTPMD,4                                                 61160600
+       TRA     USILGL              NO                                   61160700
+       TRA     USTP22                                                   61160800
+*                                                                       61160900
+* FOLLOWING TESTS IF 2 CHARS(LEFT JUSTIFIED IN LACC) ARE II, IV, VI, VR 61161000
+*                                                                       61161100
+USTP20 LAS     USVR                TEST IF VR                           61161200
+       TRA     *+2                                                      61161300
+       TRA     USTP25              YES                                  61161400
+       ARS     24                  NO, SO TEST IF II, IV, VI            61161500
+       TSX     USTPMD,4                                                 61161600
+       TRA     USILGL              NO                                   61161700
+USTP22 ALS     24                  YES                                  61161800
+       AXT     2,1                 SET CHAR LNG OF C(LACC)              61161900
+       TRA     USTP90                                                   61162000
+USTP25 LGR     30                  ISOLATE V, REPLACE BY II, AND CHECK  61162100
+       TRA     USTP31                   IF R IS ALLOWED IN UNIT-NAME    61162200
+*                                                                       61162300
+* FOLLOWING TESTS IF 3 CHARS(LEFT JUSTIFIED IN LACC) ARE IIR, IVR, VIR  61162400
+*                                                                       61162500
+USTP30 LGR     24                                                       61162600
+USTP31 TSX     USTPMD,4            CONFIRM MODEL TYPE                   61162700
+       TRA     USILGL              NO                                   61162800
+       XCL                         YES                                  61162900
+       TSX     USRLSE,4            TEST IF CHAR IS R                    61163000
+       TRA     USILGL              NO                                   61163100
+       XCL                         YES                                  61163200
+       LGL     24                  LEFT JUSTIFIED                       61163300
+       AXT     3,1                 SET CHAR LNG OF C(LACC)              61163400
+       TRA     USTP90                                                   61163500
+*                                                                       61163600
+USTP90 LDQ     SLBLNK                                                   61163700
+       LXA     USUNTL,4            CHAR LNG OF C(USUNT)                 61163800
+       TXL     USTP95,4,0          IF ZERO, NOTHING IS IN USUNT         61163900
+       SXD     USTP94,4                                                 61164000
+       XEC     USMVE+1,4           POSITION REMAINDER                   61164100
+       LGR     ,4                       OF UNIT-NAME                    61164200
+       ORS     USUNT                    FOR                             61164300
+       STQ     USUNT-1                  PACKING                         61164400
+USTP94 TXI     *+2,1,**            SET TOTAL CHAR LNG OF TAPE-UNIT-NAME 61164500
+USTP95 SLW     USUNT                                                    61164600
+       TSX     USTPTR,4            CONFIRM END OF TAPE-UNIT-NAME        61164700
+       TRA     USILGL              NO, SO ASSUME ILLEGAL ASSIGNMENT     61164800
+*                                                                       61164900
+* FOLLOWING TESTS IF THE C(LACC),RIGHT JUSTIFIED WITH LEADING ZEROES,   61165000
+* IS A TAPE MODEL TYPE II,  IV, V OR VI. IF V, C(LACC) CHANGED TO II    61165100
+*                                       IF VI, C(LACC) CHANGED TO IV    61165200
+* IF A TAPE MODEL TYPE, RETURN IS 2,4 ELSE RETURN IS 1,4                61165300
+*                                                                       61165400
+USTPMD SXA     USTPM5,4                                                 61165500
+       AXT     4,4                                                      61165600
+       LAS     USTMDL+4,4          TEST IF A VALID TAPE MODEL TYPE      61165700
+       TRA     *+2                                                      61165800
+       TRA     *+3                 YES                                  61165900
+       TIX     *-3,4,1                                                  61166000
+       TRA     USTPM7              NO                                   61166100
+       RFT     000001              MODEL TYPE NOT ALLOWED WITH          61166200
+       TRA     USILGL                   REAL CHANNEL ASSIGNMENT         61166300
+       TXH     USTPM5,4,2          TEST IF V OR VI                      61166400
+       CAL     USTMDL+2,4          REPLACE V BY II OR VI BY IV IN LACC  61166500
+       TXI     *+1,4,-1                                                 61166600
+       SXA     USLST7+1,4          SET UP WARNING                       61166700
+       SXA     USLST7+3,4               MESSAGE                         61166800
+       LXA     SLLOC,4                                                  61166900
+       SXA     USLST7+2,4                                               61167000
+       TSX     ERPR,4              NOTE...MODEL TYPE V(OR VI) CHANGED BY61167100
+       PZE     USE107,1,USLST7          COMPILER TO II(OR IV)...        61167200
+USTPM5 AXT     **,4                                                     61167300
+       TRA     2,4                                                      61167400
+USTPM7 LXA     USTPM5,4                                                 61167500
+       TRA     1,4                                                      61167600
+*                                                                       61167700
+* FOLLOWING TESTS IF LEFTMOST CHAR IN LACC IS 'R'. REMAINING CHAR ARE   61167800
+* ASSUMED TO BE ZEROES OR BLANKS.                                       61167900
+*                                                                       61168000
+USRLSE ANA     USMSK7              ISOLATE LEFTMOST CHARACTER           61168100
+       LAS     USR                 TEST IF 'R'                          61168200
+       TRA     1,4                 NO                                   61168300
+       TRA     *+2                 YES                                  61168400
+       TRA     1,4                 NO                                   61168500
+       RFT     000002              R ALLOWED IN UNIT NAME ONLY IF AN    61168600
+       TRA     2,4                      INTERSYSTEM CHAN SPECIFIED      61168700
+       TRA     USILGL                                                   61168800
+*                                                                       61168900
+* FOLLOWING TESTS IF END OF HYPER OR SYMBOLIC TAPE-UNIT NAME REACHED    61169000
+*                                                                       61169100
+USTPTR SXA     USTPTX,4                                                 61169200
+       TSX     ULSC,4                                                   61169300
+       NZT     ULSTSA              IF CURRENT ULSC-UNIT FOLLOWED BY     61169400
+       TRA     USTPCK                   A BLANK...ASSUME UNIT-NAME END  61169500
+       CAL     ULTYPB              IF NEXT ULSC-UNIT NOT A BLANK,       61169600
+       ANA     USMSKT                   BUT IS A PERIOD OR COMMA,       61169700
+       TNZ     USTPCK                   ASSUME UNIT-NAME END            61169800
+USTPTX AXT     **,4                NO-SO RETURN                         61169900
+       TRA     1,4                                                      61170000
+USTPCK TXL     USTPPK,2,0          TEST IF PRIMARY UNIT IS TAPE         61170100
+       LFT     000020                   MEDIA ONLY                      61170200
+       TRA     USERR1              NO, UNITS CONFLICT                   61170300
+       NZT     USHYFL              IF SECONDARY UNIT IS HYPERTAPE,      61170400
+       TRA     USTPPK                   THEN PRIMARY UNIT MUST BE       61170500
+       LAC     SLLOC,4                  HYPERTAPE ALSO.                 61170600
+       NZT     1,4                                                      61170700
+       TRA     USERR1              NO, UNITS CONFLICT                   61170800
+       TRA     USTPPK                                                   61170900
+*                                                                       61171000
+* TAPE-UNIT-NAME PACK ROUTINE(ASSUMES BCD UNIT IN USUNT AND LNG IN XR1) 61171100
+*                                                                       61171200
+USTPPK SXA     USUNTL,1            SET UNIT-NAME LNG,                   61171300
+       TXH     USTPP2,1,5               AND                             61171400
+       CAL     USTBLM,1                 APPEND                          61171500
+       ORS     USUNT                    BLANKS                          61171600
+       TRA     USTPP5                   TO                              61171700
+USTPP2 TXI     *+1,1,-6                 UNIT                            61171800
+       CAL     USTBLM,1                 NAME                            61171900
+       ORS     USUNT-1                                                  61172000
+USTPP5 TSX     USPACK,4            PACK BCD UNIT-NAME IN SLNTRY BLOCK   61172100
+       SIL     000010              SET TAPE MEDIUM BIT                  61172200
+       NZT     USHYFL              IF TAPE-UNIT IS HYPERTAPE,           61172300
+       TRA     USCYCL                   THEN SET                        61172400
+       LAC     SLLOC,4                  'HYPERTAPE' BIT                 61172500
+       CAL     USTAG1                   IN SECOND WD                    61172600
+       STT     1,4                      OF TBIDIC ENTRY                 61172700
+       TRA     USCYCL                                                   61172800
+* THIS SECTION PROCESSES THE 'NONE' FILE ASSIGNMENT                     61172900
+*                                                                       61173000
+USNOSC TXH     USILGL,2,0                                               61173100
+       SIL     000010              SET TAPE BIT                         61173200
+       AXT     1,2                                                      61173300
+       CAL     USNONE              SET UNIT 'NONE'                      61173400
+       SLW     USUNT                    IN C(USUNT)                     61173500
+       AXT     4,1                 SET UNIT LNG FOR CDPACK              61173600
+       SXA     USUNTL,1                                                 61173700
+       TSX     USPACK,4            PACK UNIT 'NONE' IN SLNTRY BLOCK     61173800
+       TRA     USEXTC              EXIT                                 61173900
+*                                                                       61174000
+* THIS ROUTINE PACKS THE BCD UNIT-NAME IN USUNT INTO THE UNIT ASSIGNMENT61174100
+* SUBFIELD AREA OF FLFILE CODE(1) ENTRY (SLNTRY BLOCK). THE LNG OF THE  61174200
+* BCD  UNIT IN CHAR IS IN ADDR OF USUNTL.                               61174300
+*                   CALL IS TSX USPACK,4                                61174400
+*                              (RETURN)                                 61174500
+*                                                                       61174600
+USPACK SXA     USPKXR,4                                                 61174700
+       SXA     USPKXR+1,1                                               61174800
+       SXA     USPKXR+2,2                                               61174900
+       LXA     SLDISP,1            PICK UP SLNTRY DISP OF NEXT          61175000
+       LXA     SLDISP,2                 WORD TO BE FILLED               61175100
+       LXA     USUNTL,4            LENGTH OF BCD UNIT-NAME TO BE PACKED 61175200
+       TXI     *+1,4,1             BUMP FOR COMMA FIELD                 61175300
+       CAL     USUNT               UNIT-NAME TO LACC                    61175400
+       LDQ     USUNT-1                  AND MQ                          61175500
+       LGR     6                                                        61175600
+       ORA     SLCOM               PRECEDE UNIT-MAME WITH COMMA         61175700
+       SLW     SLNTRY-1,1               AND SET IN SLNTRY BLOCK         61175800
+       TXL     *+4,4,6             TEST IF LNG EXCEEDS 6 CHAR           61175900
+       STQ     SLNTRY-2,1          YES, SO PACK REMAINDER OF UNIT-NAME  61176000
+       AXT     1,4                                                      61176100
+       TXI     *+1,2,1                                                  61176200
+       PXA     ,4                                                       61176300
+       STA     SLNTRY,1            SET ADDR OF UNIT SUBFLD CNTL WD      61176400
+       TXI     *+1,2,1             XR2 NOW HAS DISP TO LAST WD OF UNIT  61176500
+       PXD     ,2                                                       61176600
+       STD     SLNTRY,1            SET DECR OF UNIT SUBFLD CNTL WD      61176700
+       TXI     *+1,2,1             SET SLNTRY DISP OF NEXT              61176800
+       SXA     SLDISP,2                 WORD TO BE FILLED               61176900
+       LXD     SLNTRY,4            BUMP SUBFIELD                        61177000
+       TXI     *+1,4,1                  ITEM CTR                        61177100
+       SXD     SLNTRY,4                                                 61177200
+USPKXR AXT     **,4                                                     61177300
+       AXT     **,1                                                     61177400
+       AXT     **,2                                                     61177500
+       TRA     1,4                                                      61177600
+* THIS SECTION CYCLES TO NEXT UNIT-NAME FILE ASSIGNMENT                 61177700
+* (ASS UMES LAST BCD UNIT(OR LAST PART OF) IS IN CURRENT ULACC)         61177800
+*                                                                       61177900
+USCYCL TXI     *+1,2,1             INDICATE A UNIT-NAME PROCESSED       61178000
+       TXH     USMLSC,2,1          IF 2ND UNIT,ROUTE TO MULTI-REEL SCAN 61178100
+       STZ     USCYFL                                                   61178200
+USCY05 CAL     ULTYPB              CYCLE                                61178300
+       ANA     USMSKC                   THRU                            61178400
+       TZE     *+2                      ANY                             61178500
+       TSX     ULSC,4                   VALID                           61178600
+       LDC     ULPNT,1                  SEPARATORS                      61178700
+       CAL     ,1                       AND                             61178800
+       LAS     USAND                    SET                             61178900
+       TRA     *+2                      NEXT                            61179000
+       TRA     *+3                      ULSC-UNIT                       61179100
+       NZT     USCYFL                   IN                              61179200
+       TRA     USCY10                   LOGICAL                         61179300
+       TSX     ULSC,4                   ACCUMULATOR                     61179400
+       TRA     USCY05                                                   61179500
+USCY10 LAS     USFOR               TEST IF WD 'FOR'                     61179600
+       TRA     *+2                                                      61179700
+       TRA     USCYFR              YES,SO ASSUME MULTIPLE REEL          61179800
+       LAS     USMUL1              NO,SO TEST IF WD 'MULTIPLE'          61179900
+       TRA     USCYTR              NO                                   61180000
+       TRA     USCYML              YES, SO ASSUME MULTIPLE REEL         61180100
+       TRA     USCYTR              NO                                   61180200
+USCYFR TSX     ULSC,4                                                   61180300
+       TRA     USML13              SCAN REMAINDER OF 'MULTIPLE REEL'    61180400
+USCYML TSX     ULSC,4                                                   61180500
+       TRA     USML33              SCAN REMAINDER OF 'MULTIPLE REEL'    61180600
+*                                                                       61180700
+* FOLLOWING TESTS IF END OF CURRENT SELECT ENTRY REACHED.               61180800
+*                                                                       61180900
+USCYTR AXT     4,4                                                      61181000
+       LAS     USTBLE+1,4          TEST IF '.', 'SELECT', OR 'DATA'     61181100
+       TRA     *+2                                                      61181200
+       TRA     USEXTG              YES                                  61181300
+       TIX     *-3,4,1                                                  61181400
+       AXT     4,4                 TEST IF SECONDARY UNIT IS A          61181500
+       LAS     USTBLG+1,4               GENERAL HARDWARE CATAGORY       61181600
+       TRA     *+2                                                      61181700
+       TRA     USILGL              NOT PERMITTED FOR SECONDARY UNIT     61181800
+       TIX     *-3,4,1                                                  61181900
+       LXD     ULBUFL,4            NO, SO IF CHAR LNG GREATER THAN SIX  61182000
+       TXH     USEXTG,4,6               ASSUME END OF SELECT ENTRY      61182100
+       CAL     ULTYPB              NO, SO TEST IF                       61182200
+       ANA     USMSKZ                   $CBEND OR EOF                   61182300
+       TZE     USSCNX              NO, SO ASSUME A FILE ASSIGN. UNT-NAME61182400
+       TRA     USEXTG              YES                                  61182500
+*                                                                       61182600
+* THIS SECTION SCANS THE MULTIPLE REEL OPTION                           61182700
+*                                                                       61182800
+USMLSC AXT     *+2,4                                                    61182900
+       TRA     GRIN                                                     61183000
+       MZE     FOR                 'FOR'                                61183100
+       TXI     *+2,,USML20                                              61183200
+       TXI     GRKEEP,,USML20                                           61183300
+USML13 STL     USMLRL                                                   61183400
+       AXT     USML20,4                                                 61183500
+       TRA     GRIN                                                     61183600
+USML20 MZE     MULTIP              'MULTIPLE'                           61183700
+       TXI     *+2,,USML40                                              61183800
+       TXI     USML50,,0                                                61183900
+USML33 STL     USMLRL                                                   61184000
+       AXT     USML40,4                                                 61184100
+       TRA     GRIN                                                     61184200
+USML40 MZE     REEL                'REEL'                               61184300
+       TXI     USML60              MULTIPLE REEL OPTION SPECIFIED       61184400
+       TXI     *+1                 MULTIPLE REEL NOT SPECIFIED          61184500
+USML50 STL     USMODE              FLAG TO INDICATE SCANNING IN GLSC    61184600
+       LXA     USTPNO,1            TEST IF MULTIPLE TAPE                61184700
+       TXH     USML55,1,1               UNIT SPECIFIED                  61184800
+       ZET     USMLTP                   IN GENERAL HARDWARE             61184900
+       TRA     USML55                   UNIT ASSIGNMENT                 61185000
+       TXH     USML55,2,1          NO-SO TEST IF TWO UNIT-NAMES         61185100
+       NZT     USMLRL              NO-SO TEST IF PROBABLE MULT-REEL OPTN61185200
+       TRA     USEXIT              NO                                   61185300
+       TRA     USERR5              YES                                  61185400
+USML55 NZT     USMLRL              TEST IF PROBABLE MULT-REEL OPTION    61185500
+       TRA     USERR3              NO                                   61185600
+       TRA     USERR5              YES                                  61185700
+USML60 STL     USREEL              SET MULTIPLE REEL FLAG               61185800
+       TRA     USEXTG                                                   61185900
+*                                                                       61186000
+* THIS SECTION PUTS OUT USSCAN ERROR MESSAGES                           61186100
+*                                                                       61186200
+USERR1 TSX     ERPR,4              ...PRIMARY AND SECONDARY UNITS       61186300
+       PZE     USE101,3,EVLSTF          CONFLICT. SECONDARY IGNORED...  61186400
+       TRA     USEXTE                                                   61186500
+USILGL CLA     SLLOC                                                    61186600
+       STA     USLST2+2                                                 61186700
+       TXH     USILL2,2,0          HAVE ANY UNIT-NAMES BEEN PROCESSED   61186800
+       SIL     000010              NO, SO ASSUME '1 TAPE-UNIT'          61186900
+       TRA     USILL1                                                   61187000
+USILL2 AXT     1,2                 YES, SO IGNORE SECONDARY UNIT        61187100
+       AXT     7,4                                                      61187200
+       TRA     *+3                                                      61187300
+USILL1 AXT     0,2                 '1 TAPE-UNIT' ASSUMED                61187400
+       AXT     0,4                                                      61187500
+       CAL     EVLSTU,2                                                 61187600
+       SLW     USLST2+1                                                 61187700
+       SXA     USLST2+3,4                                               61187800
+USERR2 TSX     ERPR,4              ...ILLEGAL OR UNIDENTIFIABLE         61187900
+       PZE     USE102,3,USLST2           UNIT ASSIGNMENT...             61188000
+       TRA     USEXTE                                                   61188100
+USERR3 TSX     ERPR,4              ...MULTIPLE REEL OPTION OMITTED      61188200
+       PZE     USE103,1,EVLSTF           WHERE REQUIRED AND IS ASSUMED..61188300
+       TRA     USEXTR                                                   61188400
+USERR5 TSX     EVJUNK,4                                                 61188500
+       TSX     ERPR,4              ...WORD UNIDENTIFIABLE IN PROBABLE   61188600
+       PZE     USE105,3,EVLST           MULT REEL OPTION. MULT REELS    61188700
+       TRA     USEXTR                   ASSUMED...                      61188800
+USERR6 TSX     ERPR,4              ...CARD UNIT NOT ALLOWED AS          61188900
+       PZE     USE106,3,EVLSTF          SECONDARY UNIT ASSIGNMENT...    61189000
+       TRA     USEXTE                                                   61189100
+USEXTR STL     USREEL              SET MULTIPLE REEL FLAG               61189200
+       TRA     USEXTE                                                   61189300
+*                                                                       61189400
+USEXTC TSX     ULSC,4              CYCLE AND EXIT NORMAL                61189500
+       TRA     USEXTG                                                   61189600
+USEXTE STL     CWSKIP              ERROR EXIT                           61189700
+USEXTN NZT     USMODE              TEST IF LAST GROUP INTERPRETED BY GLS61189800
+USEXTG STL     CWGTKP              NO, SO NECC TO 'GET' NEXT GROUP      61189900
+USEXIT CAL     USMSKR                                                   61190000
+       ZET     USREEL              TEST FOR MULTIPLE REELS              61190100
+       ORS     SLNTRY-1            YES, SO SET BIT                      61190200
+       PIA                                                              61190300
+       STD*    SLLOC               PREFIX AND ADDR OF TBIDIC 15-WD      61190400
+       STT*    SLLOC                    HAVE NOT BEEN DISTURBED         61190500
+USXR   AXT     **,4                                                     61190600
+       TRA     1,4                 EXIT                                 61190700
+       EJECT                                                            61190800
+* THIS ROUTINE PROCESSES THE I-O-CONTROL PARAGRAPH RERUN ENTRIES.       61190900
+*                                                                       61191000
+CKCNTL STL     CWTERM              SCAN FOR 1ST. RERUN OR APPLY      $5$61191100
+       TRA     CKCYCL                                                   61191200
+CKCYGT STL     CWGTKP              SET CELL TO 'GET' NEXT GROUP         61191300
+CKSKIP STL     CWSKIP              SET ENTRY SKIP MODE SWITCH           61191400
+CKCYCL SXD     GENRFN,0           CLEAR 'ALL' SWITCH                 $5$61191500
+       TSX     CWCYCL,4           CYCLE TO NEXT 'RERUN' OR 'APPLY'   $5$61191540
+       TRA     EVRTRN              PARA TERM FOUND, SO GO TO ENV SUPV   61191600
+       LXA     GLCWN,4             RERUN OR APPLY...                 $5$61191650
+       SXD     GENRFN,4           SET 'ALL' SWITCH                   $5$61191660
+       TXH     APPL01,4,RERUN     APPLY ENCOUNTERED                  $5$61191670
+       STZ     CKUNIT              INITIALIZE                           61191700
+       STZ     CKWDFL                   FOR RERUN CLAUSE                61191800
+       AXT     *+2,4                                                    61191900
+       TRA     GRIN                                                     61192000
+CKRR15 MZE     ON                  'ON'                                 61192100
+       TXI     GRGET,,*+2                                               61192200
+       TXI     GRKEEP,,CKRR20      GO TEST FOR ALTERNATE OPTION         61192300
+       MZE     CHECKP              'CHECKPOINT-UNIT'                    61192400
+       TXI     *+2,,CKRR20                                              61192500
+       TXI     CKERR1                                                   61192600
+       STL     CKUNIT              CHECKPOINT UNIT OPTION SPECIFIED     61192700
+       TRA     GRGET                                                    61192800
+CKRR20 MZE     EVERY               'EVERY'                              61192900
+       TXI     GRGET,,*+2                                               61193000
+       TXI     GRKEEP,,*+1                                              61193100
+       MZE     BEGINN              'BEGINNING'                          61193200
+       TXI     GRGET,,CKRR25                                            61193300
+       TXI     GRKEEP,,*+1                                              61193400
+       MZE     END                 'END'                                61193500
+       TXI     *+2,,CKRR25                                              61193600
+       TXI     GRKEEP,,CKRR25                                           61193700
+       STL     CKWDFL              SET FLAG FOR WARNING                 61193800
+       TRA     GRGET                                                    61193900
+CKRR25 MZE     OF                  'OF'                                 61194000
+       TXI     GRGET,,*+2                                               61194100
+       TXI     GRKEEP,,*+1                                              61194200
+       MZE     REEL                'REEL'                               61194300
+       TXI     *+2,,CKRR30                                              61194400
+       TXI     CKERR1                                                   61194500
+       ZET     CKWDFL              TEST IF NON-STANDARD COBOL WORDING   61194600
+       TRA     CKERR3              YES, SO GIVE WARNING                 61194700
+       TRA     GRGET               NO, SO CONTINUE                      61194800
+CKRR30 MZE     OF                  'OF'                                 61194900
+       TXI     GRGET,,*+2                                               61195000
+       TXI     GRKEEP,,*+1                                              61195100
+       PZE     DN                                                       61195200
+       TXI     CKRR50,,CKRR21                                        $5$61195300
+       TXI     CKRR40,,APPLAL                                        $5$61195310
+CKRR40 TSX     APPLSC,2            LOOK FOR GENERIC FILE NAMES       $5$61195330
+*              UPON RETURN, C(AC)  = 1 IF INPUT FOUND                $5$61195340
+*                                  = 4 IF OUTPUT FOUND               $5$61195350
+*                                  = 5 IF ALL FOUND                  $5$61195360
+       ALS     4                   POSITION FOR APPLSW USE.          $5$61195370
+       NZT     CKUNIT                                                $5$61195380
+       TRA     APPLF2              THIS FILE                         $5$61195390
+       TRA     APPLF3              CHKPNT UNIT, USE APPLY CODING     $5$61195400
+*                                       * = 16 INPUT  RERUN  CHKPT   $5$61195430
+*                                       * = 32 INPUT  RERUN  THIS    $5$61195440
+*                                       * = 64 OUTPUT RERUN  CHKPT   $5$61195450
+*                                       * =128 OUTPUT RERUN  THIS    $5$61195460
+*                                       * = 80 ALL    RERUN  CHKPT   $5$61195470
+*                                       * =160 ALL    RERUN  THIS    $5$61195480
+*                                         OR LOGICAL SUMS THEREOF    $5$61195490
+CKRR50 LAC     GLPNT,4             TEST IF DATA-NAME IS              $5$61195500
+       LDI     0,4                      A SELECT FILENAME               61195600
+       IIL     150000                                                   61195700
+       LFT     770000                                                   61195800
+       TRA     CKERR2              NO                                   61195900
+       CAL     0,4                                                      61196000
+       ANA     EVMSKF              ISOLATE FN FIELD AND SET IT IN CKNTRY61196100
+       ARS     24                                                       61196200
+       STA     CKNTRY                                                   61196300
+       AXT     0,1                                                      61196400
+       NZT     CKUNIT              TEST IF STANDARD CKPNT UNIT SPEC     61196500
+       TXI     *+1,1,1             NO                                   61196600
+       CLA     CKMSKT,1            YES                                  61196700
+       STT     CKNTRY                                                   61196800
+       TSX     PUTE2,4             ENTER CODE(3) ENTRY INTO FLFILE      61196900
+       PZE     CKNTRY+1,,1                                              61197000
+       TRA     GRGET               LOOK FOR ANOTHER FILE-NAME           61197100
+CKRR21 PZE     DN                                                       61197200
+       TXI     CKRR50,,CKRR21                                        $5$61197300
+       TXI     CKCYCL                                                   61197400
+CKERR1 TSX     EVJUNK,4                                                 61197500
+       TSX     ERPR,4              ...' ' IS STRUCTURALLY INCORRECT.    61197600
+       PZE     CKE101,3,EVLST           RERUN CLAUSE IGNORED...         61197700
+       TRA     CKSKIP                                                   61197800
+CKERR2 TSX     EVJUNK,4                                                 61197900
+       TSX     ERPR,4              ...' ' IS NOT A FILE-NAME.           61198000
+       PZE     CKE102,3,EVLST           RERUN CLAUSE IGNORED...         61198100
+       TRA     CKSKIP                                                   61198200
+CKERR3 TSX     ERPR,4              ...CW 'EVERY BEGINNING OF REEL'      61198300
+       PZE     CKE103,1                 PREFERRED IN RERUN CLAUSE...    61198400
+       TRA     GRGET               CONTINUE                             61198500
+APPL01 STZ     APSEQ               INITIALIZE FOR APPLY CLAUSE       $5$61198512
+       STZ     APCSUM                                                $5$61198514
+       AXT     *+3,4                                                 $5$61198516
+       SXD     GENRFN,4            SET 'ALL' LIT SUP SW.             $5$61198517
+       TRA     GRIN                                                  $5$61198518
+       MZE     SEQCH               SEQUENCE-CHECK SPECIFIED          $5$61198520
+       TXI     *+2,,APPL02                                           $5$61198522
+       TXI     GRKEEP,,APPL03                                        $5$61198524
+       STL     APSEQ               SET SEQCH SW.                     $5$61198526
+       TRA     GRGET                                                 $5$61198528
+APPL03 MZE     CHKSM               CHECK-SUM SPECIFIED...            $5$61198530
+       TXI     *+2,,APPL02                                           $5$61198532
+       TXI     CKERR1              IMPROPER WORD FOLLOWS APPLY       $5$61198534
+       STL     APCSUM              SEC CHKSUM SW.                    $5$61198536
+       TRA     GRGET                                                 $5$61198538
+APPL02 MZE     ON                  'ON' IS REQUIRED                  $5$61198540
+       TXI     GRGET,,APPL04                                         $5$61198542
+       TXI     CKERR1                                                $5$61198544
+APPL04 PZE     DN                  DATA NAME...                      $5$61198546
+       TXI     APPL05,,APPL06      YES                               $5$61198548
+       TXI     *+1,,APPLAL                                           $5$61198550
+       AXC     APPLF1,2            SIMULATE TSX APPLSC,2             $5$61198552
+APPLSC AXT     5,4            ASSUME ALL   FILES, PENDING CHECKS     $5$61198555
+       TRA     GRKEEP                                                $5$61198560
+APPLAL MZE     ALL            ALL FILES OPTION CHECK                 $5$61198565
+       TXI     *+2,,APPLFL        'ALL' FOUND                        $5$61198570
+       TXI     *+3,,APPLIN        'ALL' NOT FOUND                    $5$61198571
+       SXD     GENRFN,0     CLEAR SW TO ALLOW 'ALL'                  $5$61198572
+       TRA     GRGET              CHECK 'FILES'                      $5$61198573
+       TRA     GRKEEP             CHECK 'INPUT'                      $5$61198575
+APPLIN MZE     INPUT              'INPUT FILES' OPTION CHECK         $5$61198580
+       TXI     *+2,,APPLFL                                           $5$61198585
+       TXI     GRKEEP,,*+2                                           $5$61198590
+       TXI     GRGET,4,-4     DESIGNATE INPUT, C(XR4)=1              $5$61198600
+       MZE     OUTPUT         OUTPUT FILES OPTION CHECK              $5$61198605
+       TXI     *+2,,APPLFL                                           $5$61198610
+       TXI     CKERR2         NOT A LEGAL OPTION                     $5$61198615
+       TXI     GRGET,4,-1     DESIGNATE OUTPUT C(XR4)=4              $5$61198620
+APPLFL MZE     FILES                    *FINAL C(APPLSW) IN CZ...    $5$61198625
+       TXI     *+2            LEGAL     *  =1 INPUT  SEQCH           $5$61198630
+       TXI     CKERR1                   *  =2 INPUT  CHKSM           $5$61198635
+       PXA     0,4                                                   $5$61198640
+       STL     CWGTKP                                                $5$61198642
+APPLF1 TRA     1,2                      *  =5 ALL    SEQCH           $5$61198645
+       ZET     APCSUM                   *  =4 OUTPUT SEQCH           $5$61198650
+APPLF2 ALS     1              CHKSUM    *  =8 OUTPUT CHKSM           $5$61198655
+APPLF3 PAI                              * =10 ALL    CHKSM           $5$61198660
+       ANA     GENRFN              GENERIC FN HOLDER                 $5$61198665
+       TZE     *+3                                                   $5$61198670
+       TSX     ERPR,4                                                $5$61198675
+       PZE     E1E201,1       REDUNDANT APPLY SPEC                   $5$61198680
+       OSI     GENRFN              SET BITS IN                       $5$61198685
+       STI     GENRFN                GENERIC FN HOLDER               $5$61198687
+       TRA     CKCYCL         GO TO NEXT STATEMENT                   $5$61198690
+APPL05 LAC     GLPNT,4             ONLY FN LEGAL                     $5$61198700
+       LDI     0,4                                                   $5$61198705
+       IIL     150000              15 WORD...                        $5$61198710
+       LFT     770000                                                $5$61198715
+       TRA     CKERR2              NOT FILE-NAME                     $5$61198720
+       CAL     0,4                                                   $5$61198725
+       ANA     EVMSKF              MASK TO FN FIELD                  $5$61198730
+       ARS     24                                                    $5$61198735
+       PAI                         DEVELOP FLFILE ENTRY              $5$61198740
+       ZET     APSEQ               MUST BE ONE OF THESE TWO          $5$61198745
+       SIR     500000              T = 5 IF SEQ CH                   $5$61198750
+       ZET     APCSUM                                                $5$61198755
+       SIR     600000              T = 6 IF CHKSUM, 7 IF BOTH        $5$61198760
+       SIL     300000              PREFIX SETTING                    $5$61198765
+       STI     CKNTRY                                                $5$61198770
+       TSX     PUTE2,4                                               $5$61198775
+       PZE     CKNTRY+1,,1                                           $5$61198780
+       TRA     GRGET                                                 $5$61198785
+APPL06 PZE     DN                                                    $5$61198790
+       TXI     APPL05,,APPL06                                        $5$61198792
+       TXI     CKCYCL                                                $5$61198794
+APSEQ  PZE     **                  APPLY SEQ-CH SW.                  $5$61198796
+APCSUM PZE     **                  APPLY CHECK-SUM SW.               $5$61198797
+* THIS ROUTINE DETERMINES IF THE LAST NAME ENTERED IN TBIDIC         $5$61198799
+* HAD BEEN PREVIOUSLY DEFINED.                                          61198800
+*                  CALL IS                                              61198900
+*                           TSX EIDFCK,4                                61199000
+*                           (RETURN-1)    IF NAME IS NON-UNIQUE         61199100
+*                           (RETURN-2)    IF NAME IS UNIQUE             61199200
+*                                                                       61199300
+* WHEN RETURN-1 IS MADE...                                              61199400
+*  IF THERE EXISTS IN TBIDIC A PREVIOUS ENTRY FOR THE NAME              61199500
+*  WITH THE SAME PREFIX CODE AS THE PREFIX CODE OF THE LAST TBIDIC      61199600
+*  ENTRY THE CELL 'EIRDNT' IS SET NON-ZERO.                             61199700
+*                                                                       61199800
+*  IF THERE EXISTS IN TBIDIC A PREVIOUS ENTRY FOR THE NAME              61199900
+*  WITH THE A DIFFERENT PREFIX CODE THAN THE PREFIX CODE OF THE LAST    61200000
+*  TBIDIC ENTRY THE CELL 'EIUNQE' IS SET NON-ZERO.                      61200100
+*                                                                       61200200
+*  (THERE MAY BE MORE THAN ONE PREVIOUS ENTRY FOR THE NAME. IN          61200300
+*  SUCH CASES IT IS POSSIBLE THAT BOTH CELLS MAY BE SET NON-ZERO.       61200400
+*                                                                       61200500
+EIDFCK SXA     EIDFX,4             SAVE                                 61200600
+       SXA     EIDFX+1,1                REGISTERS                       61200700
+       SXA     EIDFX+2,2                                                61200800
+       STI     EIDFIN                                                   61200900
+       STZ     EIRDNT              INITIALIZE                           61201000
+       STZ     EIUNQE                                                   61201100
+       LXD     TBIDIC,1            TBEDIC DISP OF DATA-NAME ENTRY       61201200
+       LDI*    TBEDIC              TEST IF FIRST DICT DEF               61201300
+       LNT     770000                                                   61201400
+       TRA     EIDFEX              YES(BCD NAME IN TBEDIC ENTRY)        61201500
+       PIA                                                              61201600
+       ALS     3                                                        61201700
+       STD     *+1                                                      61201800
+       TXL     EIDFEX,1,**         YES(BCD NAME IN ASSOC TBEDIX ENTRY)  61201900
+       XCA                         NO, SO SEARCH FOR REPEATED ENTRIES   61202000
+       CAL*    TBIDIC                                                   61202100
+       ANA     EIMSKC              ISOLATE CURRENT                      61202200
+       ARS     18                       TBIDIC ENTRY CODE               61202300
+       STT     EIDF10                                                   61202400
+       STA     EIDF10                                                   61202500
+       XCA                                                              61202600
+EIDFCY PDX     ,2                  SET TBEDIC DISP OF NEXT ENTRY IN     61202700
+       PDX     ,1                       TBEDIC CHAIN TO XR1 AND XR2     61202800
+       TSX     TBIDIC-1,4                                               61202900
+       LDI     ,1                  TEST CODE OF ASSOC TBIDIC ENTRY      61203000
+EIDF10 IIL     **                       AGAINST CURRENT DEF ENTRY CODE  61203100
+       LFT     770000                                                   61203200
+       TRA     EIDF20              NO,NOT SAME                          61203300
+       STL     EIRDNT              YES,REDUNTANT ENTRY                  61203400
+EIDF15 PXA     ,2                                                       61203500
+       PAX     ,1                                                       61203600
+       CLA*    TBEDIC              BRING IN NEXT TBEDIC ENTRY           61203700
+       ALS     3                   TEST TO SEE IF FIRST OCCURANCE OF    61203800
+       STD     *+1                      NAME DEF REACHED IN TBEDIC CHAIN61203900
+       TXH     EIDFCY,1,**         IF HIGH,NO. CONTINUE CYCLING FOR FRST61204000
+EIDFX  AXT     **,4                YES                                  61204100
+       AXT     **,1                                                     61204200
+       AXT     **,2                                                     61204300
+       LDI     EIDFIN                                                   61204400
+       TRA     1,4                                                      61204500
+EIDF20 STL     EIUNQE              SET FLAG TO INDICATE NON-UNIQENESS   61204600
+       TRA     EIDF15              GO TEST IF FIRST OCURRANCE           61204700
+EIDFEX LXA     EIDFX+1,1                                                61204800
+       LXA     EIDFX,4                                                  61204900
+       LDI     EIDFIN                                                   61205000
+       TRA     2,4                 NORMAL RETURN                        61205100
+EIDFIN BSS     1                                                        61205200
+       EJECT                                                            61205300
+*                                                                       61205400
+EVCOMM PZE                         BASIC COMMUNICATION CELL             61205500
+EVSECT PZE                         SECTION TYPE CELL                    61205600
+EVGTKP PZE                         'GET' OR 'KEEP' SWITCH               61205700
+EVPRD  PZE                         PERIOD SWITCH                        61205800
+*                                                                       61205900
+CWGTKP PZE                         CWCYCL ROUTINE 'GET OR KEEP' SWITCH  61206000
+CWTERM PZE                         TERMINATOR SWITCH                    61206100
+CWSKIP PZE                         ENTRY SKIP MODE SWITCH               61206200
+CWEXSW PZE                         CWCYCL EXIT SWITCH                   61206300
+*                                                                       61206400
+OBCPFL PZE                         OBJECT-COMPUTER FLAG                 61206500
+OB7094 PZE                         7094 OBJECT-COMPUTER FLAG            61206600
+*                                                                       61206700
+SPNLOC PZE                         HAS LOC OF LAST MNEMONIC TBIDIC DEF  61206800
+SPKYNO PZE                         HAS BIT SET IN KEY POSITION          61206900
+SPOOLD PZE                         HAS TBPOOL DISP OF LAST KEY ENTRY    61207000
+SPMNFL PZE                         MNEMONIC CLAUSE FLAG                 61207100
+SPFLAG PZE                         KEY SWITCH ENTRY STATUS CLAUSE FLAG  61207200
+SPONFF PZE                         NONZERO IF STATUS 'ON'- ZERO IF 'OFF'61207300
+SPKEYS PZE                         KEY SWITCH ENTRY HISTORY CELL        61207400
+*                                                                       61207500
+       BSS     11                  FLFILE CODE(1) BUFFER AREA           61207600
+SLNTRY PZE                                                              61207700
+       PON     ,,1                                                      61207800
+SLDISP PZE     **                  DISP OF NEXT AVAIL LOC IN SLNTRY     61207900
+SLRNAM PTW     **,,**              FLFILE CODE(2) ENTRY                 61208000
+SLINTZ PZE                         SELECT ENTRY INITIALIZATION FLAG     61208100
+SLLOC  PZE                         ADDR HAS TBIDIC LOC OF CURR SEL ENTRY61208200
+SLFLSM PZE                         ADDR HAS NO. OF TBIDIC 15-WD ENTRIES 61208300
+SLRNSM PZE                         ADDR HAS NO. OF RENAMED FILENAMES    61208400
+SLRNLK PZE                         TBRNAM CTRL WD TEMP LOC              61208500
+SLLNKA PZE                         ADDR HAS TBIDIC LOC OF RENAMING FILE 61208600
+SLLNKB PZE                         DECR HAS TBIDIC LOC OF RENAMED FILE  61208700
+SLLNKP PZE                                                              61208800
+SLTEMP PZE                                                              61208900
+*                                                                       61209000
+USPNT  PZE                         ADDR HAS PTR TO CURR ULSC UNIT       61209100
+USTPNO PZE                                                              61209200
+USMLTP PZE                                                              61209300
+       BSS     1                   CONTAINS BCD SYMBOLIC-UNIT-NAME(END) 61209400
+USUNT  PZE                         CONTAINS BCD SYMBOLIC-UNIT-NAME(BEG) 61209500
+USUNTL PZE                         ADDR HAS CHAR CNT OF UNIT-NAME ABOVE 61209600
+USCYFL PZE                         CYCLE FLAG                           61209700
+USHYFL PZE                         SET NON-ZERO IF UNIT IS HYPERTAPE    61209800
+USMLRL PZE                         SET NON ZERO IF PROBABLE REEL OPTION 61209900
+USREEL PZE                         SET NON ZERO IF REEL OPTION TO BE SET61210000
+USMODE PZE                         GLSC-ULSC SCAN SWITCH FLAG           61210100
+CKWDFL PZE                         RERUN CLAUSE WORDING FLAG            61210200
+CKUNIT PZE                         SET NON-ZERO IF STAND CKPNT UNT SPEC 61210300
+CKNTRY PTH                                                              61210400
+       PZE     ,3,                                                      61210500
+CKMSKT PZE     ,2,                                                      61210600
+*                                                                       61210700
+EIRDNT PZE                         REDUNDANT TBIDIC ENTRY FLAG          61210800
+EIUNQE PZE                         NON-UNIQUE TBIDIC ENTRY FLAG         61210900
+*                                                                       61211000
+EVMASK MTH     ,2,                                                      61211100
+EVMSK3 OCT     000000001000                                             61211200
+EVMSKF OCT     007700000000                                             61211300
+       PZE     ,1,                                                      61211400
+SPMSKT PZE     ,0,                                                      61211500
+SPMSKD OCT     007777000000                                             61211600
+SPMSKK MZE                                                              61211700
+SPS    BCI     1,S                                                      61211800
+SLFLLR BCI     1,FILLER                                                 61211900
+SLBLNK OCT     606060606060                                             61212000
+SLCOM  OCT     730000000000                                             61212100
+SLMSKE OCT     000077777777                                             61212200
+SLMSKF OCT     007700000000                                             61212300
+SLEN00 BCI     1,EN0000                                                 61212400
+USR    BCI     1,R00000                                                 61212500
+USSYS  BCI     1,SYS000                                                 61212600
+USLPAR BCI     1,(                                                      61212700
+       BCI     1,0(0000                                                 61212800
+USRPAR BCI     1,)                                                      61212900
+       BCI     1,000)00                                                 61213000
+USLASH BCI     1,/                                                      61213100
+       BCI     1,000/00                                                 61213200
+USTMDL BCI     1,0000II                                                 61213300
+       BCI     1,0000IV                                                 61213400
+       BCI     1,00000V                                                 61213500
+       BCI     1,0000VI                                                 61213600
+USVR   BCI     1,VR                                                     61213700
+USH    BCI     1,0H0000                                                 61213800
+USHYTP BCI     1,HYPERT                                                 61213900
+USTO   BCI     1,TO                                                     61214000
+USAND  BCI     1,AND                                                    61214100
+USFOR  BCI     1,FOR                                                    61214200
+USMUL1 BCI     1,MULTIP                                                 61214300
+USMUL2 BCI     1,LE                                                     61214400
+USNONE BCI     1,NONE                                                   61214500
+USASTK BCI     1,*                                                      61214600
+       BCI     1,TAPE-U                                                 61214700
+       BCI     1,CARD-R                                                 61214800
+       BCI     1,PRINTE                                                 61214900
+USTBLG BCI     1,CARD-P                                                 61215000
+       BCI     1,.                                                      61215100
+       BCI     1,SELECT                                                 61215200
+       BCI     1,DATA                                                   61215300
+USTBLE BCI     1,ID                                                     61215400
+       BCI     1,CK2                                                    61215500
+       BCI     1,CK1                                                    61215600
+       BCI     1,LB4                                                    61215700
+       BCI     1,LB3                                                    61215800
+       BCI     1,LB2                                                    61215900
+       BCI     1,LB1                                                    61216000
+       BCI     1,UT9                                                 $5$61216001
+       BCI     1,UT8                                                 $5$61216002
+       BCI     1,UT7                                                 $5$61216003
+       BCI     1,UT6                                                 $5$61216004
+       BCI     1,UT5                                                 $5$61216005
+       BCI     1,UT4                                                    61216100
+       BCI     1,UT3                                                    61216200
+       BCI     1,UT2                                                    61216300
+       BCI     1,UT1                                                    61216400
+       BCI     1,PP2                                                    61216500
+       BCI     1,OU2                                                    61216600
+       BCI     1,IN2                                                    61216700
+       BCI     1,PP1                                                    61216800
+       BCI     1,OU1                                                    61216900
+       BCI     1,IN1                                                    61217000
+       BCI     1,PCH                                                    61217100
+       BCI     1,PRT                                                    61217200
+USTBLA BCI     1,CRD               SYSTEM-UNIT-NAME TABLE               61217300
+       PZE                         SYSPP FLAG                           61217400
+       PZE                         SYSOU FLAG                           61217500
+USCDTP PZE                         SYSIN FLAG                           61217600
+USUTLB PZE                         SYSUT AND SYSLB UNITS FLAG           61217700
+       BCI     1,PU0000                                                 61217800
+       BCI     1,PR0000                                                 61217900
+USTBLB BCI     1,RD0000                                                 61218000
+USTAG4 PZE     ,4                                                       61218100
+USTAG2 PZE     ,2                                                       61218200
+USTAG1 PZE     ,1                                                       61218300
+       PZE     USTP30                                                   61218400
+       PZE     USTP20                                                   61218500
+       PZE     USTP10                                                   61218600
+USTRA  PZE     USTP00                                                   61218700
+       AXT     -36,4                                                    61218800
+       AXT     -30,4                                                    61218900
+       AXT     -24,4                                                    61219000
+       AXT     -18,4                                                    61219100
+       AXT     -12,4                                                    61219200
+USMVE  AXT     -6,4                                                     61219300
+USMSK2 OCT     777700000000                                             61219400
+USMSK1 OCT     777777000000                                             61219500
+USMSK4 OCT     000000007777                                             61219600
+USMSK5 OCT     000077000000                                             61219700
+USMSK6 OCT     007700000000                                             61219800
+USMSK7 OCT     770000000000                                             61219900
+USMSKL OCT     007777777777                                             61220000
+USMSKR OCT     400000000000        SLNTRY REEL BIT                      61220100
+USMSKC PZE     UCOM                ULTYPE COMMA BIT                     61220200
+USMSKT PZE     UCOM+UTER           ULTYPE COMMA+PERIOD BITS             61220300
+USMSKI PZE     UINT                ULTYPE INTEGER BIT                   61220400
+USMSKZ PZE     UEOF                ULTYPE $CBEND/EOF BIT                61220500
+USRTBK OCT     60                                                       61220600
+       OCT     6060                                                     61220700
+USMSKB OCT     606060                                                   61220800
+       OCT     60606060                                                 61220900
+       OCT     6060606060                                               61221000
+USTBLM OCT     606060606060                                             61221100
+EIFX1  PZE     1                                                        61221200
+EIMSKC OCT     770000000000                                             61221300
+*                                                                       61221400
+EVLST  MZE     **,,**                                                   61221500
+EVLSTF PZE     1                                                        61221600
+       PZE     **,2                                                     61221700
+EVLST1 PZE     2                                                        61221800
+       PZE     0,,4096+15                                               61221900
+       PZE     0,,4096+15                                               61222000
+EVLST4 PZE     1                                                        61222100
+       PZE     **,,4096+13                                              61222200
+EVLST5 PZE     1                                                        61222300
+       PZE     **,,4096+**                                              61222400
+EVLST6 PZE     2                                                        61222500
+       PZE     **,,4096+**                                              61222600
+       PZE     **,,4096+13                                              61222700
+EVLST8 MZE     SLNTRY-3,,3                                              61222800
+*                                                                       61222900
+       PZE     11,,4096+11                                              61223000
+       PZE     9,,4096+12                                               61223100
+       PZE     6,,4096+13                                               61223200
+       PZE     3,,4096+15                                               61223300
+EVLSTA PZE     0,,4096+15                                               61223400
+       PZE     2,,4096+10                                               61223500
+EVLSTB PZE     0,,4096+8                                                61223600
+       PZE     2,,4096+9                                                61223700
+EVLSTU PZE     0,,4096+7                                                61223800
+       AXT     3,4                                                      61223900
+EVPRM3 AXT     0,4                                                      61224000
+*                                                                       61224100
+OBLST1 PZE     1                                                        61224200
+       PZE     **,,4096+15                                              61224300
+OBLST2 PZE     1                                                        61224400
+       PZE     **,,4096+6                                               61224500
+SPLSTN PZE     1                                                        61224600
+       PZE     **,2                                                     61224700
+       PZE     ,3,                                                      61224800
+USLST2 PZE     3                                                        61224900
+       PZE     **,,4096+**                                              61225000
+       PZE     **,2                                                     61225100
+       PZE     **,,4096+41                                              61225200
+USLST7 PZE     3                                                        61225300
+       PZE     **,,4096+2                                               61225400
+       PZE     **,2                                                     61225500
+       PZE     **,,4096+3                                               61225600
+       SPACE   1                                                        61225700
+       LDIR                                                          $5$61225750
+*   THE AREA BETWEEN THE ABOVE CELL AND THE BEGINNING OF THE BUFFER     61225800
+*   AREA MAY BE USED AS PATCH AREA IN THIS PHASE. THE EXTENT OF THE     61225900
+*   PATCH AREA IS---                                                    61226000
+       SPACE   1                                                        61226100
+PATCHA EQU     COREND-BFAREA-1-*   PATCH AREA FOR THIS PHASE            61226200
+       SPACE   1                                                        61226300
+*   THE LAST CELL WHICH MAY BE USED AS PATCH  IS---                     61226400
+       SPACE   1                                                        61226500
+PATCHL EQU     COREND-BFAREA-1     LAST CELL WHICH MAY BE USE AS PATCH  61226600
+       END     BEGNE1              C1                                $5$61226700

@@ -1,0 +1,485 @@
+$DATE          120164                                                   60A00150
+$EXECUTE       IBJOB                                                    60A00200
+$IBJOB         NOGO                                                     60A00300
+$TITLE         7090/7094 COBOL COMPILER (IBCBC) 7090-CB-806 VERSION 5   60Z00000
+$IBMAP C000    450,ABSMOD,JOBSYM,()OK                                   60Z00100
+       SPACE   8                                                        60Z00200
+       PCC     ON                                                       60Z00300
+       DETAIL
+*      TITLE                                                         $5$60Z00400
+*      PCC     OFF                                                   $5$60Z00500
+       PMC     ON                                                    $5$60Z00600
+       TTL     SEGMENT II - RECORD IBCBC0                               60Z00800
+*   ORIGINS                                                             60Z00900
+EQU    OPSYN   SET                                                   $5$60Z01000
+TXI    OPSYN   PON                                                      60Z01100
+       SPACE   1                                                        60Z01200
+       SPACE   1                                                        60Z01300
+       SPACE   1                                                        60Z03600
+*   SIZES OF COMPILER                                                   60Z03700
+SUTRSZ EQU     37                  TRANSFER VECTOR SIZE                 60Z03800
+SUCMSZ SET     32                  SUPERVISOR COMMUNICATION SIZE     $5$60Z03900
+SUGNSZ SET     4                   COMPILER GENERATION COUNTS SIZE      60Z04000
+SUSCSZ SET     62                  SCAN-DICTIONARY COMMUNICATION SIZE   60Z04100
+SUFLSZ SET     7*12                FILE BLOCKS SIZE                     60Z04200
+SUTBSZ SET     20*9+5              TABLE BLOCK SIZE                     60Z04300
+NUMBUF EQU     10                  NUMBER OF BUFFERS                    60Z04400
+BUFSZE SET     128                 BUFFER SIZE                          60Z04500
+BFAREA SET     NUMBUF*BUFSZE+NUMBUF*2+2      BUFFER AREA                60Z04600
+       SPACE   2                                                        60Z04700
+*   SIZES AND ORIGINS NECESSARY TO COMMUNICATE WITH SEGMENT 1.          60Z04800
+       SPACE   1                                                        60Z04900
+SUTROR SET     8970                SUPERVISOR ORIGIN                    60Z05000
+SUB2SZ SET     3050           SIZE OF SUBROUTINES NOT USED AFTER 03     60Z05100
+FAZ1SZ SET     4000                PHASE SIZE S1 THRU E2                60Z05200
+FAZ2SZ SET     10000               PHASE SIZE P3 THRU CLEANUP           60Z05300
+COREND EQU     -901                LAST USABLE COMPILER LOCATION        60Z05400
+SUTBN1 SET     COREND-BFAREA-FAZ1SZ-SUB2SZ   ORG OF SUBS USED UNTIL P3  60Z05500
+SUTBN2 SET     COREND-BFAREA-FAZ2SZ          ORG OF P3 AND CLEANUP      60Z05600
+PHSORG SET     COREND-BFAREA-FAZ1SZ     ORG OF PHASES S1 THRU D3        60Z05700
+       SPACE   1                                                        60Z05800
+SUCMOR SET     SUTROR+SUTRSZ       SUPERVISOR COMMUNICATION ORIGIN      60Z05900
+SUGNOR SET     SUCMOR+SUCMSZ       COMPILER GENERATION COUNTS ORIGIN    60Z06000
+SUSCOR SET     SUGNOR+SUGNSZ       SCAN-COMMUNICATION ORIGIN            60Z06100
+SUFLOR SET     SUSCOR+SUSCSZ       FILE BLOCKS ORIGIN                   60Z06200
+SUTBOR SET     SUFLOR+SUFLSZ       TABLE BLOCKS ORIGIN                  60Z06300
+SUSBOR SET     SUTBOR+SUTBSZ       SUBROUTINE ORIGIN                    60Z06400
+       SPACE   1                                                        60Z06500
+       SPACE   1                                                        60Z06600
+BCDCN  SET     SUTROR              CONVERT CARD NUMBER                  60Z06700
+BINBCD SET     BCDCN+1             CONVERT BINARY TO BCD                60Z06800
+COLAG  SET     BINBCD+1            COLLECT IBMAP OUTPUT                 60Z06900
+CONLIT SET     COLAG+1             CONVERT INTEGER                      60Z07000
+DBCNV  SET     CONLIT+1            CONVERT FREE FORM                    60Z07100
+DCDFIN SET     DBCNV+1             DEFINE CITRUS TABLE SOURCE NAME      60Z07200
+DCMVQU SET     DCDFIN+1            MOVE TBQUAL NAME TO CITRUS TABLE     60Z07300
+DCQUAL SET     DCMVQU+1            ENTER UNIT INTO TBQUAL               60Z07400
+DCRSRV SET     DCQUAL+1            RESERVE TBIDIC-TBEDIC CELL           60Z07500
+DICT2  SET     DCRSRV+1            DEFINE TBQUAL NAME -PASS 2           60Z07600
+EOBERR SET     DICT2+1             PRINT END-OF-BUFFER ERROR MESSAGE    60Z07700
+ERPR   SET     EOBERR+1            COLLECT ERROR MESSAGE SKELETONS      60Z07800
+GETBL  SET     ERPR+1              GET NEXT BASE LOCATOR NUMBER         60Z07900
+GETBUF SET     GETBL+1             LOCATE NEXT INTERNAL INPUT BUFFER    60Z08000
+GETGN  SET     GETBUF+1            GET NEXT GENERATED NAME NUMBER       60Z08100
+GETTS  SET     GETGN+1             GET NEXT TEMPORARY STORAGE NUMBER    60Z08200
+GLSC   SET     GETTS+1             GROUP LEVEL SCAN                     60Z08300
+GRIN   SET     GLSC+1              GRIN INITIAL GET                     60Z08400
+GRGET  SET     GRIN+1              GRIN GET                             60Z08500
+GRINK  SET     GRGET+1             GRIN INITIAL KEEP                    60Z08600
+GRKEEP SET     GRINK+1             GRIN KEEP                            60Z08700
+PUTBUF SET     GRKEEP+1            LOCATE NEXT INTERNAL OUTPUT BUFFER   60Z08800
+PUTCP  SET     PUTBUF+1            PUT  1 WORD IN CONSTANT POOL         60Z08900
+PUTCPM SET     PUTCP+1             PUT N WORDS IN CONSTANT POOL         60Z09000
+PUTE2  SET     PUTCPM+1            PUT N WORDS IN ENVIRONMENT 2 FILE    60Z09100
+PUTLIT SET     PUTE2+1             (CONVERT AND) PUT LITERAL INTO POOL  60Z09200
+PUTP3  SET     PUTLIT+1            PUT N WORDS IN PROCEDURE 3 FILE      60Z09300
+PUTSPM SET     PUTP3+1             PUT ENTRY INTO SYMBOLIC CONSTANT POOL60Z09400
+ULSC   SET     PUTSPM+1            UNIT LEVEL SCAN                      60Z09500
+TBDEF  SET     ULSC+1              ENTRY TO DEFINE A CITRUS TABLE       60Z09600
+TBKILL SET     TBDEF+1             ENTRY TO KILL A CITRUS TABLE         60Z09700
+GLERRS SET     TBKILL+1            ENTRY TO SET UP BCD ERROR SUBSTITUTE 60Z09800
+DCSAVE SET     GLERRS+1            ENTRY TO SAVE CURRENT UNIT           60Z09900
+DCRSTR SET     DCSAVE+1            ENTRY TO RESTORE UNIT                60Z10000
+TBORG  SET     DCRSTR+1            ENTRY TO RE-ORIGIN CITRUS TABLE      60Z10100
+DCTYPE SET     TBORG+1             ENTRY TO CLASSIFY DICTIONARY ENTRY   60Z10200
+TBGROW SET     DCTYPE+1            ENTRY TO TABLE GROWTH                60Z10300
+       SPACE   1                                                        60Z10400
+CON1   SET     SUCMOR              CONLIT CONVERSION CELL               60Z10500
+IDORG  SET     CON1+1              INTERNAL DICTIONARY ORIGIN           60Z10600
+DDORG  SET     IDORG+1             DATA DICTIONARY ORIGIN               60Z10700
+SUCOLL SET     DDORG+1             COLLATE SWITCH                       60Z10800
+SUCWS  SET     SUCOLL+1            NUMBER OF COBOL WORDS                60Z10900
+L(24W) SET     SUCWS+1             LOCATION OF TALLY IN TBIDIC          60Z11000
+SUDICT SET     L(24W)+1                                                 60Z11100
+SUERRL SET     SUDICT+1            MAXIMUM ERROR LEVEL ENCOUNTERED      60Z11200
+SULBSM SET     SUERRL+1            NUMBER OF LABEL CARDS * 13           60Z11300
+SUFLSM SET     SULBSM+1            NUMBER OF FILE CARDS * 30            60Z11400
+SUPTE2 SET     SUFLSM+1            BUFFER POINTER FOR PUTE2 SUBROUTINE  60Z11500
+SUCLKP SET     SUPTE2+1            BEEN-IN-P3-FERPR SWITCH              60Z11600
+SUGNSR SET     SUCLKP+1            GENERATED NAME ATTACHED TO SAVE      60Z11700
+SUINSW SET     SUGNSR+1            PHASE INITIALIZATION SWITCH          60Z11800
+SULINK SET     SUINSW+1            CALL LINKAGE CELL(S)                 60Z11900
+SULIST SET     SULINK+2            LIST SWITCH                          60Z12000
+SUPTRA SET     SULIST+1            PHASE TRANSFER POINT                 60Z12100
+SUSEG  SET     SUPTRA+1            PHASE NUMBER                         60Z12200
+SUREF  SET     SUSEG+1             REFERENCE SWITCH                     60Z12300
+SU7094 SET     SUREF+1             INDEX REGISTER                       60Z12400
+SUFLLC SET     SU7094+1            LOC OF FIRST SELECT AND FIRST FD     60Z12500
+SUSKDV SET     SUFLLC+1            DIVISION SKIP SWITCH                 60Z12600
+SUHELP SET     SUSKDV+1            COMPILER CHECKOUT SWITCH             60Z12700
+REDUN  SET     SUHELP+1            REDUNDANCY BYPASS SWITCH             60Z12800
+SUCONS SET     REDUN+1             CONSERVE SPACE SWITCH-1 IF TIGHT     60Z12900
+SUFORS SET     SUCONS+1            ERROR MESSAGE FORCE OUT SWITCH       60Z13000
+DLDBG  SET     SUFORS+1            DEBUG MODE SWITCH                    60Z13100
+DLFATL SET     DLDBG+1             DEBUG FATAL SWITCH                   60Z13200
+DCDLIM SET     DLFATL+1            DEBUG LIMITS                         60Z13300
+DC0224 SET     DCDLIM+1            UNDEFINED NAME SWITCH                60Z13400
+GENRFN SET     DC0224+1            GENERIC FILE NAME USAGE INDICATOR $5$60Z13410
+       SPACE   1                                                        60Z13500
+GETBLC SET     SUGNOR              BASE LOCATOR COUNT                   60Z13600
+GETTSC SET     GETBLC+1            TEMPORARY STORAGE COUNT              60Z13700
+GETGNC SET     GETTSC+1            GENERATED NAME COUNT                 60Z13800
+MAXRS  SET     GETGNC+1            MAXIMUM RESULT STORAGE COUNT         60Z13900
+       SPACE                                                            60Z14000
+ULACC  SET     SUSCOR+20           UNIT ACCUMULATOR (CURRENT)           60Z14100
+ULBUF  SET     ULACC+21            UNIT ACCUMULATOR (NEXT)              60Z14200
+ULPNT  SET     ULBUF+1             UNIT POINTER                         60Z14300
+ULACCL SET     ULPNT+1             UNIT LENGTH (CURRENT)                60Z14400
+ULBUFL SET     ULACCL+1            UNIT LENGTH (NEXT)                   60Z14500
+ULTYPA SET     ULBUFL+1            UNIT TYPE (CURRENT)                  60Z14600
+ULTYPB SET     ULTYPA+1            UNIT TYPE (NEXT)                     60Z14700
+ULSTSA SET     ULTYPB+1            UNIT STRIP SWITCH (CURRENT)          60Z14800
+ULSTSB SET     ULSTSA+1            UNIT STRIP SWITCH (NEXT)             60Z14900
+CARDNO SET     ULSTSB+1            CARD NUMBER (CURRENT UNIT OR SENTENCE60Z15000
+ULISNB SET     CARDNO+1            UNIT CARD NUMBER (NEXT)              60Z15100
+ULAMA  SET     ULISNB+1            UNIT-IN-A-MARGIN SWITCH (CURRENT)    60Z15200
+ULAMB  SET     ULAMA+1             UNIT-IN-A-MARGIN SWITCH (NEXT)       60Z15300
+GLCWN  SET     ULAMB+1             COBOL WORD NUMBER                    60Z15400
+GLPNT  SET     GLCWN+1             T1 TEXT ACCUMULATOR                  60Z15500
+GLTYPE SET     GLPNT+1             GROUP TYPE                           60Z15600
+GLAND  SET     GLTYPE+1            DELETE OR KEEP 'AND' SWITCH          60Z15700
+DCCCTL SET     GLAND+1             CURRENT CITRUS LIMITS                60Z15800
+DCIMQU SET     DCCCTL+1            IMPLIED QUALIFIER CELL               60Z15900
+DCLEVL SET     DCIMQU+1            LEVEL CELL                           60Z16000
+DLDIV  SET     DCLEVL+1            PROCEDURE DIVISION SWITCH            60Z16100
+GLERRL SET     DLDIV+1             ERPR SUBSTITUTION FOR BCD ERRORS     60Z16200
+       SPACE   1                                                        60Z16300
+FLP3   SET     SUFLOR              PROCEDRUE 3 FILE (OUTPUT)            60Z16400
+FLP3IN SET     FLP3+12             PROCEDURE 3 INPUT FILE               60Z16500
+FLSPOU SET     FLP3IN+12           INTERNAL FILE SPILL OUTPUT           60Z16600
+FLSPIN SET     FLSPOU+12           INTERNAL FILE SPILL INPUT            60Z16700
+FLERPR SET     FLSPIN+12           ERROR MESSAGE INTERNAL FILE          60Z16800
+FLFILE SET     FLERPR+12           ENVIRONMENT 2 FILE                   60Z16900
+FLP1P2 SET     FLFILE+12           PROCEDURE 1, PROCEDURE 2 FILE        60Z17000
+       SPACE   1                                                        60Z17100
+TBBL   SET     SUTBOR+1            BASE LOCATOR TABLE                   60Z17200
+TBDATA SET     TBBL+9              DATA TEXT TABLE                      60Z17300
+TBDBI  SET     TBDATA+9            DATA BUILD-UP TABLE                  60Z17400
+TBDISP SET     TBDBI+9             DATA DISPLACEMENT TABLE              60Z17500
+TBEDIC SET     TBDISP+9            EXTERNAL DICTIONARY TABLE            60Z17600
+TBEDIX SET     TBEDIC+9            EXTERNAL DICTIONARY EXTENSION TABLE  60Z17700
+TBFORM SET     TBEDIX+9            DATA FORMAT TABLE                    60Z17800
+TBHASH SET     TBFORM+9            HASH TABLE                           60Z17900
+TBOOCC SET     TBHASH+9            QUANTITIES OUTSIDE RECORDS TABLE     60Z18000
+TBPI   SET     TBOOCC+9            POSITIONAL INDICATOR TABLE           60Z18100
+TBPICN SET     TBPI+9              PT CARD NUMBER TABLE                 60Z18200
+TBPOOL SET     TBPICN+9            CONSTANT POOL TABLE                  60Z18300
+TBP2OU SET     TBPOOL+9            P2 OUTPUT TABLE                      60Z18400
+TBQFI  SET     TBP2OU+9            QUANTITY TABLE                       60Z18500
+TBQUAL SET     TBQFI+9             BCD SOURCE GROUP                     60Z18600
+TBREAQ SET     TBQUAL+9            RECORDS CHANGING QUANTITIES          60Z18700
+TBSBR  SET     TBREAQ+9            QUANTITY SUBROUTINES TABLE           60Z18800
+TBSYMB SET     TBSBR+9             SYMBOLIC POOL TABLE                  60Z18900
+TBWORK SET     TBSYMB+9            WORKING STORAGE TABLE                60Z19000
+TBPROV SET     TBWORK+9            PROVIDE DATA NAME TABLE              60Z19100
+TBIDIC SET     TBPROV+12           INTERNAL DICTIONARY                  60Z19200
+       SPACE   1                                                        60Z19300
+*   LOCATION COUNTER SYMBOLSS                                           60Z19400
+INLOC  SET     0                   IN-LINE LOCATION COUNTER             60Z19500
+OUTLOC SET     1                   OUT-OF-LINE LOCATION COUNTER         60Z19600
+BLLOC  SET     2                   BASE LOCATOR SUBROUTINES LOC COUNTER 60Z19700
+       SPACE   1                                                        60Z19800
+*  THE FOLLOWING SETS EQUATE ERROR MESSAGE NUMBERS TO THEIR POSITIONS   60Z19900
+*  IN THE TABLE OF MESSAGE CONTROL BLOCKS.                              60Z20000
+AANULL SET     0                                                        60Z20100
+CLS101 SET     279                                                      60Z20200
+       EJECT                                                            60Z20300
+USE... SET     0                                                        60Z20400
+ACL    SET     1                                                        60Z20500
+ADD    SET     2                                                        60Z20600
+ADM    SET     3                                                        60Z20700
+ALS    SET     4                                                        60Z20800
+ANA    SET     5                                                        60Z20900
+ANS    SET     6                                                        60Z21000
+ARS    SET     7                                                        60Z21100
+AXC    SET     8                                                        60Z21200
+AXT    SET     9                                                        60Z21300
+BSS... SET     10                                                       60Z21400
+CAL    SET     11                                                       60Z21500
+CAQ    SET     12                                                       60Z21600
+CAS    SET     13                                                       60Z21700
+CLA    SET     14                                                       60Z21800
+CLS    SET     15                                                       60Z21900
+CRQ    SET     16                                                       60Z22000
+CVR    SET     17                                                       60Z22100
+DVH    SET     18                                                       60Z22200
+DVP    SET     19                                                       60Z22300
+END... SET     20                                                       60Z22400
+EQU... SET     21                                                       60Z22500
+ERA    SET     22                                                       60Z22600
+ETC... SET     23                                                       60Z22700
+FAD    SET     24                                                       60Z22800
+FAM    SET     25                                                       60Z22900
+FDH    SET     26                                                       60Z23000
+FDP    SET     27                                                       60Z23100
+FMP    SET     28                                                       60Z23200
+FOR    SET     29                                                       60Z23300
+FSB    SET     30                                                       60Z23400
+FSM    SET     31                                                       60Z23500
+FVE    SET     32                                                       60Z23600
+HTR    SET     33                                                       60Z23700
+IIS    SET     34                                                       60Z23800
+LAC    SET     35                                                       60Z23900
+LAS    SET     36                                                       60Z24000
+LDC    SET     37                                                       60Z24100
+LDI    SET     38                                                       60Z24200
+LDQ    SET     39                                                       60Z24300
+LGL    SET     40                                                       60Z24400
+LGR    SET     41                                                       60Z24500
+LLS    SET     42                                                       60Z24600
+LRS    SET     43                                                       60Z24700
+LXA    SET     44                                                       60Z24800
+LXD    SET     45                                                       60Z24900
+MON    SET     46                                                       60Z25000
+MPR    SET     47                                                       60Z25100
+MPY    SET     48                                                       60Z25200
+MTH    SET     49                                                       60Z25300
+MTW    SET     50                                                       60Z25400
+MZE    SET     51                                                       60Z25500
+NOP    SET     52                                                       60Z25600
+NZT    SET     53                                                       60Z25700
+OFT    SET     54                                                       60Z25800
+ONT    SET     55                                                       60Z25900
+ORA    SET     56                                                       60Z26000
+ORG... SET     57                                                       60Z26100
+ORS    SET     58                                                       60Z26200
+OSI    SET     59                                                       60Z26300
+PAC    SET     60                                                       60Z26400
+PAX    SET     61                                                       60Z26500
+PDC    SET     62                                                       60Z26600
+PDX    SET     63                                                       60Z26700
+PON    SET     64                                                       60Z26800
+PTH    SET     65                                                       60Z26900
+PTW    SET     66                                                       60Z27000
+PXA    SET     67                                                       60Z27100
+PXD    SET     68                                                       60Z27200
+PZE    SET     69                                                       60Z27300
+RIS    SET     70                                                       60Z27400
+RQL    SET     71                                                       60Z27500
+SBM    SET     72                                                       60Z27600
+SIX    SET     73                                                       60Z27700
+SLQ    SET     74                                                       60Z27800
+SLW    SET     75                                                       60Z27900
+STA    SET     76                                                       60Z28000
+STD    SET     77                                                       60Z28100
+STI    SET     78                                                       60Z28200
+STL    SET     79                                                       60Z28300
+STO    SET     80                                                       60Z28400
+STP    SET     81                                                       60Z28500
+STQ    SET     82                                                       60Z28600
+STT    SET     83                                                       60Z28700
+STZ    SET     84                                                       60Z28800
+SUB    SET     85                                                       60Z28900
+SVN    SET     86                                                       60Z29000
+SXA    SET     87                                                       60Z29100
+SXD    SET     88                                                       60Z29200
+TIF    SET     89                                                       60Z29300
+TIO    SET     90                                                       60Z29400
+TIX    SET     91                                                       60Z29500
+TLQ    SET     92                                                       60Z29600
+TMI    SET     93                                                       60Z29700
+TNO    SET     94                                                       60Z29800
+TNX    SET     95                                                       60Z29900
+TNZ    SET     96                                                       60Z30000
+TOV    SET     97                                                       60Z30100
+TPL    SET     98                                                       60Z30200
+TQO    SET     99                                                       60Z30300
+TQP    SET     100                                                      60Z30400
+TRA    SET     101                                                      60Z30500
+TSX    SET     102                                                      60Z30600
+TTR    SET     103                                                      60Z30700
+TXH    SET     104                                                      60Z30800
+TXI    SET     105                                                      60Z30900
+TXL    SET     106                                                      60Z31000
+TZE    SET     107                                                      60Z31100
+UAM    SET     108                                                      60Z31200
+UFA    SET     109                                                      60Z31300
+UFM    SET     110                                                      60Z31400
+UFS    SET     111                                                      60Z31500
+USM    SET     112                                                      60Z31600
+VDH    SET     113                                                      60Z31700
+VDP    SET     114                                                      60Z31800
+VLM    SET     115                                                      60Z31900
+XEC    SET     116                                                      60Z32000
+ZET    SET     117                                                      60Z32100
+CALL.. SET     118                                                      60Z32200
+FILE.. SET     119                                                      60Z32300
+IOCD   SET     120                                                      60Z32400
+IOCP   SET     121                                                      60Z32500
+IOCT   SET     122                                                      60Z32600
+IORP   SET     123                                                      60Z32700
+IORT   SET     124                                                      60Z32800
+IOSP   SET     125                                                      60Z32900
+IOST   SET     126                                                      60Z33000
+SAVE.. SET     127                                                      60Z33100
+BEGIN. SET     128                                                      60Z33200
+ENTRY. SET     129                                                      60Z33300
+IOCDN  SET     130                                                      60Z33400
+IOCPN  SET     131                                                      60Z33500
+IOCTN  SET     132                                                      60Z33600
+IORPN  SET     133                                                      60Z33700
+IORTN  SET     134                                                      60Z33800
+IOSPN  SET     135                                                      60Z33900
+IOSTN  SET     136                                                      60Z34000
+SAVEN  SET     137                                                      60Z34100
+IIL    SET     138                                                      60Z34200
+IIR    SET     139                                                      60Z34300
+LFT    SET     140                                                      60Z34400
+LNT    SET     141                                                      60Z34500
+OCT... SET     142                                                      60Z34600
+RFT    SET     143                                                      60Z34700
+RIL    SET     144                                                      60Z34800
+RIR    SET     145                                                      60Z34900
+RNT    SET     146                                                      60Z35000
+SIL    SET     147                                                      60Z35100
+SIR    SET     148                                                      60Z35200
+CHS    SET     149                                                      60Z35300
+CLM    SET     150                                                      60Z35400
+COM    SET     151                                                      60Z35500
+DCT    SET     152                                                      60Z35600
+ENK    SET     153                                                      60Z35700
+FRN    SET     154                                                      60Z35800
+HPR    SET     155                                                      60Z35900
+IIA    SET     156                                                      60Z36000
+LBT    SET     157                                                      60Z36100
+OAI    SET     158                                                      60Z36200
+PAI    SET     159                                                      60Z36300
+PBT    SET     160                                                      60Z36400
+PIA    SET     161                                                      60Z36500
+RIA    SET     162                                                      60Z36600
+RND    SET     163                                                      60Z36700
+SSM    SET     164                                                      60Z36800
+SSP    SET     165                                                      60Z36900
+STR    SET     166                                                      60Z37000
+XCA    SET     167                                                      60Z37100
+XCL    SET     168                                                      60Z37200
+NULL   SET     169                                                      60Z37300
+CONTRL SET     170                                                      60Z37400
+RETRN. SET     171                                                      60Z37500
+EQU    OPSYN   SYN                                                   $5$60Z37550
+       EJECT                                                            60Z37600
+       ORG     SYSFAZ                                                   60Z37700
+       BCI     1,IBCBC0                                                 60Z37800
+       ORG     SUPTRA                                                   60Z37900
+       TRA     BEGNS2              GO TO BEGINNING INSTRUCTION OF PHASE 60Z38000
+       ORG     PHSORG                                                   60Z38100
+BEGNS2 SAVE    4                                                     $5$60Z38200
+       TSX     SEGM2,4             GO TO SEGMENT 2                      60Z38500
+PHSRET RETURN  BEGNS2              GO BACK TO COBOL SUPERVISOR       $5$60Z38600
+       EJECT                                                            60Z38700
+UEOF   BOOL    1000                END-OF-FILE-BIT                      60Z38800
+       SPACE   1                                                        60Z38900
+SEGM2  SXA     SGU,4                                                    60Z39000
+       STL     SUSKDV                                                   60Z39100
+       TSX     GETGN,4                                                  60Z39200
+       SLW     SUGNSR              SAVE FOR END CARD                    60Z39300
+       STA     SEG2+1                                                   60Z39400
+       TSX     GETGN,4             STEP UP GN COUNTER                   60Z39500
+       TSX     GETGN,4             THROUGH GN0001,2                     60Z39600
+       PAX     0,4                                                      60Z39700
+       TXL     *+3,4,2             LAST GN MUST HAVE BEEN 2             60Z39800
+       TSX     ERPR,4              GN NOT 2, MAJOR TROUBLE              60Z39900
+       PZE     CLS101,3                                                 60Z40000
+       AXT     SEG2,4              LIST ADDR. FOR 7090                  60Z40100
+       ZET     SU7094                                                   60Z40200
+       AXT     SEG2A,4             LIST ADDR. FOR 7094                  60Z40300
+       SXA     SG0,4               RECORD ADDRESS OF COLAG LIST.        60Z40400
+       TSX     COLAG,4                                                  60Z40500
+ SG0   PZE     **                                                       60Z40600
+       ZET     SUINSW                                                   60Z40700
+       TRA     SGX                 IMMEDIATE EXIT (NO ID DIVISION)      60Z40800
+       TRA     SG2+1               BYPASS GETTING OF FIRST UNIT         60Z40900
+ SG2   TSX     ULSC,4                                                   60Z41000
+       LDI     ULTYPB                                                   60Z41100
+       RFT     UEOF                                                     60Z41200
+       TRA     SGXIT                                                    60Z41300
+       NZT     ULAMB                                                    60Z41400
+       TRA     SG2                 0, NOT IN A-MARGIN                   60Z41500
+       AXT     5,4                                                      60Z41600
+       LDC     ULPNT,1                                                  60Z41700
+SG3    CAL     SG4+5,4                                                  60Z41800
+       LAS     0,1                                                      60Z41900
+       TRA     *+2                                                      60Z42000
+       XEC     SG5+5,4                                                  60Z42100
+       TIX     SG3,4,1                                                  60Z42200
+       TRA     SG2                                                      60Z42300
+ SG4   BCI     1,ID                                                     60Z42400
+       BCI     1,IDENTI                                                 60Z42500
+       BCI     1,ENVIRO                                                 60Z42600
+       BCI     1,DATA                                                   60Z42700
+       BCI     1,PROCED                                                 60Z42800
+ SG5   TRA     SGXIT               (ID    )                             60Z42900
+       TRA     SG9                 (IDENTI)                             60Z43000
+       TRA     SG6                 (ENVIRO)                             60Z43100
+       TRA     SGXIT               (DATA  )                             60Z43200
+       TRA     *+1                 (PROCED)                             60Z43300
+       CAL     -1,1                                                     60Z43400
+       ERA     SG7+1                                                    60Z43500
+ SG1   TZE     SGXIT                                                    60Z43600
+       TRA     SG2                                                      60Z43700
+ SG6   CAL     -1,1                                                     60Z43800
+       ERA     SG7                                                      60Z43900
+       TRA     SG1                                                      60Z44000
+24WORD OCT     240077000000                                             60Z44100
+ SG7   BCI     2,NMENT URE                                              60Z44200
+ SG8   BCI     2,FICATION                                               60Z44300
+ SG9   CAL     -1,1                                                     60Z44400
+       ERA     SG8                                                      60Z44500
+       TNZ     SG2                                                      60Z44600
+       CAL     -2,1                                                     60Z44700
+       ERA     SG8+1                                                    60Z44800
+       TRA     SG1                                                      60Z44900
+SEG2   MZE     *+1,,20                                                  60Z45000
+       VFD     O12/0207,24/**      ** = GN 0000 (LHN)                   60Z45100
+       FVE     SAVEN                                                    60Z45200
+ SEGY  VFD     O12/2201,24/1                                            60Z45300
+       VFD     O12/2201,24/2                                            60Z45400
+       VFD     O12/2201,24/4                                            60Z45500
+       VFD     O6/07,12/1,18/0                                          60Z45600
+       BCI     1,I                                                      60Z45700
+SEGV   FVE     AXC                 AXC  GN0002+2,4                      60Z45800
+       VFD     O12/0203,24/2                                            60Z45900
+       VFD     O12/2201,24/2                                            60Z46000
+       VFD     O12/2200,6/2,18/4                                        60Z46100
+       VFD     O12/0207,24/1       GN0001  TRA  *+1                     60Z46200
+       FVE     TRA                                                      60Z46300
+       VFD     O12/2703,24/0                                            60Z46400
+       VFD     O12/2200,24/1                                            60Z46500
+       FVE     SXA                           SXA  GN0002,4              60Z46600
+       VFD     O12/0201,24/2                                            60Z46700
+       VFD     O12/2200,6/0,18/4                                        60Z46800
+       FVE     USE...                                                   60Z46900
+       VFD     O6/22,30/1                                               60Z47000
+SEG2A  PZE     SEG2+1,,2           LIST FOR 7094 (SAVES                 60Z47100
+       PZE     SEGZ,,4             INDICES 3,5,6,7 AS WELL)             60Z47200
+       MZE     SEGY,,18                                                 60Z47300
+ SEGZ  VFD     O12/2201,24/3                                            60Z47400
+       VFD     O12/2201,24/5                                            60Z47500
+       VFD     O12/2201,24/6                                            60Z47600
+       VFD     O12/2201,24/7                                            60Z47700
+ SGXIT AXT     *+2,4                                                    60Z47800
+       TRA     GRIN                                                     60Z47900
+       PZE     -1                                                       60Z48000
+       TXI     *+2,,0                                                   60Z48100
+       TXI     *+1,,0                                                   60Z48200
+SGX    TSX     DCRSRV,4            RESERVE TALLY IN TBIDIC              60Z48300
+       CLA     24WORD                                                   60Z48400
+       STO*    TBIDIC                                                   60Z48500
+       LXA     TBIDIC,4            SET COMMUNICATION CELL               60Z48600
+       SXA     L(24W),4            TO PZE X,,X WHERE                    60Z48700
+       SXD     L(24W),4            X=ADDRESS OF 24 WORD                 60Z48800
+SGU    AXT     **,4                                                     60Z48900
+       STZ     SUSKDV                                                   60Z49000
+       TRA     1,4                                                      60Z49100
+       SPACE   1                                                        60Z49200
+       LDIR                                                          $5$60Z49250
+*   THE AREA BETWEEN THE ABOVE CELL AND THE BEGINNING OF THE BUFFER     60Z49300
+*   AREA MAY BE USED AS PATCH AREA IN THIS PHASE. THE EXTENT OF THE     60Z49400
+*   PATCH AREA IS---                                                    60Z49500
+       SPACE   1                                                        60Z49600
+PATCHA EQU     COREND-BFAREA-1-*   PATCH AREA FOR THIS PHASE            60Z49700
+       SPACE   1                                                        60Z49800
+*   THE LAST CELL WHICH MAY BE USED AS PATCH  IS---                     60Z49900
+       SPACE   1                                                        60Z50000
+PATCHL EQU     COREND-BFAREA-1     LAST CELL WHICH MAY BE USE AS PATCH  60Z50100
+       END     BEGNS2              C0                                $5$60Z50200
