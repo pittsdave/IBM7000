@@ -1,0 +1,219 @@
+          BEGIN
+      COMMENT ..... QUEUE ROUTINES FOR STRAT. MODULES ..... $,
+      COMMENT $,
+      COMMENT THESE ARE GENERAL QUEUE HANDLING ROUTINES WRITTEN IN AED-0
+             LANGUAGE FOR EASE OF DEBUGGING. IN THE FOLLOWING ROUTINES,
+             THE PARAMETERS HAVE THESE MEANINGS - $,
+      COMMENT $,
+      COMMENT KEY IS A PZE QSPACE,,LENGTH $,
+      COMMENT IOSTAT IS A POINTER TO TOP OF IOSTATUS TABLE $,
+      COMMENT AFST IS A POINTER TO TOP OF ACTIVE FILE ENTRY $,
+      COMMENT ERROR IS PLACE TO GO ON ERROR RETURN $,
+      COMMENT $,
+      COMMENT THE FOLLOWING QUEUE COMPONENTS ARE USED INTERNALLY - FREEP
+             POINTS TO THE NEXT FREE STORAGE BEAD (RELATIVE TO ORIGIN OF
+             THE QUEUE SPACE). FRELNG IS THE LENGTH OF THIS BLOCK OF FRE
+             STORAGE. NEXTQ IS THE POINTER TO THE NEXT QUEUE ELEMENT.
+             FUNCT IS A 15 BIT FUNCTION CODE FILLED IN BY THE STRATEGY
+             MODULES. QLNG IS THE LENGTH OF THIS QUEUE ELEMENT
+             (INCLUDING HEADER). AFST IS A POINTER TO THE ACTIVE FILE
+             ENTRY (RELATIVE TO THE IO-STATUS TABLE IN WHICH IT IS
+             LOCATED). TWO BOOLEAN SWITCHES ARE PROVIDED - DONESW AND
+             FINISW - WHICH ARE INITIALIZED TO 'FALSE' (ZERO). $,
+      COMMENT $,
+          INTEGER QBASE,TP,NP,BP,RP,PQ,BADRET,QSIZE,QHEAD $,
+          INTEGER COMPONENT FRELNG,FREEP,WHOLE,WHOLE1 $,
+          INTEGER COMPONENT QUENO,FUNCT,NEXTQ,PAFST,QLNG $,
+          BOOLEAN COMPONENT FINISW $,
+          PACK 77777C,0,ADDRESS COMPONENTS FRELNG,NEXTQ,PAFST $,
+          PACK 77777C18,18,DECREMENT COMPONENTS FREEP,FUNCT,QLNG $,
+          PACK 7C15,15,TAG COMPONENTS FINISW $,
+          PACK 7C33,33,PREFIX COMPONENTS QUENO $,
+          FRELNG $=$ FREEP $=$ WHOLE $=$ 0 $,
+          QUENO $=$ QLNG $=$ NEXTQ $=$ FINISW $=$ 0 $,
+          WHOLE1 $=$ FUNCT $=$ PAFST $=$ 1 $,
+          PRESET
+               BEGIN
+      COMMENT QSIZE IS THE MAXIMUM SIZE OF EACH QUEUE ELEMENT AND IS
+             USED BY QTEST TO SEE IF ENOUGH SPACE EXISTS FOR THE PROPER
+             NUMBER OF REQUESTS. QHEAD IS THE LENGTH OF THE STANDARD
+             QUEUE HEADER WHICH IS ADDED TO THE REQUESTED SIZE TO GET
+             ACTUAL BEAD LENGTH. $,
+               QSIZE = 7 $,
+               QHEAD = 2 $,
+               END $,
+          PRESET BADRET = 0 $,
+ 
+          DEFINE PROCEDURE QINIT(KEY) WHERE INTEGER KEY TOBE
+               BEGIN
+      COMMENT $,
+      COMMENT QINIT SEES IF THE FIRST WORD OF THE QUEUE SPACE HAS BEEN
+             INITIALIZED. IF THIS WORD IS ZERO, IT ASSUMES IT HAS NOT
+             AND SETS UP THE APPROPRIATE POINTERS TO EMPTY QUEUE STRING
+             AND ONE BEAD OF FREE STORAGE. $,
+      COMMENT $,
+               IF WHOLE(KEY) EQL 0
+               THEN BEGIN
+                    WHOLE(KEY) = 1C18 $,
+                    WHOLE1(KEY) = (KEY .RS. 18)-1 $,
+                    END $,
+               END $,
+ 
+          DEFINE PROCEDURE RETQUE(KEY,RPQ) WHERE INTEGER KEY,RPQ TOBE
+               BEGIN
+      COMMENT $,
+      COMMENT RETQUE RETURNS THE BEAD POINTED TO BY RPQ TO THE FREE
+             STORAGE STRING LOCATED IN THE QUEUE DESIGNATED BY KEY. (IF
+             FINISW OF THE BEAD IS FALSE, A BAD CALL IS PRESUMED AND THE
+             BEAD IS ---NOT--- DELETED). AN ATTEMPT IS MADE TO 'GARBAGE
+             COLLECT' THE FREE SPACE BY DETERMINING IF TWO OR MORE FREE
+             STORAGE BEADS LIE ADJACENT TO ONE ANOTHER. $,
+      COMMENT $,
+               IF FINISW(PQ = RPQ)
+               THEN BEGIN
+                    FINISW(PQ) = FALSE $,
+                    TP = NEXTQ(QBASE = KEY .A. 77777C) $,
+                    RP = PQ-QBASE $,
+                    BP = 0 $,
+      COMMENT REMOVE THE SUBJECT BEAD FROM THE QUEUE LIST BY LOOKING FOR
+             THE BEAD WHICH POINTS TO IT AND PATCHING NEXTQ $,
+SEARCH1 $           IF TP NEQ 0 AND TP NEQ RP
+                    THEN BEGIN
+                         TP = NEXTQ((BP = TP)+QBASE) $,
+                         GOTO SEARCH1 $,
+                         END
+                    ELSE NEXTQ(BP+QBASE) = NEXTQ(TP+QBASE) $,
+                    TP = FREEP(QBASE) $,
+                    BP = 0 $,
+      COMMENT INSERT THIS BEAD INTO ASCENDING ADDRESS SEQUENCE $,
+LOOK $              IF TP NEQ 0 AND TP LEQ RP
+                    THEN BEGIN
+                         TP = FREEP((BP = TP)+QBASE) $,
+                         GOTO LOOK $,
+                         END $,
+                    TP = TP+QBASE $,
+                    BP = BP+QBASE $,
+      COMMENT SEE IF THIS BEAD IS ADJACENT TO PREVIOUS FREE STORAGE
+             ELEMENT. IF SO, THEN JUST ADD THE LENGTH OF THIS BEAD TO
+             THE OLD LENGTH. $,
+                    IF PQ EQL FRELNG(BP)+BP AND BP NEQ QBASE
+                    THEN BEGIN
+                         FRELNG(BP) = FRELNG(BP)+QLNG(PQ) $,
+                         PQ = BP $,
+                         END
+                    ELSE BEGIN
+                         FRELNG(PQ) = QLNG(PQ) $,
+                         FREEP(PQ) = FREEP(BP) $,
+                         FREEP(BP) = RP $,
+                         END $,
+      COMMENT SEE IF THIS BEAD IS ADJACENT TO BEAD NEXT IN FREE STORAGE
+             STRING. IF SO, ADD ITS COUNT TO THIS ONE AND USE ITS FREEP
+             POINTER. $,
+                    IF TP EQL PQ+FRELNG(PQ)
+                    THEN BEGIN
+                         FRELNG(PQ) = FRELNG(PQ)+FRELNG(TP) $,
+                         FREEP(PQ) = FREEP(TP) $,
+                         END $,
+                    END
+               ELSE BADRET = BADRET+1 $,
+               END $,
+ 
+          DEFINE INTEGER PROCEDURE GETQUE(KEY,IOSTAT,AFST,PRIOR,ASKED,
+           ERROR) WHERE INTEGER KEY,IOSTAT,AFST,PRIOR,ASKED $,
+          LABEL ERROR $, TOBE
+               BEGIN
+      COMMENT $,
+      COMMENT GETQUE ATTEMPTS TO FIND A QUEUE BEAD OF LENGTH ASKED+QHEAD
+             IN QUEUE DESIGNATED BY 'KEY'. IF IT DOES FIND SPACE, IT
+             INSERTS IT IN THE QUEUE LIST AFTER OTHERS OF PRIORITY
+             'PRIOR'. IT THEN PROCEEDS TO INITIALIZE STANDARD PARTS OF
+             HEADER $,
+      COMMENT $,
+               INTEGER SIZE $,
+               TP = FREEP(QBASE = KEY .A. 77777C) $,
+               BP = 0 $,
+               SIZE = ASKED+QHEAD $,
+LOOK1 $        IF TP EQL 0
+               THEN GOTO ERROR $,
+               IF FRELNG(TP+QBASE) LES SIZE
+               THEN BEGIN
+                    TP = FREEP((BP = TP)+QBASE) $,
+                    GOTO LOOK1 $,
+                    END
+               ELSE BEGIN
+                    BP = BP+QBASE $,
+                    IF FRELNG(TP = (NP = TP)+QBASE) EQL SIZE
+                    THEN FREEP(BP) = FREEP(TP)
+                    ELSE BEGIN
+                         FREEP(BP) = (NP = NP+SIZE) $,
+                         FREEP(NP = NP+QBASE) = FREEP(TP) $,
+                         FRELNG(NP) = FRELNG(TP)-SIZE $,
+                         END $,
+                    END $,
+               NP = TP $,
+               BP = 0 $,
+               TP = NEXTQ(QBASE) $,
+LOOK2 $        IF TP NEQ 0 AND QUENO(TP+QBASE) LEQ PRIOR
+               THEN BEGIN
+                    TP = NEXTQ((BP = TP)+QBASE) $,
+                    GOTO LOOK2 $,
+                    END $,
+               NEXTQ(NP) = NEXTQ(BP = BP+QBASE) $,
+               NEXTQ(BP) = NP-QBASE $,
+               QLNG(NP) = SIZE $,
+               FINISW(NP) = FALSE $,
+               PAFST(NP) = AFST-IOSTAT $,
+               QUENO(NP) = PRIOR $,
+               NP = NP $,
+               END $,
+ 
+          DEFINE PROCEDURE QSCRAP(KEY,IOSTAT,AFST) WHERE INTEGER KEY,
+           IOSTAT,AFST $, TOBE
+               BEGIN
+      COMMENT $,
+      COMMENT QSCRAP SEARCHES THE QUEUE DESIGNATED BY KEY FOR ALL
+             ELEMENTS WITH A REFERENCE TO THE REQUESTED ACTIVE FILE
+             ENTRY IN THE INDICATED IO-STATUS TABLE. IF IT FINDS ONE, IT
+             THEN CALLS RETQUE TO DELETE IT. 'QSCRAP' IS CALLED IF THE
+             STRATEGY MODULE FINDS A FATAL ERROR DURING OPERATION ON A
+             FILE OR AT THE TIME THE FILE IS CLOSED. $,
+      COMMENT $,
+               INTEGER BP,TP,RP,QBASE $,
+               TP = NEXTQ(QBASE = KEY .A. 77777C) $,
+               RP = AFST-IOSTAT $,
+LOOK2 $        IF TP NEQ 0
+               THEN BEGIN
+                    IF PAFST(TP = TP+QBASE) EQL RP
+                    THEN BEGIN
+                         BP = NEXTQ(TP) $,
+                         FINISW(TP) = TRUE $,
+                         RETQUE(KEY,TP) $,
+                         TP = BP $,
+                         END
+                    ELSE TP = NEXTQ(TP) $,
+                    GOTO LOOK2 $,
+                    END $,
+               END $,
+ 
+          DEFINE PROCEDURE QTEST(KEY,NUM,ERROR) WHERE INTEGER KEY,NUM $,
+          LABEL ERROR TOBE
+               BEGIN
+      COMMENT $,
+      COMMENT 'QTEST' SEARCHES THE DESIGNATED QUEUE TO SEE IF THERE IS
+             ROOM FOR 'NUM' ELEMENTS OF LENGTH 'QSIZE'. IF NOT IT
+             RETURNS THROUGH 'ERROR.' $,
+      COMMENT $,
+               TP = FREEP(KEY) $,
+               BP = NUM $,
+LOOK3 $        IF BP GRT 0
+               THEN BEGIN
+                    IF TP EQL 0
+                    THEN GOTO ERROR $,
+                    IF FRELNG(TP = TP+KEY) GRT QSIZE
+                    THEN BP = BP-FRELNG(TP)/QSIZE $,
+                    TP = FREEP(TP) $,
+                    GOTO LOOK3 $,
+                    END $,
+               END $,
+ 
+          END FINI
