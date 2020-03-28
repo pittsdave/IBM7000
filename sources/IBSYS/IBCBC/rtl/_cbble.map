@@ -1,0 +1,216 @@
+$IBMAP .CBBLE  LIST,DECK,300                                            3MH00000
+       TTL     BLOCKING AND DEBLOCKING COBOL FILES                  (11)3MH00009
+*    THIS SR BLOCKS (WRITE) AND DEBLOCKS (READ) FILES FOR COBOL     (10)3MH00010
+*                OBJECT TIME PROGRAMS.     DATA USED ARE...         (10)3MH00020
+*              S = WD. COUNT REQUESTED IN CALLING SEQ.,             (10)3MH00030
+*              M = WORD COUNT REMAINING IN BUFFER,                  (10)3MH00040
+*              B = L(NX.WD.IN.BUFFER).                              (10)3MH00050
+       ENTRY   .CBBLR                                               (10)3MH00060
+       ENTRY   .CBBLW                                               (10)3MH00070
+       ENTRY   .CBCLO                                               (10)3MH00080
+.CBCLO TRA     .CCLOS        USE STANDARD COBOL CLOSE ROUTINE       (11)3MH00085
+.CBBLR STL     RDSW           RDSW NOT = 0                          (10)3MH00090
+       TRA     *+2                                                  (10)3MH00100
+.CBBLW STZ     RDSW           RDSW = 0                              (10)3MH00110
+       CLA     2,4           SETUP READ ERROR RETURNS               (11)3MH00120
+       STO     CBDURD+2                                             (11)3MH00122
+       SXA     NORM1,1       SAVE REGISTERS                         (11)3MH00124
+       SXA     NORM1+1,2                                            (11)3MH00126
+       STI     CBIND                                                (11)3MH00128
+       STZ     EXIT           INITIALIZE EXIT = 0                   (10)3MH00130
+       CAL     1,4            PZE FN                                (10)3MH00140
+       TXI     *+1,4,-3      POINT IR4 TO FIRST COMMAND             (11)3MH00150
+       NZT     RDSW                                                 (11)3MH00160
+       TXI     *+1,4,1          WRITE REQUEST                       (11)3MH00170
+       SXA     X,4           AND SAVE                               (11)3MH00180
+       PAC     ,2            IR2 = -L(FCB)                          (11)3MH00190
+       STA     CBDURD+1      INITIALIZE .IOCS CALLS                 (11)3MH00200
+       STA     PUTBUF+1                                             (11)3MH00210
+       CLA*    2,2           IS THERE A BUFFER ATTACHED NORMALLY    (11)3MH00220
+       TPL     CBCOM            TRANSFER IF YES                     (11)3MH00230
+       ZET     RDSW             NO, SEPERATE READ FROM WRITE        (11)3MH00240
+       TRA     *+3              READ                                (11)3MH00250
+       TSX     PUTBUF,1      WRITE, GET BUFFER                      (11)3MH00260
+       TRA     CBCOM                                                (11)3MH00270
+       LDI     TCHXXX        SETUP NULL COMMAND FOR UPDATE          (11)3MH00280
+       TSX     GETBUF,1         AND GET INPUT BUFFER                (11)3MH00290
+ CBCOM LDI     0,4           FIRST COMMAND TO INDICATORS            (11)3MH00540
+       NZT     RDSW                                                 (10)3MH00550
+       TRA     CBBLW                                                (10)3MH00560
+       ONT     IOCTNA         IOCTN* MASK...                        (10)3MH00570
+       TRA     CBBL1          NO, NEXT MASK TEST                    (10)3MH00580
+CBBL10 TSX     UPDATE,1                                             (10)3MH00590
+       TSX     GETBUF,1                                             (10)3MH00600
+CBBL4  RIR     700000                                               (10)3MH00610
+       STI     PNT            C (ADDR)=L(BL)                        (10)3MH00620
+       STA*    PNT            B TO BL                               (10)3MH00630
+       TRA     NORM1          OUT                                   (10)3MH00640
+CBBL1  ONT     IOCPXX         IOCP INST...                          (10)3MH00650
+       TRA     CBBL2          NO                                    (10)3MH00660
+       OFT     XXXXNA         PERHAPS,ENSURE N,* OFF                (10)3MH00670
+       TRA     CBBL2          NO                                    (10)3MH00680
+       TSX     UPDATE,1           UPDATE                            (10)3MH00690
+       TSX     GETBUF,1           OBTAIN NEW BUFFER FOR READ        (10)3MH00700
+       STA     PNT                                                  (10)3MH00710
+       CAL*    PNT                                                  (10)3MH00720
+       SLW*    0,4                                                  (10)3MH00730
+       LFT     100000             IOCT OR IOCP ...                  (10)3MH00740
+       TRA     NORM1              IOCT, FINISHED                    (10)3MH00750
+       TXI     *+1,4,-1           IOCP, CONTINUE WITH NEXT IOXY TYPE(10)3MH00760
+       LDI     0,4                                                  (10)3MH00770
+       SXA     X,4            UPDATE X                              (10)3MH00780
+       ONT     IOCTNX         IOCTN INSTR                           (10)3MH00790
+       TRA     ILLEX          NO,ILLEGAL                            (10)3MH00800
+       OFT     XXXXXA         PERHAPS,ENSURE * OFF                  (10)3MH00810
+       TRA     ILLEX          NO,ILLEGAL                            (10)3MH00820
+       TSX     UPDATE,1                                             (10)3MH00830
+       TSX     GETBUF,1                                             (10)3MH00840
+       STA     0,4            B TO CALLING SEQ                      (10)3MH00850
+       TRA     NORM1                                                (10)3MH00860
+CBBL2  ONT     TCHXXX         TCH INSTR                             (10)3MH00870
+       TRA     ILLEX          NO,ILLEGAL                            (10)3MH00880
+       OFT     XXXQQQ         YES,PERHAPS                           (10)3MH00890
+       TRA     ILLEX          NO,ILLEGAL                            (10)3MH00900
+       SXA     EXIT,4         C (EXIT) = - X                        (10)3MH00910
+       PIA                                                          (10)3MH00920
+       PAC     0,4            C(ADDR) BECOMES X                     (10)3MH00930
+       SXA     X,4            UPDATE X                              (10)3MH00940
+       LDI     0,4            C(IND) = NEW X                        (10)3MH00950
+       LFT     700000       IOCDN  INSTRUCTION...                   (10)3MH00960
+       TRA     CBBL3          NO                                    (10)3MH00970
+       RNT     200000                                               (10)3MH00980
+       TRA     CBBL3                                                (10)3MH00990
+       OFT     XXXXXA         YES,PERHAPS                           (10)3MH01000
+       TRA     CBBL3          NO                                    (10)3MH01010
+       TSX     UPDATE,1                                             (10)3MH01020
+       TSX     GETBUF,1                                             (10)3MH01030
+       STA     0,4           LOC OF NEXT WORD                       (11)3MH01040
+       ZAC                   SIMULATE BUFFER DISCONNECT             (11)3MH01050
+       STD*    2,2                                                  (11)3MH01060
+       TRA     NORM1            AND EXIT                            (11)3MH01070
+CBBL3  NZT     RDSW                                                 (10)3MH01080
+       TRA     CBBL5          WRITE SIDE                            (10)3MH01090
+CBBL8  ONT     IOCPNX         IOCPN...                              (10)3MH01100
+       TRA     ILLEX                                                (10)3MH01110
+       OFT     XXXXXA                                               (10)3MH01120
+       TRA     ILLEX                                                (10)3MH01130
+       TSX     UPDATE,1       UPDATE B,,M                           (10)3MH01140
+       TSX     GETBUF,1       GET NEW BUFFER                        (10)3MH01150
+       STA     0,4            PUT B IN CALLING SEQ                  (10)3MH01160
+       TXI     *+1,4,-1       X = X + 1                             (10)3MH01170
+       SXA     X,4            UPDATE X                              (10)3MH01180
+       LDI     0,4            NEW X                                 (10)3MH01190
+       ONT     IOCTNA         IOCTN*...                             (10)3MH01200
+       TRA     ILLEX          NO,ERROR                              (10)3MH01210
+       TRA     CBBL10                                               (10)3MH01220
+CBBLW  BSS     0                                                    (10)3MH01230
+CBBL5  OFT     XXXXXA         INDIRECT REF...                       (10)3MH01240
+       TRA     CBBL6        YES, CANNOT BE IORPN OR IOCPN           (10)3MH01250
+       ONT     IOCPNX                                               (10)3MH01260
+       TRA     *+2                                                  (10)3MH01270
+       TRA     *+3            IORPN AND IOCPN O. K.                 (10)3MH01280
+       ONT     IORPNX                                               (10)3MH01290
+       TRA     CBBL6                                                (10)3MH01300
+       TSX     UPDATE,1       UPDATE                                (10)3MH01310
+       TRA     EOBEX         ENOUGH ROOM NOT LOCATED LAST TIME      (11)3MH01320
+       STA     0,4           SET LOCATOR INTO CALLING SEQ.          (11)3MH01330
+       ZAC                   ASSUME LAST RECORD IN BLOCK            (11)3MH01332
+       ONT     IOCPNX           IORPN   ...                         (11)3MH01334
+       STD*    2,2              YES, SET FOR BUFFER DISCONNECT      (11)3MH01336
+       TXI     *+1,4,-1       X = X + 1                             (10)3MH01340
+       SXA     X,4          SAVE  X                                 (10)3MH01350
+       LDI     0,4            NEXT INSTR                            (10)3MH01360
+CBBL6  ONT     IOSTNA         IOSTN*...                             (10)3MH01370
+       TRA     CBBL2          NO                                    (10)3MH01380
+       PIA                   PROCESS  IOSTN*  ON OUTPUT             (11)3MH01390
+       PDX     ,1            IR1 = WORD COUNT                       (11)3MH01400
+       CLA*    2,2           PICK UP BUFFER CONTROL WORD            (11)3MH01410
+       STD     *+1              AND CHECK FOR ENOUGH ROOM           (11)3MH01420
+       TXL     *+2,1,**                                             (11)3MH01430
+       TSX     PUTBUF,1      M L.T. S, PUT BUFFER OUT, FIND NEXT    (10)3MH01460
+       TRA     CBBL4         GO TO SET B INTO BL                    (10)3MH01470
+*                                                                   (10)3MH01700
+*      SUBROUTINES            (INTERNAL ONLY)                       (10)3MH01710
+* ASSUME UPON ENTRY... C(AC) = CBTBLN ENTRY, PZE   B,,M             (10)3MH01720
+*                      C (XR2) = DISPL WITHIN CBTBLN TABLE          (10)3MH01730
+*                                                                   (10)3MH01740
+UPDATE PIA                   COMMAND TO AC                          (11)3MH01750
+       STD     PZED          SETUP DISPLACEMENT COUNT               (11)3MH01760
+       ARS     18                                                   (11)3MH01770
+       STA     PZEA                                                 (11)3MH01780
+       CAL*    2,2           PICK UP BUFFER CONTROL WORD            (11)3MH01790
+       ANA     ADMASK           AND ISOLATE  LOCATOR,,WORDS LEFT    (11)3MH01800
+       SUB     PZED          CHECK FOR ENOUGH ROOM                  (11)3MH01810
+       TMI     1,1           TAKE EOB RETURN IF NOT                 (11)3MH01820
+       ADD     PZEA          ADJUST LOCATOR                         (11)3MH01830
+       STD*    2,2              AND UPDATE IOCS BUFFER CONTROL WORD (11)3MH01840
+       STA*    2,2                                                  (11)3MH01850
+       SUB     PZEA          ADDR(AC) = AVAILABLE LOCATION          (11)3MH01860
+       TRA     2,1           NORMAL EXIT                            (11)3MH01870
+* GET A NEW BUFFER (READ).                                          (10)3MH01890
+GETBUF CLA*    2,2           IF BUFFER ATTACHED NORMALLY,           (11)3MH01900
+       TMI     *+3                                                  (11)3MH01910
+       ZAC                      FORCE BUFFER RELEASE                (11)3MH01920
+       STD*    2,2                                                  (11)3MH01930
+CBDURD TSX     .READ,4        DUMMY READ                            (10)3MH01950
+       PZE     **,,0                                                (11)3MH01960
+       PZE     **,,**                                               (10)3MH01970
+       IOCTN   **,,1         LOCATE NEXT BUFFER AND SKIP ONE WORD   (11)3MH01980
+       CAL*    2,2           BACK OVER WORD SKIPPED                 (11)3MH01990
+       SUB     ADDR1                                                (11)3MH01995
+       ADD     DCR1                                                 (11)3MH02000
+       SLW*    2,2                                                  (11)3MH02010
+X      AXT     **,4           X POINTER IN ADDR                     (10)3MH02020
+       SXA     *+3,1                                                (10)3MH02030
+       TSX     UPDATE,1                                             (10)3MH02040
+       TRA     EOBEX          BUFFER LENGTH L.T.S                   (10)3MH02050
+       AXT     **,1                                                 (10)3MH02060
+       TRA     1,1            EXIT FROM GETBUF                      (10)3MH02070
+*                                                                   (10)3MH02080
+* GET A NEW BUFFER (WRITE).                                         (10)3MH02090
+PUTBUF TSX     .WRITE,4      OUTPUT PRESENT BUFFER AND GET NEXT     (11)3MH02100
+       PZE     **,,0                                                (11)3MH02110
+       IOSTN   **,,-1                                               (11)3MH02120
+       CAL*    2,2           AC = LOCATOR,,WORDS LEFT               (11)3MH02130
+       LXA     X,4            C(XR4) = - X                          (10)3MH02510
+       TRA     1,1                                                  (10)3MH02530
+ NORM1 AXT     **,1          RESTORE REGISTERS                      (11)3MH02540
+       AXT     **,2                                                 (11)3MH02542
+       LDI     CBIND                                                (11)3MH02544
+       NZT     EXIT          TCH EXECUTED...                        (11)3MH02546
+       TRA     1,4            EXIT FOR NON TCH                      (10)3MH02550
+       LXA     EXIT,4                                               (10)3MH02560
+       TRA     1,4            EXIT FOR TCH                          (10)3MH02570
+ CBIND                                                              (11)3MH02575
+ EOBEX AXC     CBDURD,4      FORCE EOB DIAGNOSTIC FOR THIS FILE     (11)3MH02580
+       PXD     ,4                                                   (11)3MH02590
+       XCA                                                          (11)3MH02600
+       TRA     .CEOBP                                               (11)3MH02610
+ILLEX  CALL    .CDISP(M1)'0'                                        (10)3MH02620
+       TRA     *+2                                                  (10)3MH02630
+       PZE     72                                                   (10)3MH02640
+       STR                                                          (10)3MH02650
+M1     BCI     6, CALL UPON .CBBLE SUBROUTINE HAS ILL               (10)3MH02660
+       BCI     6,EGAL CALLING SEQUENCE. CORE DUMPED.                (10)3MH02670
+*                                                                   (10)3MH02680
+*      CONSTANTS                                                    (10)3MH02690
+*                                                                   (10)3MH02700
+RDSW   PZE     **             NON-ZERO READ,ZERO WRITE              (10)3MH02710
+EXIT   PZE     **             0 IF NO TCH, NON-0 IF TCH             (10)3MH02720
+PNT    PZE     **                                                   (10)3MH02730
+PZEA   PZE     **,0,0                                               (10)3MH02740
+PZED   PZE     0,0,**                                               (10)3MH02750
+ ADDR1 PZE     1                                                    (11)3MH02752
+DCR1   PZE     0,,1                                                 (10)3MH02755
+ADMASK OCT     077777077777                                         (10)3MH02760
+IOCTNA IOCTN*  0,,0           POS INSTRUCTION MASKA                 (10)3MH02780
+IOCPXX IOCP    0,,0                                                 (10)3MH02790
+IOCTNX IOCTN   0,,0                                                 (10)3MH02800
+TCHXXX TCH     0                                                    (10)3MH02810
+IOCPNX IOCPN   0,,0                                                 (10)3MH02830
+IORPNX IORPN   0,,0                                                 (10)3MH02840
+IOSTNA IOSTN*  0,,0                                                 (10)3MH02850
+XXXXNA OCT     000000600000   NEG. INSTRUCTION MASKS                (10)3MH02860
+XXXXXA OCT     000000400000                                         (10)3MH02870
+XXXQQQ SYN     XXXXXA                                               (10)3MH02890
+       END                                                          (10)3MH02920

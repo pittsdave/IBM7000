@@ -1,0 +1,6 @@
+$IBMAP .CTANH                                                        $5$3MF00660
+       LBL     CTNH,BEGIN     .CTANH                                 (7)3MF00663
+.CTANH CAL     *+2            TANH (A)                               $5$3MF00670
+       TRA     .CGOGO                                                $5$3MF00680
+       TRA     TANH                                                  $5$3MF00690
+       END                                                           $5$3MF00700

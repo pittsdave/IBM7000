@@ -1,0 +1,10 @@
+$IBMAP .CCSIN                                                        $5$3MF01610
+       LBL     CCSN,BEGIN     .CCSIN                                 (7)3MF01613
+.CCSIN CAL     *+2            SIN (A)                                $5$3MF01620
+       TRA     .CGOGO                                                $5$3MF01630
+       NOP     CSIN                                                  $5$3MF01640
+       ENTRY   .CCCOS                                                $5$3MF01650
+.CCCOS CAL     *+2            COS (A)                                $5$3MF01660
+       TRA     .CGOGO                                                $5$3MF01670
+       NOP     CCOS                                                  $5$3MF01680
+       END                                                           $5$3MF01690

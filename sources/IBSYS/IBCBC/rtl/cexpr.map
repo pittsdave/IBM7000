@@ -1,0 +1,36 @@
+$IBMAP CEXPR   ADDREL                                                   3LI00000
+       LBL     EXPR,BEGIN     CEXPR                                  (7)3LI00010
+*      ERROR, UNDERFLOW, OVERFLOW HANDLER FOR EXPONENTIAL ROUTINES.     3LI00020
+       SPACE   2                                                        3LI00030
+       ENTRY   .CEXPR                                                   3LI00040
+.CEXPR TPL     EXOV                OVERFLOW IF POSITIVE                 3LI00050
+       PXA     0,0                                                      3LI00060
+       LRS     35                                                       3LI00070
+       TRA     2,4                 EXIT                                 3LI00080
+       SPACE   2                                                        3LI00090
+EXOV   SXA     EXOVX,4                                                  3LI00100
+       CAL*    1,4                                                      3LI00110
+       SLW     OVW+6               CARD NUMBER                          3LI00120
+       TSX     .CDPLY,4            ISSUE OVERFLOW MESSAGE               3LI00130
+       PZE     OVW,,8                                                   3LI00140
+       CLA     OMAX                PLACE LARGEST NUMBER                 3LI00150
+       LDQ     OMAX+1              IN AC-MQ                             3LI00160
+EXOVX  AXT     **,4                AND                                  3LI00170
+       TRA     2,4                 EXIT                                 3LI00180
+       SPACE   2                                                        3LI00190
+       ENTRY   .CEXNG                                                   3LI00200
+.CEXNG SXA     EXOVX,4                                                  3LI00210
+       CAL*    1,4                                                      3LI00220
+       SLW     NGW+6                                                    3LI00230
+       TSX     .CDPLY,4                                                 3LI00240
+       PZE     NGW,,8                                                   3LI00250
+       TRA     EXOVX-2                                                  3LI00260
+OVW    BCI     6,EXPONENTIAL OVERFLOW AT CARD NUMBER                    3LI00270
+       BCI     1,******                                                 3LI00280
+       BCI     5,.                                                      3LI00290
+NGW    BCI     6,ERROR IN EXPONENTIAL AT CARD NUMBER                    3LI00300
+       BCI     1,******                                                 3LI00310
+       BCI     5,.                                                      3LI00320
+OMAX   OCT     377777777777                                             3LI00330
+       OCT     344777777777                                             3LI00340
+       END                                                              3LI00350

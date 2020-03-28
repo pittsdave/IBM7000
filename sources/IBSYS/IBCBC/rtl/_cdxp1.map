@@ -1,0 +1,10 @@
+$IBMAP .CDXP1                                                        $5$3MF00810
+       LBL     CDX1,BEGIN     .CDXP1                                 (7)3MF00813
+.CDXP1 CAL     *+2            A ** B                                 $5$3MF00820
+       TRA     .CGOGO                                                $5$3MF00830
+       NOP     .DXP1.                                                $5$3MF00840
+       ENTRY   .CCXP1                                                $5$3MF00850
+.CCXP1 CAL     *+2            A ** B                                 $5$3MF00860
+       TRA     .CGOGO                                                $5$3MF00870
+       NOP     .CXP1.                                                $5$3MF00880
+       END                                                           $5$3MF00890

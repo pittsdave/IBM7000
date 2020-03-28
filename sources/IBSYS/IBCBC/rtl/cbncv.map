@@ -1,0 +1,27 @@
+$IBMAP CBNCV   ADDREL                                                   3LP00000
+       LBL     BNCV,BEGIN     CBNCV                                  (7)3LP00010
+* .CBNCV LIBRARY SUBROUTINE                                             3LP00020
+* CALLING SEQUENCE                                                      3LP00030
+*      TSX     .CBNCV,4                                                 3LP00040
+*      RETURN                                                           3LP00050
+*  ON ENTRY-UNSIGNED BINARY WORD LENGTH OF RECORD IN MQ + 1 FOR CONTROL 3LP00060
+*  ON EXIT CONTROL WORD IN BCD IN LOGICAL AC - 5 DIGIT BCD LENGTH FIELD 3LP00070
+*  WITH SIXTH CHARACTER ZEROES).                                        3LP00080
+       ENTRY   .CBNCV                                                   3LP00090
+.CBNCV SXA     BINX,4                                                   3LP00100
+       MPY     BIN6                                                     3LP00110
+       AXT     36,4                                                     3LP00120
+       STZ     BCDNO                                                    3LP00130
+BNCV1  PXD     0,0                                                      3LP00140
+       DVP     BIN10                                                    3LP00150
+       ALS     36,4                                                     3LP00160
+       ORS     BCDNO                                                    3LP00170
+BNCV2  TIX     BNCV1,4,6                                                3LP00180
+       CAL     BCDNO                                                    3LP00190
+       LGL     6                                                        3LP00200
+BINX   AXT     **,4                                                     3LP00210
+       TRA     1,4                                                      3LP00220
+BCDNO  BSS     1                                                        3LP00230
+BIN6   DEC     6                                                        3LP00240
+BIN10  DEC     10                                                       3LP00250
+       END                                                              3LP00260

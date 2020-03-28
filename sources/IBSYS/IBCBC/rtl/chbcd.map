@@ -1,0 +1,82 @@
+$IBMAP CHBCD   ADDREL                                                   3LE00000
+       LBL     HBCD,BEGIN     CHBCD                                  (7)3LE00010
+*      TSX     .CHBCD,4            HOLLERITH TO BCD CONVERSION          3LE00020
+*      PZE     BL+NNN,,TS+8                                             3LE00030
+*      RETURN                                                           3LE00040
+* THE HOLLERITH IMAGE IS LOCATED IN AN AREA INDICATED                   3LE00050
+* BY THE BASE LOCATOR(BYTE MUST BE ZERO).  THE                          3LE00060
+* BCD IMAGE IS PLACED INTO THE 12 WORD TEMPORARY                        3LE00070
+* STORAGE AREA BEGINNING AT TS+8.                                       3LE00080
+       ENTRY   .CHBCD                                                   3LE00090
+.CHBCD SXA     OUT1,1                                                   3LE00100
+       SXA     OUT1+1,2                                                 3LE00110
+       SXA     OUT1+2,4                                                 3LE00120
+       CAL     1,4                                                      3LE00130
+       PDX     0,2                 TS+8 OR OUTPUT-START                 3LE00140
+       TXI     *+1,2,6             OUTPUT-START+6                       3LE00150
+       SXA     IMG,2                                                    3LE00160
+       TXI     *+1,2,6             OUTPUT-START+12                      3LE00170
+       SXA     HSTZ,2                                                   3LE00180
+       SXA     NXHLF+1,2                                                3LE00190
+       CAL*    1,4                 INPUT-START                          3LE00200
+       PAX     0,4                                                      3LE00210
+       TXI     *+1,4,24                                                 3LE00220
+       SXA     GETH,4              INPUT-START+24                       3LE00230
+       AXT     24,4                                                     3LE00240
+       AXT     12,2                                                     3LE00250
+ HSTZ  STZ     **,2                OUTPUT-START+12                      3LE00260
+       TIX     *-1,2,1                                               12 3LE00270
+ FULL  AXT     12,1                                                  13 3LE00280
+       STZ     ZROW                                                  14 3LE00290
+       STZ     BLNKR                                                 15 3LE00300
+ GETH  CAL     **,4                                                  16 3LE00310
+       ORS     BLNKR                                                 17 3LE00320
+       TXL     *+2,1,3                                               18 3LE00330
+       ORS     ZROW                                                  19 3LE00340
+       TXL     *+2,1,2                                               20 3LE00350
+       ANA     ZROW                                                  21 3LE00360
+ BLNKX XCL                                                           22 3LE00370
+       AXT     6,2                 J                                 23 3LE00380
+ CAQLP PXD     0,0                                                   24 3LE00390
+       CAQ     MSKTB,,1                                              25 3LE00400
+       ANA     VALTB+12,1                                            26 3LE00410
+ IMG   ORS     **,2                                                  27 3LE00420
+       TIX     CAQLP,2,1                                             28 3LE00430
+       TXI     *+1,1,-1                                              29 3LE00440
+       TIX     GETH,4,2                                              30 3LE00450
+       TXH     NXHLF,1,1                                             3013LE00460
+       CAL     BLNKR                                                 31 3LE00470
+       COM                                                           32 3LE00480
+       TXH     *+3,1,1                                               33 3LE00490
+       TXI     BLNKX,1,2                                             34 3LE00500
+ NXHLF TXL     OUT1,4,1                                              35 3LE00510
+       AXT     **,1                START+12                             3LE00520
+       SXA     IMG,1                                                 38 3LE00530
+       TXI     FULL,4,21                                             39 3LE00540
+ OUT1  AXT     **,1                                                  40 3LE00550
+       AXT     **,2                                                  41 3LE00560
+       AXT     **,4                                                  42 3LE00570
+       TRA     2,4                                                      3LE00580
+ 6N24  OCT     000006000030                                          44 3LE00590
+ ZROW  PZE     0                                                     45 3LE00600
+ BLNKR PZE     0                                                     46 3LE00610
+ MSKTB OCT     0,77,7700,7777,770000,770077,777700,777777             0 3LE00620
+       OCT     77000000,77000077,77007700,77007777,77770000           8 3LE00630
+       OCT     77770077,77777700,77777777                            13 3LE00640
+       OCT     007700000000,007700000077,007700007700,007700007777   16 3LE00650
+       OCT     007700770000,007700770077,007700777700,007700777777   20 3LE00660
+       OCT     007777000000,007777000077,007777007700,007777007777   24 3LE00670
+       OCT     007777770000,007777770077,007777777700,007777777777   28 3LE00680
+       OCT     770000000000,770000000077,770000007700,770000007777   32 3LE00690
+       OCT     770000770000,770000770077,770000777700,770000777777   36 3LE00700
+       OCT     770077000000,770077000077,770077007700,770077007777   40 3LE00710
+       OCT     770077770000,770077770077,770077777700,770077777777   44 3LE00720
+       OCT     777700000000,777700000077,777700007700,777700007777   48 3LE00730
+       OCT     777700770000,777700770077,777700777700,777700777777   52 3LE00740
+       OCT     777777000000,777777000077,777777007700,777777007777   56 3LE00750
+       OCT     777777770000,777777770077,777777777700,777777777777   60 3LE00760
+ VALTB OCT     111111111111,101010101010,070707070707,060606060606    9 3LE00770
+       OCT     050505050505,040404040404,030303030303,020202020202    5 3LE00780
+       OCT     010101010101,606060606060,404040404040,202020202020    1 3LE00790
+*              7090 TIME FOR 1 CONV = 5.1MS                             3LE00800
+       END                                                              3LE00810

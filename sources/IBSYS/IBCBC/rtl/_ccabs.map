@@ -1,0 +1,6 @@
+$IBMAP .CCABS                                                        $5$3MF01410
+       LBL     CCAB,BEGIN     .CCABS                                 (7)3MF01413
+.CCABS CAL     *+2            ABSOLUTE A                             $5$3MF01420
+       TRA     .CGOGO                                                $5$3MF01430
+       NOP     CABS                                                  $5$3MF01440
+       END                                                           $5$3MF01450

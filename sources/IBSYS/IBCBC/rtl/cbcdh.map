@@ -1,0 +1,85 @@
+$IBMAP CBCDH   ADDREL                                                   3LF00000
+       LBL     BCDH,BEGIN     CBCDH                                  (7)3LF00010
+*      BCD TO HOLLERITH FOR COBOL                                       3LF00020
+*      CALLING SEQUENCE                                                 3LF00030
+*      TSX     .CBCDH,4                                                 3LF00040
+*      PZE     BL+NNN,,TS+8                                             3LF00050
+*      RETURN                                                           3LF00060
+* THE BCD IMAGE IS STORED IN THE 12 WORD                                3LF00070
+* TEMPORARY STORAGE AREA BEGINNING AT TS+8                              3LF00080
+* AND THE HOLLERITH IMAGE IS PLACED IN THE                              3LF00090
+* AREA LOCATED BY THE BASE LOCATOR.                                     3LF00100
+       ENTRY   .CBCDH                                                   3LF00110
+.CBCDH SXA     BCX1,4                                                   3LF00120
+       SXA     BCX1+1,2                                                 3LF00130
+       SXA     BCX1+2,1                                                 3LF00140
+       CAL*    1,4                                                      3LF00150
+       STA     ZONE                RECEIVING BUFFER LOCATION            3LF00160
+       CAL     1,4                                                      3LF00170
+       PDX     0,1                                                      3LF00180
+       SXA     BCD2,1              INPUT START                          3LF00190
+       LDQ     STROBE                                                06 3LF00200
+       ZET     PRINT                                                 07 3LF00210
+       TRA     BCD0                                                  08 3LF00220
+       AXT     0,1                                                   09 3LF00230
+       STZ*    ZONE                                                  10 3LF00240
+       TXI     *+1,1,-1                                              11 3LF00250
+       TXH     *-2,1,-24                                             12 3LF00260
+       LDQ     HFROL                                                 13 3LF00270
+       STQ     HAFRO                                                 14 3LF00280
+       LDQ     MZE                                                   15 3LF00290
+ BCD0  LXA     ZONE,1                                                16 3LF00300
+       TXI     *+1,1,-1                                              17 3LF00310
+       SXA     ZONE,1                                                18 3LF00320
+       SXA     *+1,1                                                 19 3LF00330
+ NUMBR AXT     **,2                                                  20 3LF00340
+       AXT     0,4                                                   26 3LF00350
+       XCL                                                           27 3LF00360
+ BCD1  TNZ     *+4                                                   28 3LF00370
+       CAL     MZE                                                   29 3LF00380
+       LDQ     HFROR                                                 30 3LF00390
+       STQ     HAFRO                                                 31 3LF00400
+       SLW     STROBE                                                32 3LF00410
+ BCD2  LDQ     **,4                                                  33 3LF00420
+       SXA     BCD6,4                                                34 3LF00430
+       AXT     6,4                                                   35 3LF00440
+ BCD3  PXD     0,0                                                   36 3LF00450
+       LGL     2                                                     37 3LF00460
+       ALS     14                                                    38 3LF00470
+       LGL     4                                                     39 3LF00480
+       ALS     1                                                     40 3LF00490
+       ACL     HAFRO                                                 41 3LF00500
+       PDX     0,1                 ZONE                              42 3LF00510
+       PAX     0,2                 NUMBR                             43 3LF00520
+       CAL     STROBE                                                44 3LF00530
+       TXH     *+4,2,-19           NUMBR GR ZERO                     45 3LF00540
+       TXL     *+3,2,-21                                             46 3LF00550
+       TXH     BCD5X,1,-21         ZONE  GR 2                        47 3LF00560
+       TXL     BCD4+1,1,-25        ZONE  LR-EQ ZERO                  48 3LF00570
+       TXL     *+2,1,-25           ZONE  LR-EQ ZERO                  49 3LF00580
+       ORS*    ZONE                                                  50 3LF00590
+       TXH     BCD4,2,6            NUMBR GR 9                        51 3LF00600
+       LXA     HAFRO,1                                               52 3LF00610
+       TXI     *+1,1,16                                              53 3LF00620
+       ORS*    ZONE                ENTER 8 PUNCH                     54 3LF00630
+       TXI     *+2,2,-16                                             55 3LF00640
+ BCD4  TXL     *+2,2,-19           NUMBR LR-EQ ZERO                  56 3LF00650
+       ORS*    NUMBR                                                 57 3LF00660
+ BCD5X ARS     1                                                     58 3LF00670
+       SLW     STROBE                                                59 3LF00680
+       TIX     BCD3,4,1            RETURN ON 6-CHAR LOOP             60 3LF00690
+ BCD6  AXT     **,4                                                  61 3LF00700
+       TXI     *+1,4,-1                                              62 3LF00710
+ BCD7  TXH     BCD1,4,-12          RETURN ON 12 WORD LOOP               3LF00720
+ BCX1  AXT     **,4                EXIT                              64 3LF00730
+       AXT     **,2                                                  65 3LF00740
+       AXT     **,1                                                  66 3LF00750
+       TRA     2,4                                                      3LF00760
+ PRINT PZE     0                                                     71 3LF00770
+STROBE PZE     0                                                     72 3LF00780
+ HAFRO PZE     0                                                     73 3LF00790
+ HFROL PZE     -19,,-25                                              74 3LF00800
+ HFROR PZE     -20,,-26                                              75 3LF00810
+ ZONE  AXT     **,1                                                     3LF00820
+ MZE   MZE     0                                                        3LF00830
+       END                                                              3LF00840

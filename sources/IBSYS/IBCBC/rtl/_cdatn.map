@@ -1,0 +1,10 @@
+$IBMAP .CDATN                                                        $5$3MF01230
+       LBL     CDAT,BEGIN     .CDATN                                 (7)3MF01233
+.CDATN CAL     *+2            ARCTAN (A)                             $5$3MF01240
+       TRA     .CGOGO                                                $5$3MF01250
+       NOP     DATAN                                                 $5$3MF01260
+       ENTRY   .CDAT2                                                $5$3MF01270
+.CDAT2 CAL     *+2            ARCTAN (A/B)                           $5$3MF01280
+       TRA     .CGOGO                                                $5$3MF01290
+       NOP     DATAN2                                                $5$3MF01300
+       END                                                           $5$3MF01310

@@ -1,0 +1,10 @@
+$IBMAP .CATAN                                                        $5$3MF00480
+       LBL     CATN,BEGIN     .CATAN                                 (7)3MF00483
+.CATAN CAL     *+2            ARCTAN (A)                             $5$3MF00490
+       TRA     .CGOGO                                                $5$3MF00500
+       TRA     ATAN                                                  $5$3MF00510
+       ENTRY   .CATN2                                                $5$3MF00520
+.CATN2 CAL     *+2            ARCTAN (A/B)                           $5$3MF00530
+       TRA     .CGOGO                                                $5$3MF00540
+       TRA     ATAN2                                                 $5$3MF00550
+       END                                                           $5$3MF00560

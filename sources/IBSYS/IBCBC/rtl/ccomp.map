@@ -1,0 +1,216 @@
+$IBMAP CCOMP   ADDREL                                                   3L500000
+       LBL     COMP,BEGIN     CCOMP                                  (7)3L500010
+*              NOTE     CALLING SEQUENCE                                3L500020
+*                                                                       3L500030
+*              NOTE     TSX   SYSCOM,4                                  3L500040
+*              NOTE     OP    SYSCOL,,6                                 3L500050
+*              NOTE     PZE   A1,T,L(LOC1)                              3L500060
+*              NOTE     PZE   LENGTH1,,6*BYTE1                          3L500070
+*              NOTE     PZE   A2,T,L(LOC2)                              3L500080
+*              NOTE     PZE   LENGTH2,,6*BYTE2                          3L500090
+*              NOTE     HIGH RETURN                                     3L500100
+*              NOTE     EQUAL RETURN                                    3L500110
+*              NOTE     LOW RETURN                                      3L500120
+*                                                                       3L500130
+*              NOTE     WHRER  OP=CVR OR NOP ACCORDING TO WHETHER       3L500140
+*              NOTE      COLLATING SEQUENCE ADJUSTMENT IS NEEDED        3L500150
+*              NOTE      OR NOT.                                        3L500160
+*                                                                       3L500170
+*              NOTE     AJ IS THE BASE OF OPERAND J, L(LOCJ) IS THE     3L500180
+*              NOTE      LOCATION OF ITS LOCATOR (=0 IF NO LOCATOR),    3L500190
+*              NOTE      T IS NON-ZERO IF THE LOCATOR IS COMPLEX.       3L500200
+*                                                                       3L500210
+*              NOTE     LENGTHJ IS THE LENGTH OF OPERAND J IN           3L500220
+*              NOTE      CHARACTERS, AND BYTEJ IS THE NOMINAL BYTE.     3L500230
+*                                                                       3L500240
+       ENTRY   .CCOMP                                                   3L500250
+.CCOMP SXA     COMEX,4             SAVE INDEX                           3L500260
+       SXA     COMEX+1,2             REGISTERS                          3L500270
+       SXA     COMEX+2,1                                                3L500280
+       CLA     1,4                                                      3L500290
+       STO     CNVSN               COLLATING SEQUENCE CONVERSION        3L500300
+       AXT     0,2                                                      3L500310
+COMST  CLA     2,4                                                      3L500320
+       STA     LOCTR,2             BASE ADDRESS                         3L500330
+       STT     TAG                 COMPLEX INDICATOR                    3L500340
+       PDC     0,1                 LOCATION OF LOCATOR                  3L500350
+       CLA     3,4                                                      3L500360
+       STA     LNGTH,2             LENGTH                               3L500370
+       STZ     TEMP                                                     3L500380
+       STD     TEMP                NOMINAL BYTE                         3L500390
+       TXL     COMB,1,0            BYPASS IF NO LOCATOR                 3L500400
+       NZT     0,1                 12-13                                3L500410
+       TRA     .CBLER              12-13                                3L500420
+       NZT     TAG                                                      3L500430
+       TRA     COMA                                                     3L500440
+       LDQ     0,1                 IF COMPLEX LOCATOR,                  3L500450
+       MPY     L.6                   ADJUST BYTE                        3L500460
+       XCA                           AND CORRECT BASE                   3L500470
+       ACL     TEMP                  FOR POSSIBLE                       3L500480
+       ANA     MSKDC                 OVERFLOW TO NEXT WORD.             3L500490
+       LRS     35                                                       3L500500
+       DVP     36B18                                                    3L500510
+       STD     TEMP                                                     3L500520
+       XCA                                                              3L500530
+       ACL     LOCTR,2                                                  3L500540
+       STA     LOCTR,2                                                  3L500550
+COMA   CLA     0,1                                                      3L500560
+       PAC     0,1                                                      3L500570
+COMB   PXA     0,1                                                      3L500580
+       STA     LOADS,2             BASE LOCATOR VALUE                   3L500590
+       LXD     TEMP,1                                                   3L500600
+       PXA     0,1                 SET UP SHIFT COMMAND                 3L500610
+       STA     SHIFT,2               FROM OPERAND BYTE                  3L500620
+       TXI     *+1,4,-2                                                 3L500630
+       TXI     *+1,2,-1                                                 3L500640
+       TXH     COMST,2,-2          BACK FOR SECOND OPERAND              3L500650
+       STZ     DIFF                SET FOR EQUAL                        3L500660
+       CLA     LNGTH                                                    3L500670
+       SUB     LNGTH+1                                                  3L500680
+       TNZ     OUT1                                                     3L500690
+ IN1   LDQ     LNGTH                                              1127623L500700
+       TMI     *+2                                                1127623L500710
+       LDQ     LNGTH+1                                            1127623L500720
+       PXD     0,0                                                      3L500730
+       DVP     L.6                                                      3L500740
+       XCA                                                              3L500750
+       PAX     0,4                 NUMBER OF WHOLE WORDS                3L500760
+       MPY     L.6                                                      3L500770
+       PXA     0,0                                                      3L500780
+       XCA                         FROM REMAINDER, COMPUTE              3L500790
+       PAC     0,2                 VALUE OF TRAILER MASK                3L500800
+       CAL     SEVENS                AND STORE FOR                      3L500810
+       LGR     0,2                   LAST WORD                          3L500820
+       STQ     MASK                                                     3L500830
+LOADS  AXT     0,1                 PICK UP LOCATOR VALUES               3L500840
+       AXT     0,2                    FOR OPERANDS                      3L500850
+       TXL     COMD,4,0            SPECIAL IF LESS THAN ONE WORD        3L500860
+COMC   CAL*    LOCTR+1                                                  3L500870
+       TXI     *+1,2,-1            CURRENT WORD OF SECOND               3L500880
+       LDQ*    LOCTR+1               OPERAND TO AC-MQ                   3L500890
+       XEC     SHIFT+1                                                  3L500900
+       ANA     SEVENS                                                   3L500910
+CNVSN  NOP     0                                                        3L500920
+       SLW     TEMP                                                     3L500930
+       CAL*    LOCTR               CURRENT WORD OF FIRST                3L500940
+       TXI     *+1,1,-1              OPERAND TO AC-MQ                   3L500950
+       LDQ*    LOCTR                                                    3L500960
+       XEC     SHIFT                                                    3L500970
+       ANA     SEVENS                                                   3L500980
+       XEC     CNVSN                                                    3L500990
+       LAS     TEMP                COMPARE WORDS                        3L501000
+       TRA     COMEX               EXIT IF HIGH                         3L501010
+       TRA     *+2                 CONTINUE IF EQUAL                    3L501020
+       TRA     COMEX               EXIT IF LOW                          3L501030
+       TIX     COMC,4,1                                                 3L501040
+COMD   CAL*    LOCTR+1             LAST CHARACTERS                      3L501050
+       TXI     *+1,2,-1              OF SECOND                          3L501060
+       LDQ*    LOCTR+1               OPERAND                            3L501070
+       XEC     SHIFT+1                                                  3L501080
+       ANA     MASK                                                     3L501090
+       XEC     CNVSN                                                    3L501100
+       SLW     TEMP                                                     3L501110
+       CAL*    LOCTR               LAST CHARACTERS OF                   3L501120
+       TXI     *+1,1,-1              FIRST OPERAND                      3L501130
+       LDQ*    LOCTR                                                    3L501140
+       XEC     SHIFT                                                    3L501150
+       ANA     MASK                                                     3L501160
+       XEC     CNVSN                                                    3L501170
+COMEX  AXT     0,4                                                      3L501180
+       AXT     0,2                                                      3L501190
+       AXT     0,1                                                      3L501200
+       LAS     TEMP                FINAL COMPARISON                     3L501210
+       TRA     6,4                 EXIT HIGH                            3L501220
+       TRA     OUT2                EQUAL                          1127623L501230
+       TRA     8,4                      LOW                             3L501240
+LOCTR  PZE     0,1                 INDIRECT OPERAND                     3L501250
+       PZE     0,2                    REFERENCES                        3L501260
+LNGTH  PZE     0                   TEMPORARY STORAGE FOR LENGTH         3L501270
+       PZE     0                                                        3L501280
+TAG    PZE     0                   COMPLEX INDICATOR                    3L501290
+TEMP   PZE     0                   TEMPORARY                            3L501300
+SHIFT  LGL     0                   SHIFT INSTRUCTIONS                   3L501310
+       LGL     0                      FOR OPERANDS                      3L501320
+MASK   PZE     0                   TRAILER MASK STORAGE                 3L501330
+L.6    OCT     6                   CONSTANTS                            3L501340
+36B18  OCT     44000000                                                 3L501350
+SEVENS OCT     777777777777                                             3L501360
+MSKDC  OCT     077777000000                                             3L501370
+ OUT1  STA     DIFF                DIFFERENCE IN CHARACTERS             3L501380
+       AXT     0,4                 INDICATE A IS LARGER                 3L501390
+       TPL     *+2                                                      3L501400
+       AXT     -1,4                INDICATE A+1 IS LARGER               3L501410
+       SXA     AXT2,4                                                   3L501420
+       TRA     IN1                                                      3L501430
+       TRA     OUT2                                                     3L501440
+ OUT2  NZT     DIFF                                                     3L501450
+       TRA     7,4                                                      3L501460
+ AXT2  AXT     **,4                                                     3L501470
+       CLA     LOADS,4             INITIALIZE XR1 FOR CHECK ON          3L501471
+       STA     COMC1-2             EXTRA CHARACTERS OF LONGER ITEM      3L501472
+       LDQ     LNGTH+1                                                  3L501480
+       PXD     0,0                                                      3L501490
+       TXL     *+2,4,0                                                  3L501500
+       LDQ     LNGTH               COMPUTE WORDS                        3L501510
+       DVP     L.6                 AND                                  3L501520
+       RQL     18                  BYTES                                3L501530
+       LGL     18                  OF SMALLER                           3L501540
+       SLW     TEMP                                                     3L501550
+       CAL     SHIFT,4                                                  3L501560
+       ANA     MONE                                                     3L501570
+       LGR     36                                                       3L501580
+       DVP     L.6                                                      3L501590
+       LGL     36+18                                                    3L501600
+       ACL     LOCTR,4             START OF LONGER                      3L501610
+       ANA     MSKTG                                                    3L501620
+       ACL     TEMP                                                     3L501630
+       PDX     0,1                                                      3L501640
+       TXL     *+2,1,5                                                  3L501650
+       ACL     LM617               -6 BASE 17                           3L501660
+       STA     START                                                    3L501670
+       XCA                                                              3L501680
+       MPY     L.6                                                      3L501690
+       XCA                                                              3L501700
+       PDX     0,1                                                      3L501710
+       SXA     LGL1,1                                                   3L501720
+       PXD     0,0                                                      3L501730
+       LDQ     DIFF                                                     3L501740
+       STZ     DIFF                                                     3L501750
+       STZ     TEMP                                                     3L501760
+       DVP     L.6                                                      3L501770
+       XCA                                                              3L501780
+       PAX     0,2                 NUMBER OF WHOLE WORDS                3L501790
+       MPY     L.6                 REMAINDER TIMES 6                    3L501800
+       PXD     0,0                                                      3L501810
+       XCA                                                              3L501820
+       PAC     0,1                                                      3L501830
+       CAL     SEVENS                                                   3L501840
+       LGR     0,1                                                      3L501850
+       STQ     MASK                                                     3L501860
+       AXT     0,1                                                      3L501870
+       TXL     COMD1,2,0                                                3L501880
+ COMC1 CAL*    START                                                    3L501890
+       TXI     *+1,1,-1                                                 3L501900
+       LDQ*    START                                                    3L501910
+ LGL1  LGL     **                                                       3L501920
+       ANA     SVTNS                                                    3L501930
+       TNZ     COM11                                                    3L501940
+       TIX     COMC1,2,1                                                3L501950
+ COMD1 CAL*    START                                                    3L501960
+       TXI     *+1,1,-1                                                 3L501970
+       LDQ*    START                                                    3L501980
+       XEC     LGL1                                                     3L501990
+       ANA     SVTNS                                                    3L502000
+       ANA     MASK                                                     3L502010
+       TZE     COMEX                                                    3L502020
+ COM11 TXL     COMEX,4,0                                                3L502030
+       STL     TEMP                                                     3L502040
+       PXD     0,0                                                      3L502050
+       TRA     COMEX                                                    3L502060
+ SVTNS OCT     171717171717                                             3L502070
+ MSKTG TXL     -1,0,-1                                                  3L502080
+ DIFF  PZE     **                                                       3L502090
+ LM617 TXL     0,,-6                                                    3L502100
+ START PZE     **,1                                                     3L502110
+ MONE  PZE     -1                                                       3L502120
+       END                                                              3L502130

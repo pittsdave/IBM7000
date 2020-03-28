@@ -1,0 +1,9 @@
+$IBMAP .CSINH                                                           3MG00190
+.CSINH CAL     *+2                SINH (A)                              3MG00200
+       TRA     .CGOGO                                                   3MG00210
+       TRA     SINH                                                     3MG00220
+       ENTRY   .CCOSH                                                   3MG00230
+.CCOSH CAL     *+2                 COSH (A)                             3MG00240
+       TRA     .CGOGO                                                   3MG00250
+       TRA     COSH                                                     3MG00260
+       END                                                              3MG00270

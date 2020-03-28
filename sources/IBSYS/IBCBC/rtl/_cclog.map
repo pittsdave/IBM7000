@@ -1,0 +1,6 @@
+$IBMAP .CCLOG                                                        $5$3MF01510
+       LBL     CCLG,BEGIN     .CCLOG                                 (7)3MF01513
+.CCLOG CAL     *+2            LN (A)                                 $5$3MF01520
+       TRA     .CGOGO                                                $5$3MF01530
+       NOP     CLOG                                                  $5$3MF01540
+       END                                                           $5$3MF01550

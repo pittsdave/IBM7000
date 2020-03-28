@@ -1,0 +1,6 @@
+$IBMAP .CCEXP                                                        $5$3MF01460
+       LBL     CCXP,BEGIN     .CCEXP                                 (7)3MF01463
+.CCEXP CAL     *+2            E ** A                                 $5$3MF01470
+       TRA     .CGOGO                                                $5$3MF01480
+       NOP     CEXP                                                  $5$3MF01490
+       END                                                           $5$3MF01500

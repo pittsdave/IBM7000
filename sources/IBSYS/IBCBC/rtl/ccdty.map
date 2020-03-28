@@ -1,0 +1,26 @@
+$IBMAP CCDTY   ADDREL                                                   3LL00000
+       LBL     CDTY,BEGIN     CCDTY                                  (7)3LL00010
+*   THIS SUBROUTINE DETERMINES IF THE UNIT ATTACHED TO A FILE IS CARD   3LL00020
+*   MEDIA OR TAPE MEDIA.                                                3LL00030
+       SPACE   1                                                        3LL00040
+*   CALLING SEQUENCE                                                    3LL00050
+*      TSX     .CCDTY,4                                                 3LL00060
+*      PZE     FILE                                                     3LL00070
+*      FILE IS ATTACHED TO CARD RETURN.                                 3LL00080
+*      FILE IS ATTACHED TO TAPE RETURN.                                 3LL00090
+       SPACE   1                                                        3LL00100
+*   WHERE FILE IS THE LOCATION OF THE IOBS FILE BLOCK                   3LL00110
+*   NOTE THAT SENSE INDICATORS ARE DESTROYED, AND ALSO THAT THE         3LL00120
+*   RETURN POINT IS UNPREDICTABLE WHEN THERE IS NO UNIT ATTACHED (NONE).3LL00130
+       ENTRY   .CCDTY                                                   3LL00140
+.CCDTY SXA     CCDTY1,4            SAVE XR4                             3LL00150
+       CAL*    1,4                 GET 1RST WORD OF FILE BLOCK          3LL00160
+       PAC     0,4                 GET -L(UNIT BLOCK) TO XR4            3LL00170
+       LDI     0,4                 GET FIRST WORD OF UNIT BLOCK         3LL00180
+CCDTY1 AXT     **,4                RELOAD XR4 TO RETURN                 3LL00190
+       LFT     020000              IS THIS INTERFACE CHANNEL            3LL00200
+       TRA     3,4                 YES, NOT CARD EQUIPMENT              3LL00210
+       LNT     000100              NO, TEST IF CARD EQUIPMENT           3LL00220
+       TRA     3,4                 NO, GO TO TAPE RETURN                3LL00230
+       TRA     2,4                 YES GO TO CARD RETURN                3LL00240
+       END     .CCDTY                                                   3LL00250

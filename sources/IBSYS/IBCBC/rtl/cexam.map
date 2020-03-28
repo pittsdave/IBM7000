@@ -1,0 +1,218 @@
+$IBMAP CEXAM   ADDREL                                                   3LN00000
+       LBL     EXAM,BEGIN     CEXAM                                  (7)3LN00010
+* CEXAM - SUBROUTINE TO EXAMINE DATUM PER D.O.D. COBOL SPECIFICATIONS   3LN00020
+*                                                                       3LN00030
+       ENTRY   .CEXAM                                                   3LN00040
+.CEXAM SXA     CXMAX2,2            SAVE INDICES                         3LN00050
+       SXA     CXMAX2+1,4                                               3LN00060
+       CLA     1,4                 GET PARAMETER WORD                   3LN00070
+       LGR     18                                                       3LN00080
+       STA     TLYING                                                   3LN00090
+       ZET     TLYING              IF TALLYING, SET TALLY = ZERO        3LN00100
+       STZ*    TLYING                                                   3LN00110
+       TXL     CXMAX2,1,0          PROTECT AGAINST LENGTH = ZERO        3LN00120
+       STZ     CSWTCH                                                   3LN00130
+       TPL     *+2                 SET REPLACING QUESTION               3LN00140
+       STL     CSWTCH                                                   3LN00150
+       STZ     LEADNG                                                   3LN00160
+       STZ     C1ST                SET MINOR QUESTIONS TO NO            3LN00170
+       STZ     TIL1ST                                                   3LN00180
+       STZ     COP                                                      3LN00185
+       PXA     0,0                                                      3LN00190
+       LGL     3                                                        3LN00200
+       PAC     0,2                 GET CODE                             3LN00210
+       TQP     *+2                                                      3LN00211
+       STL     COP                 PERMIT OVERPUNCH CHECKING            3LN00212
+       LGL     1                                                        3LN00213
+       PXA     0,0                                                      3LN00220
+       LGL     8                                                        3LN00230
+       SLW     LIT.2               SET LITERAL.2                        3LN00240
+       PXA     0,0                                                      3LN00250
+       LGL     6                                                        3LN00260
+       SLW     LIT.1               SET LITERAL.1                        3LN00270
+       XEC     STLTBL,2                                                 3LN00280
+       SPACE   1                                                        3LN00290
+       LXD     .CAREF,2                                                 3LN00300
+CXMGET TSX     .CHGET,4            GET NEXT CHARACTER                   3LN00310
+       TRA     CXMAX2              EXIT AT END                          3LN00320
+       LGL     6                                                        3LN00330
+       SUB     LIT.1               SEE IF CHAR = LIT.1                  3LN00340
+       TZE     CTIL1                                                    3LN00350
+       TXH     CXAM1,1,1                                                3LN00351
+       NZT     COP                 IF LAST CHAR, CHECK OVERPUNCH QUERY  3LN00352
+       TRA     CXAM1               NO - FORGET IT                       3LN00353
+       TMI     CXAM1               YES - NO USE IF NEGATIVE REMAINDER   3LN00354
+       PAX     0,4                                                      3LN00355
+       ZET     LIT.1                                                    3LN00356
+       TXI     *+2,4,-16           ADJUST FOR + O.P. FOR 1 - 9          3LN00357
+       TXI     *+1,4,-26           ADJUST FOR + O.P. FOR ZERO           3LN00358
+       TXL     CXAM2,4,0           TRANSFER IF + O.P.                   3LN00359
+       TXH     CXAM1,4,16                                               3LN00360
+       TXL     CXAM1,4,15          IF NOT NEGATIVE O.P., FORGET IT      3LN00361
+CXAM2  ZET     LIT.2                                                    3LN00362
+       TXI     *+2,4,16            READJUST O.P. FOR LIT.2 VALUES 1 - 9 3LN00363
+       TXI     *+1,4,26            READJUST O.P. FOR LIT.2 VALUE ZERO   3LN00364
+       PXA     0,4                                                      3LN00365
+       ORS     LIT.2               OR O.P. INTO LIT.2                   3LN00366
+       TRA     CTIL1                                                    3LN00367
+CXAM1  ZET     LEADNG                                                   3LN00368
+       TRA     CXMAX2              EXIT IF 'LEADING'                    3LN00370
+       ZET     TIL1ST                                                   3LN00380
+       TRA     CTIL1+2                                                  3LN00390
+       TXI     CXMGET,1,-1                                              3LN00400
+       SPACE   1                                                        3LN00410
+CTIL1  ZET     TIL1ST                                                   3LN00420
+       TRA     CXMAX2              EXIT IF 'UNTIL FIRST'                3LN00430
+       ZET     TLYING                                                   3LN00440
+       TRA     TLYADD              GO TO ADD TO TALLY IF 'TALLYING'     3LN00450
+CXAM3  CAL     LIT.2                                                    3LN00460
+       LGR     6                                                        3LN00470
+       XEC     RQLTB2,2            REPLACE CHAR BY LIT.2                3LN00480
+       TXH     CXAM4,2,0           NO PROBLEM                           3LN00490
+       LAC     .CAREF,4                                                 3LN00500
+       STQ     -1,4                                                     3LN00510
+       TRA     CXAM4+1                                                  3LN00520
+CXAM4  STQ*    .CAREF                                                   3LN00530
+       NZT     C1ST                                                     3LN00540
+       TXI     CXMGET,1,-1                                              3LN00550
+       TRA     CXMAX2                                                   3LN00560
+       SPACE   1                                                        3LN00570
+       PZE     1                                                        3LN00580
+TLYADD CLA*    TLYING                                                   3LN00590
+       ADD     TLYADD-1            ADD 1 TO TALLY                       3LN00600
+       STO*    TLYING                                                   3LN00610
+       ZET     CSWTCH                                                   3LN00620
+       TRA     CXAM3               DO REPLACING IF REQUESTED            3LN00630
+       TXI     CXMGET,1,-1                                              3LN00640
+       SPACE   1                                                        3LN00650
+TLYING PZE     **                                                       3LN00660
+CSWTCH PZE     **                                                       3LN00670
+LEADNG PZE     **                                                       3LN00680
+C1ST   PZE     **                                                       3LN00690
+TIL1ST PZE     **                                                       3LN00700
+COP    PZE     **                  CHECK OVERPUNCH SWITCH               3LN00705
+LIT.1  PZE     **                                                       3LN00710
+LIT.2  PZE     **                                                       3LN00720
+       SPACE   1                                                        3LN00730
+STLTBL AXT     0,0                       0                              3LN00740
+       STL     LEADNG              0     1                              3LN00750
+       STL     C1ST                      2                              3LN00760
+       STR                               3                              3LN00770
+       STL     TIL1ST                    4                              3LN00780
+       STR                               5                              3LN00790
+       STR                         7     6                              3LN00800
+       STR                         6     7                              3LN00810
+       RQL     12                  5                                    3LN00820
+       RQL     18                  4                                    3LN00830
+       RQL     24                  3                                    3LN00840
+       RQL     30                  2                                    3LN00850
+       AXT     0,0                 1                                    3LN00860
+RQLTB2 RQL     6                   0                                    3LN00870
+       SPACE   2                                                        3LN00880
+*  SUBROUTINES TO EXAMINE A DATA ITEM                                   3LN00890
+*    TO TEST IF NUMERIC (.CXAMN) OR                                     3LN00900
+*    TO TEST IF ALPHABETIC (.CXAMA)                                     3LN00910
+*                                                                       3LN00920
+       ENTRY   .CXAMN                                                   3LN00930
+.CXAMN SXA     CXMAX2,2            SAVE XR2                             3LN00940
+       AXT     2,2                                                      3LN00950
+       SXA     CXTEST,2            SET UP FOR NUMERIC TEST              3LN00960
+       AXT     CXAMN1,2                                                 3LN00970
+       TRA     CXAMNC                                                   3LN00980
+       SPACE   1                                                        3LN00990
+       ENTRY   .CXAMA                                                   3LN01000
+.CXAMA SXA     CXMAX2,2            SAVE XR2                             3LN01010
+       AXT     1,2                                                      3LN01020
+       SXA     CXTEST,2            SET UP FOR ALPHABETIC                3LN01030
+       AXT     CXMAX2,2                                                 3LN01040
+CXAMNC SXA     CXTEST+1,2                                               3LN01050
+       SXA     CXMAX2+1,4          SAVE RETURN                          3LN01060
+       CLA     1,4                                                      3LN01070
+       PDX     0,2                                                      3LN01080
+       SXA     CXMA1,2             GET TS CELL                          3LN01090
+       STL*    CXMA1               SET 'NO' ANSWER                      3LN01100
+       TXL     CXMAX2,1,0          PROTECT AGAINST LENGTH = 0           3LN01110
+       LXD     .CAREF,2            GET FIRST BYTE                       3LN01120
+       SPACE   1                                                        3LN01130
+CXGET  TSX     .CHGET,4            GET NEXT CHARACTER                   3LN01140
+       TRA     CXMA1                (AT END SET 'YES')                  3LN01150
+CLOOK  TQP     *+4                                                      3LN01160
+       CAQ     CXMATB-32,,1                                             3LN01170
+       ARS     18                                                       3LN01180
+       TRA     *+2                                                      3LN01190
+       CAQ     CXMATB,,1                                                3LN01200
+       PAI                                                              3LN01210
+CXTEST RNT     **                                                       3LN01220
+       TXI     **,1,-1                                                  3LN01230
+       TXI     CXGET,1,-1                                               3LN01240
+CXAMN1 TXH     CXMAX2,1,0          EXIT IF STRANGER NOT LAST            3LN01250
+       RNT     000010                OR IF STRANGER AT END              3LN01260
+       TRA     CXMAX2                NOT AN OVERPUNCH CHAR.             3LN01270
+CXMA1  STZ     **                  SET 'YES' ANSWER                     3LN01280
+CXMAX2 AXT     **,2                                                     3LN01290
+       AXT     **,4                                                     3LN01300
+       TRA     2,4                                                      3LN01310
+       SPACE   1                                                        3LN01320
+*  TABLE OF CHARACTERS FOR IF CLASS TESTS.                              3LN01330
+       SPACE   1                                                        3LN01340
+CXMATB PZE     2,,20               0    -                               3LN01350
+       PZE     2,,9                1    J                               3LN01360
+       PZE     2,,9                2    K                               3LN01370
+       PZE     2,,9                3    L                               3LN01380
+       PZE     2,,9                4    M                               3LN01390
+       PZE     2,,9                5    N                               3LN01400
+       PZE     2,,9                6    O                               3LN01410
+       PZE     2,,9                7    P                               3LN01420
+       PZE     2,,9                8    Q                               3LN01430
+       PZE     2,,9                9    R                               3LN01440
+       PZE     0,,8                     -OP                             3LN01450
+       PZE     16,,16              =    $                               3LN01460
+       PZE     16,,16              '    *                               3LN01470
+       PZE                                                              3LN01480
+       PZE                                                              3LN01490
+       PZE                                                              3LN01500
+       PZE     20,,1              +    SPACE                            3LN01510
+       PZE     9,,16               A    /                               3LN01520
+       PZE     9,,1                B    S                               3LN01530
+       PZE     9,,1                C    T                               3LN01540
+       PZE     9,,1                D    U                               3LN01550
+       PZE     9,,1                E    V                               3LN01560
+       PZE     9,,1                F    W                               3LN01570
+       PZE     9,,1                G    X                               3LN01580
+       PZE     9,,1                H    Y                               3LN01590
+       PZE     9,,1                I    Z                               3LN01600
+       PZE     8,,0                +OP                                  3LN01610
+       PZE     16,,16              .    ,                               3LN01620
+       PZE     16,,16              )    (                               3LN01630
+       PZE                                                              3LN01640
+       PZE                                                              3LN01650
+       PZE                                                              3LN01660
+       SPACE   2                                                        3LN01670
+*  SUBROUTINE TO GET A CHARACTER FOR .CEXAM, .CXAMA, AND .CXAMN         3LN01680
+       SPACE   1                                                        3LN01690
+*   CALLING SEQUENCE               (ENTER WITH REMAINING LENGTH         3LN01700
+*      TSX     .CHGET,4             IN XR1 AND CURRENT BYTE IN XR2)     3LN01710
+*      END OF ITEM RETURN                                               3LN01720
+*      NORMAL RETURN                                                    3LN01730
+*                                                                       3LN01740
+.CHGET TXL     CHEND,1,0           IF NO MORE CHARACTER EOI EXIT        3LN01750
+       LDQ*    .CAREF              GET NEXT CHARACTER LEFT              3LN01760
+       XEC     RQLTB1,2              JUSTIFIED IN MQ                    3LN01770
+       PXA     0,0                 ZERO OUT AC                          3LN01780
+       TXI     *+1,2,1             UPDATE BYTE NUMBER                   3LN01790
+       TXL     *+5,2,5             DONE IF LESS THAN SIX                3LN01800
+       LXA     .CAREF,2            ELSE UPDATE SOURCE WORD              3LN01810
+       TXI     *+1,2,1                                                  3LN01820
+       SXA     .CAREF,2                                                 3LN01830
+       AXT     0,2                 RESET TO FIRST BYTE                  3LN01840
+       TRA     2,4                                                      3LN01850
+CHEND  TRA     1,4                                                      3LN01860
+       STR                         7                                    3LN01870
+       STR                         6                                    3LN01880
+       RQL     30                  5                                    3LN01890
+       RQL     24                  4                                    3LN01900
+       RQL     18                  3                                    3LN01910
+       RQL     12                  2                                    3LN01920
+       RQL     6                   1                                    3LN01930
+RQLTB1 AXT     0,0                 0                                    3LN01940
+       END                                                              3LN01950

@@ -1,0 +1,6 @@
+$IBMAP .CDMOD                                                        $5$3MF00760
+       LBL     CDMD,BEGIN     .CDMOD                                 (7)3MF00763
+.CDMOD CAL     *+2            A  MOD B                               $5$3MF00770
+       TRA     .CGOGO                                                $5$3MF00780
+       NOP     DMOD                                                  $5$3MF00790
+       END                                                           $5$3MF00800

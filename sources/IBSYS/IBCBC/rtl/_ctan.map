@@ -1,0 +1,9 @@
+$IBMAP .CTAN                                                            3MG00010
+.CTAN  CAL     *+2                 TAN (A)                              3MG00020
+       TRA     .CGOGO                                                   3MG00030
+       TRA     TAN                                                      3MG00040
+       ENTRY   .CCOTN                                                   3MG00050
+.CCOTN CAL     *+2                COTAN (A)                             3MG00060
+       TRA     .CGOGO                                                   3MG00070
+       TRA     COTAN                                                    3MG00080
+       END                                                              3MG00090

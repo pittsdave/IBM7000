@@ -1,0 +1,9 @@
+$IBMAP .CARSN                                                           3MG00100
+.CARSN CAL     *+2                ARCSIN (A)                            3MG00110
+       TRA     .CGOGO                                                   3MG00120
+       TRA     ARSIN                                                    3MG00130
+       ENTRY   .CARCS                                                   3MG00140
+.CARCS CAL     *+2                 ARCCOS (A)                           3MG00150
+       TRA     .CGOGO                                                   3MG00160
+       TRA     ARCOS                                                    3MG00170
+       END                                                              3MG00180

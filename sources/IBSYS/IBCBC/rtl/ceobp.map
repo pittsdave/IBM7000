@@ -1,0 +1,124 @@
+$IBMAP CEOBP   ADDREL                                                   3L300000
+       LBL     EOBP,BEGIN     CEOBP                                  (7)3L300010
+       TTL     CEOBP-COBOL .READ AND .WRITE ERROR RETURN            (12)3L300015
+* .CEOBP AND .CERRP OBJECT TIME SUBROUTINE                              3L300020
+       SPACE   2                                                        3L300030
+*  CONTROL IS TRANSFERRED TO ONE OF THESE ROUTINES WHEN ONE OF THE      3L300040
+*  FOLLOWING CONDITIONS IS FOUND IN CONNECTION WITH .READ OR .WRITE     3L300050
+*  CHECK SUM ERROR                                                      3L300060
+*  SEQUENCE ERROR                                                       3L300070
+*  UNRECOVERABLE REDUNDANCY                                             3L300080
+*  ALL AVAILABLE BUFFERS IN USE                                         3L300090
+*  END OF BUFFER WHILE EXECUTING AN IOCYN                               3L300100
+       SPACE   2                                                        3L300110
+*   MESSAGES APPEAR OFF-LINE.  EXIT VIA '.LXRTN'.                       3L300120
+       SPACE   2                                                        3L300130
+*   CONSTANTS                                                           3L300140
+       SPACE   2                                                        3L300150
+ERRP01 BCI     9,PROCESSING TERMINATED DUE TO TAPE CHECK SUM AND REDUND 3L300160
+       BCI     3,ANCY ERRORS.                                           3L300170
+ERRP02 BCI     9,PROCESSING TERMINATED DUE TO TAPE SEQUENCE AND REDUNDA 3L300180
+       BCI     3,NCY ERRORS.                                            3L300190
+ERRP03 BCI     9,PROCESSING TERMINATED DUE TO UNRECOVERABLE TAPE REDUND 3L300200
+       BCI     3,ANCY ERRORS.                                           3L300210
+ERRP04 BCI     9,PROCESSING TERMINATED DUE TO TAPE CHECK SUM ERROR.     3L300220
+       BCI     3,                                                       3L300230
+ERRP05 BCI     8,PROCESSING TERMINATED DUE TO BLOCK SEQUENCE ERRO   (12)3L300240
+       BCI     4,R.                                                 (12)3L300250
+ERRP06 BCI     9,PROCESSING TERMINATED DUE TO TAPE RECORD LENGTH ERROR. 3L300260
+       BCI     3,                                                       3L300270
+ERRP07 BCI     9,THIS ERROR IS ASSOCIATED WITH AN I/O VERB AT CARD NUMB 3L300280
+       BCI     1,ER....                                                 3L300290
+       BCI     1,******                                                 3L300300
+       BCI     1,.                                                      3L300310
+ERRP08 BCI     9,THE FOLLOWING INFORMATION IS ASSOCIATED WITH THE FILE  3L300320
+       BCI     3,IN ERROR.....                                          3L300330
+ERRP09 BCI     2,FILE NAME...                                           3L300340
+       BCI     1,******                                                 3L300350
+       BCI     1,******                                                 3L300360
+       BCI     1,******                                                 3L300370
+       BCI     5,      REEL SEQUENCE NUMBER....                         3L300380
+       BCI     1,******                                                 3L300390
+       BCI     1,.                                                      3L300400
+ERRP10 BCI     4,FILE SERIAL NUMBER......                               3L300410
+       BCI     1,******                                                 3L300420
+       BCI     5,      FILE BLOCK COUNT........                         3L300430
+       BCI     1,******                                                 3L300440
+       BCI     1,.                                                      3L300450
+ERRP11 PZE     ERRP01,,8                                                3L300460
+       PZE     ERRP02,,8                                                3L300470
+       PZE     ERRP03,,8                                                3L300480
+       PZE     ERRP04,,8                                                3L300490
+       PZE     ERRP05,,8                                                3L300500
+       PZE     ERRP06,,8                                                3L300510
+ERRP12 OCT     1                                                        3L300511
+ERRP13 PZE     **            TEMPORARY STORAGE FOR AC                   3L300512
+ERRP14 PZE     **            AND MQ                                     3L300513
+ERRP15 TSX     .WRITE,4                                                 3L300514
+       ENTRY   .CEOBP                                                   3L300515
+.CEOBP STO     ERRP13                                                   3L300516
+       STQ     ERRP14                                                   3L300517
+       SXA     ERRP17-3,2    SAVE XR2                                   3L300518
+       SXA     ERRP17-2,4    AND XR4 IN CASE RETRY SUCCESSFUL           3L300519
+       ARS     18                                                       3L300520
+       COM                   GET L(COMMAND BEING EXECUTED               3L300521
+       STA     ERRP16+2        WHEN EOB ENCOUNTERED)                    3L300522
+       XCL                                                              3L300523
+       PDX     0,2           -(LOC OF TSX TO IOCS ROUTINE)              3L300524
+       COM                   CALCULATE NORMAL RETURN                    3L300525
+       ADD     ERRP12        FROM IOCS ROUTINE                          3L300526
+       STA     ERRP17-1                                                 3L300527
+       CLA     1,2           L(FILE BLOCK)                              3L300528
+       STA     ERRP16+1                                                 3L300530
+       CLA     0,2                                                      3L300531
+       SUB     ERRP15        WAS TSX TO .READ OR .WRITE                 3L300532
+       TNZ     ERRP17        TRA IF NOT WRITE                           3L300533
+ERRP16 TSX     .WRITE,4                                                 3L300536
+       PZE     **,,ERRP17    RETURN TO ERRP17 IF EOB CONDITION          3L300537
+       TCH     **            STILL EXISTS                               3L300538
+       AXT     **,2                                                     3L300539
+       AXT     **,4                                                     3L300540
+       TRA     **            NORMAL RETURN IF RETRY WORKS               3L300541
+ERRP17 CAL     ERRP14                                                   3L300542
+       LDQ     ERRP13                                                   3L300543
+       AXT     0,1                                                      3L300550
+       TRA     ERRP18                                                   3L300560
+       ENTRY   .CERRP                                                   3L300570
+.CERRP XCL                                                              3L300580
+       PDX     0,2                 -LOC OF TSX TO XR2                   3L300590
+       ARS     15                                                       3L300600
+       PDX     0,1                 ERROR CODE TO XRT                    3L300610
+ERRP18 TXL     *+2,1,3                                                  3L300620
+       TXI     *+1,1,-1                                                 3L300630
+       CLA     .CIOHS              GET CARD NO.                         3L300640
+       TSX     .DECVD,4            CONVERT                              3L300650
+       STQ     ERRP07+10           SAVE FOR MESSAGE                     3L300660
+       CAL     1,2                 GET FILE BLOCK LOCATION              3L300670
+       PAC     0,2                 -LOC                                 3L300680
+       CAL     6,2                 FILE SERIAL NUMBER                   3L300690
+       SLW     ERRP10+4                                                 3L300700
+       CAL     .RLHLD                                               (12)3L300710
+       SLW     ERRP09+10                                                3L300720
+       CAL     9,2                 FILE NAME -- 18 CHARACTERS           3L300730
+       SLW     ERRP09+2                                                 3L300740
+       CAL     10,2                                                     3L300750
+       SLW     ERRP09+3                                                 3L300760
+       CAL     11,2                                                     3L300770
+       SLW     ERRP09+4                                                 3L300780
+       CAL     3,2                                                      3L300790
+       TSX     .DECVD,4                                                 3L300800
+       STQ     ERRP10+10                                                3L300810
+       CAL     ERRP11+5,1                                               3L300820
+       SLW     *+2                                                      3L300830
+       TSX     .CDPLY,4                                                 3L300840
+       PZE     **                                                       3L300850
+       TSX     .CDPLY,4                                                 3L300860
+       PZE     ERRP07,,8                                                3L300870
+       TSX     .CDPLY,4                                                 3L300880
+       PZE     ERRP08,,8                                                3L300890
+       TSX     .CDPLY,4                                                 3L300900
+       PZE     ERRP09,,8                                                3L300910
+       TSX     .CDPLY,4                                                 3L300920
+       PZE     ERRP10,,8                                                3L300930
+       TRA     .LXERR                                                $5$3L300940
+       END                                                              3L300950

@@ -1,0 +1,17 @@
+$IBMAP CDIF                                                             3MI00000
+       TTL     CDIF - ROUTINE TO MODIFY CDISP FOR CFPAK                 3MI00009
+*  COBOL DISPLAY SUBROUTINE FOR FLOATING POINT TO BE USED IN            3MI00010
+*                                              CONJUNCTION WITH CD2SP   3MI00020
+       ENTRY   .CDISF                                                   3MI00030
+.CDISF TRA     *+1                                                      3MI00040
+       CAL     C1                                                       3MI00050
+       STA     .CDIS1                                                   3MI00060
+       CAL     C2                                                       3MI00070
+       STA     .CDIS2                                                   3MI00080
+       CAL     *+2                                                      3MI00090
+       SLW     .CDISF                                                   3MI00100
+       TRA     .CDISP                                                   3MI00110
+                                                                        3MI00120
+C1     PZE     .CF1SD                                                   3MI00130
+C2     PZE     .CF2SD                                                   3MI00140
+       END                                                              3MI00150

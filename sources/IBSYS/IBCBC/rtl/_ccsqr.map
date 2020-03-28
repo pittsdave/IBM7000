@@ -1,0 +1,6 @@
+$IBMAP .CCSQR                                                        $5$3MF01560
+       LBL     CCSQ,BEGIN     .CCSQR                                 (7)3MF01563
+.CCSQR CAL     *+2                 SQRT (A)                          $5$3MF01570
+       TRA     .CGOGO                                                $5$3MF01580
+       NOP     CSQRT                                                 $5$3MF01590
+       END                                                           $5$3MF01600

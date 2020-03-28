@@ -1,0 +1,10 @@
+$IBMAP .CDLOG                                                        $5$3MF01000
+       LBL     CDLG,BEGIN     .CDLOG                                 (7)3MF01003
+.CDLOG CAL     *+2            LN (A)                                 $5$3MF01010
+       TRA     .CGOGO                                                $5$3MF01020
+       NOP     DLOG                                                  $5$3MF01030
+       ENTRY   .CDL10                                                $5$3MF01040
+.CDL10 CAL     *+2            LOG BASE 10 (A)                        $5$3MF01050
+       TRA     .CGOGO                                                $5$3MF01060
+       NOP     DLOG10                                                $5$3MF01070
+       END                                                           $5$3MF01080

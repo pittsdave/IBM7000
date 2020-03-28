@@ -1,0 +1,20 @@
+$IBMAP .CGOGO                                                        $5$3MF00000
+       LBL     GOGO,BEGIN     .CGOGO                                 (7)3MF00007
+.CGOGO SXA     X,4                 C(AC) = EITHER NOP FORTRAN-NAME   $5$3MF00010
+       STA     Y                                                     $5$3MF00020
+       STD     Z                                  TRA FORTRAN-NAME   $5$3MF00030
+       CLA     4,4                 2ND. PARAM                        $5$3MF00040
+       STO     Y+3                 PUT IN FORTRAN CALLING SEQ.       $5$3MF00050
+       CLA     5,4                 3RD PARAM                         $5$3MF00060
+       STO     Y+4                                                   $5$3MF00070
+Y      CALL    **(Y,Y)             CALL UPON FORTRAN S.R.            $5$3MF00080
+X      AXT     **,4                                                  $5$3MF00090
+       STO*    3,4                 AC PART OF ANSWER                 $5$3MF00100
+Z      PZE     1,4,**              ** DETERMINES OP-CODE TRA OR NOP  $5$3MF00110
+       CLA     3,4                 IF DOUBLE PRECISION               $5$3MF00120
+       ADD     L1                   FIND LOC OF 2ND. PART OF ANSWER I$5$3MF00130
+       STA     *+1                                                   $5$3MF00140
+       STQ     **                  2ND HALF OF RESULT IS IN MQ.      $5$3MF00150
+       TRA     1,4                 EXIT                              $5$3MF00160
+L1     PZE     1                                                     $5$3MF00170
+       END                                                           $5$3MF00180

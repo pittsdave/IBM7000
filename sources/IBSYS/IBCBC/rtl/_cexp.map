@@ -1,0 +1,6 @@
+$IBMAP .CEXP                                                         $5$3MF00340
+       LBL     CEXP,BEGIN     .CEXP                                  (7)3MF00343
+.CEXP  CAL     *+2            E ** A                                 $5$3MF00350
+       TRA     .CGOGO                                                $5$3MF00360
+       TRA     EXP                                                   $5$3MF00370
+       END                                                           $5$3MF00380

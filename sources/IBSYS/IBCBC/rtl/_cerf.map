@@ -1,0 +1,5 @@
+$IBMAP .CERF                                                            3MG00280
+.CERF  CAL     *+2                ERF (A)                               3MG00290
+       TRA     .CGOGO                                                   3MG00300
+       TRA     ERF                                                      3MG00310
+       END                                                              3MG00320

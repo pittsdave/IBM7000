@@ -1,0 +1,10 @@
+$IBMAP .CCFMP                                                        $5$3MF01320
+       LBL     CFMP,BEGIN     .CCFMP                                 (7)3MF01323
+.CCFMP CAL     *+2            A * B                                  $5$3MF01330
+       TRA     .CGOGO                                                $5$3MF01340
+       NOP     .CFMP.                                                $5$3MF01350
+       ENTRY   .CCFDP                                                $5$3MF01360
+.CCFDP CAL     *+2            A / B                                  $5$3MF01370
+       TRA     .CGOGO                                                $5$3MF01380
+       NOP     .CFDP.                                                $5$3MF01390
+       END                                                           $5$3MF01400

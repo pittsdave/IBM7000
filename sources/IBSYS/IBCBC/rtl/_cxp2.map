@@ -1,0 +1,6 @@
+$IBMAP .CXP2                                                         $5$3MF00240
+       LBL     CXP2,BEGIN     .CXP2                                  (7)3MF00243
+.CXP2  CAL     *+2            A ** B                                 $5$3MF00250
+       TRA     .CGOGO                                                $5$3MF00260
+       TRA     .XP2.                                                 $5$3MF00270
+       END                                                           $5$3MF00280

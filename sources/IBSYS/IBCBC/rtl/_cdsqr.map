@@ -1,0 +1,6 @@
+$IBMAP .CDSQR                                                        $5$3MF01090
+       LBL     CDSQ,BEGIN     .CDSQR                                 (7)3MF01093
+.CDSQR CAL     *+2                 SQRT (A)                          $5$3MF01100
+       TRA     .CGOGO                                                $5$3MF01110
+       NOP     DSQRT                                                 $5$3MF01120
+       END                                                           $5$3MF01130

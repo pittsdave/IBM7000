@@ -1,0 +1,6 @@
+$IBMAP .CXP3                                                         $5$3MF00290
+       LBL     CXP3,BEGIN     .CXP3                                  (7)3MF00293
+.CXP3  CAL     *+2            A ** B                                 $5$3MF00300
+       TRA     .CGOGO                                                $5$3MF00310
+       TRA     .XP3.                                                 $5$3MF00320
+       END                                                           $5$3MF00330

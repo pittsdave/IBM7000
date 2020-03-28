@@ -1,0 +1,51 @@
+$IBMAP CBDCV   ADDREL                                                   3LO00000
+       LBL     BDCV,BEGIN     CBDCV                                  (7)3LO00010
+* .CBDCV LIBRARY SUBROUTINE                                             3LO00020
+* CALLING SEQUENCE                                                      3LO00030
+*      TSX     .CBDCV,4                                                 3LO00040
+*      RETURN                                                           3LO00050
+*  ON ENTRY - BCD CONTROL WORD IN MQ (COUNT CONTROL IN CHARACTERS)      3LO00060
+*  ON EXIT - COUNT CONTROL IN WORDS IN BINARY FORM IN DECREMENT OF ACC  3LO00070
+*  COUNT DECREASED BY ONE FOR ACTUAL RECORD LENGTH                      3LO00080
+       ENTRY   .CBDCV                                                   3LO00090
+.CBDCV SXA     BCDCV2,4                                                 3LO00100
+       SXA     BCDCV2+1,2                                               3LO00110
+       AXT     30,4                                                     3LO00120
+       PXD     0,0                                                      3LO00130
+       STZ     BINO                                                     3LO00140
+BCDCV1 LGL     6                                                        3LO00150
+       PAX     0,2                                                      3LO00160
+       TXH     BCDEX1,2,9                                               3LO00170
+       ACL     BINO                                                     3LO00180
+       TNX     BCDCV2,4,6                                               3LO00190
+       STQ     BINO+1                                                   3LO00200
+       XCL                                                              3LO00210
+       MPY     BCB10                                                    3LO00220
+       STQ     BINO                                                     3LO00230
+       LDQ     BINO+1                                                   3LO00240
+       TRA     BCDCV1                                                   3LO00250
+BCDCV2 AXT     **,4                                                     3LO00260
+       AXT     **,2                                                     3LO00270
+       XCA                                                              3LO00280
+       PXD     0,0                                                      3LO00290
+       DVP     BCB6                                                     3LO00300
+       TNZ     BCDEX                                                    3LO00310
+       XCA                                                              3LO00320
+       SUB     BCB1                                                     3LO00330
+       ALS     18                                                       3LO00340
+       TRA     1,4                                                      3LO00350
+BCDEX  TSX     .CDPLY,4                                                 3LO00360
+       PZE     IOMESS,,8                                                3LO00370
+       STR                                                              3LO00380
+BCDEX1 TSX     .CDPLY,4                                                 3LO00390
+       PZE     IOMSS1,,8                                                3LO00400
+       STR                                                              3LO00410
+BCB1   DEC     1                                                        3LO00420
+BCB6   DEC     6                                                        3LO00430
+BCB10  DEC     10                                                       3LO00440
+BINO   BSS     2                                                        3LO00450
+IOMESS BCI     9,JOB TERMINATED - ENCOUNTERED INPUT RECORD LENGTH NOT A 3LO00460
+       BCI     3, MULTIPLE OF SIX.                                      3LO00470
+IOMSS1 BCI     9,JOB TERMINATED - COUNT CONTROL CONTAINS A NON-NUMERIC  3LO00480
+       BCI     3,BCD CHARACTER.                                         3LO00490
+       END                                                              3LO00500

@@ -1,0 +1,129 @@
+$IBMAP COPEN   ADDREL                                                   3L200000
+       LBL     OPEN,BEGIN     COPEN                                  (7)3L200010
+       ENTRY   .CIOHS                                                   3L200020
+.CIOHS PZE     **,,**              DECREMENT CONTAINS I/O CARD NUMBER   3L200030
+       EJECT                                                            3L200040
+*   THIS SUBROUTINE OPENS AN IOCS FILE.                                 3L200050
+       SPACE   1                                                        3L200060
+*   CALLING SEQUENCE                                                    3L200070
+       SPACE   1                                                        3L200080
+*      TSX     .COPEN,4                                                 3L200090
+*      ROP     FILE,,ANYTHING                                           3L200100
+*   WHERE ROP IS                                                        3L200110
+*      PZE =   REWIND                                                   3L200120
+*      MZE =   NO REWIND                                                3L200130
+*      MON =   NO REWIND, NO LABEL ACTION                               3L200140
+*   NOTE THE DECREMENT OF 1,4 MAY BE NON ZERO.                          3L200150
+       SPACE   2                                                        3L200160
+       ENTRY   .COPEN                                                   3L200170
+.COPEN SXA     CIO1,4              SAVE XRS                             3L200180
+       SXA     CIO2,1                                                   3L200190
+       STI     CIO3                AND SI                               3L200200
+       CAL     1,4                 GET CALL SEQUENCE WORD               3L200210
+       LDI*    1,4                 GET FIRST WORD OF FILE BLOCK         3L200220
+       RFT     77777               AND SEE IF A UNIT IS ATTACHED        3L200230
+       TRA     CIO4                YES, GO OPEN FILE                    3L200240
+       AXT     CIO6,4              NO, SET TO PRINT MESSAGE             3L200250
+CIO5   SXA     CIO7,4              SAVE MESSAGE PARAMETER               3L200260
+       PAX     0,4                 L(FILE BLOCK) TO XR4                 3L200270
+       TXI     *+1,4,9             BUMP TO GET L(FILE NAME)             3L200280
+       SXA     CIO9,4              SAVE IN MESSAGE PARAMETER            3L200290
+       CLA     .CIOHS              CONVERT CARD NUMBER                  3L200300
+       TSX     .DECVD,4            NUMBER TO BCD                        3L200310
+       STQ     CIO12               AND SAVE                             3L200320
+       TSX     .MWR,4                                                   3L200330
+       PZE     5                                                        3L200340
+       MZE     CIO8,,4             NO UNIT IS ASSIGNED TO               3L200350
+CIO9   PZE     **,,3               'FILE NAME'                          3L200360
+CIO7   MZE     **,,2               OPENING OR CLOSING                   3L200370
+       MZE     CIO11,,7            OF FILE IS NOT PERFORMED AT CARD NUMB3L200380
+       PZE     CIO12,,1+512*4      'CARD NUMBER'                        3L200390
+CIO1   AXT     **,4                RELOAD XRS                           3L200400
+CIO2   AXT     **,1                                                     3L200410
+       LDI     CIO3                AND SI                               3L200420
+       TRA     2,4                 AND EXIT                             3L200430
+       SPACE   1                                                        3L200440
+CIO4   TSX     CIOSYS,4            GO SEE IF UNIT IS OU, PP, OR IN.     3L200450
+       SLW     *+2                 SAVE FILE NAME AND REWIND OPTION     3L200460
+       TSX     .OPEN,4             GO OPEN FILE                         3L200470
+       PZE     **                  WITH CORRECT REWIND OPTION           3L200480
+       TRA     CIO1                GO EXIT                              3L200490
+       SPACE   2                                                        3L200500
+CIOSYS ANA     CIO13               MASK OUT DECREMENT AND TAG           3L200510
+       PAC     0,1                 -L(FILE BLOCK) TO XR1                3L200520
+       LDI     2,1                 GET 3RD WORD OF FILE BLOCK           3L200530
+       LNT     200000              IS THIS SYSTEM UNIT                  3L200540
+       TRA     1,4                 NO                                   3L200550
+       ANA     CIO14               YES, MAKE SURE REWIND                3L200560
+       ORA     CIO15                OPTION IS MON ON SYSTEM UNITS       3L200570
+       TRA     1,4                                                      3L200580
+       EJECT                                                            3L200590
+*   THIS SUBROUTINE CLOSES AN IOCS FILE                                 3L200600
+       SPACE   1                                                        3L200610
+*   CALLING SEQUENCE                                                    3L200620
+       SPACE   1                                                        3L200630
+*      TSX     .CCLOSE,4                                                3L200640
+*      ROP     FILE,,OPT                                                3L200650
+*   WHERE ROP IS                                                        3L200660
+*      PZE =   REWIND AND UNLOAD                                        3L200670
+*      PTW =   REWIND                                                   3L200680
+*      MZE =   NO REWIND                                                3L200690
+*      MON =   NO REWIND, NO EOF MARK OR TRAILERS WRITTEN               3L200700
+*   AND OPT IS                                                          3L200710
+*      BIT 17 = 1 IF OPTIONAL FILE AND 0 IF NOT OPTIONAL.               3L200720
+*      BIT 16 = 1 IF CLOSE REEL AND 0 IF NOT CLOSE REEL.                3L200730
+       SPACE   1                                                        3L200740
+*   NOTE THAT AN ATTEMPT TO CLOSE A REEL OF A SYSTEM UNIT RESULTS IN    3L200750
+*   CLOSING WITH A MON CODE AND NO REOPENING OF THE FILE.               3L200760
+       SPACE   1                                                        3L200770
+       ENTRY   .CCLOS                                                   3L200780
+.CCLOS SXA     CIO1,4              SAVE XRS                             3L200790
+       SXA     CIO2,1                                                   3L200800
+       STI     CIO3                AND SI                               3L200810
+       CAL     1,4                 GET CALL SEQUENCE WORD               3L200820
+       LDI*    1,4                 GET FIRST WORD OF FILE BLOCK         3L200830
+       RFT     77777               AND SEE IF UNIT IS ATTACHED          3L200840
+       TRA     *+3                 YES,                                 3L200850
+       AXT     CIO10,4             NO, SET ERROR MESSAGE PARAMETER      3L200860
+       TRA     CIO5                GO PRINT MESSAGE                     3L200870
+       LDI     1,4                                                      3L200880
+       LFT     000002              IS CLOSE REEL REQUESTED              3L200890
+       TRA     CIO16               YES, GO                              3L200900
+CIO26  TSX     CIOSYS,4            NO GO SEE IF UNIT IS OU, IN, OR PP   3L200910
+       SLW     *+2                 SAVE FILE NAME AND REWIND OPTION     3L200920
+       TSX     .CLOSE,4            GO CLOSE FILE                        3L200930
+       PZE     **                  WITH CORRECT REWIND OPTION           3L200940
+       TRA     CIO1                GO EXIT                              3L200950
+       SPACE   2                                                        3L200960
+CIO16  PAC     0,1                 CHECK FOR CLOSE REEL                 3L200970
+       LDI     2,1                 OF SYSTEM UNIT                       3L200980
+       LFT     200000                                                   3L200990
+       TRA     CIO26               IF SYSTEM UNIT, USE STANDARD CLOSE   3L201000
+       LDI     1,4                 PUT .CCLOS CALL SEQUENCE WORD IN SI  3L201010
+       STA     CIO17               SAVE FILE LOCATION FOR               3L201020
+       STA     CIO18                REOPEN                              3L201030
+       STA     CIO19                REEL SWITCH                         3L201040
+       STA     *+2                  TEMPORARY CLOSE                     3L201050
+       TSX     .CLOSE,4            GO CLOSE TEMPORARILY                 3L201060
+       MON     **                   WITH NO LABEL ACTION                3L201070
+       TSX     .OPEN,4             REOPEN THE FILE (NEXT REEL)          3L201080
+CIO18  MON     **                   WITH NO LABEL ACTION                3L201090
+CIO17  AXC     **,4                GET SECOND WORD                      3L201100
+       LDI     1,4                  OF FILE BLOCK                       3L201110
+       RIL     000004              RESET EOT BIT INDICATING             3L201120
+       STI     1,4                  REEL SWITCH IS NECESSARY            3L201130
+       TSX     .WRITE,4            PERFORM DUMMY WRITE                  3L201140
+CIO19  PZE     **,,0                SO IOCS WILL SWITCH UNITS           3L201150
+       IOCD    0,,0                 AND PERFORM LABEL OPERATIONS        3L201160
+       TRA     CIO1                GO EXIT                              3L201170
+       SPACE   1                                                        3L201180
+CIO3   PZE     **                  SI SAVED HERE                        3L201190
+CIO6   BCI     2,OPENING                                                3L201200
+CIO8   BCI     4,NO UNIT IS ASSIGNED TO                                 3L201210
+CIO10  BCI     2,CLOSING                                                3L201220
+CIO11  BCI     7,OF FILE IS NOT PERFORMED AT CARD NUMBER                3L201230
+CIO12  BCI     1,******            SOURCE                               3L201240
+CIO13  OCT     700000077777                                             3L201250
+CIO14  OCT     000000077777                                             3L201260
+CIO15  OCT     500000000000                                             3L201270
+       END                                                              3L201280

@@ -1,0 +1,1534 @@
+$IBMAP CMPAK   ADDREL                                                   3L000000
+       LBL     MPAK,BEGIN     CMPAK                                  (7)3L000010
+       TTL     CMPAK-COBOL MOVE SUBROUTINE                              3L000015
+       ENTRY   .CMPAK                                                   3L000020
+.CMPAK SXA     SAVE2,2                                                  3L000030
+       AXC     MVP777-1,2          SET RETURN TO MVP777                 3L000040
+MVP222 SXA     SAVXR4,4            SAVE XR4 FOR DEBUGGING               3L000050
+       SXA     SAVE1,1                                                  3L000060
+MVP333 CLA     1,4                                                      3L000070
+       TPL     1,2                 TRA IF PZE LOC,,BYTE                 3L000080
+       STP     *+1                                                      3L000090
+       AXT     MVP666,0            TXI IF MON L(PI)                     3L000100
+       PDC     0,1                 -L(DISPLACEMENT CONSTANT)            3L000110
+       CAL*    1,4                 CAL L(BL)                            3L000120
+       TZE     .CBLER              ERROR IF BL NOT ACTIVE.              3L000130
+       ACL     0,1                 ACL L(DISPLACEMENT CONSTANT)         3L000140
+       PDX     0,1                 SUM OF BYTE VALUES                   3L000150
+       TXL     *+2,1,5             TEST FOR CARRY FROM BYTE ADDITION    3L000160
+       ACL     BYTCON              FORCE CARRY TO ADDRESS               3L000170
+       TRA     1,2                 RETURN                               3L000180
+MVP666 CAL*    1,4                 CAL L(PI)                            3L000190
+       TRA     1,2                 RETURN                               3L000200
+MVP777 SLW     SPOINT              1ST RETURN - PLANT SOURCE ADDRESS    3L000210
+       AXC     MVP888-1,2          SET RETURN TO MVP888                 3L000220
+       TXI     MVP333,4,-1         GO GET TARGET ADDRESS.               3L000230
+MVP888 SLW     TPOINT              PLANT TARGET ADDRESS                 3L000240
+       TXI     NXTMAC+3,4,-2       BEGIN EXECUTION OF TXI STRING        3L000250
+       ENTRY   .CMPK1                                                   3L000260
+.CMPK1 SXA     SAVE2,2                                                  3L000270
+       STO     SAVACC                                                   3L000280
+       TSX     MVP222,2                                                 3L000290
+       SLW     TPOINT                                                   3L000300
+       CLA     SAVACC                                                   3L000310
+       TXI     NXTMAC+3,4,-2                                            3L000320
+       ENTRY   .CMPK2                                                   3L000330
+.CMPK2 SXA     SAVE2,2                                                  3L000340
+       TSX     MVP222,2                                                 3L000350
+       SLW     SPOINT                                                   3L000360
+       TXI     NXTMAC+3,4,-2                                            3L000370
+SAVXR4 PZE     **                                                       3L000380
+       ENTRY   .CMPK3                                                   3L000390
+.CMPK3 SXA     SAVE1,1                                                  3L000400
+       SXA     SAVE2,2                                                  3L000410
+       SXA     SAVXR4,4            SAVE XR4 FOR DEBUGGING               3L000420
+       TXI     NXTMAC+3,4,-1                                            3L000430
+ NSWRD SXA     *+6,4                                                    3L000440
+       LXA     SPOINT,4                                                 3L000450
+       TXI     *+1,4,1                                                  3L000460
+       SXA     SPOINT,4                                                 3L000470
+       LDQ*    SPOINT                                                   3L000480
+       AXT     6,4                                                      3L000490
+       TRA     **                                                       3L000500
+ NTWRD SXA     *+6,2                                                    3L000510
+       SLW*    TPOINT                                                   3L000520
+       LXA     TPOINT,2                                                 3L000530
+       TXI     *+1,2,1                                                  3L000540
+       SXA     TPOINT,2                                                 3L000550
+       AXT     6,2                                                      3L000560
+       TRA     **                                                       3L000570
+NXTMAC SXA     SBYTE,4                                                  3L000580
+       ENTRY   .CX4                                                     3L000590
+MACCTR NULL                                                             3L000591
+.CX4   AXT     **,4                                                     3L000600
+       TXI     *+1,4,-1                                                 3L000620
+       AXT     0,1                                                      3L000630
+       XEC     0,4                                                      3L000640
+       TIX     *-1,4,1                                                  3L000650
+       ENTRY   .CXIT                                                    3L000660
+MVPKXT NULL                                                             3L000661
+.CXIT  LXA     .CX4,4                                                   3L000670
+ SAVE1 AXT     **,1                                                     3L000690
+ SAVE2 AXT     **,2                                                     3L000700
+       TRA     1,4                                                      3L000710
+       ENTRY   .CAREF                                                   3L000720
+SPOINT NULL                                                             3L000721
+.CAREF PZE     **,,**              ADDRESS,,BYTE                        3L000730
+       ENTRY   .CBREF                                                   3L000750
+TPOINT NULL                                                             3L000751
+.CBREF PZE     **,,**              ADDRESS,,BYTE                        3L000760
+       ENTRY   .COFLO                                                   3L000770
+OVTRIG NULL                                                             3L000771
+.COFLO PZE     **                                                       3L000780
+       ENTRY   .CUFLO                                                   3L000790
+MOVUNF NULL                                                             3L000791
+.CUFLO PZE     **                                                       3L000800
+RNTRIG PZE     0                                                        3L000840
+STTRIG PZE     0                                                        3L000850
+ OVSW  PZE     0                                                        3L000860
+SCTRIG PZE     0                                                        3L000870
+SAVTGT PZE     0                                                        3L000880
+SRCWRD PZE     0                                                        3L000890
+SGNCON PZE     0                                                        3L000900
+BYTCON OCT     777772000000                                             3L000910
+ OV17B OCT     000000000017                                             3L000920
+ SBYTE PZE     0                                                        3L000930
+BYTRIG PZE     0                                                        3L000940
+SAVACC PZE     0                                                        3L000950
+EDTBUF BSS     5                                                        3L000960
+       AXT     0,0                                                      3L000970
+       RQL     30                                                       3L000980
+       RQL     24                                                       3L000990
+       RQL     18                                                       3L001000
+       RQL     12                                                       3L001010
+       RQL     6                                                        3L001020
+RQLTBL AXT     0,0                                                      3L001030
+       RQL     6                                                        3L001040
+       RQL     12                                                       3L001050
+       RQL     18                                                       3L001060
+       RQL     24                                                       3L001070
+       RQL     30                                                       3L001080
+       AXT     0,0                                                      3L001090
+       LGL     30                                                       3L001100
+       LGL     24                                                       3L001110
+       LGL     18                                                       3L001120
+       LGL     12                                                       3L001130
+       LGL     6                                                        3L001140
+LGLTBL AXT     0,0                                                      3L001150
+       LGL     6                                                        3L001160
+       LGL     12                                                       3L001170
+       LGL     18                                                       3L001180
+       LGL     24                                                       3L001190
+       LGL     30                                                       3L001200
+       AXT     0,0                                                      3L001210
+       LGR     30                                                       3L001220
+       LGR     24                                                       3L001230
+       LGR     18                                                       3L001240
+       LGR     12                                                       3L001250
+       LGR     6                                                        3L001260
+LGRTBL AXT     0,0                                                      3L001270
+       LGR     6                                                        3L001280
+       LGR     12                                                       3L001290
+       LGR     18                                                       3L001300
+       LGR     24                                                       3L001310
+       LGR     30                                                       3L001320
+       AXT     0,0                                                      3L001330
+       AXT     0,0                                                      3L001340
+       ALS     30                                                       3L001350
+       ALS     24                                                       3L001360
+       ALS     18                                                       3L001370
+       ALS     12                                                       3L001380
+       ALS     6                                                        3L001390
+ALSTBL AXT     0,0                                                      3L001400
+       ALS     6                                                        3L001410
+       ALS     12                                                       3L001420
+       ALS     18                                                       3L001430
+       ALS     24                                                       3L001440
+       ALS     30                                                       3L001450
+       AXT     0,0                                                      3L001460
+XITBL5 PZE     XITBL4,0,0                                               3L001470
+       PZE     XITBL4,0,12500                                           3L001480
+       PZE     XITBL4,0,25000                                           3L001490
+       PON     XITBL4,0,04732                                           3L001500
+       PON     XITBL4,0,17232                                           3L001510
+       PON     XITBL4,0,29732                                           3L001520
+       PTW     XITBL4,0,09464                                           3L001530
+       PTW     XITBL4,0,21964                                           3L001540
+       PTH     XITBL4,0,01696                                           3L001550
+       PTH     XITBL4,0,14196                                           3L001560
+       PZE     XITBL4,0,0                                               3L001570
+       PZE     XITBL4,0,0                                               3L001580
+       PZE     XITBL4,0,0                                               3L001590
+       PZE     XITBL4,0,0                                               3L001600
+       PZE     XITBL4,0,0                                               3L001610
+       PZE     XITBL4,0,0                                               3L001620
+XITBL4 PZE     XITBL3,0,0                                               3L001630
+       PZE     XITBL3,0,01250                                           3L001640
+       PZE     XITBL3,0,02500                                           3L001650
+       PZE     XITBL3,0,03750                                           3L001660
+       PZE     XITBL3,0,05000                                           3L001670
+       PZE     XITBL3,0,06250                                           3L001680
+       PZE     XITBL3,0,07500                                           3L001690
+       PZE     XITBL3,0,08750                                           3L001700
+       PZE     XITBL3,0,10000                                           3L001710
+       PZE     XITBL3,0,11250                                           3L001720
+       PZE     XITBL3,0,0                                               3L001730
+       PZE     XITBL3,0,0                                               3L001740
+       PZE     XITBL3,0,0                                               3L001750
+       PZE     XITBL3,0,0                                               3L001760
+       PZE     XITBL3,0,0                                               3L001770
+       PZE     XITBL3,0,0                                               3L001780
+XITBL3 PZE     XITBL2,0,0                                               3L001790
+       PZE     XITBL2,0,00125                                           3L001800
+       PZE     XITBL2,0,00250                                           3L001810
+       PZE     XITBL2,0,00375                                           3L001820
+       PZE     XITBL2,0,00500                                           3L001830
+       PZE     XITBL2,0,00625                                           3L001840
+       PZE     XITBL2,0,00750                                           3L001850
+       PZE     XITBL2,0,00875                                           3L001860
+       PZE     XITBL2,0,01000                                           3L001870
+       PZE     XITBL2,0,01125                                           3L001880
+       PZE     XITBL2,0,0                                               3L001890
+       PZE     XITBL2,0,0                                               3L001900
+       PZE     XITBL2,0,0                                               3L001910
+       PZE     XITBL2,0,0                                               3L001920
+       PZE     XITBL2,0,0                                               3L001930
+       PZE     XITBL2,0,0                                               3L001940
+XITBL2 PZE     XITBL1,0,0                                               3L001950
+       PZE     XITBL1,4,12                                              3L001960
+       PZE     XITBL1,0,25                                              3L001970
+       PZE     XITBL1,4,37                                              3L001980
+       PZE     XITBL1,0,50                                              3L001990
+       PZE     XITBL1,4,62                                              3L002000
+       PZE     XITBL1,0,75                                              3L002010
+       PZE     XITBL1,4,87                                              3L002020
+       PZE     XITBL1,0,100                                             3L002030
+       PZE     XITBL1,4,112                                             3L002040
+       PZE     XITBL1,0,0                                               3L002050
+       PZE     XITBL1,0,0                                               3L002060
+       PZE     XITBL1,0,0                                               3L002070
+       PZE     XITBL1,0,0                                               3L002080
+       PZE     XITBL1,0,0                                               3L002090
+       PZE     XITBL1,0,0                                               3L002100
+XITBL1 PZE     XITBL,0,0                                                3L002110
+       PZE     XITBL,2,1                                                3L002120
+       PZE     XITBL,4,2                                                3L002130
+       PZE     XITBL,6,3                                                3L002140
+       PZE     XITBL,0,5                                                3L002150
+       PZE     XITBL,2,6                                                3L002160
+       PZE     XITBL,4,7                                                3L002170
+       PZE     XITBL,6,8                                                3L002180
+       PZE     XITBL,0,10                                               3L002190
+       PZE     XITBL,2,11                                               3L002200
+       PZE     XITBL,0,0                                                3L002210
+       PZE     XITBL,0,0                                                3L002220
+       PZE     XITBL,0,0                                                3L002230
+       PZE     XITBL,0,0                                                3L002240
+       PZE     XITBL,0,0                                                3L002250
+       PZE     XITBL,0,0                                                3L002260
+ XITBL PZE     XITBL,0,0                                                3L002270
+       PZE     XITBL,1,0                                                3L002280
+       PZE     XITBL,2,0                                                3L002290
+       PZE     XITBL,3,0                                                3L002300
+       PZE     XITBL,4,0                                                3L002310
+       PZE     XITBL,5,0                                                3L002320
+       PZE     XITBL,6,0                                                3L002330
+       PZE     XITBL,7,0                                                3L002340
+       PZE     XITBL,0,1                                                3L002350
+       PZE     XITBL,1,1                                                3L002360
+       PZE     XITBL                                                    3L002370
+       PZE     XITBL                                                    3L002380
+       PZE     XITBL                                                    3L002390
+       PZE     XITBL                                                    3L002400
+       PZE     XITBL                                                    3L002410
+       PZE     XITBL                                                    3L002420
+       SPACE   4                                                        3L002430
+* BINARY TO BCD DECIMAL LENGTH IN XR1. ADDRESS IN TPOINT                3L002440
+       ENTRY   .CIDX1                                                   3L002450
+.CIDX1 STZ     SGNCON                                                   3L002460
+       SSP                                                              3L002470
+       TRA     MVIX2                                                    3L002480
+       ENTRY   .CIDX4                                                $5$3L002490
+.CIDX4 AXT     1,2           MINUS OVERPUNCH CONVENTION ONLY         $5$3L002500
+       TRA     .CIDX2+1                                              $5$3L002510
+       ENTRY   .CIDX2              MOVIXM                               3L002520
+.CIDX2 AXT     2,2                SIGN CONVENTION                       3L002530
+       TPL     *+3                                                      3L002540
+       TXI     *+1,2,3                                                  3L002550
+       SSP                                                              3L002560
+       SXA     SGNCON,2                                                 3L002570
+ MVIX2 SXA     MACCTR,4                                                 3L002580
+       LDC     TPOINT,2                                                 3L002590
+       TXI     *+1,2,6                                                  3L002600
+       LAC     TPOINT,4                                                 3L002610
+       TIX     MVIXDP,1,10                                              3L002620
+ MVIX5 LDQ     0,4                                                      3L002630
+       STQ     UPPER                                                    3L002640
+       XEC     RQLTBL+6,2                                               3L002650
+ MVIX3 XEC     MVIX4,1                                                  3L002660
+       LRS     0                                                        3L002670
+       XEC     IX10,1                                                   3L002680
+       TRA     IX10                                                     3L002690
+       ALS     1                                                        3L002700
+       ALS     1                                                        3L002710
+       ALS     7                                                        3L002720
+       TRA     IX6                                                      3L002730
+       ALS     1                                                        3L002740
+       ALS     7                                                        3L002750
+       ALS     13                                                       3L002760
+       ALS     19                                                       3L002770
+       ALS     25                                                       3L002780
+ MVIX4 PZE     **                                                       3L002790
+       TRA     IX9                                                      3L002800
+       TRA     IX8                                                      3L002810
+       TRA     IX7                                                      3L002820
+       PZE     **                                                       3L002830
+       TRA     IX5                                                      3L002840
+       TRA     IX4                                                      3L002850
+       TRA     IX3                                                      3L002860
+       TRA     IX2                                                      3L002870
+       TRA     IX1                                                      3L002880
+ IX10  RQL     5                                                        3L002890
+       LRS     5                                                        3L002900
+       VDP     9X2,,6                                                   3L002910
+       TIX     *+2,2,1                                                  3L002920
+       TSX     MVIXW,1                                                  3L002930
+ IX9   VDP     8X2E7,,6                                                 3L002940
+       TIX     *+2,2,1                                                  3L002950
+       TSX     MVIXW,1                                                  3L002960
+       ARS     6                                                        3L002970
+ IX8   VDP     7X2E7,,6                                                 3L002980
+       TIX     *+2,2,1                                                  3L002990
+       TSX     MVIXW,1                                                  3L003000
+ IX7   VDP     6X2E13,,6                                                3L003010
+       TIX     *+2,2,1                                                  3L003020
+       TSX     MVIXW,1                                                  3L003030
+       ARS     13                                                       3L003040
+ IX6   RQL     5                                                        3L003050
+       LRS     5                                                        3L003060
+       VDP     5X2,,6                                                   3L003070
+       TIX     *+2,2,1                                                  3L003080
+       TSX     MVIXW,1                                                  3L003090
+ IX5   VDP     4X2E7,,6                                                 3L003100
+       TIX     *+2,2,1                                                  3L003110
+       TSX     MVIXW,1                                                  3L003120
+ IX4   VDP     3X2E13,,6                                                3L003130
+       TIX     *+2,2,1                                                  3L003140
+       TSX     MVIXW,1                                                  3L003150
+ IX3   VDP     2X2E19,,6                                                3L003160
+       TIX     *+2,2,1                                                  3L003170
+       TSX     MVIXW,1                                                  3L003180
+ IX2   VDP     1X2E25,,6                                                3L003190
+       TIX     *+2,2,1                                                  3L003200
+       TSX     MVIXW,1                                                  3L003210
+ IX1   VDP     2E31,,6                                                  3L003220
+       ZET     DPTEST                                                   3L003230
+       TRA     IXDP2                                                    3L003240
+       XCA                                                              3L003250
+ MVIXD PAI                         P7                                   3L003260
+       LXA     SGNCON,1                                                 3L003270
+       ACL     SGNTB2,1                                                 3L003280
+       RFT     17                                                       3L003290
+       TRA     *+2                                                      3L003300
+       ACL     ZROTBL,1                                                 3L003310
+       TNX     *+4,2,1                                                  3L003320
+       LDQ     0,4                                                      3L003330
+       XEC     RQLTBL+6,2                                               3L003340
+       XEC     LGLTBL,2                                                 3L003350
+       SLW     0,4                                                      3L003360
+       LXD     TPOINT,1                                                 3L003370
+       TXL     IXT,1,0             P7                                   3L003380
+       CAL     UPPER                                                    3L003390
+       STP*    TPOINT                                                   3L003400
+ IXT   ZET     RPTRG                                                    3L003410
+       TRA     IDRP2                                                    3L003420
+       TRA     MVPKXT                                                   3L003430
+ MVIXW STQ     0,4                                                      3L003440
+       TXI     *+1,4,-1                                                 3L003450
+       AXT     6,2                                                      3L003460
+       TRA     1,1                                                      3L003470
+MVIXDP DVP     10E10                                                    3L003480
+       XCA                                                              3L003490
+       SSP                                                              3L003500
+       STQ     LOWER                                                    3L003510
+       STL     DPTEST                                                   3L003520
+       TRA     MVIX5                                                    3L003530
+ IXDP2 TIX     *+2,2,1                                                  3L003540
+       TSX     MVIXW,1                                                  3L003550
+       CLA     LOWER                                                    3L003560
+       SSP                                                              3L003570
+       STZ     DPTEST                                                   3L003580
+       TRA     IX10                                                     3L003590
+10E10  OCT     112402762000        DEC 10000000000                      3L003600
+9X2    OCT     016715312000        DEC 20000000000                      3L003610
+8X2E7  OCT     137274100000        DEC 12800000000                      3L003620
+7X2E7  OCT     011422640000        DEC 1280000000                       3L003630
+6X2E13 OCT     075022000000        DEC 8192000000                       3L003640
+5X2    OCT     000000606500        DEC 200000                           3L003650
+4X2E7  OCT     000004704000        DEC 1280000                          3L003660
+3X2E13 OCT     000037200000        DEC 8192000                          3L003670
+2X2E19 OCT     000310000000        DEC 52428800                         3L003680
+1X2E25 OCT     002400000000        DEC 335544320                        3L003690
+ 2E31  OCT     020000000000                                             3L003700
+       ENTRY   .CXDID                                                   3L003710
+.CXDID STZ     LOWER                                                    3L003720
+ MOVXI EQU     .CXDID                                                   3L003730
+       TRA     RELOC                                                    3L003740
+       LAC     SPOINT,2                                                 3L003750
+       LXD     SPOINT,4                                                 3L003760
+ MVXI2 CAL     0,2                                                      3L003770
+       LDQ     1,2                                                      3L003780
+       XEC     LGLTBL,4                                                 3L003790
+       PAI                                                              3L003800
+       ANA     7TEENS                                                   3L003810
+       XCL                                                              3L003820
+       PXA     0,0                                                      3L003830
+       TIX     MVXI3,1,6                                                3L003840
+       XEC     CAQTBL+1,1                                               3L003850
+       SUB     LOCDIF+1,1                                               3L003860
+       ARS     15                                                       3L003870
+       ADD     LOWER                                                    3L003880
+ MVXIS IIS     HIZONE              P8                                   3L003890
+       XEC     XFTTBL+1,1                                               3L003900
+       TRA     MVXIXT                                                   3L003910
+       SSM                                                              3L003920
+       LRS     0                                                        3L003930
+MVXIXT TRA     MVPKXT                                                   3L003940
+ MVXI3 CAQ     XITBL5,,6                                                3L003950
+       SUB     LOCDF5                                                   3L003960
+       ARS     15                                                       3L003970
+       XCL                                                              3L003980
+       TXH     MVXI4,1,4                                                3L003990
+       MPY     MPYTBL+1,1                                               3L004000
+       STQ     LOWER                                                    3L004010
+       TXI     MVXI2,2,-1                                               3L004020
+ MVXI4 STZ     UPPER                                                    3L004030
+       LDI     LGLTBL,4                                                 3L004040
+       STI     MVXI6                                                    3L004050
+       AXT     0,4                                                      3L004060
+       TIX     MVXI8,1,6                                                3L004070
+       TXI     MVXI8,4,-1                                               3L004080
+ MVXI5 CAL     0,2                                                      3L004090
+       LDQ     1,2                                                      3L004100
+ MVXI6 LGL     **                                                       3L004110
+       PAI                                                              3L004120
+       ANA     7TEENS                                                   3L004130
+       XCL                                                              3L004140
+       PXA     0,0                                                      3L004150
+       XEC     MVXI21,4                                                 3L004160
+       XEC     MVXI24,4                                                 3L004170
+       ARS     15                                                       3L004180
+       ADD     LOWER                                                    3L004190
+       LRS     35                                                       3L004200
+       ADD     UPPER                                                    3L004210
+ MVXI7 XEC     MVXI22,4                                                 3L004220
+       AXT     -1,4                                                     3L004230
+       XCA                                                              3L004240
+       STO     LOWER                                                    3L004250
+       XEC     MVXI23,4                                                 3L004260
+       STQ     UPPER                                                    3L004270
+       LDQ     LOWER                                                    3L004280
+ MVXI8 XEC     MVXI23,4                                                 3L004290
+       ADD     UPPER                                                    3L004300
+       STO     UPPER                                                    3L004310
+       STQ     LOWER                                                    3L004320
+       TXI     MVXI5,2,-1                                               3L004330
+ MVXI9 TRA     MVXIS               P9                                   3L004340
+MVXI21 CAQ     XITBL5,,6                                                3L004350
+       XEC     CAQTBL+1,1                                               3L004360
+MVXI22 TIX     MVXI7+2,1,6                                              3L004370
+       TRA     MVXI9                                                    3L004380
+MVXI23 MPY     10EXP6                                                   3L004390
+       MPY     MPYTBL+1,1                                               3L004400
+MVXI24 SUB     LOCDF5                                                   3L004410
+       SUB     LOCDIF+1,1                                               3L004420
+HIZONE OCT     404040404040                                             3L004430
+       RFT     000060                                                   3L004440
+       RFT     006000                                                   3L004450
+       RFT     600000                                                   3L004460
+       LFT     000060                                                   3L004470
+       LFT     006000                                                   3L004480
+XFTTBL LFT     600000                                                   3L004490
+7TEENS OCT     171717171717                                             3L004500
+77EENS OCT     777777777717                                             3L004510
+ LOWER EQU     MVIX4                                                    3L004520
+ UPPER EQU     MVIX4+4                                                  3L004530
+10EXP6 OCT     3641100             DEC 1000000                          3L004540
+       OCT     303240              DEC 100000                           3L004550
+       OCT     23420               DEC 10000                            3L004560
+       OCT     1750                DEC 1000                             3L004570
+       OCT     144                 DEC 100                              3L004580
+MPYTBL OCT     000000000012                                             3L004590
+       CAQ     XITBL5,,6                                                3L004600
+       CAQ     XITBL4,,5                                                3L004610
+       CAQ     XITBL3,,4                                                3L004620
+       CAQ     XITBL2,,3                                                3L004630
+       CAQ     XITBL1,,2                                                3L004640
+CAQTBL CAQ     XITBL,,1                                                 3L004650
+LOCDF5 PZE     XITBL4                                                   3L004660
+       PZE     XITBL3                                                   3L004670
+       PZE     XITBL2                                                   3L004680
+       PZE     XITBL1                                                   3L004690
+       PZE     XITBL                                                    3L004700
+LOCDIF PZE     XITBL                                                    3L004710
+ RELOC LDI     MVIX2                                                    3L004720
+       STI     MOVXI+1                                                  3L004730
+       AXT     0,2                                                      3L004740
+       CLA     LOCDF5+5                                                 3L004750
+       ADD     LOCDF5+4,2                                               3L004760
+       STO     LOCDF5+4,2                                               3L004770
+       TXH     MOVXI+1,2,3                                              3L004780
+       TXI     *-3,2,1                                                  3L004790
+DPTEST PZE     0                                                        3L004800
+       PZE     10                  OP ZERO                              3L004810
+       PZE     10                  OP ZERO                              3L004820
+       PZE     0                   DECENT ZERO                          3L004830
+       PZE     10                  OP ZERO                              3L004840
+       PZE     0                  OP ZERO                            $5$3L004850
+ZROTBL PZE     0                   OPZERO                               3L004860
+       PZE     32                  YEH                                  3L004870
+       PZE     32                  SI                                   3L004880
+       PZE     0                   OUI                                  3L004890
+       PZE     16                  JA                                   3L004900
+       PZE     0                  OP ZERO                            $5$3L004910
+SGNTB2 PZE     0                   YES                                  3L004920
+       OCT     520000000000                                             3L004930
+       OCT     520000000000                                             3L004940
+       PZE     0                                                        3L004950
+       OCT     320000000000                                             3L004960
+       PZE     0                  OP ZERO                            $5$3L004970
+ZRTBL2 PZE     0                                                        3L004980
+       OCT     400000000000                                             3L004990
+       OCT     400000000000                                             3L005000
+       PZE     0                                                        3L005010
+       OCT     200000000000                                             3L005020
+       PZE     0                  OP ZERO                            $5$3L005030
+SGNTB3 PZE     0                                                        3L005040
+SUPTBL PZE     0                                                        3L005050
+       PZE     1                                                        3L005060
+       PZE     2                                                        3L005070
+       PZE     3                                                        3L005080
+       PZE     4                                                        3L005090
+       PZE     5                                                        3L005100
+       PZE     6                                                        3L005110
+       PZE     7                                                        3L005120
+       PZE     8                                                        3L005130
+       PZE     9                                                        3L005140
+       SPACE   4                                                        3L005150
+*                                                                       3L005160
+*      TXI     .CXDXD,1,TARGET.SIGN.CONVENTION                          3L005170
+       ENTRY   .CXDXD              MOVXX                                3L005180
+.CXDXD SXA     SGNCON,1                                                 3L005190
+       LDC     TPOINT,2                                                 3L005200
+       TXI     *+1,2,6                                                  3L005210
+       CAL*    TPOINT                                                   3L005220
+       XEC     LGRTBL,2                                                 3L005230
+MOVXX2 LDC     SPOINT,1                                                 3L005240
+       TXI     *+1,1,6                                                  3L005250
+       SXA     SBYTE,1                                                  3L005260
+       LDQ*    SPOINT                                                   3L005270
+       XEC     RQLTBL+6,1                                               3L005280
+       TXI     NXTMAC+3,4,-1                                            3L005290
+       ENTRY   .CXMVS                                                   3L005300
+.CXMVS STL     STTRIG                                                   3L005310
+       ENTRY   .CXMOV                                                   3L005320
+.CXMOV SXA     MACCTR,4                                                 3L005330
+       LXA     SBYTE,4                                                  3L005340
+ MVXX1 LGL     6                                                        3L005350
+       PAI                                                              3L005360
+       ANA     77EENS                                                   3L005370
+       TIX     *+2,4,1                                                  3L005380
+       TXI     NSWRD,4,*                                                3L005390
+       TNX     MVXX2,1,1                                                3L005400
+       TIX     MVXX1,2,1                                                3L005410
+       TXI     NTWRD,2,MVXX1-1                                          3L005420
+ MVXX2 ZET     STTRIG                                                   3L005430
+       TSX     MSTRIP,1                                                 3L005440
+       TIX     NXTMAC,2,1                                               3L005450
+       TXI     NTWRD,2,NXTMAC-1                                         3L005460
+       ENTRY   .CXBYS                                                   3L005470
+.CXBYS STL     STTRIG                                                   3L005480
+       ENTRY   .CXBYP                                                   3L005490
+.CXBYP SXA     MACCTR,4                                                 3L005500
+       LXA     SBYTE,4                                                  3L005510
+ BYXX1 RQL     6                                                        3L005520
+       TNX     BYXX2,1,1                                                3L005530
+       TIX     BYXX1,4,1                                                3L005540
+       TXI     NSWRD,4,BYXX1-1                                          3L005550
+ BYXX2 ZET     STTRIG                                                   3L005560
+       TSX     BSTRIP,1                                                 3L005570
+       TIX     NXTMAC,4,1                                               3L005580
+       TXI     NSWRD,4,NXTMAC-1                                         3L005590
+       ENTRY   .CXNZS                                                   3L005600
+.CXNZS STL     STTRIG                                                   3L005610
+       ENTRY   .CXNZT                                                   3L005620
+.CXNZT SXA     MACCTR,4                                                 3L005630
+       LXA     SBYTE,4                                                  3L005640
+       SLW     SAVACC                                                   3L005650
+ OVXX1 LGL     6                                                        3L005660
+       PAI                                                              3L005670
+       ANA     OV17B                                                    3L005680
+       CVR     EDTTBL,,1                                                3L005690
+       ORS     OVTRIG                                                   3L005700
+       TIX     *+2,4,1                                                  3L005710
+       TXI     NSWRD,4,*                                                3L005720
+       TIX     OVXX1,1,1                                                3L005730
+       CAL     SAVACC                                                   3L005740
+       ZET     STTRIG                                                   3L005750
+       TSX     STRIP,1                                                  3L005760
+       TRA     NXTMAC                                                   3L005770
+BSTRIP STQ     SAVACC                                                   3L005780
+       LDI     SAVACC                                                   3L005790
+       TRA     STRIP                                                    3L005800
+MSTRIP ANA     RNDMSK                                                   3L005810
+       CVR     EDTTBL,,1                                                3L005820
+       XCL                                                              3L005830
+       RQL     6                                                        3L005840
+       XCL                                                              3L005850
+ STRIP STZ     STTRIG                                                   3L005860
+       IIR     40                                                       3L005870
+       RFT     60                                                       3L005880
+       TRA     1,1                 RETURN ON + OR 0                     3L005890
+       SXA     STRIP2,1                                                 3L005900
+       LXA     SGNCON,1                                                 3L005910
+       TXI     *+1,1,3                                                  3L005920
+       SXA     SGNCON,1                                                 3L005930
+       STL     MSIGN               THIS IS USED BY RP TXI STRING        3L005940
+STRIP2 AXT     **,1                                                     3L005950
+       TRA     1,1                                                      3L005960
+       ENTRY   .CXINZ                                                   3L005970
+.CXINZ ALS     6                                                        3L005980
+ IZXX  EQU     .CXINZ                                                   3L005990
+       TIX     *+2,2,1                                                  3L006000
+       TXI     NTWRD,2,*                                                3L006010
+       TIX     IZXX,1,1                                                 3L006020
+       TXI     NXTMAC+3,4,-1                                            3L006030
+       ENTRY   .CXRND                                                   3L006040
+.CXRND XCL                                                              3L006050
+       PAI                                                              3L006060
+       ANA     RNXX2                                                    3L006070
+       SUB     HITEN                                                    3L006080
+       TPL     RNXX1                                                    3L006090
+       ADD     HISIX                                                    3L006100
+       TMI     RNXX1                                                    3L006110
+       STL     RNTRIG                                                   3L006120
+ RNXX1 PIA                                                              3L006130
+       XCL                                                              3L006140
+       TXI     NXTMAC+3,4,-1                                            3L006150
+ RNXX2 OCT     170000000000                                             3L006160
+ HITEN OCT     120000000000                                             3L006170
+ HISIX OCT     060000000000                                             3L006180
+ ROUND STZ     RNTRIG                                                   3L006190
+       AXT     RNTBL+1,4                                                3L006200
+       SXA     RNTBL+10,4                                               3L006210
+       TXL     RND1,2,5                                                 3L006220
+       LXA     TPOINT,2                                                 3L006230
+       TXI     *+1,2,-1                                                 3L006240
+       SXA     TPOINT,2                                                 3L006250
+       AXT     0,2                                                      3L006260
+       TRA     RND2                                                     3L006270
+ RND1  XEC     LGRTBL+6,2                                               3L006280
+       CAL*    TPOINT                                                   3L006290
+       XEC     LGLTBL+6,2                                               3L006300
+ RND2  SXA     *+1,1                                                    3L006310
+       AXT     **,4                                                     3L006320
+ RND3  ANA     RNDMSK                                                   3L006330
+       CVR     RNTBL+1,1,1                                              3L006340
+       TXL     RND8,1,RNTBL                                             3L006350
+       LXA     SGNCON,1                                                 3L006360
+       ACL     ZRTBL2,1                                                 3L006370
+       TXI     RND5,2,1                                                 3L006380
+ RND4  ANA     RNDMSK                                                   3L006390
+       CVR     RNTBL+1,1,1                                              3L006400
+       TXI     *+1,2,1                                                  3L006410
+       TXL     RND7,1,RNTBL                                             3L006420
+ RND5  TXL     RND6,2,5                                                 3L006430
+       SLW*    TPOINT                                                   3L006440
+       LXA     TPOINT,2                                                 3L006450
+       TXI     *+1,2,-1                                                 3L006460
+       SXA     TPOINT,2                                                 3L006470
+       AXT     0,2                                                      3L006480
+       CAL*    TPOINT                                                   3L006490
+ RND6  TIX     RND4,4,1                                                 3L006500
+       STL     OVTRIG                                                   3L006510
+ RND7  XCL                                                              3L006520
+       XEC     RQLTBL,2                                                 3L006530
+       STQ*    TPOINT                                                   3L006540
+       AXT     RNTBL,4                                                  3L006550
+       SXA     RNTBL+10,4                                               3L006560
+RNDXIT TRA     LSTWR1                                                   3L006570
+ RND8  LXA     SGNCON,1                                                 3L006580
+       ACL     SGNTB3,1                                                 3L006590
+       TXI     RND7,2,1                                                 3L006600
+RNDMSK OCT     777777777717                                             3L006610
+ RNTBL PZE     RNTBL,0,0                                                3L006620
+       PZE     RNTBL,0,4096                                             3L006630
+       PZE     RNTBL,0,8192                                             3L006640
+       PZE     RNTBL,0,12288                                            3L006650
+       PZE     RNTBL,0,16384                                            3L006660
+       PZE     RNTBL,0,20480                                            3L006670
+       PZE     RNTBL,0,24576                                            3L006680
+       PZE     RNTBL,0,28672                                            3L006690
+       PON     RNTBL,0,0                                                3L006700
+       PON     RNTBL,0,4096                                             3L006710
+       PZE     RNTBL,0,0                                                3L006720
+       PZE     RNTBL,0,0                                                3L006730
+       PZE     RNTBL,0,0                                                3L006740
+       PZE     RNTBL,0,0                                                3L006750
+       PZE     RNTBL,0,0                                                3L006760
+       PZE     RNTBL,0,0                                                3L006770
+EDTTBL EQU     RNTBL                                                    3L006780
+       ENTRY   .CXDXQ                                                   3L006790
+.CXDXQ SXA     MACCTR,4                                                 3L006800
+       ZET     RNTRIG                                                   3L006810
+       TRA     ROUND                                                    3L006820
+OVPNCH LXA     SGNCON,1                                                 3L006830
+       ACL     SGNTB2,1                                                 3L006840
+       PAI                                                              3L006850
+       RFT     17                                                       3L006860
+       TRA     *+2                                                      3L006870
+       ACL     ZROTBL,1                                                 3L006880
+LSTWRD LAC     TPOINT,1                                                 3L006890
+       TXL     *+2,2,5                                                  3L006900
+       TXI     *+4,1,1                                                  3L006910
+       LDQ     0,1                                                      3L006920
+       XEC     RQLTBL+6,2                                               3L006930
+       XEC     LGLTBL,2                                                 3L006940
+       SLW     0,1                                                      3L006950
+LSTWR1 ZET     RPTRG                                                    3L006960
+       TRA     .CXDRQ+2                                                 3L006970
+       TRA     MVPKXT                                                   3L006980
+       SPACE   4                                                        3L006990
+*                                                                       3L007000
+*  MOVE ALPHABETIC FIELD (A) TO ALPHABETIC FIELD (B)                    3L007010
+*  WHERE APOINT = PZE L(A),,BYTE POSITION                               3L007020
+*        BPOINT = PZE L(B),,BYTE POSITION                               3L007030
+*        INDEX 1 = NUMBER OF CHARACTERS TO MOVE                         3L007040
+*  NORMAL RETURN IS TO SAVE 1                                           3L007050
+*  (THIS MAY BE USED AS A CLOSED SUBROUTINE AS FOLLOWS)                 3L007060
+*      STL S239                                                         3L007070
+*      TSX MOVAA+1                                                      3L007080
+*                                                                       3L007090
+       ENTRY   .CANA1                                                   3L007100
+MOVAA  NULL                                                             3L007101
+.CANA1 STZ     S239                SET UP NORMAL RETURN TO SAVE1        3L007110
+       SXA     RB8,4               SAVE INDEX 4                         3L007130
+       LAC     APOINT,2            GET LOCATION OF SOURCE FIELD         3L007140
+       LAC     BPOINT,4            GET LOCATION OF TARGET FIELD         3L007150
+R2     CAL     0,2                 GET FIRST 2 WORDS                    3L007160
+       LDQ     1,2                    OF SOURCE FIELD                   3L007170
+       SXA     RT,1                SAVE CHARACTER COUNT                 3L007180
+       LDI     0,4                 GET FIRST WORD OF TARGET FIELD       3L007190
+       LDC     BPOINT,1            SHIFT SOURCE FIELD RIGHT BY          3L007200
+       XEC     LGRTBL,1               6X BYTE POSITION OF TARGET FIELD  3L007210
+       LDC     APOINT,1            SHIFT SOURCE FIELD LEFT BY           3L007220
+       XEC     LGLTBL,1               6X BYTE POSITION OF SOURCE FIELD  3L007230
+       LDC     BPOINT,1            GET BYTE POSITION OF TARGET AND      3L007240
+       XEC     TRATAB,1               TRANSFER TO PROPER SUBROUTINE     3L007250
+TRATAB TRA     RB1                 TRANSFER POINT FOR BYTE 0            3L007260
+       TRA     RB2                 TRANSFER POINT FOR BYTE 1            3L007270
+       TRA     RB3                 TRANSFER POINT FOR BYTE 2            3L007280
+       TRA     RB4                 TRANSFER POINT FOR BYTE 3            3L007290
+       TRA     RB5                 TRANSFER POINT FOR BYTE 4            3L007300
+       TRA     RB6                 TRANSFER POINT FOR BYTE 5            3L007310
+RT     AXT     0,1                 MAKE SYS 239 A CLOSED SUBROUTINE     3L007320
+RB1    XEC     RT                  NO. OF CHARACTERS STILL TO MOVE      3L007330
+       TXH     RB14,1,5            BYTE 0 TEST IF AT LEAST              3L007340
+RT2    RIL     770000                 6 CHARACTERS ARE TO BE MOVED      3L007350
+       TIX     RB2A,1,1            NO - RESET BYTE 0 OF TARGET          3L007360
+       ANA     RMSK10              TRANSFER IF MORE CHARACTERS          3L007370
+       AXT     1,2                    ELSE ISOLATE BYTE 0 OF            3L007380
+       TRA     RB7                    SOURCE FIELD AND TRANSFER         3L007390
+RB2    XEC     RT                  NO OF CHARACTERS REMAINING           3L007400
+       ANA     RMSK1               RESET BYTE 0 OF SOURCE               3L007410
+RB2A   RIL     007700              RESET BYTE 1 /F TARGET               3L007420
+       TIX     RB3A,1,1            TRANSFER IF MORE CHARACTERS          3L007430
+       ANA     RMSK9               RESET BYTES 2-5 OF SOURCE FIELD      3L007440
+       AXT     2,2                 MARK NEXT BYTE POSITION              3L007450
+       TRA     RB7                    AND TRANSFER TO RB7               3L007460
+RB3    XEC     RT                  NO. OF CHARACTERS STILL TO MOVE      3L007470
+       ANA     RMSK2               RESET BYTES 0,1 OF SOURCE FIELD      3L007480
+RB3A   RIL     000077              RESET BYTE 2 OF TARGET FIELD         3L007490
+       TIX     RB4A,1,1            TRANSFER IF MORE CHARACTERS          3L007500
+       ANA     RMSK8                  ELSE RESET BYTES 3 THRU 5         3L007510
+       AXT     3,2                    OF SOURCE FIELD AND               3L007520
+       TRA     RB7                    TRANSFER TO RB7                   3L007530
+RB4    XEC     RT                  NO OF CHARACTERS STILL TO MOVE       3L007540
+       ANA     RMSK3               RESET BYTES 0-2 OF SOURCE FIELD      3L007550
+RB4A   RIR     770000              RESET BYTE 3 OF TARGET FIELD         3L007560
+       TIX     RB5A,1,1            TRANSFER IF MORE CHARACTERS          3L007570
+       ANA     RMSK7               RESET BYTES 4-5                      3L007580
+       AXT     4,2                    OF SOURCE FIELD                   3L007590
+       TRA     RB7                 AND TRANSFER TO RB7                  3L007600
+RB5    XEC     RT                  NO OF CHARACTERS STILL TO MOVE       3L007610
+       ANA     RMSK4               RESET BYTES 0 THRU 3 OF SOURCE FIELD 3L007620
+RB5A   RIR     007700              RESET BYTE 4 OF TARGET FIELD         3L007630
+       TIX     RB6A,1,1            TRANSFER IF MORE CHARACTERS          3L007640
+       ANA     RMSK6                  ELSE RESET BYTE 5                 3L007650
+       AXT     5,2                    OF SOURCE FIELD                   3L007660
+       TRA     RB7                    AND TRANSFER TO RB7               3L007670
+RB6    XEC     RT                  NO OF CHARACTERS STILL TO MOVE       3L007680
+       ANA     RMSK5               RESET BYTES 0 THRU 4 OF SOURCE FIELD 3L007690
+RB6A   RIR     000077              RESET BYTE 5 OF TARGET FIELD         3L007700
+       TIX     RB10,1,1            TRANSFER IF MORE CHARACTERS          3L007710
+       AXT     0,2                 INDICATE TARGET ENDS AT BYTE 5       3L007720
+RB7    OAI                            ELSE OR SIGNIFICANT SOURCE        3L007730
+       STI     0,4                    FIELD CHARACTERS INTO TARGET FIELD3L007740
+       SXA     R243A,2             SAVE LAST TARGET FIELD BYTE POSITION 3L007750
+       SXD     R243A,4             SAVE LAST TARGET FIELD ADDRESS       3L007760
+RB8    AXT     0,4                 RESTORE INDEX 4                      3L007770
+       ZET     S239                TEST FOR NORMAL RETURN               3L007780
+       TRA     1,4                    NO - EXIT AS IF CLOSED SUBROUTINE 3L007790
+       TRA     SAVE1                  ELSE RETURN TO MOVE DRIVER        3L007800
+R243A  PZE     0                   PZE LAST TARGET BYTE,,LAST TARGET ADD3L007810
+RB10   OAI                         OR SIGNIFICANT SOURCE CHARACTERS     3L007820
+RB11   STI     0,4                    INTO TARGET FIELD.                3L007830
+RB12   SXA     RT,1                SAVE REMAINING CHARACTER COUNT       3L007840
+       CAL     APOINT              TEST IF BYTE POSITION OF A           3L007850
+       SUB     BPOINT                 IS GREATER THAN BYTE OF B         3L007860
+       TPL     RB15                YES - TRANSFER TO RB15               3L007870
+RB12A  CAL     0,2                 GET NEXT 2 WORDS OF SOURCE           3L007880
+       LDQ     1,2                    FIELD IN ACCUM. AND MQ            3L007890
+       LDC     APOINT,1            SHIFT SOURCE FIELD LEFT BY           3L007900
+       XEC     LGLTBL,1               6X BYTE POSITION OF A             3L007910
+       LDC     BPOINT,1            SHIFT SOURCE FIELD RIGHT BY          3L007920
+       XEC     LGRTBL,1               6X BYTE POSITION OF B             3L007930
+       XCL                         PLACE SECOND WORD IN ACCUM           3L007940
+       LDI     1,4                 NEXT WORD OF TARGET FIELD            3L007950
+       TXI     *+1,2,-1            BUMP SOURCE INDEX                    3L007960
+       TXI     *+1,4,-1            BUMP TARGET INDEX                    3L007970
+       XEC     RT                  GET REMAINING CHARACTER COUNT        3L007980
+       TNX     RT2,1,6             TRANSFER IF LESS THAN 6 CHARS LEFT   3L007990
+       SXA     RT,1                SAVE REMAINING CHARACTER COUNT       3L008000
+       SLW     0,4                 MOVE FULL WORD TO TARGET             3L008010
+       TRA     RB12A                  AND REPEAT ABOVE LOOP             3L008020
+RB13   CAL     0,2                 GET NEXT 2 WORDS OF SOURCE           3L008030
+       LDQ     1,2                    FIELD INTO ACCUM AND MQ           3L008040
+       LDC     BPOINT,1            SHIFT SOURCE FIELD RIGHT BY          3L008050
+       XEC     LGRTBL,1               6 X BYTE POSITION OF B            3L008060
+       LDC     APOINT,1            SHIFT SOURCE FIELD LEFT BY           3L008070
+       XEC     LGLTBL,1               6 X BYTE POSITION OF A            3L008080
+       XEC     RT                  GET REMAINING CHARACTER COUNT        3L008090
+       LDI     0,4                 GET NEXT TARGET WORD                 3L008100
+RB14   TNX     RT2,1,6             TRANSFER IF LESS THAN 6 CHARS LEFT   3L008110
+       SXA     RT,1                SAVE REMAINING CHARACTER COUNT       3L008120
+       SLW     0,4                 MOVE FULL WORD TO TARGET             3L008130
+RB15   TXI     *+1,4,-1            BUMP TARGET INDEX                    3L008140
+       TXI     RB13,2,-1           BUMP SOURCE INDEX AND REPEAT LOOP    3L008150
+RMSK1  OCT     7777777777          BYTES 1-5 MASK                       3L008160
+RMSK2  OCT     77777777            BYTES 2-5 MASK                       3L008170
+RMSK3  OCT     777777              BYTES 3-5 MASK                       3L008180
+RMSK4  OCT     7777                BYTES 4-5 MASK                       3L008190
+RMSK5  OCT     77                  BYTE 5 MASK                          3L008200
+RMSK6  OCT     777777777700        BYTES 0-4 MASK                       3L008210
+RMSK7  OCT     777777770000        BYTES 0-3 MASK                       3L008220
+RMSK8  OCT     777777000000        BYTES 0-2 MASK                       3L008230
+RMSK9  OCT     777700000000        BYTES 0-1 MASK                       3L008240
+RMSK10 OCT     770000000000        BYTE 0 MASK                          3L008250
+S239   PZE     0                                                        3L008260
+*                                                                       3L008270
+*  MOVE ALPHABETIC FIELD (A) TO ALPHABETIC FIELD (B) WITH               3L008280
+*  ADDITIONAL BLANK CHARACTERS                                          3L008290
+*      WHERE   APOINT = PZE L(A),,BYTE POSITION                         3L008300
+*              BPOINT = PZE L(B),,BYTE POSITION                         3L008310
+*              INDEX 1 = NO OF CHARACTERS IN (A)                        3L008320
+*  NORMAL RETURN IS TXI MACCTR+2,4,-1                                   3L008330
+*                                                                       3L008340
+       ENTRY   .CANA2                                                   3L008350
+MOVAAB NULL                                                             3L008351
+.CANA2 STL     S239                MAKE SYS239 A CLOSED SUBR            3L008360
+       SXA     *+2,4               SAVE INDEX 4                         3L008380
+       TSX     MOVAA+1,4           MOVE A TO B                          3L008390
+       AXT     **,4                RESTORE INDEX 4                      3L008400
+       TXI     MACCTR+2,4,-1       RETURN TO DRIVER                     3L008410
+       ENTRY   .CANA3                                                   3L008420
+MOVBAA NULL                                                             3L008421
+.CANA3 STZ     S241                   AFTER A TO B MOVE                 3L008430
+       SXA     R243C,4             SAVE INDEX 4                         3L008450
+       LDC     R243A,2             GET ADDRESS OF TARGET FIELD          3L008460
+       LXA     R243A,4             GET BYTE POSITION OF 1ST BLANK       3L008470
+       TXH     *+2,4,0             TEST FOR BYTE 0                      3L008480
+       TXI     *+1,2,1                YES - BUMP TARGET ADDRESS         3L008490
+       SXA     BPOINT,2            MODIFY BPOINT (SYS133) TO            3L008500
+       SXD     BPOINT,4               CONTAIN NEW ADDRESS AND BYTE      3L008510
+       STL     S243                MAKE SYS243 A CLOSED SUBR            3L008520
+       TSX     MOVBA+1,4           MOVE TRAILING BLANKS                 3L008530
+R243C  AXT     0,4                 RESTORE INDEX 4                      3L008540
+       ZET     S241                TEST FOR CLOSED SUBROUTINE           3L008550
+       TRA     1,4                    YES - EXIT 1,4                    3L008560
+       TRA     SAVE1               ELSE RETURN TO DRIVER                3L008570
+S241   PZE     0                   CLOSED SUBROUTINE INDICATOR          3L008580
+*                                                                       3L008590
+*  MOVE ALPHABETIC FIELD TO ALPHABETIC FIELD WHEN INFORMATION           3L008600
+*  IS UNKNOWN AT COMPILE TIME. THE ENTRY IS FOLLOWED BY                 3L008610
+*  A CONTROL WORD OF THE FORM PZE C1,,C2                                3L008620
+*  THE LOW ORDER 4 BITS OF INDEX 1 MEAN THE FOLLOWING.                  3L008630
+*      BIT 15  C2 CONTAINS TARGET FIELDS LENGTH IN WORDS                3L008640
+*      BIT 14  C1 CONTAINS SOURCE FIELDS LENGTH IN WORDS                3L008650
+*      BIT 13  C2 IS LOCATION OF TARGET FIELDS LENGTH                   3L008660
+*      BIT 12  C1 IS LOCATION OF SOURCE FIELDS LENGTH                   3L008670
+*                                                                       3L008680
+       ENTRY   .CANA4                                                   3L008690
+.CANA4 PXA     0,1                 LOAD INDICATORS WITH                 3L008700
+       PAI                            CONTENTS OF INDEX 1               3L008710
+       CAL     1,4                 LOAD INDEX 2 WITH ADDRESS            3L008720
+       PAC     ,2                  (C1) OF CONTROL WORD.                3L008730
+       RFT     10                  IS C1 THE SOURCE FIELDS LENGTH       3L008740
+       CAL     0,2                 NO-GET LENGTH OF SOURCE FIELD        3L008750
+       RNT     2                   IS C1 EXPRESSED IN WORDS             3L008760
+       TRA     *+5                    NO-TRANSFER TO *+5                3L008770
+       STA     RA242               ELSE MULTIPLY NUMBER                 3L008780
+       ALS     1                      OF WORDS BY 6                     3L008790
+       ACL     RA242                  TO OBTAIN NUMBER                  3L008800
+       ALS     1                      OF CHARACTERS.                    3L008810
+       STA     RA242               STORE CHARACTER COUNT IN RA242       3L008820
+       CAL     1,4                 LOAD INDEX 4                         3L008830
+       ARS     18                     WITH COMPLEMENT                   3L008840
+       PAC     ,2                        OF C2                          3L008850
+       RFT     4                   IS C2 LOCATION OF LENGTH OF TARGET   3L008860
+       CAL     0,2                    YES-GET LENGTH OF TARGET          3L008870
+       RNT     1                   IS C2 EXPRESSED IN WORDS             3L008880
+       TRA     *+5                    NO-TRANSFER TO *+5                3L008890
+       STA     RB242               YES-MULTIPLY NUMBER                  3L008900
+       ALS     1                      OF WORDS BY 6                     3L008910
+       ACL     RB242                  TO OBTAIN NUMBER                  3L008920
+       ALS     1                      OF CHARACTERS.                    3L008930
+       STA     RB242               STORE CHARACTER COUNT IN RB242       3L008940
+       LXA     RA242,1                AND IN INDEX 1                    3L008950
+       CAS     RA242               COMPARE A AND B CHARACTER COUNTS     3L008960
+       TRA     RBGTA               TRANSFER IF B GTR A                  3L008970
+       TXI     MOVAA,4,-1          GO TO SYS 239 IF EQUAL               3L008980
+       TRA     RAGTB               TRANSFER IF A GTR B                  3L008990
+RBGTA  STL     S239                WHEN B IS LONGER THAN A              3L009000
+       SXA     *+2,4               SAVE INDEX 4                         3L009010
+       TSX     MOVAA+1,4           MOVE ENTIRE A TO B                   3L009020
+       AXT     0,4                 RESTORE INDEX 4                      3L009030
+       CLA     RB242               COMPUTE DIFFERENCE IN LENGTHS        3L009040
+       SUB     RA242                  OF A AND B AND LOAD               3L009050
+       PAX     ,1                        IN INDEX 1                     3L009060
+       TXI     MOVBAA,4,-1         MOVE THAT NUMBER OF BLANKS TO B      3L009070
+RAGTB  LXA     RB242,1             WHEN A IS LONGER THAN B              3L009080
+       TXI     MOVAA,4,-1          MOVE NUMBER OF CHARACTERS IN B       3L009090
+RA242  PZE     0                   LENGTH OF A                          3L009100
+RB242  PZE     0                   LENGTH OF B                          3L009110
+*                                                                       3L009120
+*  MOVE BLANKS TO ALPHABETIC FIELD                                      3L009130
+*     WHERE INDEX 1 = NO. OF BLANKS                                     3L009140
+*           BPOINT = PZE L(TARGET),,BYTE OF TARGET                      3L009150
+*                                                                       3L009160
+       SPACE   4                                                        3L009170
+       ENTRY   .CSPAN                                                   3L009180
+MOVBA  NULL                                                             3L009181
+.CSPAN STZ     S243                SET UP NORMAL RETURN                 3L009190
+       SXA     RBY7,4              SAVE INDEX 4                         3L009210
+       LAC     BPOINT,2            GET TARGET ADDRESS                   3L009220
+       LDC     BPOINT,4            GET BYTE POSITION                    3L009230
+       LDI     0,2                 GET FIRST TARGET WORD                3L009240
+       TRA*    RBTAB,4             TRANSFER TO PROPER BYTE SUBR.        3L009250
+RBY    TXH     RBY8,1,5            TRANSFER IF AT LEAST 6 BLANKS        3L009260
+       RIL     770000              SET BYTE 0 OF TARGET                 3L009270
+       SIL     600000                 FIELD BLANK                       3L009280
+       TIX     *+2,1,1             TRANSFER IF MORE BLANKS              3L009290
+       TRA     RBE                 ELSE GO TO RBE                       3L009300
+RBY2   RIL     007700              SET BYTE 1 OF TARGET                 3L009310
+       SIL     006000                 FIELD BLANK                       3L009320
+       TIX     *+2,1,1             TRANSFER IF MORE BLANKS              3L009330
+       TRA     RBE                 ELSE GO TO RBE                       3L009340
+RBY3   RIL     000077              SET BYTE 2 OF TARGET                 3L009350
+       SIL     000060                 FIELD BLANK                       3L009360
+       TIX     *+2,1,1             TRANSFER IF MORE BLANKS              3L009370
+       TRA     RBE                 ELSE GO TO RBE                       3L009380
+RBY4   RIR     770000              SET BYTE 3 OF TARGET                 3L009390
+       SIR     600000                 FIELD BLANK                       3L009400
+       TIX     *+2,1,1             TRANSFER IF MORE BLANKS              3L009410
+       TRA     RBE                 ELSE GO TO RBE                       3L009420
+RBY5   RIR     007700              SET BYTE 4 OF TARGET                 3L009430
+       SIR     006000                 FIELD BLANK                       3L009440
+       TIX     *+2,1,1             TRANSFER IF MORE BLANKS              3L009450
+       TRA     RBE                 ELSE GO TO RBE                       3L009460
+RBY6   RIR     000077              SET BYTE 5 OF TARGET                 3L009470
+       SIR     000060                 FIELD BLANK                       3L009480
+RBE    STI     0,2                 STORE MODIFIED TARGET WORD           3L009490
+       TIX     RMULT,1,1           TRANSFER IF MORE BLANKS              3L009500
+RBY7   AXT     0,4                 RESTORE INDEX 4                      3L009510
+       ZET     S243                TEST FOR NORMAL RETURN               3L009520
+       TRA     1,4                    NO-TRANSFER 1,4                   3L009530
+       TRA     SAVE1               RETURN TO DRIVER                     3L009540
+RMULT  TXI     *+1,2,-1            BUMP TARGET INDEX                    3L009550
+       LDI     0,2                 GET NEXT TARGET WORD                 3L009560
+RBY8   TNX     RBY+1,1,6           TRANSFER IF LESS THAN 6 BLANKS       3L009570
+       LDQ     BLANX               STORE 6 BLANKS                       3L009580
+       STQ     0,2                    IN TARGET FIELD                   3L009590
+       TRA     RMULT               REPEAT ABOVE LOOP                    3L009600
+BLANX  OCT     606060606060        6 BLANK CHARACTERS                   3L009610
+RBTAB  PZE     RBY                 TRANSFER ADDRESS FOR BYTE 0          3L009620
+       PZE     RBY2                TRANSFER ADDRESS FOR BYTE 1          3L009630
+       PZE     RBY3                TRANSFER ADDRESS FOR BYTE 2          3L009640
+       PZE     RBY4                TRANSFER ADDRESS FOR BYTE 3          3L009650
+       PZE     RBY5                TRANSFER ADDRESS FOR BYTE 4          3L009660
+       PZE     RBY6                TRANSFER ADDRESS FOR BYTE 5          3L009670
+S243   PZE     0                   NORMAL RETURN INDICATOR              3L009680
+*                                                                       3L009690
+*  MOVE ZEROES TO ALPHABETIC FIELD                                      3L009700
+*      WHERE INDEX 1 = NO OF ZEROES TO MOVE                             3L009710
+*            BPOINT = PZE L(B),,BYTE OF B                               3L009720
+*                                                                       3L009730
+       ENTRY   .CZEAN                                                   3L009740
+MOVZA  NULL                                                             3L009741
+.CZEAN STZ     S244                SET UP NORMAL RETURN                 3L009750
+       SXA     RZY7,4              SAVE INDEX 4                         3L009770
+       LAC     BPOINT,2            GET TARGET ADDRESS                   3L009780
+       LDC     BPOINT,4            GET TARGET BYTE POSITION             3L009790
+       LDI     0,2                 GET FIRST TARGET FIELD               3L009800
+       TRA*    RZTAB,4             TRANSFER TO PROPER BYTE SUBR.        3L009810
+RZY    TXH     RZY8,1,5            TRANSFER IF AT LEAST 6 ZEROES        3L009820
+       RIL     770000              SET BYTE 0 TO ZERO                   3L009830
+       TIX     *+2,1,1             TRANSFER IF MORE ZEROES              3L009840
+       TRA     RZE                    ELSE TRANSFER TO RZE              3L009850
+RZY2   RIL     007700              SET BYTE 1 TO ZERO                   3L009860
+       TIX     *+2,1,1             TRANSFER IF MORE ZEROES              3L009870
+       TRA     RZE                    ELSE TRANSFER TO RZE              3L009880
+RZY3   RIL     000077              SET BYTE 2 TO ZERO                   3L009890
+       TIX     *+2,1,1             TRANSFER IF MORE ZEROES              3L009900
+       TRA     RZE                    ELSE TRANSFER TO RZE              3L009910
+RZY4   RIR     770000              SET BYTE 3 TO ZERO                   3L009920
+       TIX     *+2,1,1             TRANSFER IF MORE ZEROES              3L009930
+       TRA     RZE                    ELSE TRANSFER TO RZE              3L009940
+RZY5   RIR     007700              SET BYTE 4 TO ZERO                   3L009950
+       TIX     *+2,1,1             TRANSFER IF MORE ZEROES              3L009960
+       TRA     RZE                    ELSE TRANSFER TO RZE              3L009970
+RZY6   RIR     000077              SET BYTE 5 TO ZERO                   3L009980
+RZE    STI     0,2                 STORE MODIFIED TARGET WORD           3L009990
+       TIX     ZMULT,1,1           TRANSFER IF MORE ZEROES              3L010000
+RZY7   AXT     0,4                 RESTORE INDEX 4                      3L010010
+       ZET     S244                TEST FOR NORMAL RETURN               3L010020
+       TRA     1,4                    NO-TRANSFER 1,4                   3L010030
+       TRA     SAVE1               ELSE RETURN TO DRIVER                3L010040
+ZMULT  TXI     *+1,2,-1            BUMP TARGET INDEX                    3L010050
+       LDI     0,2                 GET NEXT TARGET WORD                 3L010060
+RZY8   TNX     RZY+1,1,6           TRANSFER IF LESS THAN 6 ZEROES       3L010070
+       STZ     0,2                 ELSE STORE FULL WORD OF ZEROES       3L010080
+       TRA     ZMULT               REPEAT ABOVE LOOP                    3L010090
+RZTAB  PZE     RZY                 TRANSFER ADDRESS FOR BYTE 0          3L010100
+       PZE     RZY2                TRANSFER ADDRESS FOR BYTE 1          3L010110
+       PZE     RZY3                TRANSFER ADDRESS FOR BYTE 2          3L010120
+       PZE     RZY4                TRANSFER ADDRESS FOR BYTE 3          3L010130
+       PZE     RZY5                TRANSFER ADDRESS FOR BYTE 4          3L010140
+       PZE     RZY6                TRANSFER ADDRESS FOR BYTE 5          3L010150
+S244   PZE     0                   NORMAL RETURN INDICATOR              3L010160
+*                                                                       3L010170
+*  MOVE CHARACTERS TO ALPHABETIC FIELD WHERE THIS                       3L010180
+*  ENTRY IS FOLLOWED BY A WORD CONTAINING 6 CHARACTERS                  3L010190
+*  OF THE TYPE TO BE INSERTED.                                          3L010200
+*                                                                       3L010210
+       ENTRY   .CCHOP                                                   3L010211
+.CCHOP STL     OPSW                FOR OVERPUNCH CONDITION              3L010212
+       ENTRY   .CCHAN                                                   3L010220
+.CCHAN STZ     S245                SET NORMAL RETURN                    3L010230
+       SXA     2RB8,4              SAVE INDEX 4                         3L010240
+       LAC     BPOINT,2            GET TARGET ADDRESS                   3L010250
+       LDI     0,2                 GET FIRST TARGET WORD                3L010260
+       CAL     1,4                 GET CHARACTERS TO INSERT             3L010270
+       LDC     BPOINT,4            GET BYTE POSITION OF TARGET          3L010280
+       XEC     TRATBL,4            GO TO PROPER BYTE SUBR               3L010290
+2RB1   RIL     770000              RESET BYTE 0 OF TARGET               3L010300
+       TIX     *+4,1,1             TRANSFER IF MORE CHARACTERS          3L010310
+       AXT     0,4                 TO RESET BYTES 1-5 OF SOURCE         3L010320
+       TRA     2RB7                   AND TRANSFER TO 2RB7              3L010330
+2RB2   ANA     RMSK1               RESET BYTE 0 OF SOURCE               3L010340
+       RIL     007700              RESET BYTE 1 OF TARGET               3L010350
+       TIX     *+4,1,1             TRANSFER IF MORE CHARACTERS          3L010360
+       AXT     1,4                 TO RESET BYTES 2-5 OF SOURCE         3L010370
+       TRA     2RB7                   AND TRANSFER TO 2RB7              3L010380
+2RB3   ANA     RMSK2               RESET BYTES 0-1 OF SOURCE            3L010390
+       RIL     000077              RESET BYTE 2 OF TARGET               3L010400
+       TIX     *+4,1,1             TRANSFER IF MORE CHARACTERS          3L010410
+       AXT     2,4                 TO RESET BYTES 3-5 OF SOURCE         3L010420
+       TRA     2RB7                   AND TRANSFER TO 2RB7              3L010430
+2RB4   ANA     RMSK3               RESET BYTES 0-2 OF SOURCE            3L010440
+       RIR     770000              RESET BYTE 3 OF TARGET               3L010450
+       TIX     *+4,1,1             TRANSFER IF MORE CHARACTERS          3L010460
+       AXT     3,4                 TO RESET BYTES 4-5 OF SOURCE         3L010470
+       TRA     2RB7                   AND TRANSFER TO 2RB7              3L010480
+2RB5   ANA     RMSK4               RESET BYTES 0-3 OF SOURCE            3L010490
+       RIR     007700              RESET BYTE 4 OF TARGET               3L010500
+       TIX     *+4,1,1             TRANSFER IF MORE CHARACTERS          3L010510
+       AXT     4,4                 TO RESET BYTE 5 OF SOURCE            3L010520
+       TRA     2RB7                   AND TRANSFER TO 2RB7              3L010530
+2RB6   ANA     RMSK5               RESET BYTES 0-4 OF SOURCE            3L010540
+       RIR     000077              RESET BYTE 6 OF TARGET               3L010550
+       TIX     2RB10,1,1           TRANSFER IF MORE CHARACTERS          3L010560
+       AXT     5,4                                                      3L010561
+       TRA     *+2                 SKIP MASKING                         3L010562
+2RB7   ANA     RMSK10,4            RESET APPROPRIATE SOURCE BYTES       3L010563
+       NZT     OPSW                                                     3L010564
+       TRA     2RB9                IF NO OVERPUNCH                      3L010565
+       TNZ     *+2                                                      3L010566
+       ORA     12S,4               PLUS ZERO OVERPUNCH = 32             3L010567
+       ORA     20S,4               REGULAR OVERPUNCH                    3L010568
+       STZ     OPSW                RESET OVERPUNCH SWITCH               3L010569
+2RB9   OAI                         OR APPROPRIATE CHARACTERS            3L010570
+       STI     0,2                    TO TARGET FIELD                   3L010580
+2RB8   AXT     0,4                 RESTORE INDEX 4                      3L010590
+       ZET     S245                TEST FOR NORMAL RETURN               3L010600
+       TRA     2,4                    NO-TRANSFER 2,4                   3L010610
+       TXI     SAVE1,4,-1          RETURN TO SUPERVISOR                 3L010620
+2RB10  XEC     2RB8                LOCATE CHARACTER WORD                3L010630
+       OAI                         OR APPROPRIATE CHARACTERS            3L010640
+       STI     0,2                    TO TARGET FIELD                   3L010650
+       CAL     1,4                 GET CHARACTER WORD                   3L010660
+2RB11  TXI     *+1,2,-1            BUMP TARGET INDEX                    3L010670
+       LDI     0,2                 GET NEXT TARGET WORD                 3L010680
+       TNX     2RB1,1,6            TRANSFER IF LESS THAN 6 CHARACTERS   3L010690
+       SLW     0,2                 STORE FULL WORD OF CHARACTERS        3L010700
+       TRA     2RB11               REPEAT ABOVE LOOP                    3L010710
+TRATBL TRA     2RB1                TRANSFER ADDRESS FOR BYTE 0          3L010720
+       TRA     2RB2                TRANSFER ADDRESS FOR BYTE 1          3L010730
+       TRA     2RB3                TRANSFER ADDRESS FOR BYTE 2          3L010740
+       TRA     2RB4                TRANSFER ADDRESS FOR BYTE 3          3L010750
+       TRA     2RB5                TRANSFER ADDRESS FOR BYTE 4          3L010760
+       TRA     2RB6                TRANSFER ADDRESS FOR BYTE 5          3L010770
+S245   PZE     0                   NORMAL RETURN INDICATOR              3L010780
+APOINT EQU     SPOINT              SOURCE FIELD LOCATOR                 3L010790
+BPOINT EQU     TPOINT              TARGET FIELD LOCATOR                 3L010800
+OPSW   PZE     **                  OVERPUNCH SWITCH                     3L010801
+       SPACE   1                                                        3L010802
+       OCT     000000000012                                             3L010803
+       OCT     000000001200                                             3L010804
+       OCT     000000120000                                             3L010805
+       OCT     000012000000                                             3L010806
+       OCT     001200000000                                             3L010807
+12S    OCT     120000000000                                             3L010808
+       OCT     000000000020                                             3L010809
+       OCT     000000002000                                             3L01080A
+       OCT     000000200000                                             3L01080B
+       OCT     000020000000                                             3L01080C
+       OCT     002000000000                                             3L01080D
+20S    OCT     200000000000                                             3L01080E
+       SPACE   4                                                        3L010810
+*                                                                       3L010820
+*      TXI     .CRFLS,1,C5+64*C6                                        3L010830
+*              C5 IF PLUS C6 IF MINUS                                   3L010840
+       ENTRY   .CRFLS                                                   3L010850
+.CRFLS SXA     MACCTR,4                                                 3L010860
+       LXA     SBYTE,4             CHARS LEFT IN MQ                     3L010870
+       SLW     MPTEMP                                                   3L010880
+       PXA     0,1                 C5+64*C6                             3L010890
+       ZET     MSIGN                                                    3L010900
+       ARS     6                   C6                                   3L010910
+       ANA     RMSK5               O77                                  3L010920
+       SLW     FLTSW                                                    3L010930
+       CAL     MPTEMP                                                   3L010940
+       LDI     RMSK5                                                    3L010950
+       LGL     6                                                        3L010960
+       TIF     FZERO               ZERO                                 3L010970
+       LGR     6                   NONZERO                              3L010980
+       ALS     6                   INSERT CHARACTER                     3L010990
+       ORA     FLTSW               X                                    3L011000
+       STZ     FLTSW                                                    3L011010
+       STL     SIGSW                                                    3L011020
+       TRA     MPFL1                                                    3L011030
+ FZERO ORA     MPO60               INSERT BLANK                         3L011040
+       TIX     *+2,4,1                                                  3L011050
+       TXI     NSWRD,4,*           GET NEXT SOURCE WORD                 3L011060
+ MPFL1 TIX     NXTMAC,2,1                                               3L011070
+       TXI     NTWRD,2,NXTMAC-1    STORE IN TARGET                      3L011080
+       SPACE   4                                                        3L011090
+*                                                                       3L011100
+*      TXI     .CXDRP,1,0                                               3L011110
+       ENTRY   .CXDRP                                                   3L011120
+.CXDRP LDI     TPOINT                                                   3L011130
+       STI     SVPYNT                                                   3L011140
+       LDI     MCEBF                                                    3L011150
+       STI     TPOINT                                                   3L011160
+       STZ     MSIGN                                                    3L011170
+       STZ     SIGSW                                                    3L011180
+       STZ     SIKSW                                                    3L011190
+       TRA     .CXDXD                                                   3L011200
+       SPACE   4                                                        3L011210
+*                                                                       3L011220
+*      TXI     .CIDRP,1,NO.OF.DIGITS.TO.CONVERT                         3L011230
+       ENTRY   .CIDRP                                                   3L011240
+.CIDRP SXA     MACCTR,4                                                 3L011250
+       LDI     TPOINT                                                   3L011260
+       STI     SVPYNT                                                   3L011270
+       LDI     MCEBF               PZE EDTBUF                           3L011280
+       STI     TPOINT                                                   3L011290
+       STZ     SIKSW                                                    3L011300
+       STZ     SIGSW                                                    3L011310
+       STZ     MSIGN                                                    3L011320
+       TPL     *+2                                                      3L011330
+       STL     MSIGN                                                    3L011340
+ IDRP1 STL     RPTRG                                                    3L011350
+       TRA     .CIDX1                                                   3L011360
+ IDRP2 STZ     RPTRG                                                    3L011370
+       LXA     MACCTR,4                                                 3L011380
+       LDI     MCEBF               EDTBUF                               3L011390
+       STI     SPOINT              TO SOURCE                            3L011400
+       LDI     SVPYNT              SAVED TARGET                         3L011410
+       STI     TPOINT                                                   3L011420
+       TRA     .CXDXD+1                                                 3L011430
+       SPACE   4                                                        3L011440
+*                                                                       3L011450
+*      TXI     .CXDRQ,1,NO.OF.DIGITS.DEVELOPED                          3L011460
+       ENTRY   .CXDRQ                                                   3L011470
+.CXDRQ STL     RPTRG                                                    3L011480
+       TRA     .CXDXQ                                                   3L011490
+       STZ     RPTRG                                                    3L011500
+       LXA     MACCTR,4                                                 3L011510
+       LDI     MCEBF               BEGINNING OF TPOINT                  3L011520
+       STI     SPOINT                                                   3L011530
+       LDI     SVPYNT                                                   3L011540
+       STI     TPOINT                                                   3L011550
+       TRA     .CXDXD+1                                                 3L011560
+       SPACE   4                                                        3L011570
+*                                                                       3L011580
+*      TXI     .CRQIT,1,VALUE      WHERE VALUE=0                        3L011590
+* UNLESS BLANK WHEN ZERO IS APPLICABLE, IN WHICH                        3L011600
+* CASE VALUE IS EQUAL TO THE TARGET FIELDS TOTAL LENGTH                 3L011610
+       ENTRY   .CRQIT                                                   3L011620
+.CRQIT SXA     MACCTR,4                                                 3L011630
+       ZET     SIGSW                                                    3L011640
+       TRA     LSTWRD                                                   3L011650
+       TXL     LSTWRD,1,0                                               3L011660
+       LDI     SVPYNT              REFRESH                              3L011670
+       STI     TPOINT              TPOINT                               3L011680
+       TRA     .CSPAN                                                   3L011690
+       SPACE   4                                                        3L011700
+*                                                                       3L011710
+*      TXI     .CRSIN,1,C1+64*C2                                        3L011720
+* WHERE CHARACTER C1 IS INSERTED IF THE NUMBER                          3L011730
+* IS POSITIVE AND C2 IF NEGATIVE.                                       3L011740
+       ENTRY   .CRSIN                                                   3L011750
+.CRSIN ALS     6                                                        3L011760
+       SLW     MPTEMP                                                   3L011770
+       PXA     0,1                                                      3L011780
+       ZET     MSIGN                                                    3L011790
+       ARS     6                   C2 WANTED IF NEGATIVE                3L011800
+       ANA     RMSK5               IN CASE C1                           3L011810
+       ORA     MPTEMP                                                   3L011820
+       TIX     *+2,2,1                                                  3L011830
+       TXI     NTWRD,2,*           STORE AND STEP UP COUNT              3L011840
+       TXI     NXTMAC+3,4,-1                                            3L011850
+*                                                                       3L011860
+*      TXI     .CRSIG,1,C3+64*C4                                        3L011870
+       ENTRY   .CRSIG                                                   3L011880
+.CRSIG ALS     6                                                        3L011890
+       SLW     MPTEMP                                                   3L011900
+       PXA     0,1                                                      3L011910
+       ARS     6                                                        3L011920
+       ZET     SIKSW                                                    3L011930
+       TRA     *+3                                                      3L011940
+       NZT     SIGSW                                                    3L011950
+       TRA     SIGC4                                                    3L011960
+       CAL     FLTSW                                                    3L011970
+       TZE     SIGC3                                                    3L011980
+       STZ     FLTSW                                                    3L011990
+ SIGC4 ORA     MPTEMP                                                   3L012000
+       TIX     *+2,2,1                                                  3L012010
+       TXI     NTWRD,2,*           -                                    3L012020
+       TXI     NXTMAC+3,4,-1                                            3L012030
+ SIGC3 PXA     0,1                                                      3L012040
+       ANA     RMSK5                                                    3L012050
+       TRA     SIGC4                                                    3L012060
+       SPACE   4                                                        3L012070
+*                                                                       3L012080
+*      TXI     .CR999,1,NUMBER.OF.CONSECUTIVE.NINES                     3L012090
+       ENTRY   .CR999                                                   3L012100
+.CR999 SXA     MACCTR,4                                                 3L012110
+       LXA     SBYTE,4                                                  3L012120
+       LDI     RMSK5               OCT 77                               3L012130
+       LGL     6                                                        3L012140
+       TIF     *+2                                                      3L012150
+ C991  STL     SIGSW                                                    3L012160
+       TIX     *+2,2,1             ACC  FULL                            3L012170
+       TXI     NTWRD,2,*           YES                                  3L012180
+       TIX     *+2,4,1             MQ EMPTY                             3L012190
+       TXI     NSWRD,4,*           YES                                  3L012200
+       TIX     .CR999+3,1,1                                             3L012210
+       TRA     NXTMAC                                                   3L012220
+       SPACE   4                                                        3L012230
+*                                                                       3L012240
+*      TXI     .CR000,1,NUMBER.OF.ZEROES.TO.INSERT                      3L012250
+       ENTRY   .CR000                                                   3L012260
+.CR000 STZ     MPTEMP                                                   3L012270
+       TRA     .CRBBB+2                                                 3L012280
+*                                                                       3L012290
+*      TXI     .CRBBB,1,NUMBER.OF.BLANKS.TO.INSERT                      3L012300
+       ENTRY   .CRBBB                                                   3L012310
+.CRBBB LDI     MPO60               O60                                  3L012320
+       STI     MPTEMP                                                   3L012330
+       ALS     6                                                        3L012340
+       ORA     MPTEMP                                                   3L012350
+       TIX     *+2,2,1                                                  3L012360
+       TXI     NTWRD,2,*                                                3L012370
+       TIX     .CRBBB+2,1,1                                             3L012380
+       TXI     NXTMAC+3,4,-1                                            3L012390
+       SPACE   4                                                        3L012400
+*                                                                       3L012410
+*      TXI     .CRZZZ,1,NO.OF.CONSECUTIVE.FLOATING.BLANKS               3L012420
+       ENTRY   .CRZZZ                                                   3L012430
+.CRZZZ LDI     MPO60               OCT 60                               3L012440
+       TRA     .CRAAA+1                                                 3L012450
+*                                                                       3L012460
+*      TXI     .CRAAA,1,NO.OF.CONSECUTIVE.FLOATING.*                    3L012470
+       ENTRY   .CRAAA                                                   3L012480
+.CRAAA LDI     MPAST                                                    3L012490
+       STI     MPTEMP                                                   3L012500
+       ZET     SIGSW                                                    3L012510
+       TRA     .CR999                                                   3L012520
+       SXA     MACCTR,4                                                 3L012530
+       LXA     SBYTE,4                                                  3L012540
+       LDI     RMSK5                                                    3L012550
+ CRAA1 LGL     6                                                        3L012560
+       TIF     *+2                                                      3L012570
+       TRA     C991                NONZERO                              3L012580
+       ORA     MPTEMP              INSERT CHARACTER                     3L012590
+       TIX     *+2,2,1                                                  3L012600
+       TXI     NTWRD,2,*                                                3L012610
+       TIX     *+2,4,1                                                  3L012620
+       TXI     NSWRD,4,*                                                3L012630
+       TIX     CRAA1,1,1                                                3L012640
+       TRA     NXTMAC                                                   3L012650
+       SPACE   4                                                        3L012660
+*                                                                       3L012670
+*      TXI     .CRFFQ,1,NO.OF.CONSECUTIVE.FLOATING.SIGN                 3L012680
+*              OCCURRENCES WITH NO MORE TO FOLLOW                       3L012690
+*              EXAMPLE   +++999                                         3L012700
+       ENTRY   .CRFFQ                                                   3L012710
+.CRFFQ STZ     SIKSW                                                    3L012720
+       TRA     .CRFFC+1                                                 3L012730
+*                                                                       3L012740
+*      TXI     .CRFFC,1,NO.OF.CONSECUTIVE.FLOATING.SIGN.                3L012750
+*              OCCURRENCES.WITH.NO.MORE.TO.FOLLOW.BUT                   3L012760
+*              WITH.A.COMMA.BEFORE.THE.NEXT.DIGIT.                      3L012770
+*              EXAMPLE   +++,999                                        3L012780
+       ENTRY   .CRFFC                                                   3L012790
+.CRFFC STL     SIKSW                                                    3L012800
+       ZET     SIGSW                                                    3L012810
+       TRA     .CR999                                                   3L012820
+       SXA     MACCTR,4                                                 3L012830
+       LXA     SBYTE,4                                                  3L012840
+       TXI     *+1,1,-1            REDUCE COUNT BY 1 SINCE              3L012850
+* THE FIRST DIGIT HAS BEEN EXAMINED BY .CRFFF OR                        3L012860
+* .CRFLS AND HAS BEEN FOUND TO BE A ZERO.                               3L012870
+       TXL     FFCQA,1,0                                                3L012880
+       LDI     RMSK5               TO TEST FOR ZERO                     3L012890
+ FFCQB LGL     6                                                        3L012900
+       TIF     FFCQO                                                    3L012910
+       LGR     6                   SHIFT CHARACTER BACK                 3L012920
+       ALS     6                                                        3L012930
+       ORA     FLTSW                                                    3L012940
+       STZ     FLTSW                                                    3L012950
+       STL     SIGSW                                                    3L012960
+       TIX     *+2,2,1             ACC FULL                             3L012970
+       TXI     NTWRD,2,.CR999+2    YES                                  3L012980
+       TRA     .CR999+3                                                 3L012990
+ FFCQO TIX     *+2,4,1                                                  3L013000
+       TXI     NSWRD,4,*                                                3L013010
+       ORA     MPO60                                                    3L013020
+       TIX     *+2,2,1                                                  3L013030
+       TXI     NTWRD,2,*                                                3L013040
+       TNX     FFCQA,1,1           12-13                                3L013050
+       TRA     FFCQB                                                    3L013060
+ FFCQA ALS     6                                                        3L013070
+       LDI     MPO60               BLANK                                3L013080
+       ZET     SIKSW                                                    3L013090
+       TRA     *+3                 .CRFFC                               3L013100
+       LDI     FLTSW                                                    3L013110
+       STZ     FLTSW                                                    3L013120
+       OAI                         SHOULD HAVE                          3L013130
+       PIA                         AN OIA INST                          3L013140
+       TIX     *+2,2,1             ACC FULL                             3L013150
+       TXI     NTWRD,2,NXTMAC-1 OUI                                     3L013160
+       TRA     NXTMAC                                                   3L013170
+       SPACE   4                                                        3L013180
+*                                                                       3L013190
+*      TXI     .CRFFF,1,NO.OF.CONSECUTIVE.FLOATING                      3L013200
+*              SIGN.OCCURRENCES.WITH.MORE.TO.COME                       3L013210
+*      EXAMPLE +++,+++,999                                              3L013220
+       ENTRY   .CRFFF                                                   3L013230
+.CRFFF ZET     SIGSW                                                    3L013240
+       TRA     .CR999                                                   3L013250
+       SXA     MACCTR,4                                                 3L013260
+       LXA     SBYTE,4                                                  3L013270
+       LDI     RMSK5               OCT 77                               3L013280
+ RFFA  LGL     6                                                        3L013290
+       TIF     RFFB                TRANSFER IF ZERO                     3L013300
+       STL     SIGSW               NONZERO                              3L013310
+       LGR     6                   SHIFT IT BACK                        3L013320
+       ALS     6                                                        3L013330
+       TNX     RFFB+2,1,1          LAST DIGIT                           3L013340
+       ORA     FLTSW               NO                                   3L013350
+       STZ     FLTSW                                                    3L013360
+       TIX     *+2,2,1                                                  3L013370
+       TXI     NTWRD,2,*                                                3L013380
+       TRA     .CR999+3                                                 3L013390
+ RFFB  TIX     *+2,4,1             MQ EMPTY                             3L013400
+       TXI     NSWRD,4,*           YES                                  3L013410
+       ORA     MPO60               INSERT A BLANK                       3L013420
+       TIX     *+2,2,1             ACC FULL                             3L013430
+       TXI     NTWRD,2,*           YES                                  3L013440
+       TIX     RFFA,1,1                                                 3L013450
+       TRA     NXTMAC                                                   3L013460
+       SPACE   4                                                        3L013470
+ MPO60 OCT     60                                                       3L013480
+ MCEBF PZE     EDTBUF                                                   3L013490
+MPTEMP PZE     **                  TEMPORARY STORAGE AND SWITCH         3L013500
+ MPAST BCI     1,00000*                                                 3L013510
+ RPTRG PZE     **                                                       3L013520
+ FLTSW PZE     **                  THIS WILL CONTAIN C5 OR C6           3L013530
+ SIKSW PZE     **                                                       3L013540
+*  USED BY REPORT ROUTINES                                              3L013550
+ MSIGN PZE     **                  NONZERO IF MINUS                     3L013560
+ SIGSW PZE     **                  USED BY REPORT ROUTINES              3L013570
+SVPYNT PZE     **                                                       3L013580
+* MOVE FROM NON-JUSTIFIED TO JUSTIFIED.                                 3L013590
+       ENTRY   .CINID                                                   3L013600
+.CINID LXD     APOINT,2            SET IR2=BYTE                         3L013610
+       SXD     *+1,1                                                    3L013620
+       TXI     *+1,2,**            SET IR2 = BYTE+LENGTH                3L013630
+       TXL     NJJ10,2,6                                                3L013640
+       TXL     NJJ20,2,12                                               3L013650
+       TRA     NJJ30                                                    3L013660
+* MOVE FROM JUSTIFIED TO NON-JUSTIFIED                                  3L013670
+       ENTRY   .CIDIN                                                   3L013680
+.CIDIN LXD     BPOINT,2            SET IR2=BYTE                         3L013690
+       SXD     *+1,1                                                    3L013700
+       TXI     *+1,2,**            SET IR2 = BYTE + LENGTH              3L013710
+       TXL     JNJ40,2,6                                                3L013720
+       TXL     JNJ50,2,12                                               3L013730
+       TRA     JNJ60                                                    3L013740
+NJJ2   PZE     **,**,**                                                 3L013750
+NJJ1   PZE     1                                                        3L013760
+* 0 LT (BYTE + LENGTH) LT 7. JUSTIFY.                                   3L013770
+NJJ10  LDQ*    APOINT              LDQ A                                3L013780
+       LXD     APOINT,2            SET IR2 = BYTE                       3L013790
+       XEC     RQLTBL,2            RQL 6*BYTE                           3L013800
+       XCA                                                              3L013810
+       XEC     ARSTBL+6,1          ARS 6*(6-LENGTH)                     3L013820
+       TRA     OUT                                                      3L013830
+* 6 LT (BYTE+LENGTH) LT 13. JUSTIFY.                                    3L013840
+NJJ20  TXL     NJJ25,1,6                                                3L013850
+       LDQ*    APOINT                                                   3L013860
+       LXD     APOINT,1            SET IR1 = BYTE                       3L013870
+       XEC     LGLTBL,1            LGL 6*BYTE                           3L013880
+       PXA     0,0                                                      3L013890
+       XEC     LLSTBL+6,1          LLS 6*(6-BYTE)                       3L013900
+       LAC     APOINT,1                                                 3L013910
+       LDQ     1,1                 LDQ A+1                              3L013920
+       TQP     *+2                                                      3L013930
+       ORA     NJJ1                ORA L(1)                             3L013940
+       XEC     LRSTBL+12,2         LRS 6*(12-BYTE-LENGTH)               3L013950
+       TRA     OUT                                                      3L013960
+NJJ25  LAC     APOINT,2                                                 3L013970
+       CAL     0,2                                                      3L013980
+       LDQ     1,2                                                      3L013990
+       LXD     APOINT,2                                                 3L014000
+       XEC     LGRTBL+6,2                                               3L014010
+       XCA                                                              3L014020
+       XEC     ARSTBL+6,1                                               3L014030
+       TRA     OUT                                                      3L014040
+* 12 LT (BYTE+LENGTH) LT 19. JUSTIFY.                                   3L014050
+NJJ30  SXA     NJJ35,4                                                  3L014060
+       LAC     APOINT,4                                                 3L014070
+       CAL     0,4                 CAL A                                3L014080
+       LDQ     1,4                 LDQ A+1                              3L014090
+       LXD     APOINT,2            SET IR2=BYTE                         3L014100
+       XEC     LGRTBL+6,2          LGR 6*(6-BYTE)                       3L014110
+       STQ     NJJ2                STQ TEMP                             3L014120
+       CAL     1,4                 CAL A+1                              3L014130
+       LDQ     2,4                 LDQ A+2                              3L014140
+       XEC     LGRTBL+6,2          LGR 6*(6-BYTE)                       3L014150
+       CLA     NJJ2                CLA TEMP                             3L014160
+       ALS     1                                                        3L014170
+       TQP     *+2                                                      3L014180
+       ORA     NJJ1                ORA L(1)                             3L014190
+       XEC     LRSTBL+12,1         LRS 6*(12-LENGTH)                    3L014200
+NJJ35  AXT     **,4                                                     3L014210
+       TRA     OUT                                                      3L014220
+* 0 LT (BYTE+LENGTH) LT 7. PACK NON-JUSTIFIED.                          3L014230
+JNJ40  LDQ*    BPOINT              LDQ B                                3L014240
+       XEC     RQLTBL,2            RQL 6*(BYTE+LENGTH)                  3L014250
+       XEC     LGLTBL+6,1          LGL 6*(6-LENGTH)                     3L014260
+       XCA                                                              3L014270
+       LXD     BPOINT,2            SET IR2 = BYTE                       3L014280
+       XEC     RQLTBL+6,2          RQL 6*(6-BYTE)                       3L014290
+       STQ*    BPOINT              STQ B                                3L014300
+       TRA     OUT                                                      3L014310
+* 6 LT (BYTE+LENGTH) LT 13. PACK NON-JUSTIFIED.                         3L014320
+JNJ50  TXL     JNJ55,1,6                                                3L014330
+       RQL     1                                                        3L014340
+       LGR     1                                                        3L014350
+       XEC     LGLTBL+12,2         LGL 6*(12-BYTE-LENGTH)               3L014360
+       LXD     BPOINT,1            SET IR1 = BYTE                       3L014370
+       XEC     ALSTBL,1            ALS 6*BYTE                           3L014380
+       STO     NJJ2                STO TEMP                             3L014390
+       SXA     NJJ35,4                                                  3L014400
+       LAC     BPOINT,4                                                 3L014410
+       CAL     1,4                 CAL B+1                              3L014420
+       XEC     LGRTBL+12,2         LGR 6*(12-BYTE-LENGTH)               3L014430
+       XEC     RQLTBL+12,2         RQL 6*(12-BYTE-LENGTH)               3L014440
+       STQ     1,4                 STQ B+1                              3L014450
+       LDQ     NJJ2                LDQ TEMP                             3L014460
+       CAL     0,4                 CAL B                                3L014470
+       XEC     ARSTBL+6,1          ARS 6*(6-BYTE)                       3L014480
+       XEC     LGRTBL,1            LGR 6*BYTE                           3L014490
+       STQ     0,4                 STQ B                                3L014500
+       TRA     NJJ35                                                    3L014510
+JNJ55  XEC     ALSTBL+6,1                                               3L014520
+       XCA                                                              3L014530
+       CAL*    BPOINT                                                   3L014540
+       LXD     BPOINT,1                                                 3L014550
+       XEC     ARSTBL+6,1                                               3L014560
+       XEC     LGLTBL+6,1                                               3L014570
+       LAC     BPOINT,1                                                 3L014580
+       SLW     0,1                                                      3L014590
+       CAL     1,1                                                      3L014600
+       XEC     LGRTBL+12,2                                              3L014610
+       XEC     RQLTBL+12,2                                              3L014620
+       STQ     1,1                                                      3L014630
+       TRA     OUT                                                      3L014640
+* 12 LT (BYTE+LENGTH) LT 19. PACK NON-JUSTIFIED.                        3L014650
+JNJ60  RQL     1                                                        3L014660
+       LGR     1                                                        3L014670
+       XEC     LGLTBL+12,1         LGL 6*(12-LENGTH)                    3L014680
+       STO     NJJ2                STO TEMP                             3L014690
+       LXD     BPOINT,1            SET IR1 = BYTE                       3L014700
+       XEC     LGLTBL+6,1          LGL 6*(6-BYTE)                       3L014710
+       SXA     NJJ35,4                                                  3L014720
+       LAC     BPOINT,4                                                 3L014730
+       SLW     1,4                 SLW B+1                              3L014740
+       CAL     2,4                 CAL B+2                              3L014750
+       XEC     LGRTBL+18,2         LGR 6*(18-BYTE-LENGTH)               3L014760
+       XEC     RQLTBL+18,2         RQL 6*(18-BYTE-LENGTH)               3L014770
+       STQ     2,4                 STQ B+2                              3L014780
+       LDQ     NJJ2                LDQ TEMP                             3L014790
+       CAL     0,4                 CAL B                                3L014800
+       XEC     ARSTBL+6,1          ARS 6*(6-BYTE)                       3L014810
+       XEC     LGRTBL,1            LGR 6*BYTE                           3L014820
+       STQ     0,4                 STQ B                                3L014830
+       TRA     NJJ35                                                    3L014840
+LLSTBL LLS     0                                                        3L014850
+       LLS     6                                                        3L014860
+       LLS     12                                                       3L014870
+       LLS     18                                                       3L014880
+       LLS     24                                                       3L014890
+       LLS     30                                                       3L014900
+       LLS     36                                                       3L014910
+LRSTBL LRS     0                                                        3L014920
+       LRS     6                                                        3L014930
+       LRS     12                                                       3L014940
+       LRS     18                                                       3L014950
+       LRS     24                                                       3L014960
+       LRS     30                                                       3L014970
+       LRS     36                                                       3L014980
+ARSTBL AXT     0,0                                                      3L014990
+       ARS     6                                                        3L015000
+       ARS     12                                                       3L015010
+       ARS     18                                                       3L015020
+       ARS     24                                                       3L015030
+       ARS     30                                                       3L015040
+       CLM                                                              3L015050
+ OUT   EQU     SAVE1                                                    3L015060
+       END                                                              3L015070

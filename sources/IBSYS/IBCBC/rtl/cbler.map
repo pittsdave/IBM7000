@@ -1,0 +1,15 @@
+$IBMAP CBLER   ADDREL                                                   3L100000
+       LBL     BLER,BEGIN     CBLER                                  (7)3L100010
+*              CALLING SEQUENCE                                         3L100020
+*      LAC     BL)NN,IR                                                 3L100030
+*      TXL     .CBLER,IR,0                                              3L100040
+*              ROUTINE PRINTS ON SYSTEM OUTPUT UNIT MESSAGE DESIGNATING 3L100050
+*              THAT A DATA ITEM IS REFERENCED BEFORE IT IS LOCATED      3L100060
+       ENTRY   .CBLER                                                   3L100070
+.CBLER TSX     .CDPLY,4                                                 3L100080
+       PZE     C06MS1,,8                                                3L100090
+       STR                                                              3L100100
+*                                                                       3L100110
+C06MS1 BCI     9,PROCESSING TERMINATED - DATA ITEM REFERENCED BEFORE IT 3L100120
+       BCI     3,EM IS LOCATED.                                         3L100130
+       END                                                              3L100140

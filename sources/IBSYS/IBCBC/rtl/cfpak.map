@@ -1,0 +1,1270 @@
+$IBMAP CFPAK   ADDREL                                                   3LM00000
+       LBL     FPAK,BEGIN     CFPAK                                  (7)3LM00010
+       TTL     CFPAK - COBOL CONVERSION ROUTINE                     (14)3LM00015
+MOVOVF EQU     .COFLO                                                   3LM00020
+MOVERR PZE     **                                                       3LM00030
+APOINT EQU     .CAREF                                                   3LM00040
+BPOINT EQU     .CBREF                                                   3LM00050
+MOVUNF EQU     .CUFLO                                                   3LM00060
+ MOVX4 EQU     .CX4                                                     3LM00070
+MVPKXT EQU     .CXIT                                                    3LM00080
+ MOVX1 EQU     .CXIT+1                                                  3LM00090
+ MOVX2 EQU     .CXIT+2                                                  3LM00100
+MOVXIT EQU     .CXIT+1                                                  3LM00110
+*SOURCE FIELD OF ZERO                                                   3LM00120
+*                                                                       3LM00130
+MOVZER CLA     MOVT1                                                    3LM00140
+       STO     MOVT2                                                    3LM00150
+       LDQ     MOVT2                                                    3LM00160
+       STZ     SWFF                                                     3LM00170
+       ZET     SWXF                                                     3LM00180
+       TRA     MOVXF                                                    3LM00190
+       NZT     SWXI                                                     3LM00200
+       TRA     MOVXS                                                    3LM00210
+       STZ     SWXI                                                     3LM00220
+       TXI     MOVXIT,4,-1                                              3LM00230
+*SOURCE FIELD OF INTERNAL DECIMAL                                       3LM00240
+*                                                                       3LM00250
+*      CALLING SEQUENCE                                                 3LM00260
+*                                                                       3LM00270
+*      TRA     .CIDSD                                                   3LM00280
+*      P       S.SCL,,S.NL                                              3LM00290
+*      P       T.SCL,T.SC,T.TL                                          3LM00300
+*      CALLING SEQUENCE                                                 3LM00310
+*                                                                       3LM00320
+*      TSX     .CIDF2,4                                                 3LM00330
+*      P       S.SCL,,S.NL                                              3LM00340
+*                                                                       3LM00350
+       ENTRY   .CIDF2                                                   3LM00360
+.CIDF2 STL     SWFF                                                     3LM00370
+       ENTRY   .CIDF1                                                   3LM00380
+.CIDF1 STL     SWXF                TARGET FIELD IS INTERNAL FLOATING    3LM00390
+       SXA     MOVX1,1             SAVE INDEX REGISTERS                 3LM00400
+       SXA     MOVX2,2                                                  3LM00410
+       STI     SAVIND                                                (4)3LM00411
+       ENTRY   .CIDSD                                                   3LM00420
+.CIDSD LDI     1,4                 SPECIFICATIONS OF SOURCE FIELD       3LM00430
+       TXI     *+1,4,-1            ADJUST X4 TO NEXT PARAMETER          3LM00440
+       SXA     MOVX4,4                                                  3LM00450
+       STI     MOVT1                                                    3LM00460
+       RIL     377777                                                   3LM00470
+       IIL     400000              -S.SCL                               3LM00480
+       STI     MOVDS                                                    3LM00490
+       LXD     MOVT1,1             S.NL                                 3LM00500
+ MV800 TSX     MOVNRM,4                                                 3LM00510
+       LXA     MOVX4,4                                                  3LM00520
+       TZE     MOVZER+1                                                 3LM00530
+       ZET     SWXF                                                     3LM00540
+       TRA     MOVXF               TARGET IS INTERNAL FLOATING          3LM00550
+       STO     MOVT1                                                    3LM00560
+       PXA     0,1                                                      3LM00570
+       ADD     MOVDS                                                    3LM00580
+       STO     MOVXP                                                    3LM00590
+       PXA     0,1                                                      3LM00600
+       SSM                                                              3LM00610
+       STO     MOVDS                                                    3LM00620
+       TRA     MOVXS+1             TARGET FIELD IS SCIENTIFIC DECIMAL   3LM00630
+ MV805 AXC     MV800,4                                                  3LM00640
+       TRA     MV905                                                    3LM00650
+*SOURCE FIELD OF INTERNAL FLOATING                                      3LM00660
+*                                                                       3LM00670
+*      CALLING SEQUENCE                                                 3LM00680
+*                                                                       3LM00690
+*      TSX     .CF2ID,4                                                 3LM00700
+*      P       T.SCL,,T.NL                                              3LM00710
+*                                                                       3LM00720
+*      CALLING SEQUENCE                                                 3LM00730
+*                                                                       3LM00740
+*      TRA     .CF1SD                                                   3LM00750
+*      P       T.SCL,T.SC,T.TL                                          3LM00760
+*                                                                       3LM00770
+       ENTRY   .CF2ID                                                   3LM00780
+.CF2ID STL     SWXI                                                     3LM00790
+       SXA     MOVX1,1                                                  3LM00800
+       SXA     MOVX2,2                                                  3LM00810
+       ENTRY   .CF2SD                                                   3LM00820
+.CF2SD STL     SWFF                                                     3LM00830
+       STQ     MOVT2                                                    3LM00840
+       TRA     .CF1SD+1                                                 3LM00850
+       ENTRY   .CF1ID                                                   3LM00860
+.CF1ID STL     SWXI                                                     3LM00870
+       SXA     MOVX1,1                                                  3LM00880
+       SXA     MOVX2,2                                                  3LM00890
+       ENTRY   .CF1SD                                                   3LM00900
+.CF1SD LDQ     MVD00               L(0)                                 3LM00910
+       SXA     MOVX4,4                                                  3LM00920
+       TZE     MOVZER+1                                                 3LM00930
+       LRS     27                                                       3LM00940
+       STQ     MOVT1                                                    3LM00950
+       PAX     0,2                 MOVBS=128+B                          3LM00960
+       PXA     0,2                                                      3LM00970
+       SUB     MVD05               128B35                               3LM00980
+       TZE     MV701                                                    3LM00990
+       XCA                                                              3LM01000
+       VLM     MVD03,,7            L(-.30103B12)                        3LM01010
+       TMI     *+2                 MOVDS AT BS=19                       3LM01020
+       ADD     MVD06               L(1B19)                              3LM01030
+       ARS     16                                                       3LM01040
+ MV701 STO     MOVDS               -DS AT BS=35                         3LM01050
+       CHS                                                              3LM01060
+       STO     MOVXP                                                    3LM01070
+       ZET     SWFF                                                     3LM01080
+       TXI     MV700,2,1                                                3LM01090
+       CLA     MOVT1                                                    3LM01100
+       LDQ     MVD00               L(0)                                 3LM01110
+       LRS     1                                                        3LM01120
+       TXI     MOVXS,2,1                                                3LM01130
+ MV700 STZ     SWFF                                                     3LM01140
+       LDQ     MOVT2                                                    3LM01150
+       LLS     8                                                        3LM01160
+       CLA     MOVT1                                                    3LM01170
+       ARS     8                                                        3LM01180
+       LRS     0                                                        3LM01190
+       LLS     7                                                        3LM01200
+       TRA     MOVXS                                                    3LM01210
+*SOURCE FIELD OF SCIENTIFIC DECIMAL                                     3LM01220
+*                                                                       3LM01230
+*      SENSE INDICATOR USAGE                                            3LM01240
+*      BIT 0   400000    IF 1, DECIMAL POINT IN WORD 1                  3LM01250
+*          1   200000    IF 1, DECIMAL POINT IN WORD 2                  3LM01260
+*          2   100000    IF 1, DECIMAL POINT HAS APPEARED               3LM01270
+*          3   040000    IF 1, SIGN HAS APPEARED                        3LM01280
+*          4   020000    IF 1, LEADING ZERO HAS APPEARED                3LM01290
+*          5   010000    IF 1, CONVERTING EXPONENT                      3LM01300
+*          6   004000    IF 1, END OF FIELD HAS BEEN ENCOUNTERED        3LM01310
+*      CALLING SEQUENCE                                                 3LM01320
+*                                                                       3LM01330
+*      TRA     .CSDID                                                   3LM01340
+*      P       S.SCL,S.SC,S.TL                                          3LM01350
+*      P       T.SCL,,T.NL                                              3LM01360
+*                                                                       3LM01370
+       ENTRY   .CSDID                                                   3LM01380
+.CSDID STL     SWXI                                                     3LM01390
+       TRA     .CSDSD                                                   3LM01400
+*      CALLING SEQUENCE                                                 3LM01410
+*                                                                       3LM01420
+*      TRA     .CSDF1                                                   3LM01430
+*      P       S.SCL,S.SC,S.TL                                          3LM01440
+*                                                                       3LM01450
+       ENTRY   .CSDF2                                                   3LM01460
+.CSDF2 STL     SWFF                                                     3LM01470
+       ENTRY   .CSDF1                                                   3LM01480
+.CSDF1 STL     SWXF                                                     3LM01490
+*      CALLING SEQUENCE                                                 3LM01500
+*                                                                       3LM01510
+*      TRA     .CSDSD                                                   3LM01520
+*      P       S.SCL,S.SC,S.TL                                          3LM01530
+*      P       T.SCL,T.SC,T.TL                                          3LM01540
+*                                                                       3LM01550
+       ENTRY   .CSDSD                                                   3LM01560
+.CSDSD LDQ*    APOINT                                                   3LM01570
+       LDC     APOINT,1                                                 3LM01580
+       TXI     *+1,1,6             NO. OF REMAINING BYTES               3LM01590
+       SXD     MV301,1                                                  3LM01600
+       XEC     RQL1,1                                                   3LM01610
+       CAL     1,4                 SPECIFICATIONS OF SOURCE FIELD       3LM01620
+       TXI     *+1,4,-1            ADJUST X4                            3LM01630
+       SXA     MOVX4,4                                                  3LM01640
+       PDX     0,4                 S.TL                                 3LM01650
+       STZ     MOVDS                                                    3LM01660
+       STZ     MOVPT                                                    3LM01670
+       STZ     MOVT2                                                    3LM01680
+       PBT                                                              3LM01690
+       STA     MOVDS               S.SCL FOR IMPLIED POINT              3LM01700
+       SXA     MV501,4                                                  3LM01710
+ MV301 TXL     *+2,4,0                                                  3LM01720
+       LXD     *-1,4                                                    3LM01730
+       SXD     MV501+1,4                                                3LM01740
+       PXD     0,0                                                      3LM01750
+       LDI     MVD10               200000000000                         3LM01760
+       AXT     10,2                                                     3LM01770
+       TSX     MOVCV1,1                                                 3LM01780
+       TRA     MV305               END OF FIELD                         3LM01790
+       STO     MOVT1                                                    3LM01800
+       ZET     MOVPT                                                    3LM01810
+       IIL     600000                                                   3LM01820
+       TXH     MV302,1,MVXXX+11    TERMINATOR                           3LM01830
+       AXT     10,2                                                     3LM01840
+       TZE     MV307                                                    3LM01850
+       CLM                                                              3LM01860
+       ORA     MVD11               MZE                                  3LM01870
+       TSX     MV310,1                                                  3LM01880
+       TRA     MV305+1             END OF FIELD                         3LM01890
+       STO     MOVT2                                                    3LM01900
+ MV302 RIL     060000                                                   3LM01910
+       SIL     010000                                                   3LM01920
+       PXD     0,0                                                      3LM01930
+       TXL     MV303,1,MVXXX+11                                         3LM01940
+       AXC     MV303+1,2           TERMINATOR                           3LM01950
+       SXA     MV503,2             SETUP RETURN                         3LM01960
+       TXI     MV500+1,2,MV303+3   SET X2=2                             3LM01970
+ MV303 AXT     2,2                                                      3LM01980
+       TSX     MOVCV1,1                                                 3LM01990
+       TRA     MV308               END OF FIELD                         3LM02000
+       TXH     MV308,1,MVXXX+11    TERMINATOR                           3LM02010
+       SUB     MOVPT                                                    3LM02020
+ MV306 LXA     MOVX4,4                                                  3LM02030
+       NZT     MOVT1                                                    3LM02040
+       TRA     MOVZER                                                   3LM02050
+       LNT     400000                                                   3LM02060
+       ADD     TAB11+8             L(10B35)                             3LM02070
+       ZET     MOVT2                                                    3LM02080
+       SUB     TAB11+8             L(10B35)                             3LM02090
+       LNT     100000                                                   3LM02100
+       SUB     MOVDS                                                    3LM02110
+       STO     MOVDS               ADJUSTED MOVDS                       3LM02120
+       NZT     MOVT2                                                    3LM02130
+       TRA     MV304                                                    3LM02140
+       LDQ     MOVT1                                                    3LM02150
+       TSX     MOVMPY,1            (10**10)*MOVT1+MOVT2                 3LM02160
+       AXT     128+70,2            MOVBS=BS+128                         3LM02170
+       AXT     20,1                                                     3LM02180
+       TRA     MV309                                                    3LM02190
+*                                                                       3LM02200
+ MV304 CLA     MOVT1                                                    3LM02210
+       LDQ     MVD00                                                    3LM02220
+       LRS     0                                                        3LM02230
+       AXT     128+35,2                                                 3LM02240
+       AXT     10,1                                                     3LM02250
+ MV309 NZT     SWXI                                                     3LM02260
+       TRA     MV805                                                    3LM02270
+       SXA     MOVNL,1                                                  3LM02280
+       TRA     MOVXI               TARGET FIELD IS INTERNAL DECIMAL     3LM02290
+*                                                                       3LM02300
+ MV305 IIL     600000                                                   3LM02310
+       XEC     2,2                 STO                                  3LM02320
+       CLS     MOVPT                                                    3LM02330
+       TRA     MV306                                                    3LM02340
+*                                                                       3LM02350
+ MV307 TSX     MV310,1                                                  3LM02360
+       TRA     MV305+1             END OF FIELD                         3LM02370
+       STO     MOVT1                                                    3LM02380
+       TRA     MV302                                                    3LM02390
+*                                                                       3LM02400
+ MV308 TZE     MV306-1                                                  3LM02410
+       XCA                                                              3LM02420
+       VLM     MVD04,,7            L(.1B27)                             3LM02430
+       LRS     1                                                        3LM02440
+       RND                                                              3LM02450
+       TRA     MV306-1                                                  3LM02460
+*                                                                       3LM02470
+ MV310 SXA     MV503,1                                                  3LM02480
+       TRA     MV501-1                                                  3LM02490
+*TARGET FIELD OF INTERNAL FLOATING                                      3LM02500
+*      INTERMEDIATE RESULT LEFT IN AC AND MQ WITH THE MOST SIGNIFICANT  3LM02510
+*      BIT IN POSITION 2 OF AC                                          3LM02520
+*      X2=128+BS                                                        3LM02530
+*      MOVDS=SCALING FACTOR                                             3LM02540
+*                                                                       3LM02550
+MOVXF  STZ     SWXF                                                     3LM02560
+       TZE     MOVIND+1                                              (4)3LM02570
+       SXA     MOVX4,4                                                  3LM02580
+       LFTM                                                             3LM02590
+       ZET     SWFF                                                     3LM02600
+       TRA     MV104               DOUBLE PRECISION                     3LM02610
+*SINGLE PRECISION                                                       3LM02620
+*                                                                       3LM02630
+       TSX     MOVSC1,1                                                 3LM02640
+       TXH     MV107,2,255         OVERFLOW OR UNDERFLOW                3LM02650
+       XCA                         FRACTION INTO MQ                     3LM02660
+       PXA     0,2                 CHARACTERISTIC                       3LM02670
+       LLS     27                  FORM FLOATING POINT NUMBER           3LM02680
+       RQL     28                                                       3LM02690
+       TOV     *+1                                                      3LM02700
+       FRN                                                              3LM02710
+       TNO     MV100                                                    3LM02720
+       TRA     MV106               OVERFLOW                             3LM02730
+*DOUBLE PRECISION                                                       3LM02740
+*                                                                       3LM02750
+ MV104 STZ     SWFF                                                     3LM02760
+       TSX     MOVSC2,1                                                 3LM02770
+       TXH     MV107,2,255         OVERFLOW OR UNDERFLOW                3LM02780
+       STQ     MOVT2                                                    3LM02790
+       XCA                                                              3LM02800
+       PXA     0,2                                                      3LM02810
+       LLS     27                  FORM FLOATING POINT NUMBER           3LM02820
+       TXI     *+1,2,-27                                                3LM02830
+       TXL     MV105,2,256                                              3LM02840
+       RQL     28                  PART2 UNDERFLOW                      3LM02850
+       FRN                                                              3LM02860
+       LDQ     MVD00               L(0)                                 3LM02870
+       LRS     0                                                        3LM02880
+       TRA     MV100                                                    3LM02890
+ MV105 STO     MOVT1                                                    3LM02900
+       PXA     0,2                 FORM PART2                           3LM02910
+       LLS     8                                                        3LM02920
+       LDQ     MOVT2                                                    3LM02930
+       LLS     19                                                       3LM02940
+       RQL     28                                                       3LM02950
+       TOV     *+1                                                      3LM02960
+       FRN                                                              3LM02970
+       FAD     MOVT1               ADD PART1 TO PART2                   3LM02980
+       TNO     MV100                                                    3LM02990
+ MV106 STL     MOVOVF              OVERFLOW                             3LM03000
+       CLM                                                              3LM03010
+       ORA     MVD01               377777777777                         3LM03020
+       LDQ     MVD02               344777777777                         3LM03030
+       TRA     MV105-2                                                  3LM03040
+ MV107 TXL     MV106,2,4096        OVERFLOW                             3LM03050
+       STL     MOVUNF              UNDERFLOW                            3LM03060
+       MPY     MVD00               L(0)                                 3LM03070
+ MV100 EFTM                                                             3LM03080
+MOVIND LXA     MOVX4,4                                               (4)3LM03090
+       LDI     SAVIND                                                (4)3LM03091
+       TRA     MOVXIT                                                (4)3LM03092
+SAVIND PZE     **                                                    (4)3LM03093
+*TARGET FIELD OF SCIENTIFIC DECIMAL                                     3LM03100
+*      INTERMEDIATE RESULT LEFT IN AC AND MQ WITH THE MOST SIGNIFICANT  3LM03110
+*      BIT IN POSITION 2 OF AC                                          3LM03120
+*      X2=128+BS                                                        3LM03130
+*      MOVDS=SCALING FACTOR                                             3LM03140
+*      MOVXP=DECIMAL EXPONENT OR ITS APPROXIMATION FOR NORMALIZED       3LM03150
+*              DECIMAL FRACTION AFTER SCALING                           3LM03160
+*                                                                       3LM03170
+MOVXS  STO     MOVT1                                                    3LM03180
+       ZET     SWXI                                                     3LM03190
+       TRA     MV201                                                    3LM03200
+       CLA     1,4                 SPECIFICATIONS OF TARGET FIELD       3LM03210
+       TXI     *+1,4,-1            ADJUST X4 AND STORE                  3LM03220
+       SXA     MOVX4,4                                                  3LM03230
+       STO     MOVPT                                                    3LM03240
+       PDX     0,1                 T.TL                                 3LM03250
+       ALS     1                                                        3LM03260
+       STT     MV211               T.SC                                 3LM03270
+       TMI     *+2                                                      3LM03280
+       TIX     MV201+1,1,4                                              3LM03290
+       TIX     MV201+1,1,5                                              3LM03300
+       AXT     1,1                                                      3LM03310
+       TRA     MV201+1                                                  3LM03320
+*DUMMY INTERMEDIATE TARGET FIELD SPECIFICATIONS FOR INTERNAL DECIMAL    3LM03330
+*                                                                       3LM03340
+ MV201 AXT     20,1                DUMMY T.NL=20 FOR MOVFI              3LM03350
+       SXA     MOVNL,1                                                  3LM03360
+       NZT     MOVT1                                                    3LM03370
+       TRA     MV212                                                    3LM03380
+       TXH     MV206,1,10          T.NL IS GREATER THAN 10              3LM03390
+       PXA     0,1                                                      3LM03400
+       ADD     MOVDS               T.NL-DS                              3LM03410
+       STO     MOVDS                                                    3LM03420
+       CLA     MOVT1                                                    3LM03430
+       TXL     *+3,1,8                                                  3LM03440
+       TSX     MOVSC2,1                                                 3LM03450
+       TRA     *+2                                                      3LM03460
+       TSX     MOVSC1,1                                                 3LM03470
+       LXA     MOVNL,1                                                  3LM03480
+       TNX     MV202,2,128+35                                           3LM03490
+       SXA     *+1,2                                                    3LM03500
+       LLS     0                                                        3LM03510
+       ACL     TAB15+9             L(5B35)                              3LM03520
+       TRA     MV203                                                    3LM03530
+ MV202 LRS     128+35,2                                                 3LM03540
+       RND                                                              3LM03550
+       LAS     TAB11+9,1                                                3LM03560
+       TRA     *+4                                                      3LM03570
+       TRA     *+3                                                      3LM03580
+       STO     MOVT1                                                    3LM03590
+       TRA     MV209+1                                                  3LM03600
+       RQL     1                                                        3LM03610
+       TQP     MV202-2                                                  3LM03620
+       ACL     TAB14+9             L(4B35)                              3LM03630
+ MV203 LRS     35                                                       3LM03640
+       DVP     TAB11+8             L(10B35)                             3LM03650
+       CLA     TAB11+9             L(1B35)                              3LM03660
+       ADD     MOVXP                                                    3LM03670
+       STO     MOVXP               ADJUST EXPONENT                      3LM03680
+ MV209 STQ     MOVT1                                                    3LM03690
+       CLA     MOVPT               TARGET FIELD SPECIFICATIONS          3LM03700
+       TMI     *+2                                                      3LM03710
+       STZ     MOVPT                                                    3LM03720
+       ANA     MVD12                                                    3LM03730
+       ADD     MOVXP                                                    3LM03740
+       SUB     MOVNL               ADJUST EXPONENT                      3LM03750
+       TXL     *+2,1,10                                                 3LM03760
+       NZT     MOVT2                                                    3LM03770
+       ZET     MOVT1                                                    3LM03780
+       TRA     *+2                                                      3LM03790
+       PXD     0,0                                                      3LM03800
+       STO     MOVXP                                                    3LM03810
+       AXT     0,2                                                      3LM03820
+       AXT     0,4                                                      3LM03830
+       LDI     MV211                                                    3LM03840
+       RNT     600000                                                   3LM03850
+       TRA     MV211                                                    3LM03860
+       AXT     1,2                                                      3LM03870
+       AXT     1,4                                                      3LM03880
+       TRA     *+2                                                      3LM03890
+MV211  AXT     1,**                                                     3LM03900
+       LDI     MOVT1                                                    3LM03910
+       TPL     *+2                                                      3LM03920
+       AXT     2,2                                                      3LM03930
+       CAL     MVD13+2,2                                                3LM03940
+       SLW     MOVT1               SIGN OF EXPONENT                     3LM03950
+       TQP     *+2                                                      3LM03960
+       AXT     2,4                                                      3LM03970
+       CAL     MVD13+2,4                                                3LM03980
+       LAC     BPOINT,2            TARGET WORD                          3LM03990
+       LDC     BPOINT,4                                                 3LM04000
+       TXI     *+1,4,6             NO. OF BYTES REMAINING IN WORD       3LM04010
+       TNX     MV210,1,10          T.NL IS GREATER THAN 10              3LM04020
+       LXA     MOVPT,2                                                  3LM04030
+       SXA     MV205,0                                                  3LM04040
+       TIX     MV207,2,10          DECIMAL POINT IN WORD1               3LM04050
+       ZET     MOVPT                                                    3LM04060
+       TXI     *+1,2,100                                                3LM04070
+       SXA     MV205,2             DECIMAL POINT IN WORD2               3LM04080
+       STZ     MOVPT                                                    3LM04090
+ MV208 LAC     BPOINT,2            RELOAD TARGET POINTER                3LM04100
+       STL     MV012                                                    3LM04110
+       AXT     *+2,0                                                    3LM04120
+       TRA     MOVCV2              STORE WORD1                          3LM04130
+MV205  AXT     0,1                                                      3LM04140
+       TXL     *+4,1,0                                                  3LM04150
+       SXD     MOVPT,1                                                  3LM04160
+       TXI     *+1,1,-100                                               3LM04170
+       SXA     MOVPT,1                                                  3LM04180
+       PXD     0,0                                                      3LM04190
+       LDI     MOVT2                                                    3LM04200
+       AXT     10,1                                                     3LM04210
+ MV210 STL     MV012               STORE WORD2                          3LM04220
+       AXT     *+2,0                                                    3LM04230
+       TRA     MOVCV2                                                   3LM04240
+       CAL     MOVT1                                                    3LM04250
+       LDI     MOVXP                                                    3LM04260
+       AXT     2,1                                                      3LM04270
+       STL     MV012                                                    3LM04280
+       AXT     MVPKXT,0                                                 3LM04290
+       TRA     MOVCV2              STORE EXPONENT                       3LM04300
+*                                                                       3LM04310
+ MV207 SXA     MOVPT,2                                                  3LM04320
+       TRA     MV208                                                    3LM04330
+*                                                                       3LM04340
+ MV206 CLA     MOVT1                                                    3LM04350
+       TSX     MOVSC2,1                                                 3LM04360
+       LXA     MOVNL,4             T.NL                                 3LM04370
+       TXL     MV204,2,127         LESS THAN .5                         3LM04380
+       STO     MOVT1                                                    3LM04390
+       TXH     MV200,2,128         GREATER THAN 1                       3LM04400
+       STQ     MOVT2                                                    3LM04410
+       CAL     TAB21+11,4                                               3LM04420
+       ARS     18                                                       3LM04430
+       STA     *+2                                                      3LM04440
+       CAL     MVD01               ONES                                 3LM04450
+       LLS     0                                                        3LM04460
+       ANA     MOVT1                                                    3LM04470
+       ANA     MVD01                                                    3LM04480
+       RND                                                              3LM04490
+       LDQ     MOVT2                                                    3LM04500
+       PBT                                                              3LM04510
+       TRA     MV204-1                                                  3LM04520
+ MV200 TXI     *+1,4,-1            GREATER THAN OR EQUAL TO 1           3LM04530
+       CLA     TAB11+9             1B35                                 3LM04540
+       ADD     MOVXP                                                    3LM04550
+       STO     MOVXP                                                    3LM04560
+       CLA     MOVT1                                                    3LM04570
+ MV204 TSX     MV403-1,1                                                3LM04580
+       TSX     MOVRND,1                                                 3LM04590
+       ZET     SWXI                                                     3LM04600
+       TRA     MV607                                                    3LM04610
+       DVP     TAB11-1             L(10**10B35)                         3LM04620
+       STO     MOVT2                                                    3LM04630
+       LXA     MOVNL,1                                                  3LM04640
+       TRA     MV209                                                    3LM04650
+*                                                                       3LM04660
+ MV212 NZT     SWXI                                                     3LM04670
+       TRA     MV209+1                                                  3LM04680
+       TRA     MV607+1                                                  3LM04690
+*TARGET FIELD OF INTERNAL DECIMAL                                       3LM04700
+*      INTERMEDIATE RESULT LEFT IN AC AND MQ WITH THE MOST SIGNIFICANT  3LM04710
+*      BIT IN POSITION 2 OF AC                                          3LM04720
+*      X2=128+BS                                                        3LM04730
+*      MOVDS=SCALING FACTOR                                             3LM04740
+*                                                                       3LM04750
+ MV607 STO     MOVT1                                                    3LM04760
+       CLA     MOVXP                                                    3LM04770
+       SUB     MOVNL                                                    3LM04780
+       STO     MOVDS                                                    3LM04790
+       CLA     MOVT1                                                    3LM04800
+       AXT     128+70,2                                                 3LM04810
+       LXA     MOVX4,4                                                  3LM04820
+MOVXI  STZ     SWXI                                                     3LM04830
+       STO     MOVT1                                                    3LM04840
+       CLA     1,4                                                      3LM04850
+       TXI     *+1,4,-1                                                 3LM04860
+       SXA     MOVX4,4                                                  3LM04870
+       STO     MOVT2                                                    3LM04880
+       SXD     MOVT2,0             T.SCL                                3LM04890
+       PDX     0,1                 T.NL                                 3LM04900
+       CLA     MOVT2                                                    3LM04910
+       ADD     MOVDS                                                    3LM04920
+       STO     MOVDS               D.SCL=T.SCL-S.SCL                    3LM04930
+       PXA     0,1                                                      3LM04940
+       SUB     MOVDS               T.NL-D.SCL                           3LM04950
+       TZE     MV606                                                    3LM04960
+       TMI     MV606                                                    3LM04970
+       PAX     0,4                                                      3LM04980
+       SUB     MOVNL               D.NL=(T.NL-D.SCL)-S.NL               3LM04990
+       TPL     MV604                                                    3LM05000
+       CLA     MOVDS                                                    3LM05010
+       TZE     MV602                                                    3LM05020
+       TPL     MV602                                                    3LM05030
+       CLA     MOVT1                                                    3LM05040
+       SXA     *+2,1                                                    3LM05050
+       TSX     MOVSC3,1                                                 3LM05060
+       AXT     0,4                                                      3LM05070
+       TSX     MOVMOD,1                                                 3LM05080
+       LXA     *-2,1                                                    3LM05090
+       TXH     MVPKXT,1,10                                              3LM05100
+       XCA                                                              3LM05110
+       TRA     MVPKXT                                                   3LM05120
+*                                                                       3LM05130
+ MV602 CLA     MOVT1                                                    3LM05140
+       SXA     MV609,1                                                  3LM05150
+       SXA     MV611,4                                                  3LM05160
+       LXA     MOVNL,1                                                  3LM05170
+       TXL     MV601,1,10                                               3LM05180
+       TSX     MOVMOD,1                                                 3LM05190
+       LXA     MV611,1                                                  3LM05200
+       TXH     MV611+1,1,10                                             3LM05210
+       XCA                                                              3LM05220
+       TXI     MV611+1,2,-35                                            3LM05230
+ MV601 LRS     35                                                       3LM05240
+       DVP     TEN2,4                                                   3LM05250
+       TSX     MV608,1                                                  3LM05260
+MV611  AXT     0,1                                                      3LM05270
+       TSX     MOVNRM,4                                                 3LM05280
+       TZE     MVPKXT                                                   3LM05290
+MV609  AXT     0,1                                                      3LM05300
+       TXH     MV603,1,10                                               3LM05310
+       TXL     *+3,1,9                                                  3LM05320
+       TSX     MOVSC2,1                                                 3LM05330
+       TRA     *+2                                                      3LM05340
+       TSX     MOVSC1,1                                                 3LM05350
+       TXH     MV610,2,128+35                                           3LM05360
+       LRS     128+35,2                                                 3LM05370
+       RND                                                              3LM05380
+       TRA     MVPKXT                                                   3LM05390
+*                                                                       3LM05400
+ MV603 TSX     MOVSC3,1                                                 3LM05410
+       TRA     MVPKXT                                                   3LM05420
+*                                                                       3LM05430
+ MV604 CLA     MOVT1                                                    3LM05440
+       SXA     MV609,1                                                  3LM05450
+       LXA     MOVNL,1                                                  3LM05460
+       TRA     MV611+1                                                  3LM05470
+*                                                                       3LM05480
+ MV606 XCL                                                              3LM05490
+       ORA     MOVT1                                                    3LM05500
+       ORS     MOVOVF                                                   3LM05510
+       XCL                                                              3LM05520
+ MV610 MPY     MVD00                                                    3LM05530
+       TRA     MVPKXT                                                   3LM05540
+*                                                                       3LM05550
+ MV608 XCA                                                              3LM05560
+       ORS     MOVOVF                                                   3LM05570
+       CLM                                                              3LM05580
+       XCA                                                              3LM05590
+       TRA     1,1                                                      3LM05600
+*MODULO 10**N OF INTEGER IN AC AND MQ                                   3LM05610
+*                                                                       3LM05620
+*      CALLING SEQUENCE                                                 3LM05630
+*                                                                       3LM05640
+*      TSX     MOVMOD,1                                                 3LM05650
+*              UPON ENTRY, X4=N                                         3LM05660
+*                                                                       3LM05670
+MOVMOD TNX     MV650,4,10                                               3LM05680
+       DVP     TEN2-10             L(10**10)                            3LM05690
+       STO     MOVT2                                                    3LM05700
+       CLM                                                              3LM05710
+       DVP     TEN2,4                                                   3LM05720
+       STQ     MOVOVF                                                   3LM05730
+       XCA                                                              3LM05740
+MOVMPY MPY     TEN2-10             (10**10)MOVT1+MOVT2                  3LM05750
+       STO     MOVT1                                                    3LM05760
+       XCA                                                              3LM05770
+       ADD     MOVT2                                                    3LM05780
+       LRS     35                                                       3LM05790
+       ADD     MOVT1                                                    3LM05800
+       TRA     1,1                                                      3LM05810
+ MV650 STQ     MOVT2                                                    3LM05820
+       LRS     35                                                       3LM05830
+       DVP     TEN2,4                                                   3LM05840
+       XCA                                                              3LM05850
+       ORS     MOVOVF                                                   3LM05860
+       XCA                                                              3LM05870
+       LDQ     MOVT2                                                    3LM05880
+       DVP     TEN2,4                                                   3LM05890
+       XCA                                                              3LM05900
+       ORS     MOVOVF                                                   3LM05910
+       CLM                                                              3LM05920
+       TRA     1,1                                                      3LM05930
+*SCALING ROUTINE                                                        3LM05940
+*      CALLING SEQUENCE                                                 3LM05950
+*                                                                       3LM05960
+*      TSX     MOVSC1,1  (MOVSC2)                                       3LM05970
+*                                                                       3LM05980
+*      AC=WORD1                                                         3LM05990
+*      MQ=WORD2 IF DOUBLE PRECISION                                     3LM06000
+*      X2=BS+128                                                        3LM06010
+*      MOVDS=DECIMAL SCALE TO BE USED                                   3LM06020
+*                                                                       3LM06030
+MOVSC1 LXA     MOVDS,4                                                  3LM06040
+       TXL     MV400,4,0                                                3LM06050
+       LDI     MOVDS                                                    3LM06060
+       LFT     400000              TEST SIGN OF MOVDS                   3LM06070
+       TRA     MV402                                                    3LM06080
+ MV408 XCA                                                              3LM06090
+       TNX     MV407,4,15                                               3LM06100
+       MPY     TEN1-15             (10**15)B50                          3LM06110
+       TXI     MV408,2,50                                               3LM06120
+ MV407 MPY     TEN1,4                                                   3LM06130
+       XEC     TXI1,4                                                   3LM06140
+ MV400 TNZ     *+4                                                      3LM06150
+       XCA                                                              3LM06160
+       TZE     1,1                                                      3LM06170
+       TXI     *+1,2,-35                                                3LM06180
+       LDI     MVD10               200000000000                         3LM06190
+       TIF     *+2                 NORMALIZE NUMBER                     3LM06200
+       TRA     1,1                                                      3LM06210
+ MV401 LLS     1                                                        3LM06220
+       TXI     *-3,2,-1                                                 3LM06230
+ MV402 TNX     MV406,4,15                                               3LM06240
+       DVP     TEN1-15                                                  3LM06250
+       XCA                                                              3LM06260
+       LDI     MVD10                                                    3LM06270
+       TIF     *+3                                                      3LM06280
+       LRS     1                                                        3LM06290
+       TXI     MV402,2,-49                                              3LM06300
+       TXI     MV402,2,-50                                              3LM06310
+ MV406 DVP     TEN1,4                                                   3LM06320
+       CLM                                                              3LM06330
+       XCA                                                              3LM06340
+       XEC     TXI2,4                                                   3LM06350
+*                                                                       3LM06360
+MOVSC2 LXA     MOVDS,4                                                  3LM06370
+       TXL     MV400,4,0                                                3LM06380
+       LDI     MOVDS                                                    3LM06390
+       LFT     400000                                                   3LM06400
+       TRA     MV404                                                    3LM06410
+       LDI     TEN1-15                                                  3LM06420
+ MV403 TXL     *+2,4,15                                                 3LM06430
+       TXI     *+2,2,50                                                 3LM06440
+       LDI     TEN1,4                                                   3LM06450
+       STI     MOVT2                                                    3LM06460
+       STO     MOVT1                                                    3LM06470
+       MPY     MOVT2                                                    3LM06480
+       LDQ     MOVT1                                                    3LM06490
+       STO     MOVT1                                                    3LM06500
+       MPY     MOVT2                                                    3LM06510
+       XCA                                                              3LM06520
+       ADD     MOVT1                                                    3LM06530
+       STQ     MOVT1                                                    3LM06540
+       LRS     35                                                       3LM06550
+       ADD     MOVT1                                                    3LM06560
+       TIX     MV403,4,15                                               3LM06570
+       XEC     TXI1,4                                                   3LM06580
+ MV404 TNX     MV405,4,15                                               3LM06590
+       DVP     TEN1-15                                                  3LM06600
+       STQ     MOVT1                                                    3LM06610
+       DVP     TEN1-15                                                  3LM06620
+       CLA     MOVT1                                                    3LM06630
+       LDI     MVD10                                                    3LM06640
+       TIF     *+3                                                      3LM06650
+       LRS     1                                                        3LM06660
+       TXI     MV404,2,-49                                              3LM06670
+       TXI     MV404,2,-50                                              3LM06680
+ MV405 DVP     TEN1,4                                                   3LM06690
+       STQ     MOVT1                                                    3LM06700
+       DVP     TEN1,4                                                   3LM06710
+       CLA     MOVT1                                                    3LM06720
+       XEC     TXI2,4                                                   3LM06730
+*SCALE AND ROUND DOUBLE PRECISION NUMBER                                3LM06740
+*                                                                       3LM06750
+MOVSC3 SXA     *+2,1                                                    3LM06760
+       TSX     MOVSC2,1                                                 3LM06770
+       AXT     0,1                                                      3LM06780
+       TXL     *+3,2,128+70                                             3LM06790
+       MPY     MVD00                                                    3LM06800
+       TRA     1,1                                                      3LM06810
+       TXH     *-1,2,128+69                                             3LM06820
+MOVRND LRS     128+69,2            BS AT 69                             3LM06830
+       STO     MOVT1                                                    3LM06840
+       STQ     MOVT2                                                    3LM06850
+       XCA                                                              3LM06860
+       LRS     1                                                        3LM06870
+       RND                                                              3LM06880
+       LRS     34                                                       3LM06890
+       ADD     MOVT1                                                    3LM06900
+       LRS     1                                                        3LM06910
+       TRA     1,1                 BS=70                                3LM06920
+*SCAN AND CONVERT BCD FIELD TO DECIMAL INTEGER                          3LM06930
+*                                                                       3LM06940
+*      CALLING SEQUENCE                                                 3LM06950
+*                                                                       3LM06960
+*      TSX     MOVCV1,1                                                 3LM06970
+*                                                                       3LM06980
+*      X4=REMAINING NO. OF CHARACTERS IN MQ                             3LM06990
+*      X2=MAXIMUM NO. OF DIGITS TO BE CONVERTED                         3LM07000
+*                                                                       3LM07010
+MOVCV1 SXA     MV503,1                                                  3LM07020
+ MV500 CRQ     TAB10,1,1                                                3LM07030
+       XEC     TAB20+MVXXX,1       BRANCH ON CHARACTER                  3LM07040
+       TNX     MV503,2,1           COUNT NO. OF DIGITS CONVERTED        3LM07050
+       TIX     *-3,4,1             COUNT NO. OF CHARACTERS EXAMINED     3LM07060
+MV501  AXT     0,4                                                      3LM07070
+       TNX     MV508,4,0                                                3LM07080
+       SXA     *-2,4                                                    3LM07090
+       TXL     *+2,4,6                                                  3LM07100
+       AXT     6,4                                                      3LM07110
+       SXD     MV501+1,4                                                3LM07120
+ MV502 LXA     APOINT,1            SOURCE FIELD POINTER                 3LM07130
+       TXI     *+1,1,1                                                  3LM07140
+       SXA     APOINT,1                                                 3LM07150
+       LDQ*    APOINT                                                   3LM07160
+       TRA     MV500                                                    3LM07170
+MV503  AXT     0,2                                                      3LM07180
+       TRA     2,2                 EXIT                                 3LM07190
+* ILLEGAL CHARACTER                                                     3LM07200
+*                                                                       3LM07210
+ MV504 STL     MOVERR                                                   3LM07220
+       TXI     MV500+1,1,-10                                            3LM07230
+* LEADING ZERO                                                          3LM07240
+*                                                                       3LM07250
+ MV509 SIL     020000                                                   3LM07260
+       LFT     010000                                                   3LM07270
+       TRA     MV501-2                                                  3LM07280
+       LXA     MOVPT,1                                                  3LM07290
+       TXL     MV501-1,1,0                                              3LM07300
+       TXI     *+1,1,1                                                  3LM07310
+       SXA     MOVPT,1                                                  3LM07320
+       TRA     MV501-1                                                  3LM07330
+* DECIMAL POINT                                                         3LM07340
+*                                                                       3LM07350
+ MV505 LFT     110000                                                   3LM07360
+       TRA     MV504                                                    3LM07370
+       SXA     MOVPT,2                                                  3LM07380
+       SIL     100000                                                   3LM07390
+       TRA     MV501-1                                                  3LM07400
+* PLUS OR MINUS                                                         3LM07410
+*                                                                       3LM07420
+ MV506 LFT     060000                                                   3LM07430
+       TRA     MV508+1                                                  3LM07440
+       LNT     010000                                                   3LM07450
+       LNT     100000                                                   3LM07460
+       TZE     *+MVXXX+15,1                                             3LM07470
+       TRA     MV508+1                                                  3LM07480
+       SSM                                                              3LM07490
+       SIL     040000                                                   3LM07500
+       TRA     MV501-1                                                  3LM07510
+* BLANK                                                                 3LM07520
+*                                                                       3LM07530
+ MV507 LFT     010000                                                   3LM07540
+       TRA     *+3                                                      3LM07550
+       LFT     100000                                                   3LM07560
+       TRA     MV508+1                                                  3LM07570
+       LNT     020000                                                   3LM07580
+       TZE     MV501-1             LEADING BLANK                        3LM07590
+       TRA     *+2                                                      3LM07600
+ MV508 SIL     004000              END OF FIELD                         3LM07610
+       NZT     MOVPT               TERMINATOR                           3LM07620
+       LFT     010000                                                   3LM07630
+       TRA     *+2                                                      3LM07640
+       SXA     MOVPT,2                                                  3LM07650
+       LNT     004000                                                   3LM07660
+       TRA     MV503                                                    3LM07670
+       LXA     MV503,2                                                  3LM07680
+       TRA     1,2                 END OF FIELD EXIT                    3LM07690
+*                                                                       3LM07700
+       TRA     MV507               14   BLANK                           3LM07710
+       TRA     MV506               13   -                               3LM07720
+       TRA     MV506               12   +                               3LM07730
+       TRA     MV505               11   .                               3LM07740
+       TRA     MV504               10   ILLEGAL CHARACTER               3LM07750
+       ACL     TAB19+10,2          9                                    3LM07760
+       ACL     TAB18+10,2          8                                    3LM07770
+       ACL     TAB17+10,2          7                                    3LM07780
+       ACL     TAB16+10,2          6                                    3LM07790
+       ACL     TAB15+10,2          5                                    3LM07800
+       ACL     TAB14+10,2          4                                    3LM07810
+       ACL     TAB13+10,2          3                                    3LM07820
+       ACL     TAB12+10,2          2                                    3LM07830
+       ACL     TAB11+10,2          1                                    3LM07840
+ TAB20 TZE     MV509               0                                    3LM07850
+*CONVERT INTEGER IN SI TO BCD AND STORE RESULT AS SPECIFIED             3LM07860
+*      CONVERTED FIELD MAY CONTAIN MAXIMUM OF 10 DIGITS, SIGN AND       3LM07870
+*              DECIMAL POINT                                            3LM07880
+*                                                                       3LM07890
+*      CALLING SEQUENCE                                                 3LM07900
+*                                                                       3LM07910
+*      STL     MV012                                                    3LM07920
+*      NOP     RETURN ADDRESS                                           3LM07930
+*      TRA     MOVCV2                                                   3LM07940
+*                                                                       3LM07950
+*      X1=NUMERIC LENGTH                                                3LM07960
+*      X2=-TARGET                                                       3LM07970
+*      X4=WORD LENGTH (6-BYTE)                                          3LM07980
+*      AC=0 FOR UNSIGNED INTEGER                                        3LM07990
+*        =SIGN (+,-,BLANK)                                              3LM08000
+*      SI=INTEGER                                                       3LM08010
+*                                                                       3LM08020
+MOVCV2 RIL     400000                                                   3LM08030
+       LDQ     0,2                                                      3LM08040
+       XEC     RQL1,4                                                   3LM08050
+       TNZ     *+3                                                      3LM08060
+       PIA                                                              3LM08070
+       TRA     MV010                                                    3LM08080
+       XCL                                                              3LM08090
+       LGL     6                                                        3LM08100
+       XCL                                                              3LM08110
+       PIA                                                              3LM08120
+       TNX     MV015,4,1           TARGET WORD IS FULL                  3LM08130
+ MV010 TXL     MV003,1,6           NL=1,2,3,4,5,6                       3LM08140
+       TXL     MV001,1,9           NL=7,8,9                             3LM08150
+       RQL     5                   NL=10                                3LM08160
+       LRS     5                                                        3LM08170
+       VDP     TAB1-1,,6           2*(10**9)                            3LM08180
+       RQL     1                                                        3LM08190
+       LGR     1                                                        3LM08200
+       AXT     9,1                 SET NL=1                             3LM08210
+       TNX     MV002,4,1           TARGET WORD IS FULL                  3LM08220
+ MV001 XEC     TIX,4                                                    3LM08230
+       VDP     TAB1+3,1,6          FL=6                                 3LM08240
+       ARS     6                                                        3LM08250
+       VDP     TAB1+4,1,6             5                                 3LM08260
+       ARS     6                                                        3LM08270
+       VDP     TAB1+5,1,6             4                                 3LM08280
+       ARS     6                                                        3LM08290
+       VDP     TAB1+6,1,6             3                                 3LM08300
+       ARS     6                                                        3LM08310
+       VDP     TAB1+7,1,6             2                                 3LM08320
+       ARS     6                                                        3LM08330
+       VDP     TAB1+8,1,6             1                                 3LM08340
+       RQL     1                                                        3LM08350
+       LGR     1                                                        3LM08360
+       ARS     5                                                        3LM08370
+       TXH     *+2,1,5                                                  3LM08380
+       XEC     ALS,1                                                    3LM08390
+ MV002 NZT     MOVPT                                                    3LM08400
+       TRA     MV015+2                                                  3LM08410
+       LXA     MOVPT,4                                                  3LM08420
+       SXD     *+1,1                                                    3LM08430
+       TNX     MV015+2,4,0                                              3LM08440
+       STZ     MOVPT               DECIMAL POINT TO BE INSERTED         3LM08450
+       PAI                                                              3LM08460
+       XEC     LGL1,4                                                   3LM08470
+       ALS     6                                                        3LM08480
+       ORA     POINT               INSERT DECIMAL POINT                 3LM08490
+       XEC     LGL2,4                                                   3LM08500
+       SLW     0,2                                                      3LM08510
+       CAL     1,2                                                      3LM08520
+       LGL     6                                                        3LM08530
+       XCL                                                              3LM08540
+       PIA                                                              3LM08550
+       AXT     5,4                 SET FL=5                             3LM08560
+       TXH     MV004,1,6           NL=7,8,9                             3LM08570
+       TXI     MV003+1,2,-1                                             3LM08580
+ MV008 SXD     MV009,1                                                  3LM08590
+       SXD     MV016,1                                                  3LM08600
+       LXA     MOVPT,1                                                  3LM08610
+       STZ     MOVPT                                                    3LM08620
+       TXH     *+2,1,0                                                  3LM08630
+MV016  TXL     MV017,4,0                                                3LM08640
+       XEC     LGL1,1                                                   3LM08650
+       ALS     6                                                        3LM08660
+       ORA     POINT                                                    3LM08670
+MV009  TNX     MV014,4,0                                                3LM08680
+       XEC     LGL2-1,1                                                 3LM08690
+       XCL                                                              3LM08700
+       TIX     MV007,4,1                                                3LM08710
+ MV013 AXT     6,4                                                      3LM08720
+       STQ     0,2                                                      3LM08730
+       TXI     MV012,2,-1                                               3LM08740
+ MV017 CAL     POINT+1                                                  3LM08750
+       TRA     MV018                                                    3LM08760
+ MV014 XEC     LGL2,1                                                   3LM08770
+       XCL                                                              3LM08780
+ MV018 LDI     1,2                                                      3LM08790
+       RIL     770000                                                   3LM08800
+       OAI                                                              3LM08810
+       STI     1,2                                                      3LM08820
+       AXT     5,4                                                      3LM08830
+       TRA     MV013+1                                                  3LM08840
+ MV015 TXH     *+2,1,5                                                  3LM08850
+       XEC     ALS,1                                                    3LM08860
+       AXT     6,4                 SET FL=6                             3LM08870
+       STQ     0,2                                                      3LM08880
+       LDQ     1,2                                                      3LM08890
+       TXL     MV008-1,1,6         NL=1,2,3,4,5,6                       3LM08900
+ MV004 TXI     MV010+1,2,-1        NL=7,8,9,10                          3LM08910
+ MV003 XEC     ALS,1                                                    3LM08920
+       SXD     *+1,4                                                    3LM08930
+       TNX     MV006,1,0                                                3LM08940
+       TRA     MV005+1,4                                                3LM08950
+       VDP     TAB2+1,1,6          FL=5                                 3LM08960
+       VDP     TAB2+2,1,6             4                                 3LM08970
+       VDP     TAB2+3,1,6             3                                 3LM08980
+       VDP     TAB2+4,1,6             2                                 3LM08990
+ MV005 VDP     TAB2+5,1,6             1                                 3LM09000
+       RQL     1                                                        3LM09010
+       LGR     1                                                        3LM09020
+       ALS     1                                                        3LM09030
+       TRA     MV002                                                    3LM09040
+ MV006 TRA     MV011+1,1                                                3LM09050
+       VDP     TAB2,,6             NL=6                                 3LM09060
+       VDP     TAB2+1,,6              5                                 3LM09070
+       VDP     TAB2+2,,6              4                                 3LM09080
+       VDP     TAB2+3,,6              3                                 3LM09090
+       VDP     TAB2+4,,6              2                                 3LM09100
+ MV011 XCL                            1                                 3LM09110
+       LGL     6                                                        3LM09120
+       XCL                                                              3LM09130
+       ZET     MOVPT                                                    3LM09140
+       TRA     MV008                                                    3LM09150
+       SXD     *+1,1                                                    3LM09160
+       TNX     MV013,4,0                                                3LM09170
+ MV007 XEC     RQL2,4                                                   3LM09180
+       STQ     0,2                                                      3LM09190
+MV012  TRA*    0                                                        3LM09200
+*NORMALIZE (AC+MQ) TO BIT 2                                             3LM09210
+*      CALLING SEQUENCE                                                 3LM09220
+*      S.NL IN X1                                                       3LM09230
+*      TSX     MOVNRM,4                                                 3LM09240
+*                                                                       3LM09250
+*      UPON RETURN                                                      3LM09260
+*        X1=TRUE SIZE IN NO. OF DECIMAL DIGITS                          3LM09270
+*        X2=128+BS                                                      3LM09280
+*                                                                       3LM09290
+MOVNRM TXL     MV900,1,10          SOURCE FIELD IS LESS THAN 10 DIGITS  3LM09300
+       TZE     MV901               SOURCE FIELD=0                       3LM09310
+       LAS     TEN3+20,1                                                3LM09320
+       TRA     MV902+1                                                  3LM09330
+       TRA     *+3                                                      3LM09340
+       TXI     *-3,1,-1                                                 3LM09350
+ MV901 AXT     11,1                                                     3LM09360
+       XCA                                                              3LM09370
+       LAS     TEN4+20,1                                                3LM09380
+       TRA     MV902                                                    3LM09390
+       TRA     MV902                                                    3LM09400
+       TXI     *+1,1,-1                                                 3LM09410
+       TXL     MV903,1,10                                               3LM09420
+ MV902 XCA                                                              3LM09430
+       XEC     AXT+9,1                                                  3LM09440
+       LLS     128+40,2                                                 3LM09450
+       TXI     MV905,2,30                                               3LM09460
+ MV900 LDQ     MVD00                                                    3LM09470
+       LRS     0                                                        3LM09480
+ MV903 TZE     1,4                                                      3LM09490
+       LAS     TAB11+10,1          FIND ACTUAL SIZE                     3LM09500
+       TRA     *+3                                                      3LM09510
+       TRA     *+2                                                      3LM09520
+       TXI     *-3,1,-1                                                 3LM09530
+       XEC     AXT,1               SET X2=MOVBS AND SHIFT               3LM09540
+       ALS     128+35,2                                                 3LM09550
+ MV905 LDI     MVD09               100000000000                         3LM09560
+       TZE     1,4                                                  (14)3LM09565
+       TIF     MV904                                                    3LM09570
+       TRA     1,4                                                      3LM09580
+ MV904 LLS     1                                                        3LM09590
+       TXI     MV905+2,2,-1                                         (14)3LM09600
+*TABLES AND CONSTANTS                                                   3LM09610
+ MVD00 OCT     0                                                        3LM09620
+ MVD01 OCT     377777777777                                             3LM09630
+ MVD02 OCT     344777777777                                             3LM09640
+ MVD03 OCT     400011504046        -.30103B12                           3LM09650
+ MVD04 OCT     000000000031        .1B27                                3LM09660
+ MVD05 OCT     200                                                      3LM09670
+ MVD06 OCT     000000200000                                             3LM09680
+ MVD09 PON     0                                                        3LM09690
+ MVD10 PTW     0                                                        3LM09700
+ MVD11 MZE     0                                                        3LM09710
+ MVD12 PZE     -1,0,0                                                   3LM09720
+ MVD13 OCT     406060606060                                             3LM09730
+       OCT     206060606060                                             3LM09740
+       OCT     606060606060                                             3LM09750
+SWFF   PZE     0                                                        3LM09760
+SWXI   PZE     0                                                        3LM09770
+SWXF   PZE     0                                                        3LM09780
+MOVT1  PZE     0                                                        3LM09790
+MOVT2  PZE     0                                                        3LM09800
+MOVDS  PZE     0                                                        3LM09810
+MOVXP  PZE     0                                                        3LM09820
+MOVNL  PZE     0                                                        3LM09830
+MOVPT  PZE     0                                                        3LM09840
+*                                                                       3LM09850
+ POINT OCT     000000000033                                             3LM09860
+       OCT     330000000000                                             3LM09870
+       OCT     016715312000        2*(10**9)                            3LM09880
+ TAB1  OCT     057536040000        (2**6)*(10**8)                       3LM09890
+       OCT     004611320000        (2**6)*(10**7)                       3LM09900
+       OCT     000364110000        (2**6)*(10**6)                       3LM09910
+       OCT     000030324000        (2**6)*(10**5)                       3LM09920
+       OCT     000002342000        (2**6)*(10**4)                       3LM09930
+       OCT     000000175000        (2**6)*(10**3)                       3LM09940
+       OCT     000000014400        (2**6)*(10**2)                       3LM09950
+       OCT     000000001200        (2**6)*(10**1)                       3LM09960
+ TAB2  OCT     000030324000        (2**6)*(10**5)                       3LM09970
+       OCT     000234200000        (2**12)*(10**4)                      3LM09980
+       OCT     001750000000        (2**18)*(10**3)                      3LM09990
+       OCT     014400000000        (2**24)*(10**2)                      3LM10000
+       OCT     120000000000        (2**30)*(10**1)                      3LM10010
+*TIX TABLE     NL=NL-FL                                                 3LM10020
+*                                                                       3LM10030
+       TIX     MV001+1,1,6         FL=6                                 3LM10040
+       TIX     MV001+3,1,5            5                                 3LM10050
+       TIX     MV001+5,1,4            4                                 3LM10060
+       TIX     MV001+7,1,3            3                                 3LM10070
+       TIX     MV001+9,1,2            2                                 3LM10080
+       TIX     MV001+11,1,1           1                                 3LM10090
+ TIX   BSS     0                                                        3LM10100
+*RQL TABLE TO ADJUST BEGINNING AND END FIELD                            3LM10110
+*                                                                       3LM10120
+       AXT     0,0                 FL=6                                 3LM10130
+       RQL     6                      5                                 3LM10140
+       RQL     12                     4                                 3LM10150
+       RQL     18                     3                                 3LM10160
+       RQL     24                     2                                 3LM10170
+       RQL     30                     1   FL-NL=5                       3LM10180
+ RQL1  RQL     24                               4                       3LM10190
+       RQL     18                               3                       3LM10200
+       RQL     12                               2                       3LM10210
+       RQL     6                                1                       3LM10220
+ RQL2  AXT     0,0                              0                       3LM10230
+*ALS TABLE TO ADJUST DIVIDEND                                           3LM10240
+*                                                                       3LM10250
+       AXT     0,0                 NL=6                                 3LM10260
+       ALS     6                      5                                 3LM10270
+       ALS     12                     4                                 3LM10280
+       ALS     18                     3                                 3LM10290
+       ALS     24                     2                                 3LM10300
+       ALS     30                     1                                 3LM10310
+ ALS   BSS     0                                                        3LM10320
+*LGL TABLE FOR INSERTING DECIMAL POINT                                  3LM10330
+*                                                                       3LM10340
+       AXT     0,0                 SC-NL=6                              3LM10350
+       LGL     6                         5                              3LM10360
+       LGL     12                        4                              3LM10370
+       LGL     18                        3                              3LM10380
+       LGL     24                        2                              3LM10390
+       LGL     30                        1                              3LM10400
+ LGL1  XCL                               0                              3LM10410
+       LGL     30                                 6                     3LM10420
+       LGL     24                                 5                     3LM10430
+       LGL     18                               4                       3LM10440
+       LGL     12                               3                       3LM10450
+       LGL     6                                2                       3LM10460
+       AXT     0,0                              1                       3LM10470
+ LGL2  BSS     0                                                        3LM10480
+*AXT TABLE TO SET X2=MOVBS                                              3LM10490
+*                                                                       3LM10500
+       AXT     128+38,2                                                 3LM10510
+       AXT     128+35,2                                                 3LM10520
+       AXT     128+31,2                                                 3LM10530
+       AXT     128+28,2                                                 3LM10540
+       AXT     128+25,2                                                 3LM10550
+       AXT     128+21,2                                                 3LM10560
+       AXT     128+18,2                                                 3LM10570
+       AXT     128+15,2                                                 3LM10580
+       AXT     128+11,2                                                 3LM10590
+       AXT     128+8,2                                                  3LM10600
+       AXT     128+5,2                                                  3LM10610
+ AXT   BSS     0                                                        3LM10620
+*TABLE OF POWERS OF TEN (LEFT JUSTIFIED)                                3LM10630
+*                                                                       3LM10640
+       OCT     343277244615        (10**15)B50                          3LM10650
+       OCT     265714203644        (10**14)B47                          3LM10660
+       OCT     221411634520        (10**13)B44                          3LM10670
+       OCT     350651224200        (10**12)B40                          3LM10680
+       OCT     272207335000        (10**11)B37                          3LM10690
+       OCT     225005744000        (10**10)B34                          3LM10700
+       OCT     356326240000        (10**9)B30                           3LM10710
+       OCT     276570200000        (10**8)B27                           3LM10720
+       OCT     230455000000        (10**7)B24                           3LM10730
+       OCT     364110000000        (10**6)B20                           3LM10740
+       OCT     303240000000        (10**5)B17                           3LM10750
+       OCT     234200000000        (10**4)B14                           3LM10760
+       OCT     372000000000        (10**3)B10                           3LM10770
+       OCT     310000000000        (10**2)B7                            3LM10780
+       OCT     240000000000        (10**1)B4                            3LM10790
+ TEN1  BSS     0                                                        3LM10800
+*                                                                       3LM10810
+ MVXXX EQU     MV400-10                                                 3LM10820
+ TAB10 PZE     MVXXX+0,,32         0    0    NL=20                      3LM10830
+       PZE     MVXXX+1,,29         1    1       19                      3LM10840
+       PZE     MVXXX+2,,25         2    2       18                      3LM10850
+       PZE     MVXXX+3,,22         3    3       17                      3LM10860
+       PZE     MVXXX+4,,19         4    4       16                      3LM10870
+       PZE     MVXXX+5,,15         5    5       15                      3LM10880
+       PZE     MVXXX+6,,12         6    6       14                      3LM10890
+       PZE     MVXXX+7,,9          7    7       13                      3LM10900
+       PZE     MVXXX+8,,5          10   8       12                      3LM10910
+ TAB21 PZE     MVXXX+9,,2          11   9       11                      3LM10920
+       PZE     MVXXX+10            12                                   3LM10930
+       PZE     MVXXX+10            13                                   3LM10940
+       PZE     MVXXX+10            14                                   3LM10950
+       PZE     MVXXX+10            15                                   3LM10960
+       PZE     MVXXX+10            16                                   3LM10970
+       PZE     MVXXX+10            17                                   3LM10980
+       PZE     MVXXX+12            20   +                               3LM10990
+       PZE     MVXXX+10            21                                   3LM11000
+       PZE     MVXXX+10            22                                   3LM11010
+       PZE     MVXXX+10            23                                   3LM11020
+       PZE     MVXXX+10            24                                   3LM11030
+       PZE     MVXXX+10            25                                   3LM11040
+       PZE     MVXXX+10            26                                   3LM11050
+       PZE     MVXXX+10            27                                   3LM11060
+       PZE     MVXXX+10            30                                   3LM11070
+       PZE     MVXXX+10            31                                   3LM11080
+       PZE     MVXXX+10            32                                   3LM11090
+       PZE     MVXXX+11            33   .                               3LM11100
+       PZE     MVXXX+10            34                                   3LM11110
+       PZE     MVXXX+10            35                                   3LM11120
+       PZE     MVXXX+10            36                                   3LM11130
+       PZE     MVXXX+10            37                                   3LM11140
+       PZE     MVXXX+13            40   -                               3LM11150
+*TXI TABLES TO ADJUST MOVBS DURING SCALING                              3LM11160
+*                                                                       3LM11170
+       TXI     MV400,2,50          41   DS=15                           3LM11180
+       TXI     MV400,2,47          42      14                           3LM11190
+       TXI     MV400,2,44          43      13                           3LM11200
+       TXI     MV400,2,40          44      12                           3LM11210
+       TXI     MV400,2,37          45      11                           3LM11220
+       TXI     MV400,2,34          46      10                           3LM11230
+       TXI     MV400,2,30          47      9                            3LM11240
+       TXI     MV400,2,27          50      8                            3LM11250
+       TXI     MV400,2,24          51      7                            3LM11260
+       TXI     MV400,2,20          52      6                            3LM11270
+       TXI     MV400,2,17          53      5                            3LM11280
+       TXI     MV400,2,14          54      4                            3LM11290
+       TXI     MV400,2,10          55      3                            3LM11300
+       TXI     MV400,2,7           56      2                            3LM11310
+       TXI     MV400,2,4           57      1                            3LM11320
+ TXI1  PZE     MVXXX+14            60   BLANK                           3LM11330
+       TXI     MV400,2,-50         61   DS=-15                          3LM11340
+       TXI     MV400,2,-47         62      -14                          3LM11350
+       TXI     MV400,2,-44         63      -13                          3LM11360
+       TXI     MV400,2,-40         64      -12                          3LM11370
+       TXI     MV400,2,-37         65      -11                          3LM11380
+       TXI     MV400,2,-34         66      -10                          3LM11390
+       TXI     MV400,2,-30         67      -9                           3LM11400
+       TXI     MV400,2,-27         70      -8                           3LM11410
+       TXI     MV400,2,-24         71      -7                           3LM11420
+       TXI     MV400,2,-20         72      -6                           3LM11430
+       TXI     MV400,2,-17         73      -5                           3LM11440
+       TXI     MV400,2,-14         74      -4                           3LM11450
+       TXI     MV400,2,-10         75      -3                           3LM11460
+       TXI     MV400,2,-7          76      -2                           3LM11470
+       TXI     MV400,2,-4          77      -1                           3LM11480
+ TXI2  BSS     0                                                        3LM11490
+*                                                                       3LM11500
+ TEN3  OCT     002126162140        WORD1 10**19                         3LM11510
+       OCT     000157013326              10**18                         3LM11520
+       OCT     000013064257              10**17                         3LM11530
+       OCT     000001070336              10**16                         3LM11540
+       OCT     000000070657              10**15                         3LM11550
+       OCT     000000005536              10**14                         3LM11560
+       OCT     000000000443              10**13                         3LM11570
+       OCT     000000000035              10**12                         3LM11580
+       OCT     000000000002              10**11                         3LM11590
+       OCT     000000000000              10**10                         3LM11600
+*                                                                       3LM11610
+ TEN4  OCT     221172000000        WORD2 10**19                         3LM11620
+       OCT     164731000000              10**18                         3LM11630
+       OCT     013542400000              10**17                         3LM11640
+       OCT     115760200000              10**16                         3LM11650
+       OCT     324461500000              10**15                         3LM11660
+       OCT     142036440000              10**14                         3LM11670
+       OCT     011634520000              10**13                         3LM11680
+       OCT     032451210000              10**12                         3LM11690
+       OCT     351035564000              10**11                         3LM11700
+       OCT     112402762000              10**10                         3LM11710
+*                                                                       3LM11720
+ TAB11 OCT     007346545000        1000000000                           3LM11730
+       OCT     000575360400        100000000                            3LM11740
+       OCT     000046113200        10000000                             3LM11750
+       OCT     000003641100        1000000                              3LM11760
+       OCT     000000303240        100000                               3LM11770
+       OCT     000000023420        10000                                3LM11780
+       OCT     000000001750        1000                                 3LM11790
+       OCT     000000000144        100                                  3LM11800
+       OCT     000000000012        10                                   3LM11810
+ TEN2  OCT     000000000001        1                                    3LM11820
+ TAB12 OCT     016715312000        2000000000                           3LM11830
+       OCT     001372741000        200000000                            3LM11840
+       OCT     000114226400        20000000                             3LM11850
+       OCT     000007502200        2000000                              3LM11860
+       OCT     000000606500        200000                               3LM11870
+       OCT     000000047040        20000                                3LM11880
+       OCT     000000003720        2000                                 3LM11890
+       OCT     000000000310        200                                  3LM11900
+       OCT     000000000024        20                                   3LM11910
+       OCT     000000000002        2                                    3LM11920
+ TAB13 OCT     026264057000        3000000000                           3LM11930
+       OCT     002170321400        300000000                            3LM11940
+       OCT     000162341600        30000000                             3LM11950
+       OCT     000013343300        3000000                              3LM11960
+       OCT     000001111740        300000                               3LM11970
+       OCT     000000072460        30000                                3LM11980
+       OCT     000000005670        3000                                 3LM11990
+       OCT     000000000454        300                                  3LM12000
+       OCT     000000000036        30                                   3LM12010
+       OCT     000000000003        3                                    3LM12020
+ TAB14 OCT     035632624000        4000000000                           3LM12030
+       OCT     002765702000        400000000                            3LM12040
+       OCT     000230455000        40000000                             3LM12050
+       OCT     000017204400        4000000                              3LM12060
+       OCT     000001415200        400000                               3LM12070
+       OCT     000000116100        40000                                3LM12080
+       OCT     000000007640        4000                                 3LM12090
+       OCT     000000000620        400                                  3LM12100
+       OCT     000000000050        40                                   3LM12110
+       OCT     000000000004        4                                    3LM12120
+ TAB15 OCT     045201371000        5000000000                           3LM12130
+       OCT     003563262400        500000000                            3LM12140
+       OCT     000276570200        50000000                             3LM12150
+       OCT     000023045500        5000000                              3LM12160
+       OCT     000001720440        500000                               3LM12170
+       OCT     000000141520        50000                                3LM12180
+       OCT     000000011610        5000                                 3LM12190
+       OCT     000000000764        500                                  3LM12200
+       OCT     000000000062        50                                   3LM12210
+       OCT     000000000005        5                                    3LM12220
+ TAB16 OCT     054550136000        6000000000                           3LM12230
+       OCT     004360643000        600000000                            3LM12240
+       OCT     000344703400        60000000                             3LM12250
+       OCT     000026706600        6000000                              3LM12260
+       OCT     000002223700        600000                               3LM12270
+       OCT     000000165140        60000                                3LM12280
+       OCT     000000013560        6000                                 3LM12290
+       OCT     000000001130        600                                  3LM12300
+       OCT     000000000074        60                                   3LM12310
+       OCT     000000000006        6                                    3LM12320
+ TAB17 OCT     064116703000        7000000000                           3LM12330
+       OCT     005156223400        700000000                            3LM12340
+       OCT     000413016600        70000000                             3LM12350
+       OCT     000032547700        7000000                              3LM12360
+       OCT     000002527140        700000                               3LM12370
+       OCT     000000210560        70000                                3LM12380
+       OCT     000000015530        7000                                 3LM12390
+       OCT     000000001274        700                                  3LM12400
+       OCT     000000000106        70                                   3LM12410
+       OCT     000000000007        7                                    3LM12420
+ TAB18 OCT     073465450000        8000000000                           3LM12430
+       OCT     005753604000        800000000                            3LM12440
+       OCT     000461132000        80000000                             3LM12450
+       OCT     000036411000        8000000                              3LM12460
+       OCT     000003032400        800000                               3LM12470
+       OCT     000000234200        80000                                3LM12480
+       OCT     000000017500        8000                                 3LM12490
+       OCT     000000001440        800                                  3LM12500
+       OCT     000000000120        80                                   3LM12510
+       OCT     000000000010        8                                    3LM12520
+ TAB19 OCT     103034215000        9000000000                           3LM12530
+       OCT     006551164400        900000000                            3LM12540
+       OCT     000527245200        90000000                             3LM12550
+       OCT     000042252100        9000000                              3LM12560
+       OCT     000003335640        900000                               3LM12570
+       OCT     000000257620        90000                                3LM12580
+       OCT     000000021450        9000                                 3LM12590
+       OCT     000000001604        900                                  3LM12600
+       OCT     000000000132        90                                   3LM12610
+       OCT     000000000011        9                                    3LM12620
+       END                                                              3LM12630

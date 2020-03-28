@@ -1,0 +1,9 @@
+$IBMAP .CGAMA                                                           3MG00330
+.CGAMA CAL     *+2                GAMMA (A)                             3MG00340
+       TRA     .CGOGO                                                   3MG00350
+       TRA     GAMMA                                                    3MG00360
+       ENTRY   .CALGM              LOG OF GAMMA(A)                      3MG00370
+.CALGM CAL     *+2                                                      3MG00380
+       TRA     .CGOGO                                                   3MG00390
+       TRA     ALGAMA                                                   3MG00400
+       END                                                              3MG00410

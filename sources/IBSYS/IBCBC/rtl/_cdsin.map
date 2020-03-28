@@ -1,0 +1,10 @@
+$IBMAP .CDSIN                                                        $5$3MF01140
+       LBL     CDSN,BEGIN     .CDSIN                                 (7)3MF01143
+.CDSIN CAL     *+2            SIN (A)                                $5$3MF01150
+       TRA     .CGOGO                                                $5$3MF01160
+       NOP     DSIN                                                  $5$3MF01170
+       ENTRY   .CDCOS                                                $5$3MF01180
+.CDCOS CAL     *+2            COS (A)                                $5$3MF01190
+       TRA     .CGOGO                                                $5$3MF01200
+       NOP     DCOS                                                  $5$3MF01210
+       END                                                           $5$3MF01220

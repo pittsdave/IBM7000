@@ -1,0 +1,15 @@
+$IBMAP CKEYS   ADDREL                                                   3LK00000
+       LBL     KEYS,BEGIN     CKEYS                                  (7)3LK00010
+* .CKEYS LIBRARY ROUTINE                                                3LK00020
+       SPACE   4                                                        3LK00030
+* CALLING SEQUENCE                                                      3LK00040
+       SPACE                                                            3LK00050
+*      TSX     .CKEYS,4                                                 3LK00060
+*      (RETURN)                                                         3LK00070
+       SPACE                                                            3LK00080
+* THE PANEL KEY SETTING IS PLACED IN THE MQ REGISTER                    3LK00090
+       SPACE   2                                                        3LK00100
+       ENTRY   .CKEYS                                                   3LK00110
+.CKEYS ENK                                                              3LK00120
+       TRA     1,4                                                      3LK00130
+       END                                                              3LK00140

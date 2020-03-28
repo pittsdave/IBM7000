@@ -1,0 +1,50 @@
+$IBMAP CDPLY   ADDREL                                                   3L400000
+       LBL     DPLY,BEGIN     CDPLY                                  (7)3L400010
+* .CDPLY LIBRARY ROUTINE                                                3L400020
+*  CALLING SEQUENCE...                                                  3L400030
+*      TSX     .CDPLY,4                                                 3L400040
+*      PZE     LOCATION,,DEVICE                                         3L400050
+*      (RETURN)                                                         3L400060
+* WHERE LOCATION IS THE FIRST WORD OF A TWELVE                          3L400070
+*   WORD BCD IMAGE AND                                                  3L400080
+* DEVICE HAS ONE OF THE FOLLOWING BIT CONFIGURATIONS-                   3L400090
+*        BIT 15 = 0, DISPLAY ON PRINTER (USING 'MESSAGE-WRITER')        3L400100
+*        BIT14=1   DISPLAY ON SYSTEM OUTPUT UNIT                        3L400110
+*.CDPLY LEAVES XRS AND INDICATORS INTACT                                3L400140
+       ENTRY   .CDPLY                                                   3L400150
+.CDPLY SXA     CDPL01,4                                                 3L400160
+       CAL     1,4                 PARAMETER                            3L400170
+       STA     CDPL02               LOCATION                            3L400180
+       STA     CDPL04               DEVICE                              3L400190
+       PDX     0,4                  SYSOU1 TEST                         3L400200
+       TXH     CDPL03,4,4          NO, ON LINE PRINT                    3L400210
+       TSX     .MWR,4                                                   3L400220
+       PZE     1                                                        3L400230
+CDPL02 PZE     **,,12              LOCATION                             3L400240
+       TRA     CDPL01                                                   3L400250
+CDPL03 TSX     .CCDTY,4           CHECK SYSTEM ASSIGNMENT               3L400260
+       PZE     DSPOU                                                    3L400270
+       TRA     CDPL02-2           CARD                                  3L400280
+       TSX     .OPEN,4            TAPE                                  3L400290
+       MON     DSPOU                                                    3L400300
+       STL     CDPL03             ONE-TIME                              3L400310
+CTR    AXT     **,4                                                     3L400320
+       LDQ     DPL1                                                     3L400330
+       TXH     *+2,4,0                                                  3L400331
+       LDQ     DPL2                                                     3L400332
+       STQ     CRCNT              SET CARRIAGE CONTROL CHAR             3L400333
+       TXI     *+1,4,1                                                  3L400340
+       TXL     *+2,4,56            LINE CNTR. GOES TO 57                3L400350
+       AXT     0,4                                                      3L400360
+       SXA     CTR,4                                                    3L400370
+       TSX     .WRITE,4            WRITE MESSAGE                        3L400380
+       PZE     DSPOU,,.CEOBP                                            3L400390
+       IOCP    CRCNT,,1                                                 3L400400
+CDPL04 IOCD    **,,12                                                   3L400410
+CDPL01 AXT     **,4                RESTORE XF4                          3L400420
+       TRA     2,4                   AND EXIT                           3L400430
+DSPOU  FILE    ,OU1,BLK=13,MIN=13,OUTPUT,NOLIST                         3L400440
+CRCNT  PZE                        CARRIAGE CONTROL WORD                 3L400480
+DPL1   OCT     606060606060                                             3L400490
+DPL2   OCT     016060606060                                             3L400500
+       END                                                              3L400510

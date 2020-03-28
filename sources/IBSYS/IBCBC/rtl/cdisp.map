@@ -1,0 +1,233 @@
+$IBMAP CDISP   ()OK                                                  $5$3MD00000
+       TTL     CDISP - COBOL DISPLAY SUBROUTINE                         3MD00009
+*  COBOL DISPLAY SUBROUTINE                                          $5$3MD00010
+       TTL     CDISP - COBOL DISPLAY ROUTINE                         (6)3MD00015
+*  CALLING SEQUENCE                                                  $5$3MD00020
+*      TSX     .CDPLY,4                                              $5$3MD00030
+*      TXI     *+2+N,,N            (N = ITEM.COUNT)                  $5$3MD00040
+*      PZE     DISPLAY.DEVICE.CODE,,LINKAGE.DIRECTOR                 $5$3MD00050
+*      PZE     FWA.1,,BYTE.1                                         $5$3MD00060
+*      PZE     FWA.2,,BYTE.2                                         $5$3MD00070
+*       .        .      .                                            $5$3MD00080
+*       .        .      .                                            $5$3MD00090
+*       .        .      .                                            $5$3MD00100
+*      PZE     FWA.N,,BYTE.N                                         $5$3MD00110
+*      TRA     *+1+N                                                 $5$3MD00120
+*      PZE     L.1,,FORMAT.CODE.1                                    $5$3MD00130
+*      PZE     L.2,,FORMAT.CODE.2  (WHERE L.I = ITEM LENGTH OR THE   $5$3MD00140
+*       .       .     .   .   .     ADDRESS OF A CELL CONTAINING     $5$3MD00150
+*       .       .     .   .   .     THAT LENGTH - DEPENDING ON THE   $5$3MD00160
+*       .       .     .   .   .     FORMAT CODE.)                    $5$3MD00170
+*      PZE     L.N,,FORMAT.CODE.N                                    $5$3MD00180
+*                                                                    $5$3MD00190
+*  THE FORMAT CODES ARE                                              $5$3MD00200
+*   0 = AN ITEMS, FIXED LENGTHS,        L.I. = LENGTH IN CHARACTERS  $5$3MD00210
+*   1 = XD, SD, AND REPORT ITEMS        L.I. = LENGTH IN CHARACTERS  $5$3MD00220
+*   2 = INTERNAL DECIMAL                L.I. = LENGTH IN CHARACTERS  $5$3MD00230
+*      3 = FLOATING POINT,     L.I = LENGTH IN CHARACTERS            $5$3MD00240
+*      4 = BCD,                L.I = CELL CONTAINING CHARACTER LENGTH$5$3MD00250
+*      5 = BCD,                L.I = CELL CONTAINING WORD LENGTH     $5$3MD00260
+*                                                                    $5$3MD00270
+       ENTRY   .CDISP                                                $5$3MD00280
+.CDISP SXA     CDV1,4              SET UP FIRST-VECTOR-WORD FETCH    $5$3MD00290
+       SXD     LINECT,0            SET CUMULATIVE CHARACTER COUNT = 0$5$3MD00300
+       CLA     1,4                                                   $5$3MD00310
+       PDX     0,1                                                   $5$3MD00320
+       SXA     ITEMS,1             SET UP WORKING ITEM COUNT         $5$3MD00330
+       TXI     *+1,1,4                                               $5$3MD00340
+       SXA     CDV2,1              SET UP SECOND-VECTOR-WORD FETCH   $5$3MD00350
+       CLA     2,4                                                   $5$3MD00360
+       PAX     0,1                 SOURCE LANGUAGE DEVICE CODE       $5$3MD00370
+       TXL     CDF,1,0                                               $5$3MD00380
+CDG    TSX     .CCDTY,4            BECOMES CDF-1                     $5$3MD00390
+       PZE     DSPFIL                (.CCDTY DOES NOT DESTROY XR1)   $5$3MD00400
+       TXI     *+3,1,-1            ADJUST TO ZERO                    $5$3MD00410
+       TSX     .OPEN,4             IF SYSOU1 IS TAPE, OPEN FILE      $5$3MD00420
+       MON     DSPFIL                (.OPEN DOES NOT DESTROY XR1)    $5$3MD00430
+       SXA     *+2,1               SAVE OBJECT-TIME SYSOU1 CODE      $5$3MD00440
+       STL     CDG                 SET ONCE THRU TRANSFER            $5$3MD00450
+       AXT     **,1                                                  $5$3MD00460
+CDF    SXA     DEVICE,1            SET OBJECT-TIME DEVICE CODE       $5$3MD00470
+       AXT     72,2                                                  $5$3MD00480
+       TXL     *+2,1,0            SELECT PRINT-LINE SIZE             $5$3MD00490
+       AXT     120,2                                                 $5$3MD00500
+       SXD     CDPAD,2                                               $5$3MD00510
+       SXD     CDPLSZ,2            INITIALIZE LINE-SIZE TESTS        $5$3MD00520
+       TXI     *+1,2,-1                                              $5$3MD00530
+       SXD     CDPLSZ+1,2                                            $5$3MD00540
+ITEMS  AXT     **,4                REMAINING ITEM COUNT              $5$3MD00550
+       CLA     WCBREF                                                $5$3MD00560
+       STO     .CBREF              SET NEW TARGET POINTER.           $5$3MD00570
+       TXL     CDOUT,4,0           TRANSFER IF NONE LEFT             $5$3MD00580
+       TXI     *+1,4,-1                                              $5$3MD00590
+       SXA     ITEMS,4             UPDATE REMAINING ITEMS COUNT      $5$3MD00600
+CDV1   AXT     **,4                                                  $5$3MD00610
+       CLA     3,4                                                   $5$3MD00620
+       STO     .CAREF              SET SOURCE POINTER                $5$3MD00630
+CDV2   CLA     **,4                                                  $5$3MD00640
+       TXI     *+1,4,-1                                              $5$3MD00650
+       SXA     CDV1,4              SET UP FOR NEXT VECTOR-FETCH      $5$3MD00660
+       PDX     0,4                 FORMAT CODE TO XR4                $5$3MD00670
+       TXL     CDA,4,3             TRANSFER IF LENGTH IS KNOWN       $5$3MD00680
+       TXL     *+3,4,5             IS FORMAT CODE 6                  (6)3MD00681
+       STL     SIXTP               YES, LEAVE INDICATION             (6)3MD00682
+       TXI     CDA,4,-4              AND TREAT AS IF CODE 2          (6)3MD00683
+       STA     *+1                                                   $5$3MD00690
+       LDQ     **                  GET LENGTH                        $5$3MD00700
+       TXL     *+3,4,4                                               $5$3MD00710
+       PXA     0,0                                                   $5$3MD00720
+       MPY     L(6)                CONVERT TO CHARACTERS             $5$3MD00730
+       XCA                                                           $5$3MD00740
+       AXT     0,4                 RESET WORKING FORMAT CODE = 0     $5$3MD00750
+CDA    PAX     0,1                 ITEM LENGTH TO XR1                $5$3MD00760
+       PAX     0,2                                                   $5$3MD00770
+LINECT TXI     *+1,2,**            CALCULATE AND SAVE CUMULATIVE     $5$3MD00780
+       SXD     LINECT,2               CHARACTER COUNT                $5$3MD00790
+CDPLSZ TIX     CDB,2,**            TRANSFER IF GT LINE-SIZE          $5$3MD00800
+       TXL     *+3,2,**            TRANSFER IF LINE NOT FILLED       $5$3MD00810
+       STL     PRNTSW              PRINT SWITCH ON IF LINE FILLED    $5$3MD00820
+       TRA     CDFC2,4                                               $5$3MD00830
+       PXA     0,2                                                   $5$3MD00840
+       XCL                                                           $5$3MD00850
+       PXA     0,0                                                   $5$3MD00860
+       DVP     L(6)                                                  $5$3MD00870
+       PAX     0,2                 CALCULATE AND SAVE NEXT           $5$3MD00880
+       XCL                            TARGET POINTER                 $5$3MD00890
+       ADD     ICBREF                                                $5$3MD00900
+       STA     WCBREF                                                $5$3MD00910
+       SXD     WCBREF,2                                              $5$3MD00920
+       TRA     CDFC2,4                                               $5$3MD00930
+       TRA     CDFC3               FP  = 3                           $5$3MD00940
+       TRA     CDFC1         ID = 2                                  $5$3MD00950
+       TRA     CDFC2              XD, SD, RPT = 1                    $5$3MD00960
+CDFC2  SXD     *+2,1              BCD, XD, SD, RPT                   $5$3MD00970
+       TSX     .CMPK3,4            MOVE BCD CHARACTERS               $5$3MD00980
+       TXI     .CANA1,1,**                                           $5$3MD00990
+       TRA     CDE                                                   $5$3MD01000
+CDB    SXD     X,2                                                   $5$3MD01010
+       SXA     D,1                 SAVE ITEM LENGTH                  $5$3MD01020
+X      TIX     *+1,1,**                                              $5$3MD01030
+       SXA     FCSAVE,4            SAVE WORKING FORMAT CODE          $5$3MD01040
+       TXH     CDC,4,0             TRANSFER TO PAD OUT LINE          $5$3MD01050
+       SXD     CDMLCH,1            SET NO. OF CHARS TO MOVE          $5$3MD01060
+       TSX     .CMPK3,4            MOVE ENOUGH CHARACTERS TO         $5$3MD01070
+CDMLCH TXI     .CANA1,1,**            FILL THE PRINT LINE            $5$3MD01080
+       CLA     .CAREF                                                $5$3MD01090
+       STD     *+1                                                   $5$3MD01100
+       TXI     *+1,1,**                                              $5$3MD01110
+       PXA     0,1                                                   $5$3MD01120
+       XCL                                                           $5$3MD01130
+       PXA     0,0                 CALCULATE AND SAVE NEXT .CAREF    $5$3MD01140
+       DVP     L(6)                                                  $5$3MD01150
+       PAX     0,1                                                   $5$3MD01160
+       XCL                                                           $5$3MD01170
+       ADD     .CAREF                                                $5$3MD01180
+       STA     .CAREF                                                $5$3MD01190
+       SXD     .CAREF,1                                              $5$3MD01200
+       TRA     CDD                                                   $5$3MD01210
+CDC    SXD     *+2,1                                                 $5$3MD01220
+       TSX     .CMPK3,4            PAD OUT REST OF PRINT LINE        $5$3MD01230
+       TXI     .CSPAN,1,**            WITH SPACES                    $5$3MD01240
+CDD    TSX     SHOWIT+1,4          RESET .CBREF AND DISPLAY LINE     $5$3MD01250
+FCSAVE AXT     **,4                RESTORE WORKING FORMAT CODE       $5$3MD01260
+D      AXT     **,1                ORIGINAL ITEM LENGTH              $5$3MD01270
+       TXH     *+2,4,0                                               $5$3MD01280
+       LXD     X,1                 CHANGE TO EXCESS IF ITEM SPLIT    $5$3MD01290
+       SXD     LINECT,1            RESET CUMULATIVE CHARACTER COUNT  $5$3MD01300
+       LXD     LINECT,2               AND PUT IT IN XR2              $5$3MD01310
+       TRA     CDPLSZ                                                $5$3MD01320
+CDFC1  TXL     ITEMS,1,0           PROTECT AGAINST LENGTH = ZERO     $5$3MD01330
+       TXL     *+2,1,18            PROTECT AGAINST LENGTH GT 18      $5$3MD01340
+       AXT     18,1                                                  $5$3MD01350
+       SXD     CDIDX1,1            SET CHARACTER LENGTH              $5$3MD01360
+       NZT     SIXTP               WAS FORMAT CODE 6                 (6)3MD01361
+       TRA     SIXTP+1             NO, NEEDS UNPACKING               (6)3MD01362
+       STZ     SIXTP               YES, RESET SWITCH                 (6)3MD01363
+       LAC     .CAREF,4            GET SOURCE IN REGISTERS           (6)3MD01364
+       LDQ     1,4                                                   (6)3MD01365
+       CLA     0,4                                                   (6)3MD01366
+       TRA     CDINID+1                                              (6)3MD01367
+SIXTP  PZE     0                                                     (6)3MD01368
+       PXA     0,1                                                   $5$3MD01370
+       LRS     1                                                     $5$3MD01380
+       TXL     *+2,1,6                                               $5$3MD01390
+       RND                         CALCULATE BYTE LENGTH             $5$3MD01400
+       ACL     *-3                 (FAKE CONSTANT = 1)               $5$3MD01410
+       TIX     *-1,1,17            SPECIAL CASE FOR 18               $5$3MD01420
+       PAX     0,1                                                   $5$3MD01430
+       SXD     CDINID,1            SET BYTE LENGTH                   $5$3MD01440
+       TSX     .CMPK3,4                                              $5$3MD01450
+CDINID TXI     .CINID,1,**         MOVE ITEM TO PRINT LINE           $5$3MD01460
+       TSX     .CMPK3,4                                              $5$3MD01470
+CDIDX1 TXI     .CIDX4,1,**                                           $5$3MD01480
+       TRA     CDE                                                   $5$3MD01490
+CDFC3  LAC     .CAREF,4            FLOATING POINT                    $5$3MD01500
+       CLA     0,4                                                   $5$3MD01510
+       TXL     CDFPSP,1,13                                           $5$3MD01520
+       LDQ     1,4                                                   $5$3MD01530
+       TSX     .CMPK3,4            DOUBLE PRECISION                  $5$3MD01540
+       ENTRY   .CDIS2                                                (9)3MD01545
+.CDIS2 TXI     CDSTR,1,0    ADDRESS ALTERED BY CDIF  AT OBJECT TIME  (9)3MD01550
+*                           WHEN DISPLAY OF FLOATING POINT REQUIRED  (9)3MD01555
+       MZE     16,3,21                                               $5$3MD01560
+       TRA     CDE                                                   $5$3MD01570
+CDFPSP TSX     .CMPK3,4            SINGLE PRECISION                  $5$3MD01580
+       ENTRY   .CDIS1                                                (9)3MD01585
+.CDIS1 TXI     CDSTR,1,0    ADDRESS ALTERED BY CDIF  AT OBJECT TIME  (9)3MD01590
+*                           WHEN DISPLAY OF FLOATING POINT REQUIRED  (9)3MD01595
+       MZE     8,3,13                                                $5$3MD01600
+CDE    NZT     PRNTSW              PRINT SWITCH TEST                 $5$3MD01610
+       TRA     ITEMS                  OFF - GO FOR ANOTHER ITEM      $5$3MD01620
+       AXC     ITEMS-1,4              ON  - PRINT A LINE             $5$3MD01630
+SHOWIT STZ     PRNTSW                                                $5$3MD01640
+       SXA     SHOWX4,4                                              $5$3MD01650
+DEVICE AXT     **,4                                                  $5$3MD01660
+       TXL     SHOW1,4,0           TEST DEVICE CODE                  $5$3MD01670
+CDCTR  AXT     **,4                                                  $5$3MD01680
+       AXT     BLANKS,2                                              $5$3MD01690
+       TXH     *+2,4,0             SELECT CARRIAGE CONTROL WORD      $5$3MD01700
+       AXT     CARSKP,2                                              $5$3MD01710
+       SXA     CRCNT,2             SET CARRIAGE CONTROL              $5$3MD01720
+       TXI     *+1,4,1             UPDATE COUNTER                    $5$3MD01730
+       TXL     *+2,4,56                                              $5$3MD01740
+       AXT     0,4                 RESET COUNTER EVERY 57 LINES      $5$3MD01750
+       SXA     CDCTR,4                                               $5$3MD01760
+       TSX     .WRITE,4                                              $5$3MD01770
+       PZE     DSPFIL,,.CEOBP      DISPLAY LINE ON SYSOU1            $5$3MD01780
+CRCNT  IOCP    **,,1                                                 $5$3MD01790
+       IOCD    PRNTLN,,20                                            $5$3MD01800
+SHOWX4 AXT     **,4                                                  $5$3MD01810
+       CLA     ICBREF                                                $5$3MD01820
+       STO     WCBREF              REINITIALIZE WORKING TARGET POINTE$5$3MD01830
+       STO     .CBREF              SET TARGET POINTER                $5$3MD01840
+       SXD     LINECT,0           SET LINE LENGTH BACK TO ZERO       $5$3MD01850
+       TRA     1,4                 EXIT SHOWIT SUBROUTINE            $5$3MD01860
+SHOW1  TSX     .MWR,4                                                $5$3MD01870
+       PZE     1                                                     $5$3MD01880
+       PZE     PRNTLN,,12          DISPLAY 72 CHARACTERS ON-LINE     $5$3MD01890
+       TRA     SHOWX4                                                $5$3MD01900
+CDOUT  LDC     LINECT,4            IF NO MORE ITEMS                  $5$3MD01910
+       TXL     CDEXIT,4,0          EMPTY LINE, BYPASS PADDING        $5$3MD01920
+CDPAD  TXI     *+1,4,**            BUMP BY LINE SIZE                 $5$3MD01930
+       TXL     CDEXIT,4,0                                            $5$3MD01940
+       SXD     *+2,4                                                 $5$3MD01950
+       TSX     .CMPK3,4            PAD OUT LINE WITH SPACES          $5$3MD01960
+       TXI     .CSPAN,1,**                                           $5$3MD01970
+       TSX     SHOWIT+1,4          DISPLAY IT, RESET TARGET POINTERS,$5$3MD01980
+CDEXIT LXA     CDV1,4          AND EXIT                              $5$3MD01990
+       TRA     3,4                                                   $5$3MD02000
+CDSTR  STR                  ERRONEOUS ATTEMPT TO DISPLAY FLOATING    (9)3MD02005
+*                           POINT WITHOUT GOING THRU CDIF            (9)3MD02006
+       SPACE   2                                                     $5$3MD02010
+*  CONSTANTS, TEMPORARY STORAGE (INCLUDING PRINT LINE), ETC.         $5$3MD02020
+       SPACE   1                                                     $5$3MD02030
+BLANKS BCI     1,                  CARRIAGE CONTROL NEW LINE         $5$3MD02040
+CARSKP BCI     1,1                 CARRIAGE CONTROL NEW PAGE         $5$3MD02050
+ICBREF PZE     PRNTLN              INITIAL .CBREF VALUE              $5$3MD02060
+L(6)   PZE     6                   CONSTANT 6                        $5$3MD02070
+PRNTLN BSS     20                  PRINT LINE                        $5$3MD02080
+PRNTSW PZE     **                  PRINT SWITCH                      $5$3MD02090
+WCBREF PZE     PRNTLN              WORKING TARGET POINTER (INIT VALUE$5$3MD02100
+       SPACE   1                                                     $5$3MD02110
+DSPFIL FILE    ,OU1,BLK=21,MIN=21,OUTPUT,NOLIST                      $5$3MD02120
+       END                                                           $5$3MD02130
