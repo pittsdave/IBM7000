@@ -1,0 +1,18 @@
+            EXTERNAL FUNCTION (NRECS,IRC,LRC,LTRC,LPREAM,LPHYS,NFLR,
+          1   NLAST)
+            ENTRY TO    NLREC .
+            NWDS=(NRECS-1)*IRC+LRC
+            NFLR=NWDS/LTRC
+            NLEFT=XMOD  .(    NWDS,LTRC)
+            WHENEVER (NLEFT) .LE. 0, TRANSFER TO QQ0004
+            MLPH = NLEFT + LPREAM
+            REM = MLPH - (MLPH/LPHYS)*LPHYS
+            NLAST=(MLPH/LPHYS+(REM/REM))*LPHYS
+            TRANSFER TO QQ0005
+QQ0004      NLAST=0
+QQ0005      FUNCTION RETURN
+            INTEGER     NWDS  ,     NRECS ,     IRC   ,     LRC
+            INTEGER     NFLR  ,     LTRC  ,     NLEFT ,     XMOD
+            INTEGER     NLAST ,     LPREAM,     LPHYS
+            INTEGER     MLPH,       REM
+            END OF FUNCTION

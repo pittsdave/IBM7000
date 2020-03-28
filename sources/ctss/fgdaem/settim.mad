@@ -1,0 +1,86 @@
+          R...SUBROUTINE TO SET UP JULIAN TIME FROM I/O SYSTEM TIME
+          R...AND VICE-VERSA
+          R...
+            EXTERNAL FUNCTION ( IOSTIM, JULIAN )
+          R
+          R INSERT FILE DEFINE
+            DEFINE BINARY OPERATOR .X., PRECEDENCE SAME AS =
+            MODE STRUCTURE 0 .X. 0 TO 0
+       CLA  A
+       LDQ  B
+       STQ  A
+       STO  B
+       OUT  Z
+       END
+          R
+            MODE STRUCTURE 1 .X. 1 TO 1, SAME SEQUENCE AS 0 .X. 0
+            MODE STRUCTURE 2 .X. 2 TO 2, SAME SEQUENCE AS 0 .X. 0
+            MODE STRUCTURE 3 .X. 3 TO 3, SAME SEQUENCE AS 0 .X. 0
+            MODE STRUCTURE 4 .X. 4 TO 4, SAME SEQUENCE AS 0 .X. 0
+          R
+          R
+            DEFINE BINARY OPERATOR .R., PRECEDENCE SAME AS .RS.
+            MODE STRUCTURE 1 .R. 1 TO 1
+       JMP  *+1,LA,*+3
+       SLW  T
+       JMP  *+10
+       JMP  *+3,AT,*+1
+       JMP  *+7,AC,*+1
+       JMP  *+4,MQ,*+7
+       JMP  *+1,AC,*+7
+       LRS  35
+       JMP  *+6
+       STQ  T
+       JMP  *+2
+       STO  T
+       LDQ  A
+       PXD
+       DVP  B
+       OUT  AC
+       END
+          R
+          R
+            ENTRY TO SETJUL.
+          R...THIS ENTRY SETS JULIAN FROM IOSTIM.
+          R...
+            YR = ( IOSTIM .A. 777K9 ) .RS. 27
+            MTH = ( IOSTIM .A. 74K7 ) .RS. 23
+            DAY = ( IOSTIM .A. 37K6 ) .RS. 18
+            SEC = ( IOSTIM .A. 777777K )
+          R...
+            WHENEVER ( YR .R. 4 ) .E. 0 .AND. MTH .G. 2
+             JULIAN = 1
+            OTHERWISE
+             JULIAN = 0
+            END OF CONDITIONAL
+          R...
+            WHENEVER MTH .G. 12 .OR. DAY .G. 365+JULIAN .OR.
+          1   SEC .G. 86400, FUNCTION RETURN 0
+            YR = YR-65
+            JULIAN = (YR*YRXX) + (JDAYTB(MTH)+DAY+JULIAN)*DAYXX + SEC
+            FUNCTION RETURN JULIAN
+          R...
+            ENTRY TO SETIOT.
+          R...THIS ENTRY SETS IOSTIM FROM JULIAN
+          R...
+            YR = JULIAN/YRXX
+            DAY = (JULIAN-YRXX*YR)/ DAYXX
+            SEC = JULIAN .R. (YR*YRXX + DAY*DAYXX)
+            YR = YR + 65
+          R...
+            WHENEVER DAY .G. 366 .OR. SEC .G. 86400, FUNCTION RETURN 0
+SETS1       THROUGH SETS1, FOR MTH = 1, 1, JDAYTB(MTH+1) .GE. DAY
+            WHENEVER MTH .L. 0 .OR. MTH .G. 12, FUNCTION RETURN 0
+            DAY = DAY - JDAYTB(MTH)
+            IOSTIM = (YR .LS. 27) .V. (MTH .LS. 23) .V.
+          1    (DAY .LS. 18) .V. SEC
+            FUNCTION RETURN IOSTIM
+          R...
+          R...
+            INTEGER YR,MTH,DAY,SEC,JULIAN,IOSTIM,YRXX,DAYXX,JDAYTB
+            DIMENSION JDAYTB(13)
+            VECTOR VALUES YRXX =  31536000
+            VECTOR VALUES DAYXX =  86400
+            VECTOR VALUES JDAYTB =0,0,31,59,90,120,151,181,212,243,273,
+          1    304,334,365
+            END OF FUNCTION
