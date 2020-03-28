@@ -1,0 +1,1080 @@
+$JOB           RESTAR                                                $2$IOR00000
+$EXECUTE       IBJOB                                                 $2$IOR00010
+$IBJOB RESTAR  NOGO                                                  $2$IOR00020
+$TITLE         7090/7094 RESTART PROGRAM  7090-IO-976  VERSION 2        IOR00030
+$IBMAP IOR00   1600,ABSMOD,MONSYM,()OK                               $2$IOR00040
+       TITLE                                                            IOR00050
+*                            RESTART PROGRAM                            IOR00060
+       SPACE   1                                                        IOR00070
+*     THE FOLLOWING EQU CARDS MUST BE PROPERLY SETUP ACCORDING TO       IOR00080
+*       THE MACHINE CONFIGURATION AND THE INSTALLATION STANDARD         IOR00090
+       SPACE   1                                                        IOR00100
+*                            SYSTEM PRINTER                             IOR00110
+       SPACE   1                                                        IOR00120
+*         PRINTER BOARD SENSE EXIT FOR EJECT.....1 THROUGH 10           IOR00130
+EJECT  EQU     1                                                        IOR00140
+       SPACE   1                                                        IOR00150
+*      PRINTER BOARD SENSE EXIT FOR DOUBLE SPACE.....1 THROUGH 10       IOR00160
+DBLSP  EQU     4                                                        IOR00170
+       SPACE   1                                                        IOR00180
+*               LINES PER PAGE FOR PREPROCESSOR PRINTING                IOR00190
+BCTLN  EQU     50                                                       IOR00200
+       SPACE   1                                                       $IOR00210
+*           END OF EQU CARDS TO BE DEFINED BY INSTALLATION.             IOR00220
+       TTL     0                                                        IOR00230
+       LBL     REST0000,1                                               IOR00240
+       BES     SYSCUR-*                                                 IOR00250
+       BCI     1,RESTAR                                                 IOR00260
+       BES     SYSTRA-*                                                 IOR00270
+       TRA     BA00                                                    *IOR00280
+       BES     2-*                 INITIALIZE CELL 2 FOR                IOR00290
+       TTR     SYSDMP              DUMP ON STR INSTRUCTION              IOR00300
+RESTAR BOOL    60000                                                    IOR00310
+       ORG     RESTAR                                                   IOR00320
+       TTL                   CONSTANT POOL                              IOR00330
+L(0)   PZE                                                              IOR00340
+L(1)   PZE     1                                                       $IOR00350
+L(2)   PZE     2                                                        IOR00360
+L(4)   PZE     4                                                        IOR00370
+L(377) OCT     377                                                      IOR00380
+ADDRS  PZE     -1                                                       IOR00390
+1DEC   PZE     0,,1                                                     IOR00400
+DECRE  PZE     0,,-1                                                    IOR00410
+SIX    SIX                                                              IOR00420
+DEC15  OCT     000017000000                                            $IOR00430
+BLNKS  BCI     1,                                                       IOR00440
+7PRE   SVN                                                              IOR00450
+HYSEL  OCT     120600120112                                             IOR00460
+TESTP  EQU     0                                                        IOR00470
+HWTMP  EQU     33                  WRITE TAPE MARK HYPER                IOR00480
+XCPTP  OCT     077777777777                                             IOR00490
+BV12   BCI     8,BASIC MONITOR HAS ENTERED THE RESTART SYSTEM          *IOR00500
+BFCBL  EQU     12                  LENGTH OF A FILE CONTROL BLOCK       IOR00510
+       TTL     SCAN AND LIST CONTROL BLOCKS                             IOR00520
+       SPACE   1                                                        IOR00530
+       AXT     0,2                 FILE CONTROL BLOCK COUNT             IOR00540
+BC01   TXL     BC05,1,**           IS THIS PASS COMPLETE                IOR00550
+       TXI     *+1,2,1             INCREMENT FCB COUNT                 $IOR00560
+       CLA     0,1                                                      IOR00570
+       TZE     BC04                                                     IOR00580
+       RFT     000004              IS THIS A RESTART SCAN               IOR00590
+       TRA     BC73                YES                                  IOR00600
+       ERA     SYSIN1                                                  $IOR00610
+       ANA     ADDRS                                                   $IOR00620
+       TNZ     *+3                 IS THIS SYSIN1                      $IOR00630
+       CLA     7PRE                NO, PUT A 3 IN PREFIX               $IOR00640
+       STP     2,1                 IN WORD 3 OF FCB                    $IOR00650
+       CLA     4,1                 TRANSFER IF FILE                    $IOR00660
+       TMI     BC04                LIST IS SUPPRESSED                  $IOR00670
+       CLA     0,1                                                     $IOR00680
+BC015  RIR     400010              INDICATE FIRST LINE                  IOR00690
+BC016  AXT     12,4                CLEAR IMAGE TO BLANKS                IOR00700
+       LDQ     BLANKZ                                                   IOR00710
+       STQ     BQ00+12,4                                                IOR00720
+       TIX     *-1,4,1                                                  IOR00730
+       RFT     000010                                                   IOR00740
+       TRA     BC025                                                   $IOR00750
+       RFT     000001              IS THIS THE MISC. BLOCK              IOR00760
+       TRA     BC02                YES                                  IOR00770
+       PXA     0,2                 NO-GET FILE NUMBER                   IOR00780
+       XCL                                                              IOR00790
+       TSX     BCVR,4              CONVERT TO BCD                       IOR00800
+       XCL                                                              IOR00810
+       RQL     18                                                       IOR00820
+       STQ     BQ00+1              IN IMAGE                             IOR00830
+BC02   CAL     9,1                 GET FILE TITLE                       IOR00840
+       SLW     BQ00+2                                                   IOR00850
+       CAL     10,1                                                     IOR00860
+       SLW     BQ00+3                                                   IOR00870
+       CAL     11,1                                                     IOR00880
+       SLW     BQ00+4                                                   IOR00890
+       CLA     3,1                                                      IOR00900
+       TMI     BC045               TRANSFER IF INTERNAL                 IOR00910
+       CLA     5,1                 IS THIS DISK                        $IOR00920
+       TMI     BC60                YES                                 $IOR00930
+       AXT     0,4                                                     $IOR00940
+BC020  ALS     1                                                       $IOR00950
+       PBT                         IS IT DISK                          $IOR00960
+       TRA     *+5                 NO                                  $IOR00970
+       LDQ*    0,1                 CONVERT UNIT NO.                    $IOR00980
+       TSX     .SYMUN,4                                              $2$IOR00990
+       SLW     BQ00+5              STORE DISK UNIT                     $IOR01000
+       TRA     BC021+4             AND PROCEED                         $IOR01010
+       CAL*    0,1                 GET UCB OF PRIMARY UNIT             $IOR01020
+       ANA     AB000               IS IT UNIT RECORD                   $IOR01030
+       TZE     BC021-1             NO                                  $IOR01040
+       CAL     0,1                 YES                                 $IOR01050
+       PAX     0,4                 MAKE PRIMARY                        $IOR01060
+       PXD     0,4                 AND SECONDARY                       $IOR01070
+       STD     0,1                 THE SAME                            $IOR01080
+       SIR     400000              SET CARD EQ. BIT                    $IOR01090
+       CAL     0,1                                                      IOR01100
+BC021  TSX     BC90,4              UNIT TO BCD                          IOR01110
+       XCL                                                              IOR01120
+       RQL     6                                                        IOR01130
+       STQ     BQ00+5              AND IMAGE                            IOR01140
+       RFT     400000              CARD EQ.                            $IOR01150
+       TRA     BC024+1             YES                                 $IOR01160
+       CAL     BC81                                                     IOR01170
+       SLW     BQ00+6                                                   IOR01180
+       LDQ     7,1                 REEL SEQUENCE NUMBER                 IOR01190
+       RQL     6                                                        IOR01200
+       RFT     000010              IS THIS THE FIRST LINE               IOR01210
+       TRA     BC10                NO                                   IOR01220
+       STQ     BQ00+7                                                   IOR01230
+       CAL     0,1                 YES-TEST FOR IMMEDIATE MOUNTING      IOR01240
+       ANA     BC910                                                    IOR01250
+       TZE     BC022                                                    IOR01260
+       CAL     BC80                ASTERISK FOR IMMEDIATE MOUNTING      IOR01270
+       SLW     BQ00                                                     IOR01280
+       STD     BERCT                                                    IOR01290
+       RFT     000004              IS THIS A RESTART                    IOR01300
+       TRA     BC024+1                                                  IOR01310
+BC022  STI     BM00+3              NO                                   IOR01320
+       LDI     1,1                                                      IOR01330
+       LFT     003000              IS THIS AN INPUT FILE                IOR01340
+       TRA     *+2                 NO                                   IOR01350
+       TRA     BC024               YES-LINE FINISHED                    IOR01360
+       CAL     BC82                HERE IF OUTPUT                       IOR01370
+       SLW     BQ00+9                                                  $IOR01380
+       LFT     000400              IS THIS A LABELLED FILE              IOR01390
+       TRA     *+3                 YES                                  IOR01400
+       AXT     BC85+2,4            UNLABELLED                          $IOR01410
+       TRA     BC023                                                    IOR01420
+       CLA     5,1                 IS THIS DISK                        $IOR01430
+       TPL     *+3                 NO                                  $IOR01440
+       AXT     BC86+2,4                                                $IOR01450
+       TRA     BC023                                                   $IOR01460
+       TNZ     *-2                                                     $IOR01470
+       AXT     BC83+2,4                                                $IOR01480
+       RFT     400000                                                   IOR01490
+       AXT     BC84+2,4            HIGH DEN                            $IOR01500
+BC023  SXA     *+2,4                                                    IOR01510
+       AXT     2,4                 MOVE OUTPUT TAPE MOUNTING ORDERS    $IOR01520
+       CAL     **,4                                                     IOR01530
+       SLW     BQ00+12,4                                                IOR01540
+       TIX     *-2,4,1                                                  IOR01550
+BC024  LDI     BM00+3              RESTORE INDICATORS                   IOR01560
+       RFT     000002                                                   IOR01570
+       TRA     BC03                                                     IOR01580
+       SIR     000002                                                   IOR01590
+       TSX     BWRT,4              FCB HEADER 1                         IOR01600
+       PZE     BU51,,9                                                  IOR01610
+       TSX     BWRT,4              FCB HEADER 2                         IOR01620
+       PZE     BU52,,12                                                 IOR01630
+BC03   TSX     BWRT,4                                                   IOR01640
+       PZE     BQ00,,12                                                 IOR01650
+       RFT     000010              IS THIS THE FIRST LINE               IOR01660
+BC04   TXI     BC01,1,-BFCBL       NO-TO NEXT FILE CONTROL BLOCK        IOR01670
+       CLA     3,1                                                      IOR01680
+       TMI     BC04                TRANSFER IF INTERNAL FILE            IOR01690
+       CLA     5,1                 IS THIS DISK                        $IOR01700
+       TMI     BC04                YES                                 $IOR01710
+       CAL     0,1                 SEE IF ADDITIONAL LINE IS NEEDED     IOR01720
+       STA     BC900                                                    IOR01730
+       PDX     0,4                                                      IOR01740
+       PXA     0,4                 UNIT 2                               IOR01750
+       LAS     BC900                                                    IOR01760
+       TRA     *+2                                                      IOR01770
+       TRA     BC04                UNITS EQUAL-NO ADDITIONAL LINE       IOR01780
+       SIR     000010                                                   IOR01790
+       TRA     BC016               TO EXTRA LINE                        IOR01800
+BC025  XCL                                                             $IOR01810
+       CAL     5,1                                                     $IOR01820
+       ANA     SIX                 DISK                                $IOR01830
+       TZE     *+5                 NO                                  $IOR01840
+       XCL                         GET UNIT ADDRESS                    $IOR01850
+       STA     *+1                 IN LDQ INSTRUCTION                  $IOR01860
+       LDQ     **                  AND GO CONVERT                      $IOR01870
+       TRA     BC020+4                                                 $IOR01880
+       XCL                         UNIT ADDRESS IN AC                  $IOR01890
+       TRA     BC021               GO CONVERT                          $IOR01900
+BC045  CAL     BC930                                                    IOR01910
+       SLW     BQ00+5                                                   IOR01920
+       TRA     BC024+1                                                  IOR01930
+BC10   SXA     BC11,2              SAVE FILE BLOCK NUMBER               IOR01940
+       AXT     24,2                                                     IOR01950
+       TSX     BCONV,4                                                  IOR01960
+       ADD     BONE                                                     IOR01970
+       XCL                                                              IOR01980
+       TSX     BCVR,4                                                   IOR01990
+       ANA     BC920                                                    IOR02000
+       XCL                                                              IOR02010
+       RQL     12                                                       IOR02020
+       STQ     BQ00+7                                                   IOR02030
+BC11   AXT     **,2                RESTORE FILE BLOCK NUMBER            IOR02040
+       TRA     BC022                                                    IOR02050
+BC05   RFT     000004              WAS THIS A RESTART SCAN              IOR02060
+       TRA     CHK22               YES EXIT                            $IOR02070
+       TRA     CHK22                                                    IOR02080
+BC60   AXT     0,4                 GET UCB                             $IOR02090
+       LDQ*    0,1                                                     $IOR02100
+       TSX     .SYMUN,4          SYMBOLIC UNIT                       $2$IOR02110
+       SLW     BQ00+5              TO IMAGE                            $IOR02120
+       CAL     BC88                                                    $IOR02130
+       SLW     BQ00+6              TRKS                                $IOR02140
+       CLA     7,1                                                     $IOR02150
+       TSX     .DECVD,4          FIRST TRACK ADDRESS                 $2$IOR02160
+       RQL     12                                                      $IOR02170
+       XCL                                                             $IOR02180
+       ORA     BC87                                                    $IOR02190
+       SLW     BQ00+7                                                  $IOR02200
+       CLA     7,1                                                     $IOR02210
+       TSX     .DECVA,4          LAST TRACK ADDRESS                  $2$IOR02220
+       RQL     6                                                       $IOR02230
+       XCL                                                             $IOR02240
+       ORA     SIX                                                     $IOR02250
+       SLW     BQ00+8                                                  $IOR02260
+       TRA     BC022                                                   $IOR02270
+BC80   BCI     1,    *                                                  IOR02280
+BC81   BCI     1, REEL                                                  IOR02290
+BC82   BCI     1,BLANK-                                                 IOR02300
+ BC83  BCI     2,LO DEN LAB                                            $IOR02310
+ BC84  BCI     2,HI DEN LAB                                            $IOR02320
+ BC85  BCI     2,UNLABELLED                                            $IOR02330
+ BC86  BCI     2,LABELLED                                              $IOR02340
+BC900  PZE     0                                                        IOR02350
+BC910  OCT     400000400000                                             IOR02360
+BC930  BCI     1,  CORE                                                 IOR02370
+BC920  OCT     777717171717                                             IOR02380
+ BC88  BCI     1, TRKS                                                 $IOR02390
+ BC87  OCT     000000000040                                            $IOR02400
+AB000  OCT     000100000000        UNIT RECORD OR DISK                 $IOR02410
+       SPACE   1                                                        IOR02420
+*        ALTERNATE ENTRY TO FCB SCAN, USED BY RESTART PROCEDURE         IOR02430
+       SPACE   1                                                       $IOR02440
+BLIST  CAL     CKM11               COMPUTE AND SET SCAN LIMITS         $IOR02450
+       PDC     0,4                                                      IOR02460
+       SXD     *+3,4                                                    IOR02470
+       PAC     0,4                                                     $IOR02480
+       PAC     0,1                                                     $IOR02490
+       TXI     *+1,4,**                                                 IOR02500
+       SXD     BC01,4                                                   IOR02510
+       AXT     7,4                 MODIFY PAGE HEADER                   IOR02520
+       CAL     BC795+7,4                                                IOR02530
+       SLW     BU50+8,4                                                 IOR02540
+       TIX     *-2,4,1                                                  IOR02550
+       AXT     BC01+2,4            RESTORE FOR NO                      $IOR02560
+       SXA     BC01+1,4            LABEL SCAN ON RESTART               $IOR02570
+       LDI     L(4)                INDICATE RESTART SCAN               $IOR02580
+       TRA     BC01-1              TO SCAN FILE BLOCK                   IOR02590
+BC73   LDQ     1,1                                                      IOR02600
+       RQL     16                                                       IOR02610
+       TQP     BC015               FILE NOT PERM. CLOSED               $IOR02620
+       TRA     BC04                                                     IOR02630
+BC795  BCI     7, RESTART                                               IOR02640
+       TTL     CHECKPOINT ROUTINE PART 2 - RESTART                      IOR02650
+*      CALLING SEQUENCE                                                 IOR02660
+*      TSX     CKPT2,4                                                  IOR02670
+*      PZE     FILE,T                                                   IOR02680
+*      PZE     FILE CT,DN                                               IOR02690
+CHYCW  DUP     1,8                                                      IOR02700
+       PZE     **,2,**             LAST UCW+1 FOR CHAN,, NO. OF UCW    $IOR02710
+       SPACE   1                                                        IOR02720
+CKPT2  STL     CHP3                                                     IOR02730
+       TTR     STORE                                                    IOR02740
+       TRA     CHKPT                                                    IOR02750
+       CAL     CHYCW-1,1           FIND L(UCW) OF CHECKPOINT TAPE       IOR02760
+       PDX     0,2                 IR1=CH. NO. OF CP. TAPE             $IOR02770
+       CAL*    CHYCW-1,1                                                IOR02780
+       ANA     DECRE               IS THIS CP. UCB POINTER             $IOR02790
+       SUB     CHP19                                                    IOR02800
+       TZE     CHK1                YES                                 $IOR02810
+       TIX     *-4,2,4                                                  IOR02820
+CHK23  LDQ     CHP19                                                    IOR02830
+       TSX     .CVPRT,4                                              $2$IOR02840
+       PZE     CHK14,,6                                                 IOR02850
+       TRA     STOPD               NO SUCH CP TAPE ADDRESS             *IOR02860
+CHK1   PXA     0,2                 COMPUTE L(UCW)                       IOR02870
+       SUB     CHYCW-1,1                                                IOR02880
+       STA     CHK2                                                     IOR02890
+       STA     CHP1                                                    $IOR02900
+       LDI*    CHK2                                                     IOR02910
+       LFT     000100              CARD OR DISK                        $IOR02920
+       TRA     CHK23               YES, NOT A CP FILE                  $IOR02930
+       RIL     400000                                                   IOR02940
+       STI*    CHK2                                                     IOR02950
+       CAL     2,4                                                      IOR02960
+CKM01  TXI     *+1,2,**            DECREMENT=-DELTA                     IOR02970
+       SLW*    CHYCW-1,1                                                IOR02980
+       PAX     0,4                                                      IOR02990
+       TXI     *+1,2,-2                                                $IOR03000
+       LFT     20000               HYPER                               $IOR03010
+       TRA     CHK31               YES                                 $IOR03020
+       PAI                                                              IOR03030
+       PXD     0,4                                                      IOR03040
+       SLW*    CHYCW-1,1                                                IOR03050
+       TSX     .NDSEL,4          REWIND                              $2$IOR03060
+       PZE     CHK2,,3                                                  IOR03070
+       AXT     1,4                                                     *IOR03080
+       RFT     200000              TEST DENSITY AT LOAD POINT           IOR03090
+       AXT     2,4                 HIGH DENSITY                        *IOR03100
+       SXD     *+2,4                                                   *IOR03110
+       TSX     .NDSEL,4                                              $2$IOR03120
+       PZE     CHK2,,**                                                *IOR03130
+       NZT*    CHYCW-1,1           TEST FOR DESIRED TAPE POSITION       IOR03140
+CKM02  TXI     CHK28-2,2,**        DECREMENT=DELTA+1                   $IOR03150
+       TXI     *+1,2,**            DITTO, IR2 POINTS AT UCB+1 OF CP    $IOR03160
+       CAL     CHK99                                                    IOR03170
+       SLW*    CHYCW-1,1                                                IOR03180
+       TSX     .ACTV,4                                               $2$IOR03190
+       PZE     CHK2                                                     IOR03200
+       ZET*    CHYCW-1,1           HOLD                                 IOR03210
+       TRA     *-1                                                      IOR03220
+CHK28  CAL     CHK95               READ MESSAGE BLOCK                   IOR03230
+       SLW*    CHYCW-1,1                                                IOR03240
+       TSX     .ACTV,4                                               $2$IOR03250
+       PZE     CHK2                                                     IOR03260
+       ZET*    CHYCW-1,1                                                IOR03270
+       TRA     *-1                                                      IOR03280
+       LXD     SYSUCW,4            4 * NOUCW TO IR4                     IOR03290
+CHK27  CAL     **,4                ADDRESS=UEA11+4*NOUCW+DELTA          IOR03300
+CKM03  SLW     **,4                ADDRESS=UEA11+4*NOUCW                IOR03310
+       ANA     SIX                 SKIP TAPES NOT                      $IOR03320
+       TNZ     *+9                 TO BE REPOSITIONED                  $IOR03330
+CKM04  CLA     **,4                ADDRESS=UEA11+4*NOUCW+DELTA+2        IOR03340
+       TZE     *+7                 UEA11=L(1STUCB)                     $IOR03350
+       TPL     *+6                 DELTA=LAST L(IOCS)-L(1STUCB)        $IOR03360
+       SXA     *+4,4                                                    IOR03370
+CKM05  LDQ     **,4                ADDRESS=UEA11+4*NOUCW+DELTA          IOR03380
+       TSX     .CVPRT,4                                              $2$IOR03390
+       PZE     CHK50,,8+512*DBLSP                                       IOR03400
+       AXT     **,4                                                     IOR03410
+       PXD     0,0                                                      IOR03420
+CKM06  STP     **,4                ADDRESS=UEA11+4*NOUCW+DELTA+2        IOR03430
+       TIX     CHK27,4,4           STEP TO NEXT UNIT                    IOR03440
+CHK2   CLS     **                                                       IOR03450
+       STO*    *-1                 DISABLE CP TAPE REPOSITIONING       $IOR03460
+CKM07  CAL     **                  STORE CHECKPOINT ID                  IOR03470
+       SLW     CHK18+2                                                  IOR03480
+       AXT     6,2                 PREPARE MESSAGE FOR                  IOR03490
+CKM08  LDQ     **                  ADDRESS=CHK11+4*NOUCW                IOR03500
+       RQL     17                                                       IOR03510
+       CAL     CHK20                                                    IOR03520
+       TQP     *+2                                                      IOR03530
+       ANS     CHK19+9,2                                               $IOR03540
+       RQL     1                   SET UP SENSE SWITCH MSG.            $IOR03550
+       TIX     *-3,2,1                                                  IOR03560
+       TSX     .MWR,4                                                $2$IOR03570
+       PZE     3                                                        IOR03580
+       PZE     ,,512*EJECT                                              IOR03590
+       PZE     CHK18,,3            RESTART ID LINE                      IOR03600
+       PZE     CHK19,,9+512*DBLSP                                       IOR03610
+CKM09  CLA     **                  ADDRESS=CHK11+4*NOUCW+3              IOR03620
+       TRA     *+3                                                     $IOR03630
+CKM10  LXD     **,2                NO. OF WORDS IN MESSAGE BLOCK        IOR03640
+       TRA     CHK21                                                    IOR03650
+       STD     *+2                                                      IOR03660
+       TRA     BLIST                                                   $IOR03670
+CKM11  PZE     **,,**              ADDRESS=CHK11+4*NOUCW+4              IOR03680
+CHK31  TXI     *+1,4,1                                                 $IOR03690
+       SXA     *+3,4                                                   $IOR03700
+       TSX     .NDSEL,4          REWIND CP TAPE                      $2$IOR03710
+       PZE     CHK2,,30                                                $IOR03720
+       AXT     **,4                RESTORE IR4 TO REQ FILE +1          $IOR03730
+       TIX     *+2,4,1             SPACE FORWARD TO REQ FILE           $IOR03740
+       TRA     CKM02               CP TAPE IS POSITIONED               $IOR03750
+       SXA     *-3,4                                                   $IOR03760
+       TSX     .NDSEL,4          SKIP FORWARD ONE FILE               $2$IOR03770
+       PZE     CHK2,,37                                                $IOR03780
+       TRA     *-6                                                     $IOR03790
+CHK21  CAL*    CHK12                                                    IOR03800
+       STD     CHK12                                                    IOR03810
+       STD     *+1                                                      IOR03820
+       TIX     *+4,2,**                                                 IOR03830
+       TNX     CHK22,2,1                                                IOR03840
+       SXD     CHK12,2                                                  IOR03850
+       AXT     1,2                                                      IOR03860
+       CAL     CHK12                                                    IOR03870
+       ADD     L(1)                                                     IOR03880
+       STA     CHK12                                                    IOR03890
+       TSX     .MWR,4            PRINT RESTART MESSAGE               $2$IOR03900
+       PZE     1                                                        IOR03910
+CHK12  PZE     **,,**              ADDRESS=CHK11+4*NOUCW+4              IOR03920
+       LXD     CHK12,4                                                  IOR03930
+       PXA     0,4                                                      IOR03940
+       ACL     CHK12                                                    IOR03950
+       STA     CHK12                                                    IOR03960
+       TIX     CHK21,2,1                                                IOR03970
+CHK22  TSX     .PAUSE,4                                              $2$IOR03980
+       LXD     SYSUCW,4            4*(NO. OF UCWS) TO IR4               IOR03990
+       LXD     SYSUBC,1            NO. OF CHANNELS TO IR1               IOR04000
+       TXI     *+1,1,CHYCW                                              IOR04010
+       SXA     CHK3,1                                                   IOR04020
+       SXA     CKM13,1                                                  IOR04030
+       SXA     CKM14,1                                                  IOR04040
+       SXA     CKM15,1                                                  IOR04050
+       SXA     CKM16,1                                                  IOR04060
+       SXA     CKM21,1                                                  IOR04070
+       SXA     HYRER-4,1                                               $IOR04080
+       SXA     HYRER,1                                                 $IOR04090
+       TIX     *+1,1,CHYCW                                              IOR04100
+CHK3   CAL     **,1                INITIALIZE TAPE POSITIONING          IOR04110
+       PDX     0,2                                                      IOR04120
+       TXL     CHK6,2,0                                                 IOR04130
+       PXA     0,2                                                     $IOR04140
+CKM13  SBM     **,1                                                    $IOR04150
+       STA     CHK7                L(UCB) TO BE POSITIONED             $IOR04160
+       SXA     CHK5,4                                                  $IOR04170
+CKM14  LDI*    **,1                1ST UCW CP READ                     $IOR04180
+       LFT     600100              SKIP CARD EQUIPMENT                 $IOR04190
+       TRA     CHK4-1              AND UNASSIGNED TAPES                $IOR04200
+       LFT     20000               HYPER                               $IOR04210
+       TRA     CKM18               YES                                 $IOR04220
+       TSX     .NDSEL,4          REWIND                              $2$IOR04230
+       PZE     CHK7,,3                                                 $IOR04240
+CKM17  AXC     **,4                ADDRESS=DELTA                        IOR04250
+CHK7   LDI     **,4                                                     IOR04260
+       AXT     1,4                                                     *IOR04270
+       RFT     200000              TEST DENSITY AT LOAD POINT           IOR04280
+       AXT     2,4                                                     *IOR04290
+       SXD     *+2,4                                                   *IOR04300
+       TSX     .NDSEL,4                                              $2$IOR04310
+       PZE     CHK7,,**                                                *IOR04320
+CKM18  TXI     *+1,2,**            DECREMENT=-DELTA-2                   IOR04330
+CKM15  NZT*    **,1                TEST DESIRED TAPE POSITION           IOR04340
+CKM19  TXI     CHK5,2,**           DECREMENT=DELTA+1                    IOR04350
+       LFT     20000                                                   $IOR04360
+       TRA     HYREP-2                                                 $IOR04370
+CKM20  TXI     *+1,2,**            DITTO                                IOR04380
+       CAL     CHK99                                                    IOR04390
+CKM16  SLW*    **,1                ADDRESS=CHYCW+CHH5                   IOR04400
+       TSX     .ACTV,4           INITIATE POSITIONING                $2$IOR04410
+       PZE     CHK7                                                     IOR04420
+CHK5   AXT     **,4                                                     IOR04430
+       TXI     *+2,2,-3                                                 IOR04440
+       TXI     *+1,2,-4                                                 IOR04450
+CHK4   PXD     0,2                 SET INDEX TO NEXT UCW                IOR04460
+CKM21  STD     **,1                ADDRESS=CHYCW+CHH5                   IOR04470
+       TNX     *+4,4,4                                                 $IOR04480
+CHK6   TIX     CHK3,1,1            TRY NEXT CHANNEL                     IOR04490
+       LXD     SYSUBC,1            GO AROUND AGAIN                     $IOR04500
+       TRA     CHK3                                                    $IOR04510
+       AXT     0,2                 RESTORE CORE                         IOR04520
+       TRA     CHP4                                                     IOR04530
+*                      INITIALIZATION OF RESTART.                       IOR04540
+CHKPT  LXA     SYSUCW,4            COMPUTE DELTA                        IOR04550
+       SXD     *+2,4                                                    IOR04560
+       AXT     CHK11+1,4                                               *IOR04570
+       TIX     *+1,4,**                                                 IOR04580
+       SXD     DELTA,4                                                  IOR04590
+       PXA     0,4                                                      IOR04600
+       PAC     0,4                                                      IOR04610
+       SXD     CKM01,4                                                  IOR04620
+       TXI     *+1,4,-2                                                 IOR04630
+       SXD     CKM18,4                                                  IOR04640
+       STA     CKM22                                                    IOR04650
+       STA     CKM17                                                    IOR04660
+       PAX     0,4                                                      IOR04670
+       TXI     *+1,4,1                                                  IOR04680
+       SXD     CKM02,4                                                  IOR04690
+       SXD     CKM02+1,4                                                IOR04700
+       SXD     CKM19,4                                                  IOR04710
+       SXD     CKM20,4                                                  IOR04720
+       TXI     *+1,4,1                                                  IOR04730
+       SXA     CHK86,4                                                  IOR04740
+       SXA     CKM23,4                                                  IOR04750
+       LXD     SYSUCW,4                                                 IOR04760
+       SXD     *+3,4                                                    IOR04770
+       SXD     *+11,4                                                   IOR04780
+       LXA     SYSUCW,4                                                 IOR04790
+       TXI     *+1,4,**                                                 IOR04800
+       SXA     CKM03,4                                                  IOR04810
+DELTA  TXI     *+1,4,**                                                 IOR04820
+       SXA     CHK27,4                                                  IOR04830
+       SXA     CKM05,4                                                  IOR04840
+       TXI     *+1,4,2                                                  IOR04850
+       SXA     CKM04,4                                                  IOR04860
+       SXA     CKM06,4                                                  IOR04870
+       AXT     CHK11+1,4                                               *IOR04880
+       TXI     *+1,4,**                                                 IOR04890
+       SXA     CKM08,4                                                  IOR04900
+       TXI     *+1,4,2                                                  IOR04910
+       SXA     CKM07,4                                                  IOR04920
+       SXA     CKM24,4                                                  IOR04930
+       TXI     *+1,4,1                                                  IOR04940
+       SXA     CKM09,4                                                  IOR04950
+       SXA     CKM10,4                                                  IOR04960
+       TXI     *+1,4,1                                                  IOR04970
+       SXA     CKM11,4                                                  IOR04980
+       SXA     CHK12,4                                                  IOR04990
+       LXD     SYSUCW,4                                                 IOR05000
+       TXI     *+1,4,2                                                 *IOR05010
+       SXD     CHK16,4                                                  IOR05020
+       LAC     SYSUBC,4                                                 IOR05030
+       SXA     *+13,1                                                   IOR05040
+       LXD     SYSUBC,1                                                 IOR05050
+       AXT     0,2                                                      IOR05060
+       CAL     0,4                                                      IOR05070
+       ARS     16                                                       IOR05080
+       ACL     0,4                                                      IOR05090
+       STA     CHYCW,2                                                  IOR05100
+       CAL     0,4                 BUILD TABLE AT CHYCW                $IOR05110
+       ALS     2                                                        IOR05120
+       STD     CHYCW,2                                                  IOR05130
+       TXI     *+1,2,-1                                                 IOR05140
+       TXI     *+1,4,-1                                                 IOR05150
+       TIX     *-9,1,1                                                  IOR05160
+       AXT     **,1                                                     IOR05170
+       XEC     CHPX4               RESTORE X4                           IOR05180
+       TRA     CKPT2+3                                                  IOR05190
+       TTL     SPECIAL FUNCTION FOR TAPE POSITIONING                    IOR05200
+SPCHK  SXA     CHK83,4                                                  IOR05210
+       STA     CHK96                                                    IOR05220
+       PAC     0,2                                                      IOR05230
+       TMI     CHK84               TRANSFER IF POSTING ENTRY            IOR05240
+       CAL     0,2                                                      IOR05250
+       PDX     0,4                                                      IOR05260
+       SXA     CHK80,4                                                  IOR05270
+       CAL     CHK98                                                    IOR05280
+       STA*    .RCHX                                                 $2$IOR05290
+       STZ*    .RCTX                                                 $2$IOR05300
+CHK80  RDS     **                                                       IOR05310
+       XEC*    .RCHX                                                 $2$IOR05320
+CHK83  AXT     **,4                                                     IOR05330
+       TRA     1,4                 EXIT                                 IOR05340
+CHK84  CLA     2,2                                                      IOR05350
+       SSP                         TURN OFF NOISE BIT                   IOR05360
+       SUB     1DEC                                                     IOR05370
+       TNZ     CHK85                                                    IOR05380
+CKM22  LDI     **,2                BEGINNING OF FILE 2                  IOR05390
+       RFT     100000                                                   IOR05400
+       TRA     *+4                                                      IOR05410
+       TSX     .NDSEL,4          SET DENSITY LOW                     $2$IOR05420
+       PZE     CHK96,,1                                                 IOR05430
+       TRA     *+3                                                      IOR05440
+       TSX     .NDSEL,4          SET DENSITY HIGH                    $2$IOR05450
+       PZE     CHK96,,2                                                 IOR05460
+CHK85  CLA     2,2                 CURRENT TAPE POSITION                IOR05470
+CKM23  CAS     **,2                DESIRED TAPE POSITION                IOR05480
+       TRA     CHK86                                                    IOR05490
+       TRA     CHK87                                                    IOR05500
+       TRA     CHK83                                                   $IOR05510
+CHK86  LDI     **,2                ADDRESS=DELTA+2                      IOR05520
+       RNT     700000                                                   IOR05530
+       TRA     CHK29                                                    IOR05540
+       PIA                                                              IOR05550
+       SXA     CHK87-1,1                                                IOR05560
+       PAC     0,1                 NUMBER OF BSR NEEDED                 IOR05570
+       TSX     .NDSEL,4                                              $2$IOR05580
+       PZE     CHK96,,5                                                 IOR05590
+       TIX     *-2,1,1                                                  IOR05600
+       AXT     **,1                                                     IOR05610
+CHK87  STZ     1,2                                                      IOR05620
+       TRA     CHK83                                                   $IOR05630
+       SPACE   1                                                        IOR05640
+CHK29  LDQ*    .TRPSW                                                $2$IOR05650
+       TSX     .CVPRT,4                                              $2$IOR05660
+       PZE     CHK30,,3                                                 IOR05670
+       CLA     CHK1-1              CAUSE STOP IF ERROR                 $IOR05680
+       STO     CHK28                                                    IOR05690
+       STO     CHP4                                                     IOR05700
+       TRA     CHK87                                                    IOR05710
+       TTL     SPECIAL HYPER CP. TAPE POSITIONING                       IOR05720
+       TSX     .NDSEL,4          REWIND                              $2$IOR05730
+       PZE     CHK7,,30                                                $IOR05740
+HYREP  TSX     .NDSEL,4          FORWARD SPACE RECORDS               $2$IOR05750
+       PZE     CHK7,,36            UNTIL EITHER=OR GREATER             $IOR05760
+       LAC     CHK7,4              THAN CP RECORD UCB                  $IOR05770
+       CLA     2,4                 CURRENT UCW3                        $IOR05780
+       CAS*    **,1                OLD UCW 3                           $IOR05790
+       TRA     *+3                                                     $IOR05800
+       TRA     CKM19                                                   $IOR05810
+       TRA     HYREP                                                   $IOR05820
+HYRER  LDI*    **,1                                                    $IOR05830
+       RNT     700000              COMPLEMENT RECORD COUNT             $IOR05840
+       TRA     HYBRP               NO                                  $IOR05850
+       PIA                         YES                                 $IOR05860
+       SXA     *+5,1                                                   $IOR05870
+       PAC     0,1                                                     $IOR05880
+       TSX     .NDSEL,4          BACKSPACE UNTIL EQUAL               $2$IOR05890
+       PZE     CHK7,,34                                                $IOR05900
+       TIX     *-2,1,1                                                 $IOR05910
+       AXT     **,1                                                    $IOR05920
+       TRA     CKM19                                                   $IOR05930
+HYBRP  LDQ     0,4                                                     $IOR05940
+       TSX     .CVPRT,4          PRINT MESG.                         $2$IOR05950
+       PZE     CHK30,,3                                                $IOR05960
+       CLA     CHK1-1                                                  $IOR05970
+       STO     CHK28               STORE STOP                          $IOR05980
+       STO     CHP4                DEAD CELL                           $IOR05990
+       TRA     CKM19                                                   $IOR06000
+       SPACE   1                                                        IOR06010
+*                  SPECIAL FUNCTION FOR MESSAGE BLOCK                   IOR06020
+       SPACE   1                                                        IOR06030
+SPCK1  SXA     CHK70,4                                                  IOR06040
+       PAC     0,4                                                      IOR06050
+       TMI     CHK71               TRANSFER IF POSTING ENTRY            IOR06060
+       CAL     0,4                                                      IOR06070
+       PAI                                                             $IOR06080
+       LFT     20000               HYPER                               $IOR06090
+       TRA     CHK72               YES                                 $IOR06100
+       ORA     CHK94               SET BINARY MODE                      IOR06110
+       PDX     0,4                                                      IOR06120
+       SXA     *+3,4                                                    IOR06130
+       CAL     CHK95                                                    IOR06140
+       STA*    .RCHX                                                 $2$IOR06150
+       RDS     **                  INITIATE READING BLOCK               IOR06160
+       XEC*    .RCHX                                                 $2$IOR06170
+CHK70  AXT     **,4                                                     IOR06180
+       TRA     1,4                 EXIT                                 IOR06190
+CHK71  STZ     1,4                                                      IOR06200
+       TRA     *-3                                                      IOR06210
+CHK72  ANA     HSMA                SET UNIT NO. IN                     $IOR06220
+       ORA     HYSEL               CONTROL STATEMENT                   $IOR06230
+       STD     HSMA-1                                                  $IOR06240
+       CLA     1,4                                                     $IOR06250
+       SUB     L(2)                SET START CHANNEL                   $IOR06260
+       STA*    .RCHX                                                 $2$IOR06270
+       STA     *+4                                                     $IOR06280
+       PIA                         SET INTERFACE                       $IOR06290
+       ARS     23                  INTO SMS                            $IOR06300
+       ANA     L(1)                                                    $IOR06310
+       ORS     **                                                      $IOR06320
+       CAL     CHK18               CHANGE IORT TO                      $IOR06330
+       STP     CKM24               A COPY AND DISCONNECT               $IOR06340
+       TRA     CHK70-1                                                 $IOR06350
+       TTL                             CONSTANTS                        IOR06360
+CHK94  OCT     000020000000                                             IOR06370
+CHK95  PZE     CHK16,,SPCK1                                             IOR06380
+CHK96  PZE     0                                                        IOR06390
+CHK98  PZE     CHK13                                                    IOR06400
+CHK99  PZE     0,0,SPCHK                                                IOR06410
+CHK20  OCT     777777772445                                             IOR06420
+CHK13  IORTN   0,,-1                                                    IOR06430
+       SMS     70                  NCI                                 $IOR06440
+       CTLR    HSMA-1                                                  $IOR06450
+CHK16  IOCP    CHK11,,**           DECREMENT=4*NOUCW+1                  IOR06460
+CKM24  IORT    **,,-1              ADDRESS=CHK11+4*NOUCW+2              IOR06470
+       TCH     SYSTWT              INTERUPT                            $IOR06480
+CHK50  BCI     8,NOISE RECORDS MAY CAUSE INCORRECT POSITIONING          IOR06490
+CHK18  BCI     3,RESTART     XXXXXX                                     IOR06500
+CHK19  BCI     9,SET SENSE SWITCHES   1UP   2UP   3UP   4UP   5UP   6UP IOR06510
+CHK30  BCI     3,POSITIONING FAILED                                     IOR06520
+CHK14  BCI     6,INCORRECT CHECKPOINT TAPE ADDRESS                      IOR06530
+       OCT     120612120112                                            $IOR06540
+HSMA   OCT     000017000000                                            $IOR06550
+       SPACE   1                                                        IOR06560
+BA00   TSX     .MWR,4                                                $2$IOR06570
+       PZE     2                                                        IOR06580
+       PZE     BV12,,8+512*DBLSP                                       *IOR06590
+       PZE     CMT11,,4                                                 IOR06600
+       TSX     .PAUSE,4                                              $2$IOR06610
+       ENK                         GET CODE FROM KEYS                  $IOR06620
+       STQ     *+3                                                      IOR06630
+       TSX     CKPT2,4             LETS RESTART                        $IOR06640
+       PZE     *+1,1                                                    IOR06650
+       PZE     **                                                       IOR06660
+CMT11  BCI     4,SET KEYS TO RESTART CODE                               IOR06670
+       TTL         CONVERT UNIT DESIGNATION TO BCD                      IOR06680
+*      CALLING SEQUENCE                                                 IOR06690
+       SPACE   1                                                        IOR06700
+*      TSX BC90,4                                                       IOR06710
+       SPACE   1                                                        IOR06720
+*       INPUT-UNIT CONTROL WORD LOCATION IN ACCUMULATOR ADDRESS         IOR06730
+       SPACE   1                                                        IOR06740
+*          OUTPUT-BCD UNIT DESIGNATION IN LOGICAL ACCUMULATOR           IOR06750
+*                 RIGHT JUSTIFIED WITH LEADING BLANKS                   IOR06760
+       SPACE   1                                                        IOR06770
+*              TAPE - XNN (X=CHANNEL LETTER, N=1,...,10)                IOR06780
+*                        CARD UNITS-RDX,PUX,PRX                         IOR06790
+       SPACE   1                                                        IOR06800
+*         NOTE-IF THE UCW LOCATION IS ZERO, THE ACCUMULATOR IS          IOR06810
+*                             ALL BLANKS.                               IOR06820
+       SPACE   1                                                        IOR06830
+BC90   SXA     BC91,4              SAVE XR4                             IOR06840
+       SXA     BC94,2              IR2                                  IOR06850
+       STI     BC97                AND INDICATORS                       IOR06860
+       PAC     0,4                 UCW LOCATION                         IOR06870
+       TXL     BC93,4,0            TRANSFER IF NO UNIT                  IOR06880
+       CAL     0,4                                                      IOR06890
+       LGR     27                  POSITION IO ADDRESS                  IOR06900
+       ANA     BC95                KEEP CHANNEL NUMBER                  IOR06910
+       ORA     BC96                12-ZONE, LEADING BLANKS              IOR06920
+       SLW     BM00+2              SAVE CHANNEL LETTER                  IOR06930
+       PXD     0,0                                                      IOR06940
+       LGL     3                                                        IOR06950
+       LBT                                                              IOR06960
+       TRA     BC92                TRANSFER IF TAPE                     IOR06970
+       PXD     0,0                                                      IOR06980
+       LGL     2                                                        IOR06990
+       PAC     0,4                                                      IOR07000
+       CAL     BM00+2                                                   IOR07010
+       LGR     6                                                        IOR07020
+       CAL     BC95,4              UNIT ABBREVIATION                    IOR07030
+       LGL     6                   SUFFIX CHANNEL LETTER                IOR07040
+BC91   AXT     **,4                RESTORE XR4                          IOR07050
+BC94   AXT     **,2                IR2                                  IOR07060
+       LDI     BC97                AND INDICATORS                       IOR07070
+       TRA     1,4                 EXIT                                 IOR07080
+BC92   PXD     0,0                 HERE IF TAPE                         IOR07090
+       LGL     6                   GET UNIT NUMBER                      IOR07100
+       PAX     0,4                                                      IOR07110
+       TIX     *+1,4,16            MAY BE BINARY ADDRESS                IOR07120
+       PXA     0,4                                                      IOR07130
+       XCL                                                              IOR07140
+       TSX     BCVR,4              CONVERT NUMBER TO BCD                IOR07150
+       LDQ     BLANKZ                                                   IOR07160
+       PAI                                                              IOR07170
+       LGR     12                                                       IOR07180
+       RFT     7700                                                     IOR07190
+       TRA     *+2                                                      IOR07200
+       RQL     6                                                        IOR07210
+       CAL     BM00+2              PREFIX CHANNEL LETTER                IOR07220
+       LGL     12                                                       IOR07230
+       TRA     BC91                                                     IOR07240
+BC93   CAL     BLANKZ                                                   IOR07250
+       TRA     BC91                                                     IOR07260
+BC95   OCT     000000000017                                             IOR07270
+       BCI     1,    RD                                                 IOR07280
+       BCI     1,    PU                                                 IOR07290
+       BCI     1,    PR                                                 IOR07300
+BC96   BCI     1,     +                                                 IOR07310
+BC97   PZE     0                                                        IOR07320
+       TTL              NORMAL MESSAGE ROUTINE                          IOR07330
+*          THIS ROUTINE PRINTS ANY OF THE NORMAL PREPROCESSOR           IOR07340
+*           MESSAGES, RESTORING TO AND HEADING THE FOLLOWING            IOR07350
+*                         PAGE WHEN NECESSARY.                          IOR07360
+       SPACE   1                                                        IOR07370
+*      CALLING SEQUENCE                                                 IOR07380
+       SPACE   1                                                        IOR07390
+*      TSX BWRT,4                                                       IOR07400
+*      PZE L,,N                                                         IOR07410
+       SPACE   1                                                        IOR07420
+*                                WHERE                                  IOR07430
+*                         L=ORIGIN OF MESSAGE                           IOR07440
+*              N=NUMBER OF WORDS IN MESSAGE (12 OR LESS)                IOR07450
+       SPACE   1                                                        IOR07460
+BWRT   SXA     BD03,4              SAVE XR4                             IOR07470
+       CAL     1,4                 SET UP PROUT C.S.                    IOR07480
+       SLW     BD02                                                    *IOR07490
+       LXD     BLTP,4              REMAINING LINES, THIS PAGE           IOR07500
+       TIX     BD01,4,1            ARE WE AT END OF PAGE               $IOR07510
+       CAL     BPGN2               YES-INCREMENT PAGE NUMBER            IOR07520
+       ADD     BONE                                                     IOR07530
+       SLW     BPGN2                                                    IOR07540
+       XCL                                                              IOR07550
+       TSX     BCVR,4              CONVERT TO BCD                       IOR07560
+       SLW     BU50+11             STORE IN HEADER                      IOR07570
+       TSX     .MWR,4            RESTORE, PRINT HEADER               $2$IOR07580
+       PZE     3                                                        IOR07590
+       PZE     BU50,,512*EJECT                                          IOR07600
+       PZE     BU50,0,12                                                IOR07610
+       PZE     BU50,0,0                                                 IOR07620
+       AXT     BCTLN-2,4           SET LINE COUNT FOR PAGE              IOR07630
+BD01   SXD     BLTP,4              SAVE LINE COUNT                      IOR07640
+       LDC     BD02,4                                                   IOR07650
+       TXL     BD03,4,0            EXIT IF NO MESSAGE                   IOR07660
+       TSX     .MWR,4            PRINT MESSAGE                       $2$IOR07670
+       PZE     1                                                       $IOR07680
+BD02   PZE     **,,**                                                   IOR07690
+BD03   AXT     **,4                                                     IOR07700
+       TRA     2,4                 EXIT                                 IOR07710
+       SPACE   1                                                        IOR07720
+*                      ASSIGNMENT LISTING HEADERS                       IOR07730
+       SPACE   1                                                        IOR07740
+BU50   BCI     9, JOB- XXXXXXXXXXXXXXXXXX      DATE  00/00/00           IOR07750
+       BCI     3,        PAGE   XXX                                     IOR07760
+BU51   BCI     9,   FILE DESCRIPTIONS (MOUNT FILES MARKED WITH *)--     IOR07770
+BU52   BCI     9,       NO.  FILE NAME          UNIT  MOUNT TAPES--     IOR07780
+       BCI     3,                                                       IOR07790
+       TTL              BCD TO BINARY INTEGER CONVERSION                IOR07800
+*      CALLING SEQUENCE                                                 IOR07810
+       SPACE   1                                                        IOR07820
+*      TSX BCONV,4                                                      IOR07830
+       SPACE   1                                                        IOR07840
+*                                ENTRY                                  IOR07850
+*      1. N NUMERIC BCD CHARACTERS IN HIGH ORDER MQ. (N MUST BE         IOR07860
+*         6 OR LESS).                                                   IOR07870
+*      2. 6*N  IN X2.                                                   IOR07880
+       SPACE   1                                                        IOR07890
+*                                 EXIT                                  IOR07900
+*      1. BINARY INTEGER IN LOGICAL ACCUMULATOR,B=35.                   IOR07910
+       SPACE   1                                                        IOR07920
+BCONV  STZ     BN00                INITIALIZE SUMMER                    IOR07930
+       PXD     0,0                                                      IOR07940
+BCON1  LGL     6                   GET NEXT DIGIT                       IOR07950
+       ACL     BN00                ADD SUMMER                           IOR07960
+       TNX     BCON2,2,6           TO EXIT IF COMPLETED                 IOR07970
+       STQ     BN00+1                                                   IOR07980
+       XCL                                                              IOR07990
+       MPY     BTEN                                                     IOR08000
+       STQ     BN00                SAVE PARTIAL PRODUCT                 IOR08010
+       LDQ     BN00+1                                                   IOR08020
+       TRA     BCON1                                                    IOR08030
+BCON2  TRA     1,4                 EXIT                                 IOR08040
+       TTL              BINARY TO BCD CONVERSION ROUTINE                IOR08050
+*      CALLING SEQUENCE                                                 IOR08060
+*      TSX BCVR,4                                                       IOR08070
+       SPACE   1                                                        IOR08080
+*                                ENTRY                                  IOR08090
+*    UNSIGNED BINARY INTEGER (LESS THAN OR EQUAL TO 999999) IN MQ.      IOR08100
+       SPACE   1                                                        IOR08110
+*                                 EXIT                                  IOR08120
+*         BCD INTEGER IN A, WITH LEADING BLANKS IF NECESSARY.           IOR08130
+       SPACE   1                                                        IOR08140
+*      NOTES                                                            IOR08150
+*      1. ZERO CONVERTS TO ALL BLANKS.                                  IOR08160
+*      2. THE MQ IS NORMALLY ZERO ON EXIT. IF THE INPUT INTEGER         IOR08170
+*         IS GREATER THAN 999999, THE QUOTIENT,                         IOR08180
+*         N/1000000, IS IN THE MQ.                                      IOR08190
+BCVR   SXA     BCVR4,4             SAVE XR4                             IOR08200
+       AXT     36,4                                                     IOR08210
+       STZ     BN00                                                     IOR08220
+BCVR1  PXD     0,0                                                      IOR08230
+       DVP     BTEN                GET NEXT DIGIT                       IOR08240
+       TZE     BCVR5                                                    IOR08250
+       ALS     36,4                                                     IOR08260
+       ORS     BN00                                                     IOR08270
+BCVR2  TXI     *+1,4,-6                                                 IOR08280
+       TXH     BCVR1,4,0                                                IOR08290
+BCVR3  CAL     BLANKZ                                                   IOR08300
+       ALS     36,4                                                     IOR08310
+       ORA     BN00                                                     IOR08320
+BCVR4  AXT     **,4                RESTORE XR4                          IOR08330
+       TRA     1,4                 EXIT                                 IOR08340
+BCVR5  STQ     BN00+1                                                   IOR08350
+       ZET     BN00+1                                                   IOR08360
+       TRA     BCVR2               CONTINUE-NOT DONE                    IOR08370
+       TRA     BCVR3               CONVERSION FINISHED                  IOR08380
+       SPACE   1                                                        IOR08390
+*                              CONSTANTS                                IOR08400
+       SPACE   1                                                        IOR08410
+BONE   PZE     1                                                        IOR08420
+BTEN   PZE     10                                                       IOR08430
+BLANKZ BCI     1,                                                       IOR08440
+       SPACE   1                                                        IOR08450
+*          ASSEMBLY PARAMETERS, MISCELLANEOUS REFERENCE CELLS           IOR08460
+       SPACE   1                                                        IOR08470
+*                         PREPROCESSOR COUNTS                           IOR08480
+       SPACE   1                                                        IOR08490
+BPGN2  BSS     1                   ASSIGNMENT LIST PAGE NUMBER          IOR08500
+BERCT  BSS     1                   ERROR COUNT                          IOR08510
+BLTP   BSS     1                   LINES THIS PAGE (BERR,BWRT)          IOR08520
+*                               BUFFERS                                 IOR08530
+       SPACE   1                                                        IOR08540
+BQ00   BSS     24                  CONTROL CARD OUTPUT BUFFER           IOR08550
+BM00   BSS     4                   WORKING STORAGE BLOCK                IOR08560
+BN00   BSS     3                                                        IOR08570
+CMT5   BCI     7, CHECKPOINT XXXXXX CODE XXXXXX XXXXXX                  IOR08580
+*  ERROR STOP   -  RETURN TO IBSYS                                      IOR08590
+STOPD  TSX     .MWR,4                                                $2$IOR08600
+       PZE     1                                                        IOR08610
+       PZE     BV14,,5+512*EJECT                                        IOR08620
+       CLA     SYSJOB                                                  *IOR08630
+       ORA     1DEC                SET PHASE ERROR                     *IOR08640
+       STO     SYSJOB                                                  *IOR08650
+       TRA     SYSRET                                                   IOR08660
+BV14   BCI     5,RESTART RETURNING TO IBSYS                             IOR08670
+       TTL                         STORE ROUTINE                        IOR08680
+*                           CALLING SEQUENCE                            IOR08690
+*     STL     CHC3                                                      IOR08700
+*     TTR     STORE                                                     IOR08710
+       SPACE   1                                                        IOR08720
+*                     USED BY CHECK POINT ROUTINES                      IOR08730
+*       1. SAVES INDEX REGISTERS                                        IOR08740
+*       2. SETS UP INDIRECTLY ADDRESSABLE CELL FOR DUMP TAPE            IOR08750
+*       3. SETS UP CHANNEL INSTRUCTIONS                                 IOR08760
+*       4. PLACES -(CHANNEL NO.) INTO X1                                IOR08770
+       SPACE   1                                                        IOR08780
+STORE  ENB     L(0)                DISABLE TRAPS                        IOR08790
+       STI     CHPSI               SAVE SENSE INDICATOR                 IOR08800
+       SXA     CHPX4,4             SAVE INDEX REGISTERS                 IOR08810
+       SXA     CHPX2,2                                                  IOR08820
+       SXA     CHPX1,1                                                  IOR08830
+       SXA     CHPX4-4,3                                               $IOR08840
+       AXT     0,1                                                     $IOR08850
+       AXT     1,3                                                      IOR08860
+       TXH     *+5,1,0             7090                                 IOR08870
+       STL     X94                 7094                                 IOR08880
+       SXA     CHPX4-3,5                                               $IOR08890
+       SXA     CHPX4-2,6                                               $IOR08900
+       SXA     CHPX4-1,7                                               $IOR08910
+       SXA     CHPSL,0                                                  IOR08920
+       AXT     4,1                 SAVE SENSE LIGHT CONDITION           IOR08930
+       CAL     L(1)                                                     IOR08940
+       SLT     5,1                                                      IOR08950
+       TRA     *+2                                                      IOR08960
+       ORS     CHPSL                                                    IOR08970
+       ALS     1                                                        IOR08980
+       TIX     *-4,1,1                                                  IOR08990
+       CAL     1,4                 FILE,T                               IOR09000
+CHP2   PAI     16                                                       IOR09010
+       STA     *+2                                                      IOR09020
+       RNT     100000              TEST FOR INDIRECT ADDRESSING         IOR09030
+       CAL     **                  ADDRESS=ADDRESS OF KEYS STORAGE     $IOR09040
+       STA     CHP1                                                     IOR09050
+CHP3   AXC     **,2                                                     IOR09060
+       PXD     0,0                 TEST FOR 7090 OR 7094                IOR09070
+       OCT     044300012000        DOUBLE LOAD                          IOR09080
+       TZE     *+2                 THIS IS A 7090                       IOR09090
+       OCT     476000000016        ENTER MULTIPLE TAG MODE              IOR09100
+       TXL     CHP1,2,*            CHECKPOINT                          $IOR09110
+       TSX     .NDSEL,4                                              $2$IOR09120
+       PZE     CHP1,0,TESTP                                             IOR09130
+       LXA     CHPX4,4                                                 $IOR09140
+CHP1   CAL     **                  UCW WORD1                            IOR09150
+       STD     CHP19                                                    IOR09160
+       ARS     18                  PHYSICAL TAPE ADDRESS                IOR09170
+       ORA     CHP2                SET MODE TO BINARY                   IOR09180
+       AXT     5,1                                                      IOR09190
+       STA     CHP7+3,1            SET UP SELECT INSTRUCTIONS           IOR09200
+       TIX     *-1,1,1                                                  IOR09210
+       ARS     9                                                        IOR09220
+       ANA     *+1                                                      IOR09230
+       PAC     15,1                -(CHANNEL NO.)                       IOR09240
+       TXI     *+1,1,1                                                  IOR09250
+       LDQ*    .TRCX                                                 $2$IOR09260
+       SLQ     CHP17               TRCX                                 IOR09270
+       LDQ*    .TCOX                                                 $2$IOR09280
+       CAL     .CKWAT                                                $2$IOR09290
+       ACL     L(1)                                                     IOR09300
+       STA     *+1                                                      IOR09310
+       SLQ     **                  TCOX                                 IOR09320
+       CAL*    .RCHX                                                 $2$IOR09330
+       ORA     D48                                                      IOR09340
+CHPSL  XCL     **                  SENSE LIGHT CONDITION                IOR09350
+       SLQ     CHP15               RCHX*                                IOR09360
+       LDQ*    .ETTX                                                 $2$IOR09370
+       STQ     CHP16                                                    IOR09380
+       LDQ*    .TEFX                                                 $2$IOR09390
+       SLQ     CHP13               TEFX                                 IOR09400
+       TXI     *+1,1,-1                                                 IOR09410
+       TRA     1,2                                                      IOR09420
+CHPSI                                                                   IOR09430
+CHP19  PZE     0,,**                                                    IOR09440
+       EJECT                                                            IOR09450
+*                                 EXIT                                  IOR09460
+*                         DUMP OR RESTORE CORE                          IOR09470
+*                       RESTORE INDEX REGISTERS                         IOR09480
+       SPACE   1                                                        IOR09490
+CHP4   LDC     SYSUBC,1            -NO. OF CHANNELS TO X1               IOR09500
+       TXI     *+1,1,1             DELAY UNTIL                          IOR09510
+       ZET*    .CHXSP              ALL CHANNELS                      $2$IOR09520
+       TRA     CHP4                BECOME DORMANT.                      IOR09530
+       TXH     *-3,1,0                                                  IOR09540
+       ENB     L(0)                DISABLE TRAPS                        IOR09550
+       STZ     .CHPSW                                                $2$IOR09560
+CHP30  LDI*    CHP1                                                    $IOR09570
+       LFT     20000               7909 CHANNEL                        $IOR09580
+       TRA     CHGSH               YES                                 $IOR09590
+       TSX     RDWR,4                                                   IOR09600
+       PZE     CHP8                                                     IOR09610
+       TRA     CHP6                RTC RETURN                           IOR09620
+       AXT     2,2                 2 INTO X2 FOR WEF                    IOR09630
+       TSX     RDWR,4                                                   IOR09640
+       PZE                                                              IOR09650
+       TRA     CHP6                                                     IOR09660
+CHP76  AXT     L(0),4                                                  $IOR09670
+       SXA     .TRAPX,4                                              $2$IOR09680
+       LXD     SYSUBC,1                                                 IOR09690
+       SXD     *+1,1                                                    IOR09700
+       TXI     *+1,1,**                                                 IOR09710
+       TXI     *+1,1,10                                                 IOR09720
+       SXA     *+5,1                                                    IOR09730
+       TXI     *+1,1,1                                                  IOR09740
+       SXA     *+4,1                                                    IOR09750
+       TXI     *+1,1,-11                                                IOR09760
+       CAL     CHP10               ACTIVATE ALL CHANNELS                IOR09770
+       STA     **,1                                                     IOR09780
+       TRA     **,1                                                     IOR09790
+CHP11  TIX     *-2,1,2                                                  IOR09800
+       NZT     X94                 7090                                $IOR09810
+       TRA     CHPX4               YES                                 $IOR09820
+       OCT     076000000016        LEAVE MULTIPLE TAG MODE             $IOR09830
+       AXT     **,3                RESTORE IR FOR 94                   $IOR09840
+       AXT     **,5                                                    $IOR09850
+       AXT     **,6                                                    $IOR09860
+       AXT     **,7                                                    $IOR09870
+CHPX4  AXT     **,4                RESTORE INDEX REGISTERS              IOR09880
+CHPX2  AXT     **,2                                                     IOR09890
+       SLF                                                              IOR09900
+       AXT     4,1                 RESTORE SENSE LIGHTS                 IOR09910
+       CAL     CHPSL                                                    IOR09920
+       LBT                                                              IOR09930
+       TRA     *+2                                                      IOR09940
+       SLN     5,1                                                      IOR09950
+       ARS     1                                                        IOR09960
+       TIX     *-4,1,1                                                  IOR09970
+       AXT     .TRAPS,1                                              $2$IOR09980
+       SXA     .TRAPX,1                                              $2$IOR09990
+CHPX1  AXT     **,1                                                     IOR10000
+CHP10  PIA     CHP11               TAPE POSITION OF CHECK POINT         IOR10010
+       STZ     X94                 ZERO 7094 SWITCH                    $IOR10020
+       ENB     .TRAPS                                                $2$IOR10030
+       TRA     4,4                 EXIT                                 IOR10040
+X94    PZE                         7094 SWITCH                         $IOR10050
+CHGSH  PIA                                                             $IOR10060
+       ANA     DEC15               PUT UNIT NUMBER                     $IOR10070
+       ORA     HYSEL               IN SELECT ORDER                     $IOR10080
+       STD     CHP28-2                                                 *IOR10090
+       CLA     CHP11+3                                                 $IOR10100
+       STA     CHP28                                                   $IOR10110
+       PIA                                                             *IOR10120
+       ARS     23                  SET THE SMS                         $IOR10130
+       ANA     L(1)                TO CORRECT                          $IOR10140
+       ORS     CHP28                                                   $IOR10150
+       TSX     *+2,4                                                   $IOR10160
+       PZE     CHP28-1             RESTART CTLR                        *IOR10170
+       XEC     CHP15               START CHANNEL                       $IOR10180
+       TSX     .CKWAT,4            WAIT UNTIL FINISHED               $2$IOR10190
+       TRA     CHP76                                                   $IOR10200
+       OCT     120600120112                                            $IOR10210
+       XMT*    CHK11,,4                                                *IOR10220
+CHP28  SMS     14                                                      $IOR10230
+       CTLR    *-3                                                     *IOR10240
+       CPYP    0,,1                                                    $IOR10250
+       CPYD    1,,-1                                                   $IOR10260
+       TCH*    CHK11                                                   *IOR10270
+       TTL                         READ OR WRITE CHECKPOINT             IOR10280
+*                      UPON ENTRY X2 MUST CONTAIN                       IOR10290
+*                              0 FOR RDS                                IOR10300
+*                              1 FOR WRS                                IOR10310
+*                              2 FOR WEF                                IOR10320
+CHPRW  RUNA    **                                                       IOR10330
+       WEFA    **                                                       IOR10340
+CHP7   WTBA    **                                                       IOR10350
+       RTBA    **                                                       IOR10360
+CHP6   BSRA    **                                                       IOR10370
+       TXL     *+2,2,0                                                  IOR10380
+RDWR   SXA     CHP20+4,4                                                IOR10390
+       XEC     CHP7+1,2            SELX                                 IOR10400
+CHP15  RCHA*   1,4                                                      IOR10410
+       TSX     .CKWAT,4                                              $2$IOR10420
+       LXA     CHP20+4,4                                                IOR10430
+       IOT                                                              IOR10440
+       TRA     CHP20               I/O CHECK                            IOR10450
+CHP16  ETTA                                                             IOR10460
+       TRA     CHP70                                                    IOR10470
+CHP13  TEFA    *                                                        IOR10480
+CHP17  TRCA    2,4                                                      IOR10490
+       TRA     3,4                                                      IOR10500
+CHP20  TSX     .MWR,4                                                $2$IOR10510
+       PZE     1                                                        IOR10520
+       PZE     CMT8,,2                                                  IOR10530
+       TSX     .PAWS,4                                               $2$IOR10540
+       AXT     **,4                                                     IOR10550
+       TRA     CHP16                                                    IOR10560
+CHP8   IOCP    0,,1                                                     IOR10570
+       IOCD    1,,-1                                                    IOR10580
+D48    PZE     0,0,48                                                   IOR10590
+CHP70  LAC     CHP1,4              HERE ON EOT                          IOR10600
+       CLA     1DEC                                                    $IOR10610
+       STO     2,4                                                     $IOR10620
+       XEC     CHPRW               RUN                                  IOR10630
+       TSX     .MWR,4                                                $2$IOR10640
+       PZE     1                                                        IOR10650
+       PZE     CHP71,,8+512*DBLSP                                      $IOR10660
+       CAL     BLNKS                                                   $IOR10670
+       ANA     XCPTP                                                   $IOR10680
+       LAC     CHP1,4                                                  $IOR10690
+       SLW     CMT5+6                                                  $IOR10700
+       LDQ     0,4                                                     $IOR10710
+       TSX     .CVPRT,4                                              $2$IOR10720
+       PZE     CMT5,,7+512*DBLSP                                       $IOR10730
+       TRA     CHP30                                                   $IOR10740
+CHP71  BCI     8,CHECKPOINT INVALID, MOUNT NEW REEL TO CONTINUE        $IOR10750
+CMT8   BCI     2,I/O CHECK                                              IOR10760
+       BES     20                  PATCH AREA                           IOR10770
+CHK11  BSS     0                   UCW TABLE                            IOR10780
+       END     -1                                                    $2$IOR10790
