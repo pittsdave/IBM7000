@@ -1,0 +1,7 @@
+       NOLNK
+       LBL     GWRD
+       ENTRY   GETWRD   
+       ENTRY   SETWRD   
+GETWRD TIA     =HGETWRD 
+SETWRD TIA     =HSETWRD 
+       END  

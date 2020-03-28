@@ -1,0 +1,5 @@
+       NOLNK
+       LBL     IODG
+       ENTRY   IODIAG   
+IODIAG TIA     =HIODIAG 
+       END  

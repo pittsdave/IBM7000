@@ -1,0 +1,5 @@
+       NOLNK
+       LBL     GTCM
+       ENTRY   GETCOM   
+GETCOM TIA     =HGETCOM 
+       END  

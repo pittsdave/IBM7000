@@ -1,0 +1,9 @@
+       NOLNK
+       LBL     GTLO
+       ENTRY   GETLOC   
+       ENTRY   GETARY   
+       ENTRY   SETLOC   
+GETLOC TIA     =HGETLOC 
+GETARY TIA     =HGETARY 
+SETLOC TIA     =HSETLOC 
+       END  

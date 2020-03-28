@@ -1,0 +1,5 @@
+       NOLNK
+       LBL     GTDY
+       ENTRY   GTDYTM   
+GTDYTM TIA     =HGTDYTM 
+       END  

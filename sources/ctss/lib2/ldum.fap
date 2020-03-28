@@ -1,0 +1,9 @@
+       DETAIL
+*LDMP     FOR TIME SHARING MOD XI FOREGROUND LIBRARY    JDH    DEC 62   
+       LBL     LDUMP
+       ENTRY   LDUMP    
+       REM     CALLS EXIT FOREVER.  
+       REM
+LDUMP  TSX     $EXIT,4  
+       TRA     *-1
+       END  

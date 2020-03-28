@@ -1,0 +1,8 @@
+       NOLNK
+*      NEXCOM  DUMMY ENTRY TO SUPERVISOR  
+*      SEPTEMBER 64          L. POUZIN    
+*     
+       LBL     NEXCOM
+       ENTRY   NEXCOM   
+NEXCOM TIA     =HNEXCOM 
+       END  

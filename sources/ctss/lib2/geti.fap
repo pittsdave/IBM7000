@@ -1,0 +1,8 @@
+       NOLNK
+* DUMMY FOR SUPERVISOR ENTRY  
+* COMPUTATION CENTER         LOUIS POUZIN 
+*      JUNE 64    
+       LBL     TS18EN
+       ENTRY   GETIME   
+GETIME TIA     =HGETIME 
+       END  

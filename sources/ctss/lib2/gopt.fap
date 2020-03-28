@@ -1,0 +1,11 @@
+       NOLNK
+       LBL     GOPT
+       ENTRY   GETOPT   
+       ENTRY   SETOPT   
+       ENTRY   RSOPT    
+       ENTRY   LDOPT    
+GETOPT TIA     =HGETOPT 
+SETOPT TIA     =HSETOPT 
+RSOPT  TIA     =HRSOPT  
+LDOPT  TIA     =HLDOPT  
+       END  
